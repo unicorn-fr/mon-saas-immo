@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Chips, Input, LoadError, Loader, Pill, TextLink, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type TenantDocKey, type TenantFile } from '../../../lib/contract'
@@ -54,13 +54,18 @@ export default function FicheLocataire() {
         <Input label="Adresse actuelle" value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} hint="Jusqu’à son entrée dans les lieux." />
       </FicheSection>
 
-      <FicheSection id="situation" n={++n} title="Situation" intro="Sert seulement à vous proposer le bon type de bail." done={done('situation')}>
+      <FicheSection id="situation" n={++n} title="Situation" intro="Sert à vous proposer le bon type de bail et à vérifier la part du loyer dans les revenus. Rien de cela ne figure dans le bail." done={done('situation')}>
         <Chips
           legend="Situation"
           value={f.situation ?? null}
           onChange={(v) => set({ situation: v })}
           options={(Object.keys(SITUATION_LABEL) as Array<keyof typeof SITUATION_LABEL>).map((k) => ({ value: k, label: fem ? SITUATION_LABEL[k].replace(/é$/, 'ée').replace(/Indépendant$/, 'Indépendante').replace(/Étudiant$/, 'Étudiante').replace(/Apprenti$/, 'Apprentie') : SITUATION_LABEL[k] }))}
         />
+        <Fields>
+          <Input label={f.situation === 'STUDENT' ? 'Établissement' : 'Employeur ou activité'} value={f.employer} onChange={(v) => set({ employer: v })} />
+          <Input label="Métier ou formation" value={f.occupation} onChange={(v) => set({ occupation: v })} />
+        </Fields>
+        <Money label="Revenus nets par mois" cents={f.monthlyIncomeCents ?? null} onChange={(c) => set({ monthlyIncomeCents: c })} hint="Ne figure pas dans le bail." />
         <Callout tone="tip">{e('Étudiant', 'Étudiante')} : un bail meublé de 9 mois non reconduit est possible. Formation, stage, mission temporaire : le bail mobilité de 1 à 10 mois devient possible.</Callout>
       </FicheSection>
 

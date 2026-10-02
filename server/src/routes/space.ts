@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { propertyLeaseMissing } from '../domain/checklist.js'
 import { alignInsuranceReminders } from '../services/reminders.js'
 import { z } from 'zod'
 import type { Lease, Payment, Property, Tenant } from '@prisma/client'
@@ -187,6 +188,8 @@ router.get('/properties/:id', async (req, res) => {
       file: f,
       completion: propertyCompletion(f),
       diagnostics: diagnosticsFor(f),
+      /** Ce qui manque au logement pour faire un bail (contrat type, diagnostics, mobilier). */
+      leaseMissing: propertyLeaseMissing(f, f.furnished ? 'MEUBLE' : 'VIDE'),
       energyWarning: energyRentalWarning(f.diagnostics?.dpe?.class),
       rentControlLikely: rentControlLikely(f.inseeCode),
       leases: p.leases.map((l) => ({ id: l.id, status: l.status, kind: leaseKindOf(l), tenantName: leaseTenantLabel(l, names), startDate: iso(l.startDate), endDate: iso(l.endDate), rentCents: l.rentCents, chargesCents: l.chargesCents, depositCents: l.depositCents, rent: rentStatus(l, l.payments) })),

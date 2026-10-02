@@ -86,7 +86,12 @@ export interface PropertyDetails extends PropertySummary {
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; leaseId: string; date: string | null; createdAt: string }>
 }
 /** La fiche détaillée renvoie la complétude complète (étapes) à la place du pourcentage. */
-export type PropertyView = Omit<PropertyDetails, 'completion'> & { completion: Completion }
+export interface LeaseBlocker {
+  key: string
+  label: string
+  section: string
+}
+export type PropertyView = Omit<PropertyDetails, 'completion'> & { completion: Completion; leaseMissing?: LeaseBlocker[] }
 
 export interface TenantSummary {
   id: string

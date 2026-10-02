@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
-import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, TextArea, TextLink, Toggle, errorMessage, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, Select, TextArea, TextLink, Toggle, errorMessage, useToast } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { KIND_LABEL, MOBILITY_REASONS, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
 import { openDoc, printDoc } from '../../../lib/docs'
 import { dateFr, euros } from '../../../lib/format'
-import type { LeaseView, ProfileView, PropertySummary, TenantSummary } from '../../../lib/space'
+import type { LeaseBlocker, LeaseView, ProfileView, PropertySummary, PropertyView, TenantSummary } from '../../../lib/space'
 
 const LABELS = ['Logement', 'Locataire', 'Déjà prêt', 'Date', 'Loyer', 'Avant', 'Clauses', 'Prêt']
 
@@ -32,6 +32,23 @@ export default function CreationBail() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const setT = (patch: Partial<LeaseTerms>) => setTerms((t) => ({ ...t, ...patch }))
+  // L'ordre est imposé : logement complet, puis locataire, puis le bail.
+  const [propertyBlockers, setPropertyBlockers] = useState<LeaseBlocker[] | null>(null)
+  const [tenantBlockers, setTenantBlockers] = useState<Record<string, TenantBlocker[]>>({})
+  useEffect(() => {
+    setPropertyBlockers(null)
+    if (!propertyId) return
+    api<PropertyView>(`/properties/${propertyId}`)
+      .then((p) => setPropertyBlockers(p.leaseMissing ?? []))
+      .catch(() => setPropertyBlockers([]))
+  }, [propertyId])
+  const tenantKey = tenantIds.join(',')
+  useEffect(() => {
+    Promise.all(tenantIds.map((t) => api<{ forLease: TenantBlocker[] }>(`/tenants/${t}/missing`).then((r) => [t, r.forLease] as const)))
+      .then((rows) => setTenantBlockers(Object.fromEntries(rows)))
+      .catch(() => setTenantBlockers({}))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantKey])
 
   useEffect(() => {
     api<PropertySummary[]>('/properties').then(setProperties).catch((e) => toast.error(e))
@@ -88,11 +105,13 @@ export default function CreationBail() {
       switch (step) {
         case 1:
           if (!propertyId) throw new Error('Choisissez le logement.')
+          if (propertyBlockers?.length) throw new Error('Complétez d’abord le logement : le bail reprend toutes ses informations.')
           if (id && lease && lease.property.id !== propertyId) throw new Error('Le logement d’un bail en préparation ne peut pas changer. Créez un autre bail.')
           goto(2)
           return
         case 2: {
           if (!tenantIds.length) throw new Error('Choisissez au moins un locataire.')
+          if (tenantIds.some((t) => tenantBlockers[t]?.length)) throw new Error('Complétez d’abord ce qui manque au locataire pour le bail, ou demandez-le-lui.')
           if (!id) {
             const p = properties?.find((x) => x.id === propertyId)
             const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.furnished ? 'MEUBLE' : 'VIDE' } } })
@@ -116,7 +135,9 @@ export default function CreationBail() {
         case 5:
           if (!terms.rentCents) throw new Error('Indiquez le loyer hors charges.')
           if (terms.zone?.tense === null || terms.zone?.tense === undefined) throw new Error('Indiquez si la commune est en zone tendue.')
-          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? maxDeposit(terms.kind ?? 'VIDE', terms.rentCents), zone: terms.zone })
+          if (terms.zone?.control && (!terms.zone.refRentCentsM2 || !terms.zone.refRentMaxCentsM2)) throw new Error('Encadrement des loyers : indiquez le loyer de référence et le loyer de référence majoré.')
+          if (terms.zone?.complementCents && !terms.zone.complementJustification?.trim()) throw new Error('Justifiez le complément de loyer par les caractéristiques du logement.')
+          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, paymentTerm: terms.paymentTerm ?? 'ADVANCE', paymentMethod: terms.paymentMethod ?? 'TRANSFER', paymentPlace: terms.paymentPlace, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? maxDeposit(terms.kind ?? 'VIDE', terms.rentCents), zone: terms.zone })
           goto(6)
           return
         case 6:
@@ -175,6 +196,14 @@ export default function CreationBail() {
             ))}
           </div>
           <TextLink to="/espace/logements/nouveau?retour=bail">+ Un autre logement</TextLink>
+          {propertyId && propertyBlockers?.length ? (
+            <Callout tone="warn" title="Le logement doit être complet avant le bail">
+              Il manque : {propertyBlockers.map((b) => b.label.toLowerCase()).join(', ')}.{' '}
+              <TextLink to={`/espace/logements/nouveau?id=${propertyId}&etape=${PROPERTY_STEP[propertyBlockers[0].section] ?? 'type'}&retour=bail`} style={{ fontSize: 13 }}>
+                Compléter le logement
+              </TextLink>
+            </Callout>
+          ) : null}
         </>
       ) : null}
 
@@ -196,6 +225,7 @@ export default function CreationBail() {
             </div>
           ) : null}
           <TextLink to={`/espace/locataires/nouveau${propertyId ? `?logement=${propertyId}` : ''}`}>+ Ajouter un locataire</TextLink>
+          {tenantIds.map((t) => <TenantCheck key={t} tenantId={t} name={tenants.find((x) => x.id === t)?.name ?? 'Locataire'} email={tenants.find((x) => x.id === t)?.email ?? null} blockers={tenantBlockers[t] ?? []} propertyId={propertyId} />)}
           <StepNote>{tenantIds.length > 1 ? 'Plusieurs locataires : ils signent tous le bail (colocation ou couple).' : 'Un nouveau locataire ? Bailio vous pose les questions nécessaires, une par une.'}</StepNote>
         </>
       ) : null}
@@ -264,10 +294,27 @@ export default function CreationBail() {
             options={c.chargesModes.map((m) => ({ value: m, label: m === 'PROVISION' ? 'Provision' : m === 'FORFAIT' ? 'Forfait' : 'Paiement périodique' }))}
             hint={terms.chargesMode === 'FORFAIT' ? 'Forfait : un montant fixe, sans régularisation.' : 'Provision : une avance, régularisée une fois par an avec les dépenses réelles.'}
           />
-          <Chips big legend="Payé le" value={terms.paymentDay ?? 5} onChange={(v) => setT({ paymentDay: v })} options={[1, 5, 10].map((n) => ({ value: n, label: n === 1 ? '1er' : String(n) }))} />
+          <Fields>
+            <Select label="Payé au plus tard le" value={String(terms.paymentDay ?? 5)} onChange={(v) => setT({ paymentDay: Number(v) })} options={Array.from({ length: 28 }, (_, i) => ({ value: String(i + 1), label: `${i === 0 ? '1er' : i + 1} du mois` }))} />
+            <Select label="Moyen de paiement" value={terms.paymentMethod ?? 'TRANSFER'} onChange={(v) => setT({ paymentMethod: v })} options={[{ value: 'TRANSFER', label: 'Virement' }, { value: 'CHEQUE', label: 'Chèque' }, { value: 'CASH', label: 'Espèces (contre reçu)' }, { value: 'OTHER', label: 'Autre' }]} />
+          </Fields>
+          <Chips legend="Le loyer se paie" value={terms.paymentTerm ?? 'ADVANCE'} onChange={(v) => setT({ paymentTerm: v })} options={[{ value: 'ADVANCE', label: 'D’avance (à échoir)' }, { value: 'ARREARS', label: 'À la fin du mois (à terme échu)' }]} hint="D’avance : le loyer d’octobre est payé début octobre. C’est l’usage." />
+          {terms.paymentMethod === 'OTHER' ? <Input label="Précisez le moyen et le lieu de paiement" value={terms.paymentPlace ?? ''} onChange={(v) => setT({ paymentPlace: v })} /> : null}
+          <StepNote>Le prélèvement automatique ne peut pas être imposé au locataire (article 4 de la loi du 6 juillet 1989).</StepNote>
           {terms.kind !== 'MOBILITE' ? <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint={terms.rentCents ? `Au maximum ${euros(maxDeposit(terms.kind ?? 'VIDE', terms.rentCents))} : ${terms.kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.` : undefined} error={terms.rentCents && terms.depositCents && terms.depositCents > maxDeposit(terms.kind ?? 'VIDE', terms.rentCents) ? 'Au-dessus du maximum légal.' : null} /> : <Callout tone="info">En bail mobilité, aucun dépôt de garantie ne peut être demandé.</Callout>}
           <Chips legend="La commune est-elle en zone tendue ?" value={terms.zone?.tense ?? null} onChange={(v) => setT({ zone: { ...terms.zone, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<>En zone tendue, le loyer à la relocation est encadré. <a href="https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">Vérifier ma commune</a></>} />
-          {c.rentControlLikely ? <Callout tone="warn">Cette commune applique l’encadrement des loyers : le loyer de référence majoré doit figurer dans le bail. Vous le renseignez dans le contrat détaillé.</Callout> : null}
+          <Chips legend="Le logement est soumis à l’encadrement des loyers ?" value={terms.zone?.control ?? (c.rentControlLikely ? true : null)} onChange={(v) => setT({ zone: { ...terms.zone, control: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint={c.rentControlLikely ? 'Cette commune applique l’encadrement : le loyer ne peut pas dépasser le loyer de référence majoré.' : 'Paris, Lille, Lyon, Montpellier, Bordeaux et quelques communes d’Île-de-France l’appliquent.'} />
+          {terms.zone?.control ?? c.rentControlLikely ? (
+            <>
+              <Fields>
+                <Money label="Loyer de référence (€/m²)" cents={terms.zone?.refRentCentsM2 ?? null} onChange={(v) => setT({ zone: { ...terms.zone, control: true, refRentCentsM2: v } })} />
+                <Money label="Loyer de référence majoré (€/m²)" cents={terms.zone?.refRentMaxCentsM2 ?? null} onChange={(v) => setT({ zone: { ...terms.zone, control: true, refRentMaxCentsM2: v } })} />
+              </Fields>
+              <span style={{ fontSize: 13, color: BAI.inkSoft }}>Sur le site de la préfecture ou de la métropole, selon l’adresse, le nombre de pièces, l’époque de construction et le type de location.</span>
+              <Money label="Complément de loyer (facultatif)" cents={terms.zone?.complementCents ?? null} onChange={(v) => setT({ zone: { ...terms.zone, complementCents: v } })} hint="Seulement si le logement a des caractéristiques exceptionnelles (terrasse, vue…). Le loyer de base est alors égal au loyer de référence majoré." />
+              {terms.zone?.complementCents ? <TextArea label="Ce qui justifie le complément de loyer" value={terms.zone?.complementJustification ?? ''} onChange={(v) => setT({ zone: { ...terms.zone, complementJustification: v } })} rows={2} /> : null}
+            </>
+          ) : null}
           <Known items={[terms.kind === 'MOBILITE' ? 'Pas de révision du loyer en bail mobilité' : c.revisionAllowed ? 'Révision chaque année avec l’indice officiel' : 'Logement classé F ou G : le loyer ne peut pas être révisé']} />
         </>
       ) : null}
@@ -285,7 +332,14 @@ export default function CreationBail() {
               <Input big label="Date de son dernier loyer" type="date" value={terms.previous.lastPaymentDate ?? ''} onChange={(v) => setT({ previous: { ...terms.previous, lastPaymentDate: v || null } })} />
             </Fields>
           ) : null}
+          {terms.previous?.rentedWithin18Months ? <Input label="Date de la dernière révision de son loyer" type="date" value={terms.previous.lastRevisionDate ?? ''} onChange={(v) => setT({ previous: { ...terms.previous, lastRevisionDate: v || null } })} hint="Mention obligatoire du bail. Laissez vide s’il n’a jamais été révisé." /> : null}
           <TextArea label="Travaux faits depuis le dernier bail" value={terms.works?.sinceLast ?? ''} onChange={(v) => setT({ works: { ...terms.works, sinceLast: v || null } })} placeholder="Aucun" rows={2} />
+          {terms.kind !== 'MOBILITE' ? (
+            <>
+              <TextArea label="Travaux d’amélioration prévus pendant le bail, avec hausse de loyer (facultatif)" value={terms.works?.increase ?? ''} onChange={(v) => setT({ works: { ...terms.works, increase: v || null } })} placeholder="Nature des travaux, délai, montant de la hausse" rows={2} />
+              <TextArea label="Travaux faits par le locataire en échange d’une baisse de loyer (facultatif)" value={terms.works?.decrease ?? ''} onChange={(v) => setT({ works: { ...terms.works, decrease: v || null } })} placeholder="Durée de la baisse, remboursement en cas de départ anticipé" rows={2} />
+            </>
+          ) : null}
           <StepNote>La loi impose d’indiquer ces informations dans le bail.</StepNote>
         </>
       ) : null}
@@ -378,5 +432,57 @@ function CustomClauses({ clauses, warnings, onChange }: { clauses: string[]; war
       <TextLink onClick={() => onChange([...clauses, ''])}>+ Ajouter une clause à vous</TextLink>
       <StepNote>Bailio vous prévient si une clause que vous écrivez est interdite par la loi (article 4 de la loi du 6 juillet 1989).</StepNote>
     </div>
+  )
+}
+
+/** Étape du parcours « Ajouter un logement » où compléter chaque mention manquante. */
+const PROPERTY_STEP: Record<string, string> = { address: 'type', type: 'type', size: 'size', heating: 'heating', equipments: 'equipments', tv: 'equipments', diagnostics: 'diagnostics', furniture: 'furniture' }
+const TENANT_STEP: Record<string, string> = { name: 'identity', birthDate: 'birth', birthPlace: 'birth', guarantee: 'guarantee', visaleNumber: 'guarantee' }
+
+interface TenantBlocker {
+  key: string
+  label: string
+  ask: boolean
+}
+
+/** Ce qu'il manque au locataire pour le bail : à compléter soi-même, ou à lui demander. */
+function TenantCheck({ tenantId, name, email, blockers, propertyId }: { tenantId: string; name: string; email: string | null; blockers: TenantBlocker[]; propertyId: string | null }) {
+  const toast = useToast()
+  const [sent, setSent] = useState(false)
+  if (!blockers.length) return null
+  const step = blockers[0].key.startsWith('guarantor') ? 'guarantor' : TENANT_STEP[blockers[0].key] ?? 'identity'
+  const askable = blockers.some((b) => b.ask)
+  const ask = async () => {
+    try {
+      await api(`/tenants/${tenantId}/request`, { method: 'POST', body: { send: true } })
+      setSent(true)
+      toast.show(`Demande envoyée à ${email}.`)
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  return (
+    <Callout tone="warn" title={`Pour le bail, il manque pour ${name}`}>
+      {blockers.map((b) => b.label.toLowerCase()).join(', ')}.{' '}
+      <TextLink to={`/espace/locataires/nouveau?id=${tenantId}&etape=${step}${propertyId ? `&logement=${propertyId}` : ''}`} style={{ fontSize: 13 }}>
+        Compléter
+      </TextLink>
+      {askable && email && !sent ? (
+        <>
+          {' · '}
+          <TextLink onClick={() => void ask()} style={{ fontSize: 13 }}>
+            Le demander par email
+          </TextLink>
+        </>
+      ) : null}
+      {askable && !email ? (
+        <>
+          {' · '}
+          <TextLink onClick={() => void openDoc(`/tenants/${tenantId}/request.pdf`).catch(toast.error)} style={{ fontSize: 13 }}>
+            Courrier à imprimer
+          </TextLink>
+        </>
+      ) : null}
+    </Callout>
   )
 }

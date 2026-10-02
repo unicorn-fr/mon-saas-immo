@@ -84,3 +84,125 @@ test('ajouter un logement : appartement meublé en copropriété, toutes les men
   assert.ok(p.file.roomList.length >= 3)
   assert.ok((await api('/contacts', { token })).some((c) => c.kind === 'SYNDIC' && c.name === 'Cabinet Lagarde'))
 })
+
+const pdf = (name) => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n') })
+
+test('ajouter un locataire : ce qui manque est demandé par email, le locataire complète son dossier sans compte', async () => {
+  const { token } = await newAccount()
+  const ctx = await signedInContext(browser, token)
+  const page = await ctx.newPage()
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/espace/locataires/nouveau`)
+  await page.getByRole('button', { name: 'Madame', exact: true }).click()
+  await page.getByLabel('Prénom(s)').fill('Inès')
+  await page.getByLabel('Nom de naissance').fill('Roche')
+  await next(page)
+  await next(page) // naissance : inconnue, demandée plus tard
+  const email = `ines+${Date.now()}@example.fr`
+  await page.getByLabel('Email').fill(email)
+  await next(page)
+  await page.getByRole('button', { name: 'Salarié', exact: true }).click()
+  await page.getByLabel('Employeur ou activité').fill('Clinique du Parc')
+  await page.getByLabel('Revenus nets par mois').fill('2100')
+  await next(page)
+  await page.getByRole('button', { name: 'Seule', exact: true }).click()
+  await next(page)
+  await page.getByText('Oui', { exact: true }).click()
+  await next(page)
+  // Le garant : le nom suffit pour continuer, le reste viendra du locataire
+  await page.getByLabel('Prénom(s)').fill('Marc')
+  await page.getByLabel('Nom', { exact: true }).fill('Roche')
+  await page.getByLabel('Montant maximum garanti').fill('15000')
+  await next(page)
+  await next(page) // justificatifs : aucun pour l'instant
+  await page.getByText('Il manque encore quelques éléments').waitFor()
+  await page.getByText('Date de naissance', { exact: false }).first().waitFor()
+  await shot(page, 'parcours-locataire-manque')
+  await page.getByRole('button', { name: 'Demander par email' }).click()
+  await page.getByText(`Demande envoyée à ${email}.`).waitFor()
+  const tenantId = new URL(page.url()).searchParams.get('id')
+  await ctx.close()
+  assert.deepEqual(errors, [])
+
+  // Le locataire, depuis le lien
+  const { link } = await api(`/tenants/${tenantId}/missing`, { token })
+  const code = link.url.split('/').pop()
+  const tctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const tp = await tctx.newPage()
+  const terrors = []
+  watch(tp, terrors)
+  await tp.goto(`${BASE}/dossier/${code}`)
+  await tp.getByRole('heading', { name: 'Votre dossier de location' }).waitFor()
+  const me = tp.locator('section').filter({ has: tp.getByRole('heading', { name: 'Vous', exact: true }) })
+  await me.getByLabel('Date de naissance').fill('1994-02-03')
+  await me.getByLabel('Lieu de naissance').fill('Montpellier')
+  await me.getByLabel('Téléphone').fill('06 11 22 33 44')
+  await me.getByLabel('Adresse actuelle').fill('9 rue Saint-Guilhem, 34000 Montpellier')
+  await me.getByRole('button', { name: 'Enregistrer' }).click()
+  await tp.getByText('Enregistré.').first().waitFor()
+  await tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))
+  await tp.getByText('Justificatif reçu.').first().waitFor()
+  await tp.getByLabel('Dernier avis d’imposition (garant)').setInputFiles(pdf('avis.pdf'))
+  await tp.getByText('Justificatif reçu.').first().waitFor()
+  await shot(tp, 'dossier-locataire')
+  await tp.getByRole('button', { name: 'J’ai terminé' }).click()
+  await tp.getByRole('heading', { name: 'Merci.' }).waitFor()
+  await tctx.close()
+  assert.deepEqual(terrors, [])
+
+  const t = await api(`/tenants/${tenantId}`, { token })
+  assert.equal(t.file.birthPlace, 'Montpellier')
+  assert.equal(t.file.employer, 'Clinique du Parc')
+  assert.equal(t.file.monthlyIncomeCents, 210000)
+  assert.ok(t.file.documents.some((d) => d.category === 'identity' && d.received))
+  assert.ok(t.file.guarantor.documents.some((d) => d.category === 'taxNotice' && d.received))
+  assert.equal(t.file.guarantor.maxCents, 1500000)
+  const after = await api(`/tenants/${tenantId}/missing`, { token })
+  assert.ok(!after.missing.some((m) => m.key === 'birthDate' || m.key === 'doc.identity'))
+  // Le courrier pour un locataire sans email
+  const r = await fetch(`http://localhost:5000/api/tenants/${tenantId}/request.pdf`, { headers: { Authorization: `Bearer ${token}` } })
+  assert.equal(r.headers.get('content-type'), 'application/pdf')
+})
+
+test('créer un bail : logement complet d’abord, puis locataire complet, puis les conditions', async () => {
+  const { token } = await newAccount()
+  const p = await api('/properties', { method: 'POST', token, body: { address: '4 rue Neuve, 34200 Sète', habitat: 'COLLECTIVE', legalRegime: 'MONO', furnished: false } })
+  const t = await api('/tenants', { method: 'POST', token, body: { civility: 'MONSIEUR', firstNames: 'Paul', lastName: 'Vidal', email: `paul+${Date.now()}@example.fr`, propertyId: p.id, guarantee: 'NONE' } })
+  const ctx = await signedInContext(browser, token)
+  const page = await ctx.newPage()
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/espace/baux/nouveau?logement=${p.id}`)
+  await page.getByText('Le logement doit être complet avant le bail').waitFor()
+  await page.getByText(/identifiant fiscal du logement/).waitFor()
+  await next(page)
+  await page.getByText('Complétez d’abord le logement').waitFor()
+  // Le logement est complété (comme par le parcours), puis on revient au bail.
+  await api(`/properties/${p.id}`, {
+    method: 'PUT',
+    token,
+    body: {
+      fiscalId: '341234567891', constructionPeriod: 'AFTER_2005', surface: 40, rooms: 2, roomList: [{ name: 'Séjour' }, { name: 'Chambre' }],
+      heating: { mode: 'INDIVIDUAL', energy: 'ELECTRIC' }, hotWater: { mode: 'INDIVIDUAL' }, equipments: ['kitchen'], smokeDetectors: 1, tv: 'COLLECTIVE', internet: 'FIBER',
+      diagnostics: { dpe: { class: 'C', costMin: 500, costMax: 700, costYear: 2023 }, erp: { date: '2026-09-01' }, electricity: { installOver15: false }, gas: { hasGas: false } },
+    },
+  })
+  await page.reload()
+  await page.getByText('Le logement doit être complet avant le bail').waitFor({ state: 'detached' }).catch(() => undefined)
+  assert.equal(await page.getByText('Le logement doit être complet avant le bail').count(), 0)
+  await next(page)
+  // Locataire : sa naissance manque, on peut la lui demander
+  await page.getByText('Pour le bail, il manque pour Paul Vidal').waitFor()
+  await page.getByText('Le demander par email').waitFor()
+  await shot(page, 'parcours-bail-locataire-incomplet')
+  await next(page)
+  await page.getByText('Complétez d’abord ce qui manque au locataire').waitFor()
+  await api(`/tenants/${t.id}`, { method: 'PUT', token, body: { birthDate: '1990-01-15', birthPlace: 'Béziers' } })
+  await page.reload()
+  await next(page)
+  // Conditions : le bail est créé, on arrive à « Bailio a presque tout »
+  await page.getByText('Bailio a presque tout.').waitFor()
+  await ctx.close()
+  assert.deepEqual(errors, [])
+})

@@ -202,6 +202,9 @@ model Tenant {
   propertyId String?
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   data       Json      @default("{}")
+  // Lien sans compte remis au locataire pour compléter son dossier (informations et justificatifs manquants).
+  formCode   String?   @unique
+  formSentAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Cite } from '../../components/Sources'
 import { useNavigate, useParams } from 'react-router-dom'
+import { TenantDossier } from '../../components/TenantDossier'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
@@ -100,6 +101,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               <TextLink to={`/espace/locataires/${t.id}/fiche#guarantee`}>Indiquer la garantie</TextLink>
             )}
           </Card>
+          <TenantDossier tenantId={t.id} email={f.email} />
           <Card title="Justificatifs" action={<TextLink onClick={() => setUpload(true)} style={{ fontSize: 14 }}>Ajouter</TextLink>}>
             {docs.map((k) => (
               <div key={k} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>

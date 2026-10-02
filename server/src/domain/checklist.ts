@@ -36,19 +36,10 @@ export function partiesMissing(c: ContractInput): Missing[] {
   return out
 }
 
-/** Tout ce que le contrat type exige pour un bail complet, sans ligne laissée en blanc. */
-export function leaseMissing(c: ContractInput): Missing[] {
-  const out = partiesMissing(c)
-  const p = c.property
-  const t = c.terms
-  const kind = t.kind ?? (p.furnished ? 'MEUBLE' : 'VIDE')
-  const push = (key: string, label: string, where: Where, section: string, tenant?: number) => out.push({ key, label, where, section, tenant })
-
-  const l = c.landlord
-  if ((l.kind === 'SCI' || l.kind === 'COMPANY') && !has(l.company?.representedBy)) push('landlord.representative', 'Qui signe pour la société', 'LANDLORD', 'company')
-  if (l.agent?.enabled && !has(l.agent.name)) push('landlord.agent', 'Le nom de votre mandataire', 'LANDLORD', 'agent')
-
-  // Logement (rubrique II)
+/** Logement : tout ce que la rubrique II du contrat type, les diagnostics et le mobilier exigent avant le bail. */
+export function propertyLeaseMissing(p: ContractInput['property'], kind: NonNullable<ContractInput['terms']['kind']>): Missing[] {
+  const out: Missing[] = []
+  const push = (key: string, label: string, where: Where, section: string) => out.push({ key, label, where, section })
   if (!has(p.habitat) || !has(p.legalRegime)) push('property.type', 'Maison ou appartement, copropriété ou non', 'PROPERTY', 'type')
   if (!has(p.constructionPeriod)) push('property.period', 'La période de construction', 'PROPERTY', 'size')
   if (!has(p.surface)) push('property.surface', 'La surface habitable', 'PROPERTY', 'size')
@@ -68,6 +59,23 @@ export function leaseMissing(c: ContractInput): Missing[] {
     if (!has(v?.date) && !has(v?.fileId)) push(`property.diag.${d.key}`, `Le diagnostic « ${d.label} » (date ou fichier)`, 'PROPERTY', 'diagnostics')
   }
   if (kind !== 'VIDE' && (p.furniture?.present?.length ?? 0) < 11) push('property.furniture', 'Les 11 éléments de mobilier obligatoires', 'PROPERTY', 'furniture')
+
+  return out
+}
+
+/** Tout ce que le contrat type exige pour un bail complet, sans ligne laissée en blanc. */
+export function leaseMissing(c: ContractInput): Missing[] {
+  const out = partiesMissing(c)
+  const p = c.property
+  const t = c.terms
+  const kind = t.kind ?? (p.furnished ? 'MEUBLE' : 'VIDE')
+  const push = (key: string, label: string, where: Where, section: string, tenant?: number) => out.push({ key, label, where, section, tenant })
+
+  const l = c.landlord
+  if ((l.kind === 'SCI' || l.kind === 'COMPANY') && !has(l.company?.representedBy)) push('landlord.representative', 'Qui signe pour la société', 'LANDLORD', 'company')
+  if (l.agent?.enabled && !has(l.agent.name)) push('landlord.agent', 'Le nom de votre mandataire', 'LANDLORD', 'agent')
+
+  out.push(...propertyLeaseMissing(p, kind))
 
   // Conditions (rubriques III à VI)
   if (!has(t.startDate)) push('terms.start', 'La date d’entrée dans les lieux', 'TERMS', 'dates')

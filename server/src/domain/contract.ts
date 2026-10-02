@@ -224,6 +224,20 @@ export type PropertyFile = z.infer<typeof propertyFileSchema>
 
 // ── Fiche du locataire et garant ─────────────────────────────────────────────
 
+/**
+ * Pièces que la loi autorise à demander au locataire et à sa caution (décret n° 2015-1437 du 5 novembre 2015) :
+ * une pièce d'identité, un justificatif de domicile, des justificatifs d'activité et de ressources (dont l'avis d'imposition).
+ */
+export const TENANT_DOCUMENTS = {
+  identity: 'Pièce d’identité',
+  home: 'Justificatif de domicile',
+  activity: 'Justificatif d’activité professionnelle',
+  taxNotice: 'Dernier avis d’imposition',
+  income: 'Justificatifs de ressources',
+} as const
+const documentsSchema = opt(z.array(z.object({ category: z.enum(Object.keys(TENANT_DOCUMENTS) as [string, ...string[]]), label: opt(text(160)), received: z.boolean(), fileId: opt(z.string().uuid()) })).max(20))
+const situationSchema = z.enum(['EMPLOYEE', 'SELF_EMPLOYED', 'STUDENT', 'APPRENTICE', 'RETIRED', 'OTHER'])
+
 export const guarantorSchema = z.object({
   civility: opt(civility),
   lastName: opt(text(80)),
@@ -233,6 +247,11 @@ export const guarantorSchema = z.object({
   link: opt(text(80)),
   address: opt(text(300)),
   email: opt(z.email('Email invalide').or(z.literal(''))),
+  phone: opt(text(30)),
+  situation: opt(situationSchema),
+  employer: opt(text(160)),
+  monthlyIncomeCents: opt(cents),
+  documents: documentsSchema,
   engagement: opt(z.enum(['SOLIDAIRE', 'SIMPLE'])),
   duration: opt(z.enum(['FIXED', 'OPEN'])),
   until: opt(isoDate),
@@ -242,12 +261,6 @@ export const guarantorSchema = z.object({
 })
 export type Guarantor = z.infer<typeof guarantorSchema>
 
-export const TENANT_DOCUMENTS = {
-  identity: 'Pièce d’identité',
-  home: 'Justificatif de domicile',
-  activity: 'Justificatif d’activité professionnelle',
-  income: 'Justificatifs de ressources',
-} as const
 
 export const tenantFileSchema = z.object({
   civility: opt(civility),
@@ -259,13 +272,18 @@ export const tenantFileSchema = z.object({
   email: opt(z.email('Email invalide').or(z.literal(''))),
   phone: opt(text(30)),
   currentAddress: opt(text(300)),
-  situation: opt(z.enum(['EMPLOYEE', 'SELF_EMPLOYED', 'STUDENT', 'APPRENTICE', 'RETIRED', 'OTHER'])),
+  situation: opt(situationSchema),
+  /** Employeur, établissement d'études ou activité. */
+  employer: opt(text(160)),
+  occupation: opt(text(120)),
+  /** Revenus nets mensuels du locataire (part du loyer dans les revenus). */
+  monthlyIncomeCents: opt(cents),
   living: opt(z.enum(['ALONE', 'COUPLE', 'COLOCATION'])),
   coTenants: opt(z.array(z.object({ civility: opt(civility), firstNames: opt(text(120)), lastName: opt(text(80)), email: opt(z.email().or(z.literal(''))) })).max(5)),
   guarantee: opt(z.enum(['CAUTION', 'VISALE', 'GLI', 'NONE'])),
   visaleNumber: opt(text(40)),
   guarantor: opt(guarantorSchema),
-  documents: opt(z.array(z.object({ category: z.enum(Object.keys(TENANT_DOCUMENTS) as [string, ...string[]]), label: opt(text(160)), received: z.boolean(), fileId: opt(z.string().uuid()) })).max(20)),
+  documents: documentsSchema,
   insurance: opt(z.object({ insurer: opt(text(120)), expiresAt: opt(isoDate), fileId: opt(z.string().uuid()) })),
   newAddress: opt(text(300)),
 })

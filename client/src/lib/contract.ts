@@ -82,6 +82,7 @@ export const TENANT_DOCUMENTS = {
   identity: 'Pièce d’identité',
   home: 'Justificatif de domicile',
   activity: 'Justificatif d’activité professionnelle',
+  taxNotice: 'Dernier avis d’imposition',
   income: 'Justificatifs de ressources',
 } as const
 export const MOBILITY_REASONS = {
@@ -157,6 +158,9 @@ export interface PropertyFile {
   ad?: N<{ title?: N<string>; description?: N<string>; rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'FORFAIT'>; depositCents?: N<number>; complementCents?: N<number>; availableFrom?: N<string> }>
 }
 
+export type Situation = 'EMPLOYEE' | 'SELF_EMPLOYED' | 'STUDENT' | 'APPRENTICE' | 'RETIRED' | 'OTHER'
+export type DocEntry = { category: TenantDocKey; label?: N<string>; received: boolean; fileId?: N<string> }
+
 export interface Guarantor {
   civility?: N<Civility>
   lastName?: N<string>
@@ -166,6 +170,11 @@ export interface Guarantor {
   link?: N<string>
   address?: N<string>
   email?: N<string>
+  phone?: N<string>
+  situation?: N<Situation>
+  employer?: N<string>
+  monthlyIncomeCents?: N<number>
+  documents?: N<DocEntry[]>
   engagement?: N<'SOLIDAIRE' | 'SIMPLE'>
   duration?: N<'FIXED' | 'OPEN'>
   until?: N<string>
@@ -186,13 +195,16 @@ export interface TenantFile {
   email?: N<string>
   phone?: N<string>
   currentAddress?: N<string>
-  situation?: N<'EMPLOYEE' | 'SELF_EMPLOYED' | 'STUDENT' | 'APPRENTICE' | 'RETIRED' | 'OTHER'>
+  situation?: N<Situation>
+  employer?: N<string>
+  occupation?: N<string>
+  monthlyIncomeCents?: N<number>
   living?: N<'ALONE' | 'COUPLE' | 'COLOCATION'>
   coTenants?: N<Array<{ civility?: N<Civility>; firstNames?: N<string>; lastName?: N<string>; email?: N<string> }>>
   guarantee?: N<'CAUTION' | 'VISALE' | 'GLI' | 'NONE'>
   visaleNumber?: N<string>
   guarantor?: N<Guarantor>
-  documents?: N<Array<{ category: TenantDocKey; label?: N<string>; received: boolean; fileId?: N<string> }>>
+  documents?: N<DocEntry[]>
   insurance?: N<{ insurer?: N<string>; expiresAt?: N<string>; fileId?: N<string> }>
   newAddress?: N<string>
 }

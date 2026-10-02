@@ -79,6 +79,7 @@ export default function ActeCaution() {
           <Input label="Email" type="email" value={g.email} onChange={(v) => set({ email: v })} />
         </Fields>
         <Input label="Adresse" value={g.address} onChange={(v) => set({ address: v })} />
+        <Input label="Téléphone" type="tel" value={g.phone} onChange={(v) => set({ phone: v })} />
       </FicheSection>
 
       <FicheSection id="engagement" n={++n} title="Type d’engagement" done={done('engagement')}>

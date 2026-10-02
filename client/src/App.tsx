@@ -67,6 +67,7 @@ const Compte = page('Compte')
 const Edl = page('Edl')
 const Signer = page('Signer')
 const EspaceLocataire = page('EspaceLocataire')
+const Dossier = page('Dossier')
 const Bienvenue = page('Bienvenue')
 
 
@@ -174,6 +175,7 @@ function Pages() {
               <Route path="/signer/:token" element={<Signer />} />
               <Route path="/candidature/:code" element={<Candidature />} />
               <Route path="/locataire/:code" element={<EspaceLocataire />} />
+              <Route path="/dossier/:code" element={<Dossier />} />
               <Route path="/mentions-legales" element={<MentionsLegales />} />
               <Route path="/conditions" element={<Conditions />} />
               <Route path="/confidentialite" element={<Confidentialite />} />

@@ -69,6 +69,12 @@ Chaque information saisie est enregistrée et réutilisée :
 
 `server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.
 
+## Parcours dans l'ordre : logement, locataire, bail
+
+- « Ajouter un logement » (`AjoutLogement.tsx`, étapes nommées, copropriété et mobilier seulement s'ils s'appliquent) demande tout ce que la rubrique II du contrat type, les diagnostics et le mobilier exigent ; « il manque… » côté serveur : `propertyLeaseMissing` (`domain/checklist.ts`).
+- « Ajouter un locataire » (`AjoutLocataire.tsx`) : identité, naissance, coordonnées, situation et revenus, garant (identité, engagement, montant, durée), 5 justificatifs autorisés (dont l'avis d'imposition), pour lui et son garant. Ce qui manque (`domain/tenantFile.ts`, `tenantMissing`) se demande au locataire par email ou par courrier (`routes/tenantForm.ts`) : lien sans compte `/dossier/:code` (colonne `Tenant.formCode`, 30 jours), il complète lui-même, tout arrive dans sa fiche.
+- « Créer un bail » refuse d'avancer tant que le logement (`leaseMissing` de la fiche) puis le locataire (`tenantLeaseMissing`) ne sont pas complets, avec le lien vers l'étape à compléter ou la demande au locataire.
+
 ## Lien du locataire
 
 `routes/tenantLink.ts`, page publique `/locataire/:code` (colonne `Lease.tenantCode`) : sans compte, le locataire envoie son attestation d'assurance (fiches des locataires et rappel mis à jour), l'attestation d'entretien de la chaudière (bail et fiche du logement) et donne ou retire son accord pour la quittance par email (art. 21, avec la date). Les fichiers rejoignent les documents du bail (`meta.from = 'TENANT'`). Côté propriétaire : carte « Documents du locataire » sur la page du bail, et tâches d'« Aujourd'hui » (assurance, chaudière) qui envoient le lien.
