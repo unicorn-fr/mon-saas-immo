@@ -46,6 +46,9 @@ export default function Argent() {
         }
         actions={
           <>
+            <Btn variant="outline" to="/espace/argent/bilan">
+              Bilan
+            </Btn>
             <Btn variant="outline" to="/espace/argent/declaration">
               Déclaration de revenus
             </Btn>

@@ -28,6 +28,7 @@ import {
   rentRevisionAllowed,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
+import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
@@ -323,6 +324,8 @@ router.post('/leases/:id/reopen', async (req, res) => {
 router.delete('/leases/:id', async (req, res) => {
   const lease = await leaseOwned(req.user!.id, String(req.params.id))
   if (lease.status !== 'DRAFT') throw new HttpError(409, 'Seul un bail en préparation peut être supprimé.')
+  const { property: _p, ...row } = lease
+  await toTrash(req.user!.id, 'LEASE', `Bail en préparation : ${propertyName(lease.property)}`, row)
   await prisma.lease.delete({ where: { id: lease.id } })
   res.json({ success: true, data: { deleted: true } })
 })

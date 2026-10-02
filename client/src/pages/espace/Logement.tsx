@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
+import { Interventions } from '../../components/Interventions'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { UploadModal } from '../../components/UploadModal'
@@ -109,6 +110,7 @@ function Overview({ p }: { p: PropertyView }) {
             </Btn>
           </div>
         </Card>
+        <Interventions propertyId={p.id} />
         <Card title="Fiche du logement" action={<TextLink to={`/espace/logements/${p.id}/fiche`} style={{ fontSize: 14 }}>{p.completion.percent < 100 ? 'Compléter' : 'Modifier'}</TextLink>}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
             <span style={{ color: BAI.inkSoft }}>Complétée</span>

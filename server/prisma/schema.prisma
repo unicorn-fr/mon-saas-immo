@@ -64,29 +64,32 @@ model User {
   notifyUrgent    Boolean   @default(true) // alertes urgentes (loyer en retard…)
   createdAt       DateTime  @default(now())
 
-  sessions   Session[]
-  properties Property[]
-  leases     Lease[]
-  documents  Document[]
-  reminders  Reminder[]
-  drafts     Draft[]
-  tenants     Tenant[]
-  payments    Payment[]
-  expenses    Expense[]
-  inventories Inventory[]
-  files       FileBlob[]
-  signatures  SignatureRequest[]
-  actionCodes ActionCode[]
-  candidates  Candidate[]
+  sessions      Session[]
+  properties    Property[]
+  leases        Lease[]
+  documents     Document[]
+  reminders     Reminder[]
+  drafts        Draft[]
+  tenants       Tenant[]
+  payments      Payment[]
+  expenses      Expense[]
+  inventories   Inventory[]
+  files         FileBlob[]
+  signatures    SignatureRequest[]
+  actionCodes   ActionCode[]
+  candidates    Candidate[]
+  contacts      Contact[]
+  interventions Intervention[]
+  trashItems    TrashItem[]
 }
 
 model Session {
-  id         String   @id @default(uuid())
-  tokenHash  String   @unique
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt  DateTime
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
   // Journal des connexions (« Mon compte ») et expiration après inactivité.
   lastSeenAt DateTime?
   ip         String?
@@ -125,51 +128,52 @@ model LoginToken {
 
 // Brouillon du tunnel, commencé sans compte. Le token (en clair) reste chez le client.
 model Draft {
-  id          String    @id @default(uuid())
-  tokenHash   String    @unique
-  data        Json      @default("{}")
-  step        String    @default("type")
+  id          String   @id @default(uuid())
+  tokenHash   String   @unique
+  data        Json     @default("{}")
+  step        String   @default("type")
   resumeEmail String?
   // « J'ai déjà un bail signé » : fichier d'origine, conservé jusqu'à la création du compte
   importFile  Bytes?
   importMime  String?
   importName  String?
   userId      String?
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  leaseId     String?   @unique
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  leaseId     String?  @unique
   expiresAt   DateTime
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([expiresAt])
 }
 
 model Property {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  address      String // libellé complet
-  postalCode   String?
-  city         String?
-  inseeCode    String?
-  banId        String?
-  surface      Float?
-  rooms        Int?
-  dpeClass     String?
-  dpeNumber    String?
-  label        String? // nom court : « Studio rue Foch »
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address    String // libellé complet
+  postalCode String?
+  city       String?
+  inseeCode  String?
+  banId      String?
+  surface    Float?
+  rooms      Int?
+  dpeClass   String?
+  dpeNumber  String?
+  label      String? // nom court : « Studio rue Foch »
   // Lien public de candidature (/candidature/:code), null si désactivé
-  applyCode    String?  @unique
+  applyCode  String?  @unique
   // Fiche complète du logement (domain/contract.ts, propertyFileSchema)
-  data         Json     @default("{}")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  data       Json     @default("{}")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
 
-  leases     Lease[]
-  tenants    Tenant[]
-  expenses   Expense[]
-  documents  Document[]
-  candidates Candidate[]
+  leases        Lease[]
+  tenants       Tenant[]
+  expenses      Expense[]
+  documents     Document[]
+  candidates    Candidate[]
+  interventions Intervention[]
 
   @@index([userId])
 }
@@ -207,27 +211,27 @@ model Tenant {
 }
 
 model Lease {
-  id              String      @id @default(uuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  propertyId      String
-  property        Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  type            LeaseType
-  status          LeaseStatus @default(ACTIVE)
-  startDate       DateTime    @db.Date
-  durationMonths  Int
-  endDate         DateTime    @db.Date
-  rentCents       Int
-  chargesCents    Int
-  depositCents    Int
-  paymentDay      Int         @default(5)
+  id             String      @id @default(uuid())
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId     String
+  property       Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type           LeaseType
+  status         LeaseStatus @default(ACTIVE)
+  startDate      DateTime    @db.Date
+  durationMonths Int
+  endDate        DateTime    @db.Date
+  rentCents      Int
+  chargesCents   Int
+  depositCents   Int
+  paymentDay     Int         @default(5)
   // Bail créé dans l'espace : { terms } (domain/contract.ts). Bail du tunnel : copie des réponses.
-  data            Json
+  data           Json
   // Locataires signataires (fiches Tenant) ; vide pour les baux créés par l'ancien tunnel.
-  tenantIds       String[]    @default([])
-  signedAt        DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @default(now()) @updatedAt
+  tenantIds      String[]    @default([])
+  signedAt       DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @default(now()) @updatedAt
 
   documents   Document[]
   reminders   Reminder[]
@@ -240,30 +244,30 @@ model Lease {
 
 // Chaque version d'un document est conservée, jamais écrasée.
 model Document {
-  id          String       @id @default(uuid())
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leaseId     String?
-  lease       Lease?       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
-  propertyId  String?
-  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  tenantId    String?
-  tenant      Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  id         String       @id @default(uuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId    String?
+  lease      Lease?       @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property?    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenantId   String?
+  tenant     Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   // GENERATED (par Bailio) ou UPLOADED (ajouté par le propriétaire)
-  origin      String       @default("GENERATED")
+  origin     String       @default("GENERATED")
   // Période concernée (quittance : « 2026-09 »), ou autre repère
-  period      String?
-  meta        Json?
-  kind        DocumentKind
-  version     Int          @default(1)
-  title       String
-  mimeType    String
-  sha256      String
-  sizeBytes   Int
+  period     String?
+  meta       Json?
+  kind       DocumentKind
+  version    Int          @default(1)
+  title      String
+  mimeType   String
+  sha256     String
+  sizeBytes  Int
   // Bail généré : snapshot des données (le PDF est re-rendu à l'identique). Bail importé : le fichier d'origine.
-  snapshot    Json?
-  file        Bytes?
-  createdAt   DateTime     @default(now())
+  snapshot   Json?
+  file       Bytes?
+  createdAt  DateTime     @default(now())
 
   @@index([userId])
   @@index([leaseId, kind])
@@ -272,16 +276,16 @@ model Document {
 
 // Loyer reçu pour un mois : complet → quittance, partiel → reçu (art. 21).
 model Payment {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leaseId      String
-  lease        Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
-  period       String // AAAA-MM
-  amountCents  Int
-  receivedAt   DateTime @db.Date
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId     String
+  lease       Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  period      String // AAAA-MM
+  amountCents Int
+  receivedAt  DateTime @db.Date
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   @@unique([leaseId, period])
   @@index([userId, period])
@@ -289,38 +293,38 @@ model Payment {
 
 // Dépense d'un logement : travaux, entretien, impôt, copropriété…
 model Expense {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   propertyId       String?
   property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   vendor           String
   description      String?
   category         String // REPAIR, MAINTENANCE, TAX, COPRO, INSURANCE, OTHER
   amountCents      Int
-  recoverableCents Int      @default(0) // part récupérable sur le locataire
-  chargeTo         String   @default("OWNER") // OWNER ou TENANT
-  status           String   @default("OK") // TO_VERIFY (lue automatiquement) ou OK
-  date             DateTime @db.Date
+  recoverableCents Int       @default(0) // part récupérable sur le locataire
+  chargeTo         String    @default("OWNER") // OWNER ou TENANT
+  status           String    @default("OK") // TO_VERIFY (lue automatiquement) ou OK
+  date             DateTime  @db.Date
   documentId       String?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
 
   @@index([userId, date])
 }
 
 // État des lieux d'entrée ou de sortie (décret n° 2016-382).
 model Inventory {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   leaseId   String
-  lease     Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  lease     Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
   kind      String // ENTRY ou EXIT
-  status    String   @default("DRAFT") // DRAFT ou SIGNED
+  status    String    @default("DRAFT") // DRAFT ou SIGNED
   date      DateTime?
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  data      Json      @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
 
   @@index([leaseId])
 }
@@ -340,16 +344,16 @@ model FileBlob {
 }
 
 model Reminder {
-  id        String         @id @default(uuid())
-  userId    String
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leaseId   String
-  lease     Lease          @relation(fields: [leaseId], references: [id], onDelete: Cascade)
-  type      ReminderType
-  dueDate   DateTime       @db.Date
-  status    ReminderStatus @default(TODO)
-  emailedAt DateTime?
-  doneAt    DateTime?
+  id           String         @id @default(uuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId      String
+  lease        Lease          @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  type         ReminderType
+  dueDate      DateTime       @db.Date
+  status       ReminderStatus @default(TODO)
+  emailedAt    DateTime?
+  doneAt       DateTime?
   // « Me le rappeler plus tard » : masqué jusqu'à cette date
   snoozedUntil DateTime?
 
@@ -361,50 +365,103 @@ model Reminder {
 // document figé (empreinte SHA-256), chaque signataire identifié par un lien personnel
 // et un code reçu par email, horodatage, adresse IP et appareil conservés comme preuve.
 model SignatureRequest {
-  id           String    @id @default(uuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  leaseId      String
-  lease        Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId          String
+  lease            Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
   // PENDING, COMPLETED, CANCELLED
-  status       String    @default("PENDING")
+  status           String    @default("PENDING")
   // Contrat figé au lancement : le PDF signé est rendu à l'identique depuis ces données.
-  snapshot     Json
+  snapshot         Json
   // Empreintes SHA-256 des documents présentés : { lease, guarantees: { [index]: hash } }
-  hashes       Json
+  hashes           Json
   // Document final (signatures + certificat), une fois tous les signataires passés.
   signedDocumentId String?
-  createdAt    DateTime  @default(now())
-  completedAt  DateTime?
-  signers      Signer[]
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+  signers          Signer[]
 
   @@index([leaseId])
 }
 
 model Signer {
-  id           String    @id @default(uuid())
-  requestId    String
-  request      SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  id             String           @id @default(uuid())
+  requestId      String
+  request        SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   // LANDLORD, TENANT, GUARANTOR
-  role         String
+  role           String
   // Rang du locataire ou du garant dans le contrat figé
-  position     Int       @default(0)
-  name         String
-  email        String
-  tokenHash    String    @unique
+  position       Int              @default(0)
+  name           String
+  email          String
+  tokenHash      String           @unique
   // Le lien personnel expire : un nouveau est envoyé sur demande (« Renvoyer le lien »).
   tokenExpiresAt DateTime?
-  codeHash     String?
-  codeExpiresAt DateTime?
-  codeAttempts Int       @default(0)
+  codeHash       String?
+  codeExpiresAt  DateTime?
+  codeAttempts   Int              @default(0)
   codeVerifiedAt DateTime?
   // Mention recopiée (« Lu et approuvé », ou mention de l'article 2297 pour le garant)
-  mention      String?
-  image        String?
-  signedAt     DateTime?
-  ip           String?
-  userAgent    String?
-  createdAt    DateTime  @default(now())
+  mention        String?
+  image          String?
+  signedAt       DateTime?
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime         @default(now())
 
   @@index([requestId])
+}
+
+/// Carnet : artisans, syndic, assureur… réutilisés pour les interventions et les dépenses.
+model Contact {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String         @default("ARTISAN") // ARTISAN, SYNDIC, INSURER, AGENCY, OTHER
+  name          String
+  trade         String? // plombier, électricien…
+  phone         String?
+  email         String?
+  address       String?
+  note          String?
+  createdAt     DateTime       @default(now())
+  interventions Intervention[]
+
+  @@index([userId])
+}
+
+/// Intervention dans un logement (réparation, entretien) : suivie jusqu'à la dépense correspondante.
+model Intervention {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO, PLANNED, DONE
+  date        DateTime? @db.Date
+  costCents   Int?
+  expenseId   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@index([propertyId])
+  @@index([userId])
+}
+
+/// Corbeille : un élément supprimé est gardé 30 jours (copie complète), puis effacé pour de bon.
+model TrashItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // EXPENSE, DOCUMENT, TENANT, INTERVENTION, CONTACT, LEASE
+  label     String
+  payload   Json
+  deletedAt DateTime @default(now())
+
+  @@index([userId])
 }

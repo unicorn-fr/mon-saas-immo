@@ -14,6 +14,8 @@ import { renderLetterPdf, type LetterRender } from '../pdf/letter.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { propertyFileSchema, type ContractInput, type Guarantor } from '../domain/contract.js'
 import { splitPayment, taxSummary, type TaxProperty } from '../domain/tax.js'
+import { propertyReport } from '../domain/report.js'
+import { toTrash } from '../services/trash.js'
 import { parseIsoDate } from '../domain/lease.js'
 import { emailLetter } from './leases.js'
 import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } from './helpers.js'
@@ -94,9 +96,16 @@ router.put('/expenses/:id', async (req, res) => {
 router.delete('/expenses/:id', async (req, res) => {
   const e = await prisma.expense.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
   if (!e) throw new HttpError(404, 'Dépense introuvable.')
+  await toTrash(req.user!.id, 'EXPENSE', `Dépense : ${e.vendor}`, e)
   await prisma.expense.delete({ where: { id: e.id } })
   // « Ce n'est pas une facture » : le document déposé est retiré aussi.
-  if (e.documentId && req.query.withDocument === '1') await prisma.document.deleteMany({ where: { id: e.documentId, userId: req.user!.id } })
+  if (e.documentId && req.query.withDocument === '1') {
+    const d = await prisma.document.findFirst({ where: { id: e.documentId, userId: req.user!.id } })
+    if (d) {
+      await toTrash(req.user!.id, 'DOCUMENT', `Document : ${d.title}`, d)
+      await prisma.document.delete({ where: { id: d.id } })
+    }
+  }
   res.json({ success: true, data: { deleted: true } })
 })
 
@@ -184,6 +193,59 @@ router.get('/money/export', async (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="bailio-${year}.csv"`)
   res.send(`﻿${rows.join('\r\n')}\r\n`)
+})
+
+// ── Bilan annuel et prévisionnel ─────────────────────────────────────────────
+
+router.get('/money/report', async (req, res) => {
+  const userId = req.user!.id
+  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear()).parse(req.query.year)
+  const from = new Date(Date.UTC(year, 0, 1))
+  const to = new Date(Date.UTC(year + 1, 0, 1))
+  const [properties, payments, expenses, leases] = await Promise.all([
+    prisma.property.findMany({ where: { userId }, orderBy: { createdAt: 'asc' } }),
+    prisma.payment.findMany({ where: { userId, receivedAt: { gte: from, lt: to } }, include: { lease: true } }),
+    prisma.expense.findMany({ where: { userId, date: { gte: from, lt: to }, status: 'OK' } }),
+    prisma.lease.findMany({ where: { userId, status: { not: 'DRAFT' } } }),
+  ])
+  // Mois échus de l'année (jusqu'au mois en cours) : sert à repérer les loyers attendus et non reçus.
+  const now = new Date()
+  const lastMonth = year < now.getUTCFullYear() ? 12 : year > now.getUTCFullYear() ? 0 : now.getUTCMonth() + 1
+  const reports = properties.map((p) => {
+    const mine = leases.filter((l) => l.propertyId === p.id)
+    const pays = payments.filter((x) => x.lease.propertyId === p.id)
+    let expected = 0
+    for (const l of mine) {
+      for (let m = 1; m <= lastMonth; m++) {
+        const first = new Date(Date.UTC(year, m - 1, 1))
+        const last = new Date(Date.UTC(year, m, 0))
+        if (l.startDate <= last && l.endDate >= first) expected += l.rentCents + l.chargesCents
+      }
+    }
+    const received = pays.reduce((a, x) => a + x.amountCents, 0)
+    return propertyReport({
+      id: p.id,
+      name: propertyName(p),
+      year,
+      purchasePriceCents: readProperty(p).purchase?.priceCents ?? null,
+      payments: pays.map((x) => ({ period: x.period, ...splitPayment(x.amountCents, x.lease.rentCents) })),
+      expenses: expenses.filter((e) => e.propertyId === p.id),
+      leases: mine.map((l) => ({ status: l.status, start: iso(l.startDate)!, end: iso(l.endDate)!, rentCents: l.rentCents, chargesCents: l.chargesCents })),
+      unpaidCents: Math.max(0, expected - received),
+    })
+  })
+  res.json({ success: true, data: { year, properties: reports, purchases: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).purchase ?? null])) } })
+})
+
+// Prix d'achat d'un logement (rendement brut du bilan), gardé dans sa fiche.
+router.put('/properties/:id/purchase', async (req, res) => {
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const body = z.object({ priceCents: z.number().int().min(0).max(1_000_000_000).nullable(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional() }).parse(req.body)
+  const file = readProperty(p)
+  const next = propertyFileSchema.parse({ ...file, purchase: { ...(file.purchase ?? {}), ...body } })
+  await prisma.property.update({ where: { id: p.id }, data: { data: next } })
+  res.json({ success: true, data: next.purchase })
 })
 
 // ── Aide à la déclaration des revenus locatifs ───────────────────────────────
@@ -370,6 +432,8 @@ router.post('/documents/:id/send', async (req, res) => {
 router.delete('/documents/:id', async (req, res) => {
   const doc = await ownDocument(req.user!.id, String(req.params.id))
   if (doc.origin !== 'UPLOADED' && doc.kind !== 'LETTER') throw new HttpError(409, 'Un document généré par Bailio est conservé pour garder l’historique.')
+  const full = await prisma.document.findUniqueOrThrow({ where: { id: doc.id } })
+  await toTrash(req.user!.id, 'DOCUMENT', `Document : ${full.title}`, full)
   await prisma.document.delete({ where: { id: doc.id } })
   await prisma.expense.updateMany({ where: { documentId: doc.id }, data: { documentId: null } })
   res.json({ success: true, data: { deleted: true } })

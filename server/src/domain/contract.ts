@@ -198,6 +198,8 @@ export const propertyFileSchema = z.object({
   smokeDetectors: opt(z.number().int().min(0).max(20)),
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge, 1 télécommande ». */
   keys: opt(text(200)),
+  /** Achat du logement : sert au rendement brut du bilan. */
+  purchase: opt(z.object({ priceCents: opt(z.number().int().min(0).max(1_000_000_000)), date: opt(isoDate) })),
   /** Par année de déclaration : sommes saisies une fois pour l'aide fiscale (intérêts d'emprunt, honoraires). */
   tax: opt(z.record(z.string().regex(/^\d{4}$/), z.object({ loanInterestCents: opt(cents), adminFeesCents: opt(cents) }))),
   /** Annonce de mise en location : réglages gardés pour la prochaine fois. */

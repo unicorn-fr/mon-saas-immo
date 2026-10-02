@@ -94,3 +94,6 @@ export const Circle = ({ size = 18, color = BAI.dashed, strokeWidth = 1.8 }: Ico
 export const Signpost = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
   <svg {...base(size, color, strokeWidth)}><path d="M12 3v18M5 6h12l2.5 2.5L17 11H5zM19 14H8l-2.5 2.5L8 19h11z" /></svg>
 )
+export const Book = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h11M9 8h6" /></svg>
+)

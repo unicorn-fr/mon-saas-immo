@@ -101,6 +101,7 @@ export default function Compte() {
               <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Vos données sont hébergées en Suisse, chez Infomaniak, et ne sont jamais revendues.</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
                 <TextLink onClick={() => setAction('EXPORT')}>Tout exporter</TextLink>
+                <TextLink to="/espace/corbeille">Corbeille</TextLink>
                 <TextLink onClick={() => setAction('DELETE')} style={{ color: BAI.error }}>
                   Supprimer mon compte
                 </TextLink>

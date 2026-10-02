@@ -11,6 +11,7 @@ import { propertyColumns, propertyName, readProfile, readProperty, readTenant, r
 import { iso, mergeFile } from './helpers.js'
 import { buildAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
+import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
 
 /**
@@ -317,6 +318,8 @@ router.delete('/tenants/:id', async (req, res) => {
   const t = await ownTenant(userId, String(req.params.id))
   const leases = await leasesOfTenant(userId, t.id)
   if (leases.some((l) => l.status === 'ACTIVE')) throw new HttpError(409, 'Ce locataire a un bail en cours : enregistrez d’abord son départ.')
+  const { property: _p, ...row } = t
+  await toTrash(userId, 'TENANT', `Locataire : ${tenantName(readTenant(t)) || 'sans nom'}`, row)
   await prisma.tenant.delete({ where: { id: t.id } })
   res.json({ success: true, data: { deleted: true } })
 })

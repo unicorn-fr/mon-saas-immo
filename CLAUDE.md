@@ -66,6 +66,13 @@ Chaque information saisie est enregistrée et réutilisée :
 
 `server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.
 
+## Bilan, carnet, corbeille
+
+- Bilan par logement (`domain/report.ts`, testé) : `/espace/argent/bilan`, loyers, dépenses, résultat ; prix d'achat gardé dans la fiche (`purchase`) pour le rendement brut.
+- Carnet (`routes/contacts.ts`, `/espace/carnet`) : un contact saisi une fois sert dans toutes les interventions. Une intervention terminée avec un coût crée (ou met à jour) sa dépense ; une intervention prévue apparaît dans « Aujourd'hui ».
+- Corbeille (`services/trash.ts`, `/espace/corbeille`) : toute suppression (dépense, document, locataire, bail en préparation, contact, intervention) passe par `toTrash` ; restauration à l'identique pendant 30 jours, puis effacement par la tâche quotidienne. Nouvelle suppression : passer par `toTrash`.
+- Immeubles : sur « Logements », les logements à la même adresse (et même ville) sont regroupés.
+
 ## Base de données
 
 - Montants en **centimes** (`Int`).

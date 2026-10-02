@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
+import { display } from '../../components/ui'
 import { Btn, Empty, LoadError, Loader, PageHead, Pill, Stat, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
 import { eurosCents, monthName, plural } from '../../lib/format'
@@ -24,10 +25,31 @@ export default function Logements() {
 
 const PHOTO_BG = [BAI.photoWarm, BAI.photoCool, BAI.photoSand]
 
+/** Clé d'immeuble : même adresse et même ville, sans tenir compte des accents, de la casse ni de la ponctuation. */
+const buildingKey = (p: PropertySummary) =>
+  `${p.address} ${p.city ?? ''}`
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+/** Logements regroupés par immeuble, dans l'ordre de la liste. */
+function buildings(items: PropertySummary[]) {
+  const groups = new Map<string, PropertySummary[]>()
+  for (const p of items) {
+    const k = buildingKey(p) || p.id
+    groups.set(k, [...(groups.get(k) ?? []), p])
+  }
+  return [...groups].map(([key, list]) => ({ key, label: list[0].address, items: list }))
+}
+
 function List({ items }: { items: PropertySummary[] }) {
   const rented = items.filter((p) => p.status === 'RENTED').length
   const drafts = items.filter((p) => p.lease?.status === 'DRAFT').length
   const late = items.filter((p) => p.lease?.rent.key === 'LATE').length
+  const groups = buildings(items)
+  const singles = groups.filter((g) => g.items.length === 1).map((g) => g.items[0])
   return (
     <>
       <PageHead
@@ -43,9 +65,25 @@ function List({ items }: { items: PropertySummary[] }) {
             <Stat value={late} label={late > 1 ? 'loyers en retard' : 'loyer en retard'} accent />
             <Stat value={drafts} label={drafts > 1 ? 'baux en préparation' : 'bail en préparation'} />
           </div>
+          {groups.map((g) =>
+            g.items.length > 1 ? (
+              <section key={g.key} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                  <h2 style={{ ...display('clamp(22px, 3vw, 26px)'), margin: 0 }}>{g.label}</h2>
+                  <span style={{ fontSize: 14, color: BAI.inkSoft }}>Même immeuble · {plural(g.items.length, 'logement')}</span>
+                </div>
+                <div className="cards-3">
+                  {g.items.map((p) => (
+                    <PropertyCard key={p.id} p={p} bg={PHOTO_BG[items.indexOf(p) % PHOTO_BG.length]} />
+                  ))}
+                </div>
+              </section>
+            ) : null,
+          )}
+          {singles.length && singles.length < items.length ? <h2 style={{ ...display('clamp(22px, 3vw, 26px)'), margin: 0 }}>Autres logements</h2> : null}
           <div className="cards-3">
-            {items.map((p, i) => (
-              <PropertyCard key={p.id} p={p} bg={PHOTO_BG[i % PHOTO_BG.length]} />
+            {singles.map((p) => (
+              <PropertyCard key={p.id} p={p} bg={PHOTO_BG[items.indexOf(p) % PHOTO_BG.length]} />
             ))}
           </div>
         </>

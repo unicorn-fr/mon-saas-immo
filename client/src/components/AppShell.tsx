@@ -5,7 +5,7 @@ import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { initialsOf } from '../lib/contract'
 import type { TodayView } from '../lib/space'
-import { Euro, Home, Page, People, Plus, Sun, Signpost } from './Icons'
+import { Euro, Home, Page, People, Plus, Sun, Signpost, Book } from './Icons'
 import { Modal } from './kit'
 
 /**
@@ -32,6 +32,7 @@ const NAV = [
   { to: '/espace/locataires', label: 'Locataires', icon: People },
   { to: '/espace/documents', label: 'Documents', icon: Page },
   { to: '/espace/argent', label: 'Argent', icon: Euro },
+  { to: '/espace/carnet', label: 'Carnet', icon: Book },
   { to: '/espace/situations', label: 'Que se passe-t-il ?', icon: Signpost },
 ]
 

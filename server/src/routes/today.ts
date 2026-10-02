@@ -13,6 +13,7 @@ import { landlordNoticeMonthsFor, rentRevisionAllowed } from '../domain/rules.js
 import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
+import { upcomingInterventions } from './contacts.js'
 
 /**
  * « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé, et les prochaines échéances.
@@ -165,6 +166,7 @@ router.get('/today', async (req, res) => {
     const label = { RENT_REVISION: `Révision du loyer, ${place}`, INSURANCE: `Attestation d’assurance, ${place}`, LEASE_END: `Dernier jour pour donner congé, ${place}`, INVENTORY_ENTRY: `État des lieux d’entrée, ${place}`, CHARGES_REGULARIZATION: 'Régularisation annuelle des charges', RENT_RECEIPT: '' }[r.type]
     upcoming.push({ date: short(r.dueDate), label, sort: r.dueDate.getTime() })
   }
+  for (const i of await upcomingInterventions(user.id)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
   upcoming.sort((a, b) => a.sort - b.sort)
 
   const expected = running.length
