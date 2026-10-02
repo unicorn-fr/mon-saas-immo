@@ -255,7 +255,25 @@ export interface ExpenseDetails extends Expense {
   document: null | { id: string; mimeType: string; title: string; meta: { reading?: InvoiceReading; matchedBy?: string | null } | null; createdAt: string }
 }
 
-export type LetterType = 'REVISION' | 'INSURANCE' | 'REMINDER' | 'FORMAL_NOTICE' | 'NOTICE_TO_LEAVE' | 'TENANT_NOTICE' | 'CHARGES' | 'DEPOSIT_RETURN'
+export type LetterType =
+  | 'REVISION'
+  | 'INSURANCE'
+  | 'REMINDER'
+  | 'FORMAL_NOTICE'
+  | 'NOTICE_TO_LEAVE'
+  | 'TENANT_NOTICE'
+  | 'CHARGES'
+  | 'DEPOSIT_RETURN'
+  | 'GUARANTOR_CALL'
+  | 'NUISANCE'
+  | 'DAMAGE_REPAIR'
+  | 'BOILER'
+  | 'SHORT_NOTICE_PROOF'
+  | 'RENT_CERTIFICATE'
+  | 'DEPOSIT_RECEIPT'
+  | 'OWNER_CHANGE'
+  | 'SMOKE_DETECTOR'
+  | 'E_RECEIPT_CONSENT'
 
 export const LETTER_TITLES: Record<LetterType, string> = {
   REVISION: 'Révision annuelle du loyer',
@@ -265,7 +283,17 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   NOTICE_TO_LEAVE: 'Congé donné par le bailleur',
   TENANT_NOTICE: 'Accusé de réception du congé du locataire',
   CHARGES: 'Régularisation annuelle des charges',
-  DEPOSIT_RETURN: 'Restitution du dépôt de garantie',
+  DEPOSIT_RETURN: 'Restitution du dépôt de garantie et solde de tout compte',
+  GUARANTOR_CALL: 'Appel à la caution',
+  NUISANCE: 'Mise en demeure de cesser un trouble',
+  DAMAGE_REPAIR: 'Demande de réparation des dégradations',
+  BOILER: 'Demande d’attestation d’entretien de la chaudière',
+  SHORT_NOTICE_PROOF: 'Demande de justificatif pour un préavis d’un mois',
+  RENT_CERTIFICATE: 'Attestation de loyer',
+  DEPOSIT_RECEIPT: 'Reçu du dépôt de garantie',
+  OWNER_CHANGE: 'Changement de propriétaire',
+  SMOKE_DETECTOR: 'Attestation d’installation de détecteurs de fumée',
+  E_RECEIPT_CONSENT: 'Accord pour recevoir les quittances par email',
 }
 
 export interface LetterDefaults {
@@ -273,6 +301,8 @@ export interface LetterDefaults {
   letter: Record<string, unknown> & { type: LetterType }
   note: string | null
   recipient: { name: string; address: string }
+  /** Saisie en cours enregistrée automatiquement (date), ou null si les valeurs viennent de Bailio. */
+  draftSavedAt: string | null
 }
 
 export const STATES = ['Neuf', 'Bon', 'Usé', 'Mauvais', 'Hors service'] as const

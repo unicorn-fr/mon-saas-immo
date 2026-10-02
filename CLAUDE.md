@@ -43,7 +43,15 @@ Toute modification de ces règles s'accompagne d'un test dans `server/src/domain
 Textes officiels reproduits **à l'identique** (ne jamais les reformuler, seulement la mise en page) :
 - notice d'information de l'arrêté du 29 mai 2015 modifié (`server/src/pdf/notice-text.ts`), jointe à la fin de chaque bail et publique sur `/api/notice-information.pdf` ;
 - notice de l'arrêté du 13 décembre 2017 et article 15, II, alinéas 1 à 5 (`server/src/pdf/notice-conge-text.ts`), joints au congé pour vendre ou reprendre un logement vide.
-Tests : `server/src/domain/notices.test.ts`.
+- listes des réparations locatives (décret 87-712) et des charges récupérables (décret 87-713) (`server/src/pdf/annexes-text.ts`), publiques sur `/api/reparations-locatives.pdf` et `/api/charges-recuperables.pdf`.
+Tests : `server/src/domain/notices.test.ts`, `server/src/domain/letters.test.ts`.
+
+## Ne jamais faire ressaisir
+
+Chaque information saisie est enregistrée et réutilisée :
+- courriers : la saisie en cours est gardée automatiquement (`lease.data.letterDrafts`), et les faits utiles d'un courrier enregistré sont retenus avec le bail (`tenantNotice`, `depositReceivedAt`, `boilerServiceDate`…) puis repris par les courriers suivants ;
+- état des lieux de sortie : nouvelle adresse du locataire et date de remise des clés reprises dans sa fiche et le solde de tout compte ;
+- toute écriture dans `lease.data` relit les données juste avant (`patchLeaseData`) pour ne rien effacer.
 
 ## Base de données
 

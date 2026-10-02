@@ -79,6 +79,8 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
     if (key.startsWith('caution-')) return { label: 'Ouvrir', onClick: guard(() => openDoc(`/leases/${l.id}/guarantee/${key.slice(8)}.pdf`)) }
     if (key === 'inventory') return { label: l.status === 'DRAFT' ? 'Après signature' : 'Le faire', to: l.status === 'DRAFT' ? undefined : `/espace/baux/${l.id}/etat-des-lieux` }
     if (key === 'notice') return { label: 'Ouvrir', onClick: guard(() => openDoc('/notice-information.pdf')) }
+    if (key === 'repairs') return { label: 'Ouvrir', onClick: guard(() => openDoc('/reparations-locatives.pdf')) }
+    if (key === 'charges') return { label: 'Ouvrir', onClick: guard(() => openDoc('/charges-recuperables.pdf')) }
     if (key === 'copro' || key === 'furniture') return { label: 'Compléter', to: `/espace/logements/${l.property.id}/fiche#${key === 'copro' ? 'copro' : 'furniture'}` }
     return { label: 'L’ajouter', to: `/espace/logements/${l.property.id}?onglet=diagnostics` }
   }
@@ -168,7 +170,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
 
           <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12, paddingBottom: 8 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Pièces à joindre au bail</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>{annexDone} sur {l.annexes.length}</span></div>} style={{ gap: 0 }}>
             {l.annexes.map((a) => {
-              const act = a.done && !a.key.startsWith('caution-') && a.key !== 'notice' ? null : annexAction(a.key)
+              const act = a.done && !a.key.startsWith('caution-') && !['notice', 'repairs', 'charges'].includes(a.key) ? null : annexAction(a.key)
               return (
                 <div key={a.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
                   <span style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>

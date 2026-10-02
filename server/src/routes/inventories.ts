@@ -7,7 +7,7 @@ import { HttpError } from '../lib/http.js'
 import { layout, sendEmail } from '../lib/email.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
-import { contractFor, leaseKindOf, leaseOwned, propertyName } from '../services/contract.js'
+import { contractFor, leaseKindOf, leaseOwned, propertyName, readTenant } from '../services/contract.js'
 import { initialInventory, inventoryDataSchema, inventoryProgress, type InventoryData } from '../domain/inventory.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
@@ -100,6 +100,16 @@ router.post('/inventories/:id/sign', async (req, res) => {
   const recipients = [...new Set([...(await contractFor(user, lease)).tenants.map((t) => t.email).filter((e): e is string => Boolean(e)), user.email])]
   for (const to of recipients) {
     await sendEmail({ to, subject: `${what[0].toUpperCase()}${what.slice(1)} signé`, ...mail, replyTo: user.email, attachments: [{ filename: `etat-des-lieux-${inv.kind === 'EXIT' ? 'sortie' : 'entree'}.pdf`, content: pdf }] }).catch((e) => console.error('Envoi de l’état des lieux impossible', e))
+  }
+  // Sortie : la nouvelle adresse du locataire et la date de remise des clés servent ensuite aux courriers (solde de tout compte).
+  if (inv.kind === 'EXIT') {
+    for (const id of lease.tenantIds) {
+      const t = await prisma.tenant.findFirst({ where: { id, userId: user.id } })
+      if (t && signed.newAddress) await prisma.tenant.update({ where: { id }, data: { data: { ...readTenant(t), newAddress: signed.newAddress } } })
+    }
+    const fresh = await prisma.lease.findUniqueOrThrow({ where: { id: lease.id } })
+    const ld = (fresh.data ?? {}) as Record<string, unknown>
+    if (!ld.keysDate) await prisma.lease.update({ where: { id: lease.id }, data: { data: { ...ld, keysDate: signed.date } } })
   }
   if (inv.kind === 'ENTRY') await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INVENTORY_ENTRY', status: 'TODO' }, data: { status: 'DONE', doneAt: new Date() } })
   res.json({ success: true, data: { id: inv.id, status: 'SIGNED' } })

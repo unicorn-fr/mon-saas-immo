@@ -50,7 +50,23 @@ export const letterSchema = z.discriminatedUnion('type', [
     keysDate: isoDate,
     conform: z.boolean(),
     deductions: z.array(z.object({ label: z.string().max(200), justification: z.string().max(160), amountCents: cents })).max(20),
+    /** Solde de tout compte : loyers et charges restant dus à la sortie. */
+    unpaidCents: cents.default(0),
+    /** Régularisation des charges au prorata : positif si le locataire doit, négatif si le bailleur rembourse. */
+    chargesBalanceCents: z.number().int().min(-10_000_000).max(10_000_000).default(0),
+    /** Immeuble collectif : provision gardée jusqu'à l'approbation des comptes (20 % du dépôt au plus, art. 22). */
+    heldCents: cents.default(0),
   }),
+  z.object({ type: z.literal('GUARANTOR_CALL'), amountCents: cents, periods: z.array(z.string()).min(1).max(24), delayDays: z.number().int().min(8).max(60).default(15), commandDate: isoDate.optional().nullable() }),
+  z.object({ type: z.literal('NUISANCE'), facts: z.string().min(1).max(2000), dates: z.string().max(300).optional().nullable(), delayDays: z.number().int().min(1).max(60).default(8) }),
+  z.object({ type: z.literal('DAMAGE_REPAIR'), items: z.array(z.object({ label: z.string().min(1).max(300) })).min(1).max(20), delayDays: z.number().int().min(8).max(90).default(30) }),
+  z.object({ type: z.literal('BOILER'), lastServiceDate: isoDate.optional().nullable() }),
+  z.object({ type: z.literal('SHORT_NOTICE_PROOF'), receivedDate: isoDate, reason: z.string().min(1).max(300) }),
+  z.object({ type: z.literal('RENT_CERTIFICATE'), since: isoDate, rentCents: cents, chargesCents: cents, upToDate: z.boolean().default(true) }),
+  z.object({ type: z.literal('DEPOSIT_RECEIPT'), amountCents: cents, receivedDate: isoDate, method: z.string().max(120).optional().nullable() }),
+  z.object({ type: z.literal('OWNER_CHANGE'), newOwnerName: z.string().min(1).max(200), newOwnerAddress: z.string().min(1).max(300), effectiveDate: isoDate, paymentInfo: z.string().max(500).optional().nullable() }),
+  z.object({ type: z.literal('SMOKE_DETECTOR'), count: z.number().int().min(1).max(30), installedDate: isoDate.optional().nullable() }),
+  z.object({ type: z.literal('E_RECEIPT_CONSENT'), email: z.string().trim().email().max(200) }),
 ])
 export type LetterInput = z.infer<typeof letterSchema>
 export type LetterType = LetterInput['type']
@@ -63,7 +79,17 @@ export const LETTER_TITLES: Record<LetterType, string> = {
   NOTICE_TO_LEAVE: 'Congé donné par le bailleur',
   CHARGES: 'Régularisation annuelle des charges',
   TENANT_NOTICE: 'Accusé de réception du congé du locataire',
-  DEPOSIT_RETURN: 'Restitution du dépôt de garantie',
+  DEPOSIT_RETURN: 'Restitution du dépôt de garantie et solde de tout compte',
+  GUARANTOR_CALL: 'Appel à la caution',
+  NUISANCE: 'Mise en demeure de cesser un trouble',
+  DAMAGE_REPAIR: 'Demande de réparation des dégradations',
+  BOILER: 'Demande d’attestation d’entretien de la chaudière',
+  SHORT_NOTICE_PROOF: 'Demande de justificatif pour un préavis d’un mois',
+  RENT_CERTIFICATE: 'Attestation de loyer',
+  DEPOSIT_RECEIPT: 'Reçu du dépôt de garantie',
+  OWNER_CHANGE: 'Changement de propriétaire',
+  SMOKE_DETECTOR: 'Attestation d’installation de détecteurs de fumée',
+  E_RECEIPT_CONSENT: 'Accord pour recevoir les quittances par email',
 }
 
 export interface LetterContent {
@@ -76,6 +102,11 @@ export interface LetterContent {
   quote?: { title: string; paragraphs: string[] }
   /** Notice officielle à joindre en pages suivantes (congé pour vendre ou reprendre un logement vide). */
   appendNotice?: 'CONGE'
+  /**
+   * Mise en page : courrier (par défaut), attestation signée par le bailleur, ou formulaire à faire signer
+   * par le locataire (accord pour la quittance par email).
+   */
+  form?: 'ATTESTATION' | 'TENANT_FORM'
   /** Montant calculé à afficher dans l'interface (nouveau loyer, solde, somme à restituer). */
   computed?: { label: string; cents: number }[]
 }
@@ -119,6 +150,11 @@ export interface LetterContext {
   kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE'
   /** Désignation des locaux loués, reprise du bail (obligatoire dans le congé pour vendre). */
   premises?: string
+  landlordName?: string
+  landlordAddress?: string
+  leaseStart?: string | null
+  /** Caution du locataire (appel à la caution). */
+  guarantor?: { name: string; solidaire: boolean } | null
 }
 
 export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent {
@@ -238,27 +274,154 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
       }
     }
     case 'DEPOSIT_RETURN': {
-      const retained = l.deductions.reduce((a, x) => a + x.amountCents, 0)
-      const back = Math.max(0, l.depositCents - retained)
+      const retained = l.deductions.reduce((x, y) => x + y.amountCents, 0)
+      const owed = retained + (l.unpaidCents ?? 0) + (l.chargesBalanceCents ?? 0)
+      const held = l.heldCents ?? 0
+      const balance = l.depositCents - owed - held
+      const back = Math.max(0, balance)
       const deadline = depositDeadline(l.keysDate, l.conform)
+      const rows: string[][] = [['Dépôt de garantie versé', '', e(l.depositCents)]]
+      for (const x of l.deductions) rows.push([`Retenue : ${x.label}`, x.justification, `- ${e(x.amountCents)}`])
+      if (l.unpaidCents) rows.push(['Loyers et charges restant dus', '', `- ${e(l.unpaidCents)}`])
+      if (l.chargesBalanceCents) rows.push([l.chargesBalanceCents > 0 ? 'Régularisation des charges à votre charge' : 'Régularisation des charges en votre faveur', 'Décompte joint', l.chargesBalanceCents > 0 ? `- ${e(l.chargesBalanceCents)}` : `+ ${e(-l.chargesBalanceCents)}`])
+      if (held) rows.push(['Provision gardée jusqu’à l’approbation des comptes de l’immeuble', 'Article 22', `- ${e(held)}`])
+      rows.push([balance >= 0 ? 'Solde à vous restituer' : 'Solde restant à votre charge', '', e(Math.abs(balance))])
       return {
-        subject: 'Restitution du dépôt de garantie',
+        subject: 'Restitution du dépôt de garantie et solde de tout compte',
         recommended: false,
         paragraphs: [
-          `Suite à la remise des clés le ${d(l.keysDate)} et à l’état des lieux de sortie, voici le décompte de votre dépôt de garantie de ${e(l.depositCents)}.`,
+          `Suite à la remise des clés le ${d(l.keysDate)} et à l’état des lieux de sortie, voici le solde de tout compte de votre location, à partir de votre dépôt de garantie de ${e(l.depositCents)}.`,
           retained
             ? 'Les retenues ci-dessous correspondent aux différences constatées avec l’état des lieux d’entrée, hors usure normale et vétusté ; chacune est justifiée par la pièce indiquée.'
-            : 'L’état des lieux de sortie étant conforme à l’état des lieux d’entrée, aucune retenue n’est appliquée.',
-          `La somme de ${e(back)} vous sera versée au plus tard le ${formatDateFr(deadline)}.`,
+            : 'L’état des lieux de sortie étant conforme à l’état des lieux d’entrée, aucune retenue pour dégradation n’est appliquée.',
+          balance >= 0
+            ? `La somme de ${e(back)} vous sera versée au plus tard le ${formatDateFr(deadline)}.`
+            : `Le dépôt de garantie ne couvre pas les sommes dues : il reste ${e(-balance)} à régler. Je vous remercie de procéder au paiement dans un délai de quinze jours.`,
+          ...(held ? [`La provision de ${e(held)} sera régularisée dans le mois qui suit l’approbation définitive des comptes de l’immeuble (article 22 de la loi n° 89-462 du 6 juillet 1989).`] : []),
         ],
-        table: retained
-          ? { columns: ['Retenue', 'Justificatif', 'Montant'], widths: [50, 30, 20], rows: [...l.deductions.map((x) => [x.label, x.justification, e(x.amountCents)]), ['Total des retenues', '', e(retained)], ['À restituer', '', e(back)]] }
-          : undefined,
+        table: rows.length > 2 ? { columns: ['Ligne', 'Justificatif', 'Montant'], widths: [52, 26, 22], rows } : undefined,
         computed: [
-          { label: 'À restituer', cents: back },
+          { label: balance >= 0 ? 'À restituer' : 'Reste dû par le locataire', cents: Math.abs(balance) },
           { label: 'Retenues', cents: retained },
         ],
       }
     }
+    case 'GUARANTOR_CALL': {
+      const g = ctx.guarantor
+      return {
+        subject: 'Appel à la caution : loyers impayés',
+        recommended: true,
+        paragraphs: [
+          `Vous vous êtes porté(e) caution${g?.solidaire === false ? '' : ' solidaire'} des obligations de ${ctx.tenantName}, locataire du logement situé ${ctx.propertyAddress}${ctx.leaseStart ? `, selon le bail ayant pris effet le ${d(ctx.leaseStart)}` : ''}.`,
+          `Malgré mes relances, les sommes suivantes restent impayées : loyer et charges de ${l.periods.join(', ')}, soit un total de ${e(l.amountCents)} (${eurosInWords(l.amountCents)}).`,
+          g?.solidaire === false
+            ? `Votre engagement étant une caution simple, je vous informe de cette situation. Je vous remercie de prendre contact avec votre proche afin que cette dette soit réglée dans un délai de ${l.delayDays} jours ; à défaut, je pourrai vous en demander le paiement après avoir poursuivi le locataire.`
+            : `En application de votre engagement, je vous demande de régler cette somme dans un délai de ${l.delayDays} jours à compter de la réception de ce courrier.`,
+          ...(l.commandDate ? [`Un commandement de payer a été délivré au locataire le ${d(l.commandDate)} ; il vous est également signifié par commissaire de justice, comme le prévoit l’article 24 de la loi n° 89-462 du 6 juillet 1989.`] : []),
+        ],
+      }
+    }
+    case 'NUISANCE':
+      return {
+        subject: 'Mise en demeure de cesser un trouble de voisinage',
+        recommended: true,
+        paragraphs: [
+          `Des troubles m’ont été signalés au sujet du logement que vous louez, situé ${ctx.propertyAddress} : ${l.facts.trim().replace(/\.$/, '')}${l.dates ? ` (${l.dates})` : ''}.`,
+          'Votre bail et la loi vous obligent à user paisiblement du logement et à respecter la tranquillité du voisinage (article 7 de la loi n° 89-462 du 6 juillet 1989). De mon côté, la loi m’oblige à intervenir pour faire cesser ces troubles (article 6-1).',
+          `Je vous mets donc en demeure de faire cesser ces troubles sans délai, et au plus tard dans les ${l.delayDays} jours suivant la réception de ce courrier.`,
+          'À défaut, je me verrai contraint d’engager les démarches prévues par la loi, qui peuvent aller jusqu’à la résiliation du bail par le juge.',
+        ],
+      }
+    case 'DAMAGE_REPAIR':
+      return {
+        subject: 'Réparation de dégradations dans le logement',
+        recommended: true,
+        paragraphs: [
+          `J’ai constaté les dégradations suivantes dans le logement situé ${ctx.propertyAddress} :`,
+          ...l.items.map((x) => `– ${x.label.trim()}`),
+          'Le locataire répond des dégradations survenues pendant la location et prend en charge l’entretien courant et les menues réparations, sauf vétusté, malfaçon, vice de construction ou force majeure (article 7 de la loi n° 89-462 du 6 juillet 1989 ; décret n° 87-712 du 26 août 1987).',
+          `Je vous demande de faire réaliser ces réparations dans un délai de ${l.delayDays} jours, ou de me proposer une date pour les faire ensemble. Je reste à votre disposition pour en parler.`,
+        ],
+      }
+    case 'BOILER':
+      return {
+        subject: 'Attestation d’entretien annuel de la chaudière',
+        recommended: false,
+        paragraphs: [
+          `La chaudière du logement situé ${ctx.propertyAddress} doit être entretenue chaque année par un professionnel qualifié (décret n° 2009-649 du 9 juin 2009). Cet entretien fait partie de l’entretien courant à la charge du locataire (décret n° 87-712 du 26 août 1987).`,
+          l.lastServiceDate ? `Le dernier entretien dont j’ai connaissance date du ${d(l.lastServiceDate)}.` : 'Je n’ai pas encore reçu d’attestation d’entretien.',
+          'Pouvez-vous me transmettre l’attestation remise par le professionnel lors de sa dernière visite, par email ou par courrier ? Je vous remercie par avance.',
+        ],
+      }
+    case 'SHORT_NOTICE_PROOF': {
+      const end = formatDateFr(tenantNoticeEnd(l.receivedDate, 3))
+      return {
+        subject: 'Votre préavis d’un mois : justificatif à fournir',
+        recommended: true,
+        paragraphs: [
+          `J’ai bien reçu le ${d(l.receivedDate)} votre lettre de congé, dans laquelle vous demandez un préavis réduit à un mois pour le motif suivant : ${l.reason.trim().replace(/\.$/, '')}.`,
+          'La loi permet ce préavis d’un mois, à condition que le motif soit précisé et justifié au moment du congé (article 15 de la loi n° 89-462 du 6 juillet 1989). Je n’ai pas reçu de justificatif.',
+          'Pouvez-vous me transmettre une pièce le justifiant (par exemple : attestation de l’employeur, notification de mutation, attestation de France Travail, certificat médical, attestation de la CAF) ?',
+          `Sans justificatif, le préavis de trois mois s’applique : il prendrait fin le ${end}.`,
+        ],
+      }
+    }
+    case 'RENT_CERTIFICATE': {
+      const total = l.rentCents + l.chargesCents
+      return {
+        subject: 'Attestation de loyer',
+        recommended: false,
+        form: 'ATTESTATION',
+        paragraphs: [
+          `Je soussigné(e) ${ctx.landlordName ?? ''}, demeurant ${ctx.landlordAddress ?? ''}, certifie louer à ${ctx.tenantName} le logement situé ${ctx.propertyAddress}, à titre de résidence principale, depuis le ${d(l.since)}.`,
+          `Le loyer mensuel est de ${e(l.rentCents)} hors charges, et les charges de ${e(l.chargesCents)}, soit ${e(total)} par mois (${eurosInWords(total)}).`,
+          l.upToDate ? `À la date de la présente attestation, le locataire est à jour du paiement de ses loyers et charges.` : `À la date de la présente attestation, des loyers ou charges restent dus.`,
+          'Attestation établie pour servir et valoir ce que de droit.',
+        ],
+      }
+    }
+    case 'DEPOSIT_RECEIPT':
+      return {
+        subject: 'Reçu du dépôt de garantie',
+        recommended: false,
+        form: 'ATTESTATION',
+        paragraphs: [
+          `Je soussigné(e) ${ctx.landlordName ?? ''}, bailleur du logement situé ${ctx.propertyAddress}, reconnais avoir reçu de ${ctx.tenantName}, le ${d(l.receivedDate)}, la somme de ${e(l.amountCents)} (${eurosInWords(l.amountCents)})${l.method ? `, par ${l.method}` : ''}, au titre du dépôt de garantie prévu au bail${ctx.leaseStart ? ` ayant pris effet le ${d(ctx.leaseStart)}` : ''}.`,
+          'Cette somme garantit l’exécution des obligations du locataire. Elle ne porte pas intérêt et sera restituée à la fin de la location, dans un délai d’un mois après la remise des clés si l’état des lieux de sortie est conforme à celui d’entrée, de deux mois dans le cas contraire, déduction faite des sommes dues et justifiées (article 22 de la loi n° 89-462 du 6 juillet 1989).',
+        ],
+      }
+    case 'OWNER_CHANGE':
+      return {
+        subject: 'Changement de propriétaire du logement',
+        recommended: true,
+        paragraphs: [
+          `Je vous informe que le logement que vous louez, situé ${ctx.propertyAddress}, appartient à compter du ${d(l.effectiveDate)} à ${l.newOwnerName}, demeurant ${l.newOwnerAddress}.`,
+          'Votre bail continue aux mêmes conditions avec le nouveau propriétaire, qui devient votre bailleur (article 1743 du Code civil). Vous n’avez aucune démarche particulière à accomplir.',
+          l.paymentInfo?.trim() ? `À partir de cette date, les loyers et charges sont à verser au nouveau propriétaire : ${l.paymentInfo.trim()}.` : 'À partir de cette date, les loyers et charges sont à verser au nouveau propriétaire, qui vous indiquera ses coordonnées de paiement.',
+          'Votre dépôt de garantie vous sera restitué par le nouveau propriétaire à la fin de la location (article 22 de la loi n° 89-462 du 6 juillet 1989). Je vous remercie pour la confiance que vous m’avez accordée.',
+        ],
+      }
+    case 'SMOKE_DETECTOR':
+      return {
+        subject: 'Attestation d’installation de détecteurs de fumée',
+        recommended: false,
+        form: 'ATTESTATION',
+        paragraphs: [
+          `Je soussigné(e) ${ctx.landlordName ?? ''}, propriétaire du logement situé ${ctx.propertyAddress}, atteste que ${l.count === 1 ? 'un détecteur autonome avertisseur de fumée y est installé' : `${l.count} détecteurs autonomes avertisseurs de fumée y sont installés`}${l.installedDate ? ` depuis le ${d(l.installedDate)}` : ''}, conformément à la loi n° 2010-238 du 9 mars 2010 et à la norme NF EN 14604.`,
+          `${l.count === 1 ? 'Ce détecteur a été remis en état de fonctionnement' : 'Ces détecteurs ont été remis en état de fonctionnement'} à l’entrée du locataire, ${ctx.tenantName}. Pendant la location, le locataire veille à leur bon fonctionnement et remplace les piles si besoin.`,
+          'Attestation établie pour servir et valoir ce que de droit, notamment auprès de l’assureur du logement.',
+        ],
+      }
+    case 'E_RECEIPT_CONSENT':
+      return {
+        subject: 'Accord pour recevoir les quittances par email',
+        recommended: false,
+        form: 'TENANT_FORM',
+        paragraphs: [
+          `Je soussigné(e) ${ctx.tenantName}, locataire du logement situé ${ctx.propertyAddress}, donne mon accord à ${ctx.landlordName ?? 'mon bailleur'} pour recevoir mes quittances de loyer, reçus et avis d’échéance sous forme électronique, à l’adresse email suivante : ${l.email}.`,
+          'Cet accord est donné en application de l’article 21 de la loi n° 89-462 du 6 juillet 1989, qui permet la transmission dématérialisée de la quittance avec l’accord exprès du locataire. La quittance reste gratuite.',
+          'Je peux revenir sur cet accord à tout moment, par simple demande écrite, et recevoir à nouveau mes quittances sur papier.',
+        ],
+      }
   }
 }

@@ -27,12 +27,12 @@ import {
   rentControlLikely,
   rentRevisionAllowed,
 } from '../domain/rules.js'
-import { LETTER_TITLES, letterContent, letterSchema, revisedRent, type LetterInput } from '../domain/letters.js'
+import { LETTER_TITLES, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
-import { annexesLabel, personName, propertyAddress } from '../pdf/labels.js'
+import { annexesLabel, landlordAddress, landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendPdf } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 
@@ -153,6 +153,8 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     ...guarantors.map((g) => ({ key: `caution-${g.tenantId}`, label: `Acte de caution de ${g.name}`, status: 'Prêt', done: true })),
     { key: 'inventory', label: 'État des lieux d’entrée', status: entry?.status === 'SIGNED' ? 'Fait' : `À faire le ${c.terms.startDate ? formatDateFr(parseIsoDate(c.terms.startDate)) : 'jour de l’entrée'}`, done: entry?.status === 'SIGNED' },
     ...(c.property.legalRegime === 'COPRO' ? [{ key: 'copro', label: 'Extraits du règlement de copropriété', status: c.property.copro?.extractsProvided ? 'Joint' : 'À ajouter', done: Boolean(c.property.copro?.extractsProvided) }] : []),
+    { key: 'repairs', label: 'Liste des réparations locatives (facultative)', status: 'Prête à joindre', done: true },
+    { key: 'charges', label: 'Liste des charges récupérables (facultative)', status: 'Prête à joindre', done: true },
     ...(leaseKindOf(lease) !== 'VIDE' ? [{ key: 'furniture', label: 'Inventaire du mobilier', status: c.property.furniture?.inventory?.length ? 'Joint' : 'Avec l’état des lieux', done: Boolean(c.property.furniture?.inventory?.length) }] : []),
   ]
   const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && c.property.surface), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
@@ -590,6 +592,37 @@ async function recipientOf(user: User, lease: LeaseWithProperty, c: ContractInpu
   }
 }
 
+/**
+ * Ce que Bailio retient d'un bail au fil des courriers : rien n'est à ressaisir d'un document à l'autre
+ * (congé reçu → fin du préavis, reçu du dépôt, entretien de la chaudière, brouillons en cours).
+ */
+interface LeaseFacts {
+  keysDate?: string
+  tenantNotice?: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string }
+  landlordNotice?: { reason: string; leaseEnd: string; date: string }
+  depositReceivedAt?: string
+  depositMethod?: string | null
+  boilerServiceDate?: string | null
+  smokeInstalledDate?: string | null
+  ownerChange?: { newOwnerName: string; effectiveDate: string }
+  letterDrafts?: Partial<Record<LetterType, { letter: Record<string, unknown>; savedAt: string }>>
+}
+const leaseFacts = (lease: Lease): LeaseFacts => (lease.data ?? {}) as LeaseFacts
+
+/** Mise à jour d'une partie des données du bail, relues juste avant l'écriture. */
+async function patchLeaseData(leaseId: string, patch: (facts: LeaseFacts & Record<string, unknown>) => Record<string, unknown>) {
+  const fresh = await prisma.lease.findUniqueOrThrow({ where: { id: leaseId } })
+  const data = (fresh.data ?? {}) as LeaseFacts & Record<string, unknown>
+  await prisma.lease.update({ where: { id: leaseId }, data: { data: { ...data, ...patch(data) } as Prisma.InputJsonObject } })
+}
+
+/** Destinataire : le locataire, sauf l'appel à la caution (le garant). */
+function recipientFor(type: LetterType, tenant: { name: string; address: string }, c: ContractInput) {
+  if (type !== 'GUARANTOR_CALL') return tenant
+  const g = c.guarantors[0]
+  return g ? { name: personName(g), address: g.address ?? '' } : { name: 'Garant', address: '' }
+}
+
 /** Mois échus non payés (ou payés partiellement), du plus ancien au plus récent. */
 async function unpaid(lease: Lease) {
   const payments = await prisma.payment.findMany({ where: { leaseId: lease.id } })
@@ -617,6 +650,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   const type = z.enum(Object.keys(LETTER_TITLES) as [string, ...string[]]).parse(req.params.type)
   const terms = readTerms(lease)
   const c = await contractFor(user, lease)
+  const facts = leaseFacts(lease)
   let data: Record<string, unknown> = { type }
   let note: string | null = null
   if (type === 'REVISION') {
@@ -662,10 +696,42 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
         ? `Logement vide : préavis de trois mois, réduit à un mois si le logement est en zone tendue${tense ? ' (c’est le cas ici)' : ''} ou si le locataire justifie d’un premier emploi, d’une mutation, d’une perte d’emploi, d’un nouvel emploi après une perte d’emploi, de son état de santé, du RSA ou de l’AAH, ou d’un logement social attribué.`
         : 'Location meublée : le préavis du locataire est toujours d’un mois.'
   } else if (type === 'DEPOSIT_RETURN') {
-    const keys = (lease.data as { keysDate?: string }).keysDate ?? iso(lease.endDate)
-    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [] }
+    const keys = facts.keysDate ?? facts.tenantNotice?.endDate ?? iso(lease.endDate)
+    const u = await unpaid(lease)
+    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [], unpaidCents: u.reduce((a, x) => a + x.missing, 0), chargesBalanceCents: 0, heldCents: 0 }
+    if (u.length) note = `Loyers non réglés repris automatiquement : ${u.map((x) => monthLabel(x.period)).join(', ')}.`
+  } else if (type === 'GUARANTOR_CALL') {
+    const u = await unpaid(lease)
+    data = { type, amountCents: u.reduce((a, x) => a + x.missing, 0), periods: u.map((x) => monthLabel(x.period)), delayDays: 15, commandDate: null }
+    note = !c.guarantors.length ? 'Aucun garant n’est enregistré pour ce bail : ajoutez-le dans la fiche du locataire.' : !u.length ? 'Aucun loyer impayé n’est enregistré pour ce bail.' : null
+  } else if (type === 'NUISANCE') {
+    data = { type, facts: '', dates: '', delayDays: 8 }
+  } else if (type === 'DAMAGE_REPAIR') {
+    data = { type, items: [{ label: '' }], delayDays: 30 }
+  } else if (type === 'BOILER') {
+    data = { type, lastServiceDate: facts.boilerServiceDate ?? null }
+    const h = c.property.heating
+    if (h?.mode !== 'INDIVIDUAL' || !['GAS', 'FUEL', 'WOOD'].includes(String(h.energy))) note = 'D’après la fiche du logement, il n’y a pas de chaudière individuelle au gaz, au fioul ou au bois : ce courrier n’est peut-être pas nécessaire.'
+  } else if (type === 'SHORT_NOTICE_PROOF') {
+    data = { type, receivedDate: facts.tenantNotice?.receivedDate ?? iso(new Date()), reason: facts.tenantNotice?.reducedReason ?? '' }
+    if (!facts.tenantNotice) note = 'Enregistrez d’abord l’accusé de réception du congé du locataire : la date et le motif seront repris ici.'
+  } else if (type === 'RENT_CERTIFICATE') {
+    const u = await unpaid(lease)
+    data = { type, since: iso(lease.startDate), rentCents: lease.rentCents, chargesCents: lease.chargesCents, upToDate: u.length === 0 }
+  } else if (type === 'DEPOSIT_RECEIPT') {
+    data = { type, amountCents: lease.depositCents, receivedDate: facts.depositReceivedAt ?? iso(lease.startDate), method: facts.depositMethod ?? '' }
+  } else if (type === 'OWNER_CHANGE') {
+    data = { type, newOwnerName: '', newOwnerAddress: '', effectiveDate: iso(new Date()), paymentInfo: '' }
+  } else if (type === 'SMOKE_DETECTOR') {
+    data = { type, count: Math.max(1, c.property.smokeDetectors ?? 1), installedDate: facts.smokeInstalledDate ?? null }
+  } else if (type === 'E_RECEIPT_CONSENT') {
+    data = { type, email: c.tenants.find((t) => t.email)?.email ?? '' }
+    if (!c.tenants.some((t) => t.email)) note = 'Ajoutez l’email du locataire dans sa fiche : il sera repris ici.'
   }
-  res.json({ success: true, data: { title: LETTER_TITLES[type as keyof typeof LETTER_TITLES], letter: data, note, recipient: await recipientOf(user, lease, c) } })
+  // Ce que le propriétaire a déjà saisi pour ce courrier et pas encore enregistré est repris tel quel.
+  const draft = facts.letterDrafts?.[type as LetterType]
+  if (draft?.letter) data = { ...data, ...draft.letter, type }
+  res.json({ success: true, data: { title: LETTER_TITLES[type as keyof typeof LETTER_TITLES], letter: data, note, recipient: recipientFor(type as LetterType, await recipientOf(user, lease, c), c), draftSavedAt: draft?.savedAt ?? null } })
 })
 
 /** Désignation des locaux loués, comme au bail : type, surface, pièces, annexes. */
@@ -685,10 +751,64 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'SALE' && kind === 'VIDE' && !letter.priceCents) throw new HttpError(400, 'Indiquez le prix de vente : sans lui, le congé pour vendre est nul.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && (!letter.beneficiary?.name || !letter.beneficiary.address || !letter.beneficiary.link)) throw new HttpError(400, 'Indiquez le nom, l’adresse et le lien de parenté du bénéficiaire de la reprise : ces mentions sont obligatoires.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason !== 'SALE' && !letter.justification?.trim()) throw new HttpError(400, letter.reason === 'RESUMPTION' ? 'Expliquez en une phrase pourquoi la reprise est réelle et sérieuse : cette mention est obligatoire.' : 'Indiquez le motif légitime et sérieux du congé.')
-  const content = letterContent(letter, { tenantName: recipient.name, propertyAddress: propertyAddress(c.property), guarantorName: c.guarantors[0] ? personName(c.guarantors[0]) : null, kind, premises: premisesLabel(c.property) })
-  const input = { content, landlord: c.landlord, recipient, date: new Date() }
+  if (letter.type === 'GUARANTOR_CALL' && !c.guarantors.length) throw new HttpError(400, 'Aucun garant n’est enregistré pour ce bail : ajoutez-le dans la fiche du locataire.')
+  const g = c.guarantors[0]
+  const content = letterContent(letter, {
+    tenantName: recipient.name,
+    propertyAddress: propertyAddress(c.property),
+    guarantorName: g ? personName(g) : null,
+    guarantor: g ? { name: personName(g), solidaire: g.engagement !== 'SIMPLE' } : null,
+    kind,
+    premises: premisesLabel(c.property),
+    landlordName: landlordName(c.landlord),
+    landlordAddress: landlordAddress(c.landlord),
+    leaseStart: c.terms.startDate ?? iso(lease.startDate),
+  })
+  const input = { content, landlord: c.landlord, recipient: recipientFor(letter.type, recipient, c), date: new Date() }
   return { pdf: await renderLetterPdf(input), content, input }
 }
+
+/** Les faits utiles d'un courrier enregistré sont gardés avec le bail, et son brouillon est effacé. */
+async function rememberLetter(lease: Lease, letter: LetterInput) {
+  const today = iso(new Date())!
+  await patchLeaseData(lease.id, (f) => {
+    const { [letter.type]: _done, ...drafts } = f.letterDrafts ?? {}
+    const patch: Record<string, unknown> = { letterDrafts: drafts }
+    if (letter.type === 'TENANT_NOTICE') {
+      const months = tenantNoticeMonths(leaseKindOf(lease), letter.reduced)
+      patch.tenantNotice = { receivedDate: letter.receivedDate, reduced: letter.reduced, reducedReason: letter.reducedReason ?? null, endDate: iso(tenantNoticeEnd(letter.receivedDate, months)) }
+    }
+    if (letter.type === 'NOTICE_TO_LEAVE') patch.landlordNotice = { reason: letter.reason, leaseEnd: letter.leaseEnd, date: today }
+    if (letter.type === 'DEPOSIT_RECEIPT') Object.assign(patch, { depositReceivedAt: letter.receivedDate, depositMethod: letter.method ?? null })
+    if (letter.type === 'BOILER' && letter.lastServiceDate) patch.boilerServiceDate = letter.lastServiceDate
+    if (letter.type === 'SMOKE_DETECTOR' && letter.installedDate) patch.smokeInstalledDate = letter.installedDate
+    if (letter.type === 'OWNER_CHANGE') patch.ownerChange = { newOwnerName: letter.newOwnerName, effectiveDate: letter.effectiveDate }
+    if (letter.type === 'DEPOSIT_RETURN') patch.keysDate = f.keysDate ?? letter.keysDate
+    return patch
+  })
+}
+
+// Brouillon d'un courrier : chaque saisie est gardée, même sans enregistrer le PDF.
+router.put('/leases/:id/letters/draft/:type', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  const type = z.enum(Object.keys(LETTER_TITLES) as [LetterType, ...LetterType[]]).parse(req.params.type)
+  const letter = z.record(z.string(), z.unknown()).parse(req.body)
+  if (JSON.stringify(letter).length > 20_000) throw new HttpError(413, 'Ce courrier est trop long.')
+  const savedAt = new Date().toISOString()
+  await patchLeaseData(lease.id, (f) => ({ letterDrafts: { ...(f.letterDrafts ?? {}), [type]: { letter: { ...letter, type }, savedAt } } }))
+  res.json({ success: true, data: { savedAt } })
+})
+
+// « Repartir des valeurs proposées par Bailio »
+router.delete('/leases/:id/letters/draft/:type', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  const type = String(req.params.type)
+  await patchLeaseData(lease.id, (f) => {
+    const { [type as LetterType]: _gone, ...drafts } = f.letterDrafts ?? {}
+    return { letterDrafts: drafts }
+  })
+  res.json({ success: true, data: { cleared: true } })
+})
 
 router.post('/leases/:id/letters/preview', async (req, res) => {
   const user = req.user!
@@ -703,12 +823,14 @@ router.post('/leases/:id/letters', async (req, res) => {
   const lease = await leaseOwned(user.id, String(req.params.id))
   const letter = letterSchema.parse(req.body)
   const { pdf, content, input } = await letterPdf(user, lease, letter)
-  const doc = await saveGeneratedDocument({ userId: user.id, kind: 'LETTER', title: LETTER_TITLES[letter.type], pdf, snapshot: { letter: input }, leaseId: lease.id, propertyId: lease.propertyId, meta: { type: letter.type } })
+  const doc = await saveGeneratedDocument({ userId: user.id, kind: 'LETTER', title: LETTER_TITLES[letter.type], pdf, snapshot: { letter: input, input: letter }, leaseId: lease.id, propertyId: lease.propertyId, meta: { type: letter.type } })
+  await rememberLetter(lease, letter)
   // Révision : le nouveau loyer s'applique au bail et devient la nouvelle référence.
   if (letter.type === 'REVISION') {
     const next = revisedRent(letter.oldRentCents, letter.irlRef.value, letter.irlNew.value)
     const terms = readTerms(lease)
-    await prisma.lease.update({ where: { id: lease.id }, data: { rentCents: next, data: { ...(lease.data as object), terms: { ...terms, rentCents: next, revision: { ...terms.revision, irlQuarter: letter.irlNew.quarter, irlValue: letter.irlNew.value } } } } })
+    await prisma.lease.update({ where: { id: lease.id }, data: { rentCents: next } })
+    await patchLeaseData(lease.id, () => ({ terms: { ...terms, rentCents: next, revision: { ...terms.revision, irlQuarter: letter.irlNew.quarter, irlValue: letter.irlNew.value } } }))
     await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'RENT_REVISION', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
   }
   if (letter.type === 'INSURANCE') {

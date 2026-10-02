@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, renderToBuffer } from '@react-pdf/renderer'
 import { CONGE_NOTICE_BLOCKS, CONGE_NOTICE_FOOTNOTES, CONGE_NOTICE_REFERENCE, CONGE_NOTICE_TITLE, CONGE_NOTICE_URL } from './notice-conge-text.js'
 import { NOTICE_BLOCKS, NOTICE_DPE_TABLE, NOTICE_FOOTNOTES, NOTICE_REFERENCE, NOTICE_TITLE, NOTICE_URL, type NoticeBlock } from './notice-text.js'
+import { CHARGES_BLOCKS, REPAIRS_BLOCKS } from './annexes-text.js'
 import { Footer, INK, MUTED, Table, s } from './theme.js'
 
 /**
@@ -19,6 +20,22 @@ interface OfficialNotice {
 }
 
 export const LEASE_NOTICE: OfficialNotice = { heading: 'Notice d’information', title: NOTICE_TITLE, reference: NOTICE_REFERENCE, url: NOTICE_URL, blocks: NOTICE_BLOCKS, footnotes: NOTICE_FOOTNOTES }
+export const REPAIRS_LIST: OfficialNotice = {
+  heading: 'Réparations locatives',
+  title: 'Liste des réparations ayant le caractère de réparations locatives',
+  reference: 'Annexe du décret n° 87-712 du 26 août 1987',
+  url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006066148',
+  blocks: REPAIRS_BLOCKS,
+  footnotes: [],
+}
+export const CHARGES_LIST: OfficialNotice = {
+  heading: 'Charges récupérables',
+  title: 'Liste des charges récupérables',
+  reference: 'Annexe du décret n° 87-713 du 26 août 1987',
+  url: 'https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006066149',
+  blocks: CHARGES_BLOCKS,
+  footnotes: [['*', 'Note de Bailio : le droit de bail, cité par le texte, a été supprimé depuis.']],
+}
 export const CONGE_NOTICE: OfficialNotice = { heading: 'Notice d’information', title: CONGE_NOTICE_TITLE, reference: CONGE_NOTICE_REFERENCE, url: CONGE_NOTICE_URL, blocks: CONGE_NOTICE_BLOCKS, footnotes: CONGE_NOTICE_FOOTNOTES }
 
 const st = {
@@ -62,7 +79,7 @@ function Blocks({ notice }: { notice: OfficialNotice }) {
           </Text>
         )
       })}
-      <Text style={[st.h2, { marginTop: 12 }]}>Notes</Text>
+      {notice.footnotes.length ? <Text style={[st.h2, { marginTop: 12 }]}>Notes</Text> : null}
       {notice.footnotes.map(([n, x]) => (
         <Text key={n} style={[st.p, { fontSize: 7.6, color: MUTED }]}>
           ({n}) {x}
@@ -77,7 +94,7 @@ export function NoticePages({ notice = LEASE_NOTICE, footer, paraphs = 0 }: { no
   return (
     <Page size="A4" style={s.page}>
       <Text style={[s.title, { fontSize: 13 }]}>{notice.heading}</Text>
-      <Text style={[s.subtitle, { fontSize: 9.5, lineHeight: 1.4 }]}>{notice.title.replace(/^Notice d’information /, '').replace(/^./, (c) => c.toUpperCase())}</Text>
+      <Text style={[s.subtitle, { fontSize: 9.5, lineHeight: 1.4 }]}>{notice.title === notice.heading ? '' : notice.title.replace(/^Notice d’information /, '').replace(/^./, (c) => c.toUpperCase())}</Text>
       <Text style={s.intro}>
         {notice.reference}. Texte officiel reproduit à l’identique ({notice.url}).
       </Text>
