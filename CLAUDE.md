@@ -53,6 +53,10 @@ Chaque information saisie est enregistrée et réutilisée :
 - état des lieux de sortie : nouvelle adresse du locataire et date de remise des clés reprises dans sa fiche et le solde de tout compte ;
 - toute écriture dans `lease.data` relit les données juste avant (`patchLeaseData`) pour ne rien effacer.
 
+## Parcours guidés « Que se passe-t-il ? »
+
+`server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.
+
 ## Base de données
 
 - Montants en **centimes** (`Int`).

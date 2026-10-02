@@ -188,11 +188,12 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null }
 }
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -214,7 +215,7 @@ export interface TodayView {
   tasks: Task[]
   upcoming: Array<{ date: string; label: string }>
   properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'caramel' | 'muted' } }>
-  counts: { properties: number; tenants: number; leases: number }
+  counts: { properties: number; tenants: number; leases: number; signedLeases?: number }
 }
 
 export interface MoneyView {

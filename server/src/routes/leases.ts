@@ -27,6 +27,7 @@ import {
   rentControlLikely,
   rentRevisionAllowed,
 } from '../domain/rules.js'
+import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { LETTER_TITLES, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderContractPdf } from '../pdf/contract.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
@@ -165,6 +166,8 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     id: lease.id,
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
+    /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null },
     checklist,
     esignPending,
     reopen,
@@ -837,6 +840,56 @@ router.post('/leases/:id/letters', async (req, res) => {
     await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INSURANCE', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
   }
   res.status(201).json({ success: true, data: { documentId: doc.id, computed: content.computed ?? [] } })
+})
+
+// ── Parcours guidés « Que se passe-t-il ? » ─────────────────────────────────
+
+const journeyKind = z.enum(['DEPARTURE', 'UNPAID', 'SALE', 'PROBLEM'])
+
+/** Prochaine fin du bail, à partir d'aujourd'hui (le bail a pu être reconduit). */
+function nextLeaseEnd(lease: Lease): Date {
+  let end = lease.endDate
+  while (end < new Date()) end = contractEndDate(iso(new Date(end.getTime() + 86_400_000))!, lease.durationMonths)
+  return end
+}
+
+router.get('/leases/:id/journeys/:kind', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const kind = journeyKind.parse(req.params.kind)
+  const c = await contractFor(user, lease)
+  const [docs, inventories, u] = await Promise.all([
+    prisma.document.findMany({ where: { leaseId: lease.id, kind: 'LETTER' }, select: { meta: true, createdAt: true } }),
+    prisma.inventory.findMany({ where: { leaseId: lease.id }, select: { kind: true, status: true, date: true } }),
+    unpaid(lease),
+  ])
+  const journey = buildJourney(kind, {
+    today: iso(new Date())!,
+    leaseKind: leaseKindOf(lease),
+    status: lease.status as JourneyInput['status'],
+    leaseEnd: iso(nextLeaseEnd(lease))!,
+    noticeMonths: landlordNoticeMonthsFor(leaseKindOf(lease)),
+    unpaid: u.map((x) => ({ ...x, label: monthLabel(x.period) })),
+    letters: docs.flatMap((d) => ((d.meta as { type?: string } | null)?.type ? [{ type: (d.meta as { type: string }).type, date: iso(d.createdAt)! }] : [])),
+    inventories: inventories.map((i) => ({ kind: i.kind as 'ENTRY' | 'EXIT', status: i.status as 'DRAFT' | 'SIGNED', date: i.date ? iso(i.date) : null })),
+    hasGuarantor: c.guarantors.length > 0,
+    facts: leaseFacts(lease) as JourneyInput['facts'],
+  })
+  res.json({ success: true, data: { ...journey, lease: { id: lease.id, tenantName: c.tenants.map((t) => personName(t)).join(' et '), address: propertyAddress(c.property) } } })
+})
+
+// Étape faite en dehors de Bailio (commandement de payer…), cochée par le propriétaire.
+router.post('/leases/:id/journeys/:kind/:step/done', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  const key = `${journeyKind.parse(req.params.kind)}.${z.string().regex(/^[a-z]{2,20}$/).parse(req.params.step)}`
+  const { done } = z.object({ done: z.boolean() }).parse(req.body)
+  await patchLeaseData(lease.id, (f) => {
+    const all = { ...((f.journeyDone as Record<string, string> | undefined) ?? {}) }
+    if (done) all[key] = iso(new Date())!
+    else delete all[key]
+    return { journeyDone: all }
+  })
+  res.json({ success: true, data: { done } })
 })
 
 export { leaseView }

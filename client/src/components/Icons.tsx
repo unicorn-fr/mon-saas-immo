@@ -91,3 +91,6 @@ export const Pencil = ({ size = 20, color = 'currentColor', strokeWidth = 1.8 }:
 export const Circle = ({ size = 18, color = BAI.dashed, strokeWidth = 1.8 }: IconProps) => (
   <svg {...base(size, color, strokeWidth)}><circle cx="12" cy="12" r="8" /></svg>
 )
+export const Signpost = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M12 3v18M5 6h12l2.5 2.5L17 11H5zM19 14H8l-2.5 2.5L8 19h11z" /></svg>
+)

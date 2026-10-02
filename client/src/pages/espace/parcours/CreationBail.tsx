@@ -40,6 +40,19 @@ export default function CreationBail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Un seul logement, ou un seul locataire pour ce logement : il est déjà choisi, rien à refaire.
+  useEffect(() => {
+    if (id) return
+    if (!propertyId && properties?.length === 1) setPropertyId(properties[0].id)
+  }, [id, properties, propertyId])
+  useEffect(() => {
+    if (id || tenantIds.length || !tenants) return
+    const forProperty = tenants.filter((t) => !t.leaseId && t.property?.id === propertyId)
+    const free = tenants.filter((t) => !t.leaseId)
+    const candidates = forProperty.length ? forProperty : free.length === 1 ? free : []
+    if (candidates.length === 1) setTenantIds([candidates[0].id])
+  }, [id, tenants, propertyId, tenantIds.length])
+
   useEffect(() => {
     if (!id) return
     api<LeaseView>(`/leases/${id}`)

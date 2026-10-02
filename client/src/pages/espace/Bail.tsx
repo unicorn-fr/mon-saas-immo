@@ -34,7 +34,7 @@ const STATUS: Record<string, { label: string; tone: 'owner' | 'green' | 'caramel
 }
 
 function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; setLease: (v: LeaseView) => void }) {
-  const { hash } = useLocation()
+  const { hash, search } = useLocation()
   // « Tout voir » depuis la page du locataire : on amène les paiements à l'écran.
   useEffect(() => {
     if (hash === '#paiements') document.getElementById('paiements')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -42,7 +42,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   const toast = useToast()
   const navigate = useNavigate()
   const [payOpen, setPayOpen] = useState(false)
-  const [endOpen, setEndOpen] = useState(false)
+  const [endOpen, setEndOpen] = useState(new URLSearchParams(search).get('depart') === '1')
   const [signOpen, setSignOpen] = useState(false)
   const status = STATUS[l.status === 'DRAFT' && l.ready ? 'READY' : l.status]
   const first = l.tenants[0]?.name.split(' ')[0] || 'votre locataire'
@@ -284,6 +284,9 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                 <Link to={`/espace/baux/${l.id}/courriers`} style={darkLink}>
                   Quittances et courriers
                 </Link>
+                <Link to="/espace/situations" style={darkLink}>
+                  Que se passe-t-il ?
+                </Link>
                 {l.computed.noticeMonths ? (
                   <Link to={`/espace/baux/${l.id}/courriers?type=NOTICE_TO_LEAVE`} style={darkLink}>
                     Donner congé
@@ -352,9 +355,10 @@ function nextPeriod(): string {
 function EndModal({ open, onClose, lease, onDone }: { open: boolean; onClose: () => void; lease: LeaseView; onDone: (v: LeaseView) => void }) {
   const toast = useToast()
   const navigate = useNavigate()
-  const [keysDate, setKeysDate] = useState(todayIso())
-  const [newAddress, setNewAddress] = useState('')
   const exit = lease.inventories.find((i) => i.kind === 'EXIT')
+  // Déjà connus : remise des clés (état des lieux de sortie), fin du préavis, nouvelle adresse.
+  const [keysDate, setKeysDate] = useState(lease.facts?.keysDate ?? (exit?.status === 'SIGNED' ? exit.date : null) ?? lease.facts?.tenantNotice?.endDate ?? todayIso())
+  const [newAddress, setNewAddress] = useState(lease.contract.tenants[0]?.newAddress ?? '')
   const save = async () => {
     if (!keysDate) return toast.show('Indiquez la date de remise des clés.', 'error')
     try {

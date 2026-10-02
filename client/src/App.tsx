@@ -53,6 +53,8 @@ const FicheLocataire = page('FicheLocataire')
 const ActeCaution = page('ActeCaution')
 const Contrat = page('Contrat')
 const Courriers = page('Courriers')
+const Situations = page('Situations')
+const Parcours = page('Parcours')
 const EtatDesLieux = page('EtatDesLieux')
 const Compte = page('Compte')
 const Edl = page('Edl')
@@ -145,6 +147,8 @@ function Pages() {
               <Route path="/espace/argent/factures/:id" element={<RequireAuth><FactureVerifier /></RequireAuth>} />
               <Route path="/espace/baux/:id" element={<RequireAuth><Bail /></RequireAuth>} />
               <Route path="/espace/baux/:id/courriers" element={<RequireAuth><Courriers /></RequireAuth>} />
+              <Route path="/espace/situations" element={<RequireAuth><Situations /></RequireAuth>} />
+              <Route path="/espace/baux/:id/parcours/:kind" element={<RequireAuth><Parcours /></RequireAuth>} />
               <Route path="/espace/baux/:id/etat-des-lieux" element={<RequireAuth><EtatDesLieux /></RequireAuth>} />
               <Route path="/edl/:id" element={<RequireAuth><Edl /></RequireAuth>} />
               <Route path="/espace/compte" element={<RequireAuth><Compte /></RequireAuth>} />

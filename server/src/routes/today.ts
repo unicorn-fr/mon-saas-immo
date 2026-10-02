@@ -28,7 +28,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -50,13 +50,17 @@ router.get('/today', async (req, res) => {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const period = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
 
-  const [leases, tenants, properties, toVerify, inventories] = await Promise.all([
+  const [leases, tenants, properties, toVerify, inventories, letterDocs] = await Promise.all([
     prisma.lease.findMany({ where: { userId: user.id }, include: { property: true, payments: true } }),
     prisma.tenant.findMany({ where: { userId: user.id } }),
     prisma.property.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'asc' } }),
     prisma.expense.findMany({ where: { userId: user.id, status: 'TO_VERIFY' }, include: { property: true }, orderBy: { createdAt: 'desc' } }),
     prisma.inventory.findMany({ where: { userId: user.id } }),
+    prisma.document.findMany({ where: { userId: user.id, kind: 'LETTER' }, select: { leaseId: true, meta: true, createdAt: true } }),
   ])
+  /** Dernier courrier d'un type pour un bail. */
+  const lastLetter = (leaseId: string, type: string) =>
+    letterDocs.filter((d) => d.leaseId === leaseId && (d.meta as { type?: string } | null)?.type === type).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]?.createdAt ?? null
   for (const l of leases) await ensureReminders(l)
   const names = Object.fromEntries(tenants.map((t) => [t.id, tenantName(readTenant(t))]))
   const reminders = await prisma.reminder.findMany({
@@ -112,6 +116,37 @@ router.get('/today', async (req, res) => {
     }
   }
 
+  // Échéances déduites de ce que Bailio sait déjà (congé reçu, état des lieux, courriers, fiche du logement).
+  for (const l of leases) {
+    if (l.status !== 'ACTIVE' && l.status !== 'ENDED') continue
+    const facts = (l.data ?? {}) as { tenantNotice?: { receivedDate: string; endDate: string }; keysDate?: string; boilerServiceDate?: string; snoozed?: Record<string, string> }
+    const snoozed = (key: string) => Boolean(facts.snoozed?.[key] && facts.snoozed[key] > iso(today)!)
+    const place = propertyName(l.property)
+    const who = leaseTenantLabel(l, names) || 'votre locataire'
+    const exit = inventories.find((i) => i.leaseId === l.id && i.kind === 'EXIT')
+    const notice = facts.tenantNotice
+    // Départ annoncé : l'état des lieux de sortie à prévoir dans les trois semaines.
+    if (notice && l.status === 'ACTIVE' && exit?.status !== 'SIGNED') {
+      const end = new Date(`${notice.endDate}T00:00:00Z`)
+      if (end.getTime() - today.getTime() <= 21 * DAY)
+        tasks.push({ id: `departure-${l.id}`, type: 'DEPARTURE', tag: 'Départ du locataire', tone: 'owner', place, title: `${who} part le ${short(end)} : prévoir l’état des lieux de sortie`, text: 'Bailio reprend l’état des lieux d’entrée pour comparer, pièce par pièce, et prépare ensuite le solde de tout compte.', leaseId: l.id, inventoryId: exit?.id })
+    }
+    // Clés rendues : le solde de tout compte et la restitution du dépôt, avec la date limite.
+    const keys = facts.keysDate ?? (exit?.status === 'SIGNED' && exit.date ? iso(exit.date) : null)
+    if (keys && !lastLetter(l.id, 'DEPOSIT_RETURN')) {
+      const limit = new Date(`${keys}T00:00:00Z`)
+      limit.setUTCMonth(limit.getUTCMonth() + 1)
+      tasks.push({ id: `settle-${l.id}`, type: 'SETTLEMENT', tag: 'Dépôt de garantie', tone: limit < today ? 'error' : 'caramel', place, title: `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`, text: 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.', leaseId: l.id })
+    }
+    // Chaudière individuelle : attestation d'entretien chaque année.
+    const heating = (l.property.data as { heating?: { mode?: string; energy?: string } } | null)?.heating
+    if (l.status === 'ACTIVE' && heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(heating.energy)) && !snoozed('BOILER')) {
+      const last = [facts.boilerServiceDate ? new Date(`${facts.boilerServiceDate}T00:00:00Z`) : null, lastLetter(l.id, 'BOILER')].filter((d): d is Date => Boolean(d)).sort((a, b) => b.getTime() - a.getTime())[0] ?? l.startDate
+      if (today.getTime() - last.getTime() >= 365 * DAY)
+        tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'caramel', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
+    }
+  }
+
   for (const e of toVerify) {
     tasks.push({ id: `exp-${e.id}`, type: 'INVOICE', tag: 'Facture à vérifier', tone: 'green', place: e.property ? propertyName(e.property) : 'Sans logement', title: `${e.vendor}, ${formatEuros(e.amountCents)}${e.property ? `, rangée dans ${propertyName(e.property)}` : ''}`, expenseId: e.id })
   }
@@ -152,9 +187,20 @@ router.get('/today', async (req, res) => {
         const status = current ? (st!.key === 'PAID' ? { label: 'Payé', tone: 'green' } : st!.key === 'LATE' ? { label: 'En retard', tone: 'error' } : st!.key === 'UPCOMING' ? { label: 'Entrée à venir', tone: 'owner' } : { label: st!.label, tone: 'muted' }) : draft ? { label: 'Bail en cours', tone: 'caramel' } : { label: 'Disponible', tone: 'muted' }
         return { id: p.id, name: propertyName(p), status }
       }),
-      counts: { properties: properties.length, tenants: tenants.length, leases: leases.length },
+      counts: { properties: properties.length, tenants: tenants.length, leases: leases.length, signedLeases: leases.filter((l) => l.status !== 'DRAFT').length },
     },
   })
+})
+
+// « Me le rappeler plus tard » pour une échéance déduite (chaudière) : 30 jours.
+router.post('/leases/:id/snooze/:key', requireUser, async (req, res) => {
+  const lease = await prisma.lease.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!lease) throw new HttpError(404, 'Bail introuvable.')
+  const key = z.enum(['BOILER']).parse(req.params.key)
+  const until = new Date(Date.now() + 30 * DAY).toISOString().slice(0, 10)
+  const data = (lease.data ?? {}) as Record<string, unknown>
+  await prisma.lease.update({ where: { id: lease.id }, data: { data: { ...data, snoozed: { ...((data.snoozed as Record<string, string>) ?? {}), [key]: until } } } })
+  res.json({ success: true, data: { until } })
 })
 
 // Actions sur un rappel : fait, annuler, me le rappeler plus tard (dans 7 jours).

@@ -4,7 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
 import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast } from '../../components/kit'
-import { Home, Page, Upload } from '../../components/Icons'
+import { Check, Upload } from '../../components/Icons'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
@@ -31,7 +31,7 @@ function TodayContent() {
   if (error || !data) return <LoadError message={error ?? ''} retry={reload} />
   // Serveur pas encore mis à jour (réponse à l'ancien format) : message clair plutôt qu'un plantage.
   if (!Array.isArray(data.tasks) || !data.counts || !data.stats) return <LoadError message="Le serveur de Bailio est en cours de mise à jour. Réessayez dans quelques minutes." retry={reload} />
-  if (data.counts.properties === 0 && data.counts.leases === 0) return <FirstSteps name={data.user.firstName} />
+  if ((data.counts.signedLeases ?? data.counts.leases) === 0 && data.tasks.length === 0) return <FirstSteps name={data.user.firstName} counts={data.counts} />
 
   const month = monthName(Number(data.stats.month.slice(5)))
   const first = data.user.firstName
@@ -48,6 +48,9 @@ function TodayContent() {
             {data.tasks.length ? `${plural(data.tasks.length, 'action')} cette semaine, déjà préparée${data.tasks.length > 1 ? 's' : ''}.` : 'Rien à faire cette semaine.'}
           </span>
         </div>
+        <Btn variant="outline" to="/espace/situations">
+          Que se passe-t-il ?
+        </Btn>
         {data.stats.rentsExpected ? (
           <div className="hide-md" style={{ display: 'flex', gap: 12 }}>
             <MiniStat label={`Loyers de ${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
@@ -131,6 +134,7 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
     case 'LATE_RENT':
       actions = [
         { label: 'Relire la relance', onClick: () => letters('REMINDER') },
+        { label: 'Que faire en cas d’impayé ?', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/UNPAID`) },
         { label: 'Le loyer est arrivé', variant: 'outline', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance est prête dans vos documents.') },
       ]
       break
@@ -166,6 +170,7 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
     case 'LEASE_END':
       actions = [
         { label: 'Préparer un congé', onClick: () => letters('NOTICE_TO_LEAVE') },
+        { label: 'Vendre ou reprendre : les étapes', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/SALE`) },
         { label: 'Laisser le bail se renouveler', variant: 'outline', onClick: () => reminder('done', 'C’est noté : le bail sera reconduit.') },
       ]
       break
@@ -177,6 +182,21 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
       break
     case 'DRAFT_LEASE':
       actions = [{ label: 'Reprendre le bail', onClick: () => navigate(`/espace/baux/${t.leaseId}`) }]
+      break
+    case 'DEPARTURE':
+      actions = [
+        { label: t.inventoryId ? 'Reprendre l’état des lieux de sortie' : 'Préparer l’état des lieux de sortie', onClick: () => navigate(t.inventoryId ? `/edl/${t.inventoryId}` : `/espace/baux/${t.leaseId}/etat-des-lieux?type=EXIT`) },
+        { label: 'Voir toutes les étapes', variant: 'outline', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/DEPARTURE`) },
+      ]
+      break
+    case 'SETTLEMENT':
+      actions = [{ label: 'Préparer le solde de tout compte', onClick: () => letters('DEPOSIT_RETURN') }]
+      break
+    case 'BOILER':
+      actions = [
+        { label: 'Préparer la demande', onClick: () => letters('BOILER') },
+        { label: 'Me le rappeler dans un mois', variant: 'ghost', onClick: () => run(() => api(`/leases/${t.leaseId}/snooze/BOILER`, { method: 'POST' }), 'Rappel reporté d’un mois.') },
+      ]
       break
     case 'INVOICE':
       break
@@ -219,29 +239,60 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
   )
 }
 
-/** Premier pas : l'espace est vide. Maquette « Premier pas, espace vide ». */
-function FirstSteps({ name }: { name: string | null }) {
-  const cards = [
-    { to: '/espace/logements/nouveau', icon: <Home color={BAI.caramel} size={26} />, title: 'Ajouter un logement', text: 'Quelques questions simples, une à la fois.', main: true },
-    { to: '/importer', icon: <Upload color={BAI.caramel} size={26} />, title: 'Importer un bail signé', text: 'Une photo suffit. Bailio remplit tout.' },
-    { to: '/espace/baux/nouveau', icon: <Page color={BAI.caramel} size={26} />, title: 'Créer un bail', text: 'Bailio vous demande seulement ce qu’il ne sait pas.' },
+/**
+ * Démarrage en 3 étapes : logement, locataire, bail. Chaque étape reprend ce qui est déjà saisi ;
+ * un bail déjà signé peut être importé d'un coup (photo ou PDF) pour remplir les trois.
+ */
+function SetupSteps({ counts }: { counts: TodayView['counts'] }) {
+  const steps = [
+    { done: counts.properties > 0, to: '/espace/logements/nouveau', title: 'Ajouter votre logement', text: 'Adresse, surface, équipements : quelques questions simples, une à la fois.' },
+    { done: counts.tenants > 0, to: '/espace/locataires/nouveau', title: 'Ajouter votre locataire', text: 'Son identité, son garant, ses coordonnées.' },
+    { done: (counts.signedLeases ?? 0) > 0, to: '/espace/baux/nouveau', title: 'Créer le bail', text: 'Bailio relie le logement et le locataire, et ne vous demande que ce qu’il ne sait pas.' },
   ]
+  const next = steps.findIndex((s) => !s.done)
+  return (
+    <div className="split-aside" style={{ gap: 20 }}>
+      <section className="grow" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <span style={{ fontSize: 14, color: BAI.inkSoft }}>{steps.filter((s) => s.done).length} étape{steps.filter((s) => s.done).length > 1 ? 's' : ''} sur 3</span>
+        {steps.map((s, i) => (
+          <div key={s.title} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', padding: '14px 0', borderTop: i ? `1px solid ${BAI.dividerSoft}` : 'none' }}>
+            <span style={{ width: 32, height: 32, borderRadius: 16, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, ...(s.done ? { background: BAI.greenLight, color: BAI.green } : i === next ? { background: BAI.owner, color: BAI.surface } : { border: `1.5px solid ${BAI.dashed}`, color: BAI.inkSoft }) }}>{s.done ? <Check size={16} /> : i + 1}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+              <span style={{ fontSize: 18, fontWeight: 700, color: s.done ? BAI.inkMid : BAI.ink }}>{s.title}</span>
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{s.text}</span>
+              {i === next ? (
+                <div style={{ paddingTop: 4 }}>
+                  <Btn to={s.to}>{i === 0 ? 'Ajouter un logement' : i === 1 ? 'Ajouter un locataire' : s.title}</Btn>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </section>
+      <aside className="aside">
+        <Link to="/importer" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ width: 52, height: 52, borderRadius: 14, background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Upload color={BAI.caramel} size={26} />
+          </span>
+          <span style={{ fontSize: 20, fontWeight: 700 }}>J’ai déjà un bail signé</span>
+          <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Prenez-le en photo ou déposez le PDF : Bailio remplit le logement, le locataire et le bail en une fois.</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>Importer mon bail</span>
+        </Link>
+      </aside>
+    </div>
+  )
+}
+
+/** Premier pas : l'espace est vide. Maquette « Premier pas, espace vide ». */
+function FirstSteps({ name, counts }: { name: string | null; counts: TodayView['counts'] }) {
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 'clamp(8px, 3vw, 40px)' }}>
         <h1 style={display('clamp(42px, 6vw, 60px)')}>Bienvenue{name ? `, ${name}` : ''}.</h1>
-        <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Par quoi commence-t-on ?</p>
+        <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Pour commencer, c’est simple comme 1, 2, 3.</p>
       </div>
-      <div className="cards-3" style={{ gap: 20 }}>
-        {cards.map((c) => (
-          <Link key={c.to} to={c.to} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: c.main ? `2px solid ${BAI.owner}` : `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(22px, 3vw, 32px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <span style={{ width: 52, height: 52, borderRadius: 14, background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{c.icon}</span>
-            <span style={{ fontSize: 22, fontWeight: 700 }}>{c.title}</span>
-            <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>{c.text}</span>
-          </Link>
-        ))}
-      </div>
-      <div style={{ fontSize: 15, color: BAI.inkSoft }}>Vous pourrez faire le reste plus tard, rien ne presse.</div>
+      <SetupSteps counts={counts} />
+      <div style={{ fontSize: 15, color: BAI.inkSoft }}>Tout ce que vous saisissez est enregistré au fur et à mesure : vous pouvez vous arrêter et reprendre plus tard.</div>
     </>
   )
 }
