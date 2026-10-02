@@ -19,6 +19,11 @@ describe('citeParts : chaque article cité renvoie au texte officiel', () => {
   it('Code civil : seuls les articles vérifiés ont un lien', () => {
     expect(linked('Code civil, art. 2297').map(([t]) => t)).toEqual(['2297'])
     expect(linked('Code civil, art. 1344')).toEqual([])
+    // 1366 (écrit électronique) et 1367 (signature électronique) : deux articles distincts
+    const [[, a1366]] = linked('Code civil, art. 1366')
+    const [[, a1367]] = linked('Code civil, art. 1367')
+    expect(a1366).toContain('LEGIARTI000032042461')
+    expect(a1367).toContain('LEGIARTI000032042456')
   })
 
   it('contrat type et décrets : lien vers le décret', () => {

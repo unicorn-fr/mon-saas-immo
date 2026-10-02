@@ -13,11 +13,12 @@ Aucun service extérieur ne reçoit les documents des propriétaires. Seul Resen
 
 ## Mettre à jour
 
-**Automatique** : toutes les 5 minutes, le serveur regarde la branche `main` sur GitHub et se met à jour seul
-s'il y a du nouveau (`auto-update.sh`, activé par `install.sh`). Rien à faire après un push.
+**Automatique** : à chaque push sur `main`, GitHub Actions lance toutes les vérifications ; si elles passent, la
+branche `production` est avancée. Toutes les 5 minutes, le serveur regarde cette branche et se met à jour seul
+(`auto-update.sh`, activé par `install.sh`). Une version qui échoue aux tests n'est jamais mise en ligne.
 
 Vérification : https://api.bailio.eu/health affiche la version en ligne (`"version":"abc1234"`, le début du
-numéro du dernier commit de `main`).
+numéro du dernier commit validé).
 
 **À la main** (ou pour activer la mise à jour automatique sur un serveur installé avant) — les commandes se tapent
 **sur le serveur**, pas sur votre ordinateur. Ouvrez d'abord une session sur le serveur :
@@ -76,7 +77,20 @@ de la base chaque nuit (14 jours conservés).
 | Voir la version en ligne | https://api.bailio.eu/health |
 | Voir les journaux | `cd /opt/bailio/deploy/vps && sudo docker compose logs -f api` (ou `caddy`) |
 | Sauvegarder maintenant | `sudo /opt/bailio/deploy/vps/backup.sh` |
-| Restaurer une sauvegarde | `gunzip -c /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz \| sudo docker compose exec -T db psql -U bailio -d bailio` |
+| Restaurer une sauvegarde | `sudo ./restore.sh /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz` (ou `bailio-AAAA-MM-JJ.sql.gz.enc` pour la copie hors serveur) |
 
-Conseil : copiez régulièrement `/opt/bailio-backups` ailleurs (par exemple Swiss Backup d'Infomaniak) : une sauvegarde
-sur le même serveur ne protège pas d'une panne du serveur.
+## Sauvegarde hors du serveur (à activer)
+
+Chaque nuit, `backup.sh` garde une copie sur le serveur (14 jours). Pour qu'une panne du serveur ne fasse rien
+perdre, il envoie aussi une copie **chiffrée** (AES-256) vers un stockage externe compatible S3, gardée 30 jours.
+
+1. Créez un stockage S3 : par exemple Manager Infomaniak → **Swiss Backup** → espace « S3 compatible »
+   (ou Infomaniak Object Storage, Scaleway, OVH). Notez l'adresse (endpoint), le nom du compartiment (bucket),
+   la clé d'accès et la clé secrète.
+2. Générez une phrase secrète : `openssl rand -base64 32`. **Notez-la ailleurs que sur le serveur**
+   (gestionnaire de mots de passe) : sans elle, impossible de restaurer.
+3. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et remplissez `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`
+   (si demandée), `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_PASSPHRASE`.
+4. Testez tout de suite : `sudo /opt/bailio/deploy/vps/backup.sh` doit afficher « copie hors serveur OK ».
+
+Journal : `/var/log/bailio-backup.log`.

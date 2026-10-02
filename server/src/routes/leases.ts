@@ -41,7 +41,8 @@ import { leaseTenantLabel, rentStatus } from './space.js'
  * versions, loyers reçus (quittance ou reçu), avis d'échéance, courriers, envoi par email.
  */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/leases'], requireUser)
 
 type LeaseWithProperty = Lease & { property: Property }
 
@@ -113,6 +114,20 @@ export function assertComplete(missing: Missing[]) {
   throw new HttpError(400, `Pour que ce document soit valable, il manque : ${list.join(' ; ')}${missing.length > 4 ? ` (et ${missing.length - 4} autre${missing.length > 5 ? 's' : ''})` : ''}.`)
 }
 
+/**
+ * Bail créé par l'ancien tunnel public (avant la vérification des mentions obligatoires) : il a été enregistré
+ * comme signé alors qu'il était peut-être incomplet. Tant qu'aucun loyer ni état des lieux n'est enregistré,
+ * le propriétaire peut le repasser en préparation pour le compléter et le faire signer.
+ */
+async function reopenInfo(lease: LeaseWithProperty, c: ContractInput, paymentCount: number, inventorySigned: boolean) {
+  const legacy = (lease.data as { legacy?: { source?: string } }).legacy
+  if (lease.status !== 'ACTIVE' || !legacy || legacy.source === 'import') return null
+  const missing = leaseMissing(c).length
+  if (!missing) return null
+  const esign = await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'COMPLETED' }, select: { id: true } })
+  return { missing, allowed: paymentCount === 0 && !inventorySigned && !esign }
+}
+
 async function leaseView(user: User, lease: LeaseWithProperty) {
   const c = await contractFor(user, lease)
   const [payments, documents, inventories, reminders, tenants] = await Promise.all([
@@ -143,12 +158,14 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
   const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && c.property.surface), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
   const checklist = lease.status === 'DRAFT' ? withLinks(leaseMissing(c), lease) : []
   const esignPending = Boolean(await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'PENDING' }, select: { id: true } }))
+  const reopen = await reopenInfo(lease, c, payments.length, inventories.some((i) => i.status === 'SIGNED'))
   return {
     id: lease.id,
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
     checklist,
     esignPending,
+    reopen,
     dirty: Boolean((lease.data as { dirty?: boolean }).dirty),
     signedAt: iso(lease.signedAt),
     kind: leaseKindOf(lease),
@@ -281,6 +298,21 @@ router.put('/leases/:id/terms', async (req, res) => {
   })
   const fresh = await leaseOwned(user.id, lease.id)
   res.json({ success: true, data: await leaseView(user, fresh) })
+})
+
+// Ancien bail du tunnel, enregistré comme signé sans l'être : retour en préparation.
+router.post('/leases/:id/reopen', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const view = await leaseView(user, lease)
+  if (!view.reopen) throw new HttpError(409, 'Ce bail ne peut pas repasser en préparation.')
+  if (!view.reopen.allowed) throw new HttpError(409, 'Des loyers ou un état des lieux sont déjà enregistrés pour ce bail : il est considéré comme signé. Pour le modifier, créez un avenant.')
+  const data = lease.data as Record<string, unknown>
+  await prisma.$transaction([
+    prisma.lease.update({ where: { id: lease.id }, data: { status: 'DRAFT', signedAt: null, data: { ...data, snapshot: undefined, dirty: false, reopenedAt: new Date().toISOString() } as unknown as Prisma.InputJsonObject } }),
+    prisma.reminder.deleteMany({ where: { leaseId: lease.id, status: 'TODO' } }),
+  ])
+  res.json({ success: true, data: await leaseView(user, await leaseOwned(user.id, lease.id)) })
 })
 
 router.delete('/leases/:id', async (req, res) => {

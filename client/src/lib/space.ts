@@ -166,6 +166,8 @@ export interface LeaseView {
   checklist: MissingItem[]
   /** Signature en ligne en cours : le contrat est figé. */
   esignPending: boolean
+  /** Ancien bail du tunnel enregistré comme signé alors qu'il est incomplet. */
+  reopen?: { missing: number; allowed: boolean } | null
   dirty: boolean
   signedAt: string | null
   kind: LeaseKind

@@ -6,7 +6,8 @@ import { publicUser } from './auth.js'
 
 /** Compte : suivi par email, préférences, export et suppression des données (RGPD). */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/account'], requireUser)
 
 router.post('/account/follow-up', async (req, res) => {
   const user = await prisma.user.update({ where: { id: req.user!.id }, data: { followUpSince: req.user!.followUpSince ?? new Date() } })

@@ -19,7 +19,8 @@ import { publicUser } from './auth.js'
  * Chaque tâche porte ses actions (relire la relance, loyer arrivé, lettre de révision…).
  */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/reminders', '/today'], requireUser)
 
 const DAY = 86_400_000
 const MONTHS_SHORT = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']

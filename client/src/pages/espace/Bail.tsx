@@ -63,6 +63,11 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
     setSignOpen(false)
     toast.show(l.status === 'DRAFT' ? 'Bail signé : les loyers, quittances et rappels démarrent.' : 'Nouvelle version enregistrée.')
   })
+  const reopen = guard(async () => {
+    if (!window.confirm('Repasser ce bail en préparation ? À faire seulement s’il n’a pas encore été signé.')) return
+    setLease(await api<LeaseView>(`/leases/${l.id}/reopen`, { method: 'POST' }))
+    toast.show('Bail repassé en préparation. Complétez les mentions manquantes, puis faites-le signer.')
+  })
   const removeDraft = guard(async () => {
     if (!window.confirm('Supprimer ce bail en préparation ?')) return
     await api(`/leases/${l.id}`, { method: 'DELETE' })
@@ -100,6 +105,21 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               <TextLink to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 13 }}>
                 Compléter le bail
               </TextLink>
+            </Callout>
+          ) : null}
+          {l.status === 'ACTIVE' && l.reopen ? (
+            <Callout tone="warn" title={`Ce bail est incomplet : il manque ${l.reopen.missing} mention${l.reopen.missing > 1 ? 's' : ''} obligatoire${l.reopen.missing > 1 ? 's' : ''}`}>
+              Il a été créé avant que Bailio vérifie toutes les mentions exigées par la loi.{' '}
+              {l.reopen.allowed ? (
+                <>
+                  S’il n’est pas encore signé, repassez-le en préparation : Bailio vous demandera ce qui manque, puis vous le ferez signer.{' '}
+                  <TextLink style={{ fontSize: 13 }} onClick={reopen}>
+                    Repasser en préparation
+                  </TextLink>
+                </>
+              ) : (
+                'Des loyers ou un état des lieux sont déjà enregistrés : s’il faut le corriger, modifiez-le puis faites signer la nouvelle version (avenant).'
+              )}
             </Callout>
           ) : null}
           {l.status === 'ACTIVE' && l.dirty ? (

@@ -19,7 +19,8 @@ import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } 
 
 /** Dépenses, factures lues automatiquement, tableau « Argent », documents et fichiers du propriétaire. */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/documents', '/expenses', '/files', '/money'], requireUser)
 
 const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
 export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }

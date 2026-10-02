@@ -1,0 +1,104 @@
+# Vérifications à chaque push et pull request. Sur main, si tout passe, la branche « production »
+# est avancée : c'est elle que le serveur suit (deploy/vps/auto-update.sh). Une version en erreur
+# n'est donc jamais mise en ligne automatiquement.
+name: Vérifications
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Types, tests et construction
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - name: Outils de lecture des baux (OCR)
+        run: sudo apt-get update -q && sudo apt-get install -yq tesseract-ocr tesseract-ocr-fra poppler-utils
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+      - name: Types (serveur et site)
+        run: npm run typecheck
+      - name: Tests (règles juridiques, OCR, site)
+        run: npm test
+      - name: Construction
+        run: npm run build
+
+  e2e:
+    name: Parcours complets (navigateur)
+    runs-on: ubuntu-latest
+    needs: checks
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: bailio
+          POSTGRES_PASSWORD: bailio
+          POSTGRES_DB: bailio
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U bailio" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://bailio:bailio@localhost:5432/bailio
+      E2E_API_LOG: /tmp/bailio-api.log
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+            e2e/package-lock.json
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+      - run: npm ci --prefix e2e
+      - run: npx --prefix e2e playwright install --with-deps chromium
+      - name: Base de test
+        run: npx --prefix server prisma migrate deploy --schema server/prisma/schema.prisma
+      - name: API et site
+        run: |
+          (cd server && npx tsx src/server.ts > /tmp/bailio-api.log 2>&1 &)
+          (cd client && npx vite --port 5173 > /tmp/vite.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf localhost:5000/health && curl -sf localhost:5173 >/dev/null && exit 0; sleep 2; done
+          cat /tmp/bailio-api.log; exit 1
+      - name: Parcours
+        run: npm --prefix e2e test
+      - name: Captures et journaux en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-captures
+          path: |
+            e2e/captures/
+            /tmp/bailio-api.log
+            /tmp/vite.log
+
+  production:
+    name: Mise en production
+    runs-on: ubuntu-latest
+    needs: [checks, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Avancer la branche production (suivie par le serveur)
+        run: git push origin HEAD:refs/heads/production --force-with-lease

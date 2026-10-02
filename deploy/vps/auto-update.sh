@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mise à jour automatique : toutes les 5 minutes, si la branche main a changé sur GitHub,
+# Mise à jour automatique : toutes les 5 minutes, si la version validée (branche production) a changé sur GitHub,
 # le serveur se met à jour seul (update.sh). Rien à faire après un push.
 #
 # Installation (une seule fois, en root) :  /opt/bailio/deploy/vps/auto-update.sh --install
@@ -42,9 +42,13 @@ fi
 exec 9>/run/bailio-auto-update.lock
 flock -n 9 || exit 0
 
-git -C "$APP" fetch -q origin main
-if [ "$(git -C "$APP" rev-parse HEAD)" = "$(git -C "$APP" rev-parse origin/main)" ]; then
+# Branche suivie : « production », avancée par GitHub Actions seulement quand tous les tests passent
+# (.github/workflows/ci.yml). Tant qu'elle n'existe pas, main.
+BRANCH=main
+if git -C "$APP" ls-remote --exit-code --heads origin production >/dev/null 2>&1; then BRANCH=production; fi
+git -C "$APP" fetch -q origin "$BRANCH:refs/remotes/origin/$BRANCH"
+if [ "$(git -C "$APP" rev-parse HEAD)" = "$(git -C "$APP" rev-parse "origin/$BRANCH")" ]; then
   exit 0
 fi
-echo "Nouvelle version $(git -C "$APP" rev-parse --short origin/main) : mise à jour…"
-"$DIR/update.sh"
+echo "Nouvelle version $(git -C "$APP" rev-parse --short "origin/$BRANCH") ($BRANCH) : mise à jour…"
+BAILIO_BRANCH="$BRANCH" "$DIR/update.sh"

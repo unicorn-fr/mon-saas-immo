@@ -56,7 +56,7 @@ https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.baili
 ## Déploiement
 
 - **Site** : Vercel (bailio.fr) tant que le domaine ne peut pas pointer vers le VPS ; `/api` y est relayé vers le VPS.
-- **API, base, lecture des baux** : VPS (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy assure le HTTPS de l'API (et pourra servir le site plus tard) ; la base n'est pas exposée. Le serveur se met à jour seul toutes les 5 minutes depuis `main` ; la version en ligne est affichée par https://api.bailio.eu/health. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **API, base, lecture des baux** : VPS (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy assure le HTTPS de l'API (et pourra servir le site plus tard) ; la base n'est pas exposée. À chaque push sur `main`, GitHub Actions vérifie tout (types, tests, construction, parcours dans un navigateur) puis avance la branche `production` ; le serveur suit cette branche et se met à jour seul toutes les 5 minutes ; la version en ligne est affichée par https://api.bailio.eu/health. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi (actif par défaut à l'inscription).
 
 ## Vérifications

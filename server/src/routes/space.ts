@@ -16,7 +16,8 @@ import { publicUser } from './auth.js'
  * Chaque fiche se remplit en plusieurs fois ; la réponse indique son avancement étape par étape.
  */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/profile', '/properties', '/tenants'], requireUser)
 
 // ── Profil du bailleur ───────────────────────────────────────────────────────
 

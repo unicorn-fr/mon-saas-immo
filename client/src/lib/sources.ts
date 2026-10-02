@@ -53,7 +53,7 @@ export const law = (art: string) => (LOI_1989[art] ? `${LEGI}/loda/article_lc/${
 /** Code civil : seuls les articles dont le lien a été vérifié. */
 const CODE_CIVIL: Record<string, string> = {
   '1367': `${LEGI}/codes/article_lc/LEGIARTI000032042456`,
-  '1366': `${LEGI}/codes/article_lc/LEGIARTI000032042456`,
+  '1366': `${LEGI}/codes/article_lc/LEGIARTI000032042461`,
   '1375': `${LEGI}/codes/article_lc/LEGIARTI000032042416/`,
   '1174': `${LEGI}/codes/id/LEGISCTA000032008860`,
   '1724': `${LEGI}/codes/article_lc/LEGIARTI000028806598/`,

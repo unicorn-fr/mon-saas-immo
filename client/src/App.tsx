@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, type ComponentType, type ReactNode } from 'react'
+import { recoverOnce } from './lib/recover'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -7,8 +8,8 @@ import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
 import Home from './pages/Home'
-// Toutes les pages sont dans le même fichier : changer de page ne télécharge plus rien,
-// donc plus de page qui reste bloquée (réseau mobile, mise à jour du site pendant la visite).
+// Pages publiques dans le fichier principal ; l'espace dans un second fichier (pages/espace/index.ts),
+// téléchargé dès que la première page est affichée.
 import TypeStep from './pages/tunnel/TypeStep'
 import LogementStep from './pages/tunnel/LogementStep'
 import PersonnesStep from './pages/tunnel/PersonnesStep'
@@ -17,31 +18,46 @@ import RelectureStep from './pages/tunnel/RelectureStep'
 import RecevoirStep from './pages/tunnel/RecevoirStep'
 import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
-import Bienvenue from './pages/Bienvenue'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
-import Aujourdhui from './pages/espace/Aujourdhui'
-import Logements from './pages/espace/Logements'
-import Logement from './pages/espace/Logement'
-import Locataires from './pages/espace/Locataires'
-import Locataire from './pages/espace/Locataire'
-import Documents from './pages/espace/Documents'
-import Argent from './pages/espace/Argent'
-import { FactureAjout, FactureVerifier } from './pages/espace/Facture'
-import Bail from './pages/espace/Bail'
-import AjoutLogement from './pages/espace/parcours/AjoutLogement'
-import AjoutLocataire from './pages/espace/parcours/AjoutLocataire'
-import CreationBail from './pages/espace/parcours/CreationBail'
-import FicheBailleur from './pages/espace/fiches/FicheBailleur'
-import FicheLogement from './pages/espace/fiches/FicheLogement'
-import FicheLocataire from './pages/espace/fiches/FicheLocataire'
-import ActeCaution from './pages/espace/fiches/ActeCaution'
-import Signer from './pages/Signer'
-import Contrat from './pages/espace/fiches/Contrat'
-import Courriers from './pages/espace/Courriers'
-import EtatDesLieux from './pages/espace/EtatDesLieux'
-import Edl from './pages/Edl'
-import Compte from './pages/espace/Compte'
 import { MentionsLegales, Conditions, Confidentialite, Contact, NotFound } from './pages/legal/Legal'
+
+
+type EspaceModule = typeof import('./pages/espace/index')
+let espaceLoad: Promise<EspaceModule> | null = null
+/** Téléchargement unique de l'espace. En cas d'échec (site mis à jour pendant la visite), la page est rechargée une fois. */
+function loadEspace(): Promise<EspaceModule> {
+  espaceLoad ??= import('./pages/espace/index').catch((err) => {
+    espaceLoad = null
+    if (recoverOnce()) return new Promise<EspaceModule>(() => undefined)
+    throw err
+  })
+  return espaceLoad
+}
+const page = (name: keyof EspaceModule) => lazy(() => loadEspace().then((m) => ({ default: m[name] as ComponentType })))
+const Aujourdhui = page('Aujourdhui')
+const Logements = page('Logements')
+const Logement = page('Logement')
+const Locataires = page('Locataires')
+const Locataire = page('Locataire')
+const Documents = page('Documents')
+const Argent = page('Argent')
+const FactureAjout = page('FactureAjout')
+const FactureVerifier = page('FactureVerifier')
+const Bail = page('Bail')
+const AjoutLogement = page('AjoutLogement')
+const AjoutLocataire = page('AjoutLocataire')
+const CreationBail = page('CreationBail')
+const FicheBailleur = page('FicheBailleur')
+const FicheLogement = page('FicheLogement')
+const FicheLocataire = page('FicheLocataire')
+const ActeCaution = page('ActeCaution')
+const Contrat = page('Contrat')
+const Courriers = page('Courriers')
+const EtatDesLieux = page('EtatDesLieux')
+const Compte = page('Compte')
+const Edl = page('Edl')
+const Signer = page('Signer')
+const Bienvenue = page('Bienvenue')
 
 
 function Loading() {
@@ -93,8 +109,14 @@ export default function App() {
 
 function Pages() {
   const { pathname } = useLocation()
+  // L'espace est téléchargé dès que la première page est affichée : y entrer est ensuite instantané.
+  useEffect(() => {
+    const t = window.setTimeout(() => void loadEspace().catch(() => undefined), 800)
+    return () => window.clearTimeout(t)
+  }, [])
   return (
     <ErrorBoundary resetKey={pathname}>
+          <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/commencer" element={<DraftReady><TypeStep /></DraftReady>} />
@@ -138,6 +160,7 @@ function Pages() {
               <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+          </Suspense>
     </ErrorBoundary>
   )
 }

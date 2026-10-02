@@ -18,7 +18,8 @@ import { filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.
  * remplis sur téléphone pièce par pièce avec photos, signés par les deux parties, puis figés.
  */
 const router = Router()
-router.use(requireUser)
+// Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
+router.use(['/inventories', '/leases'], requireUser)
 
 async function ownInventory(userId: string, id: string) {
   const inv = await prisma.inventory.findFirst({ where: { id, userId } })
