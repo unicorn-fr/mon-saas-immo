@@ -17,10 +17,16 @@ export function clientIp(req: Request): string {
 }
 
 /** Limite par visiteur, avec un message en français au format habituel de l'API. */
+/**
+ * Tests de bout en bout seulement (local, CI) : ils créent beaucoup de comptes depuis la même adresse.
+ * Jamais pris en compte en production.
+ */
+const SCALE = process.env.NODE_ENV === 'production' ? 1 : Math.max(1, Number(process.env.RATE_LIMIT_SCALE) || 1)
+
 export function limitPerVisitor(windowMinutes: number, limit: number) {
   return rateLimit({
     windowMs: windowMinutes * 60_000,
-    limit,
+    limit: limit * SCALE,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req) => ipKeyGenerator(clientIp(req)),

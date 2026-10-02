@@ -24,5 +24,6 @@ npm --prefix e2e test
 
 Variables utiles : `E2E_BASE` (site, `http://localhost:5173`), `E2E_API` (`http://localhost:5000/api`),
 `E2E_API_LOG` (journal de l'API, `/tmp/bailio-api.log`), `CHROMIUM_PATH` (navigateur déjà installé).
+Lancez l’API avec `RATE_LIMIT_SCALE=20` : les parcours créent beaucoup de comptes depuis la même adresse (sans effet en production).
 
 Les captures d'écran sont écrites dans `e2e/captures/` (ignoré par git).

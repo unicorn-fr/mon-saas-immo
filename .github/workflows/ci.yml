@@ -57,6 +57,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://bailio:bailio@localhost:5432/bailio
       E2E_API_LOG: /tmp/bailio-api.log
+      RATE_LIMIT_SCALE: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
