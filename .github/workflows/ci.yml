@@ -70,7 +70,8 @@ jobs:
       - run: npm ci --prefix e2e
       - run: npx --prefix e2e playwright install --with-deps chromium
       - name: Base de test
-        run: npx --prefix server prisma migrate deploy --schema server/prisma/schema.prisma
+        working-directory: server
+        run: npx prisma generate && npx prisma migrate deploy
       - name: API et site
         run: |
           (cd server && npx tsx src/server.ts > /tmp/bailio-api.log 2>&1 &)
