@@ -2,7 +2,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Callout, Card, Crumbs, LoadError, Loader, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextArea, TextLink, useLoad, useToast } from '../../components/kit'
+import { openDoc } from '../../lib/docs'
+import { TENANT_DOCUMENTS, type TenantDocKey } from '../../lib/contract'
+import type { ProfileView, PropertyView } from '../../lib/space'
+import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import { dateNum, eurosCents } from '../../lib/format'
 
@@ -22,6 +26,7 @@ interface CandidateRow {
   dossierFacileUrl: string | null
   message: string | null
   rentShare: number | null
+  documents: Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string; label: string }>
 }
 interface CandidatesView {
   applyCode: string | null
@@ -43,6 +48,21 @@ export default function Candidats() {
   const navigate = useNavigate()
   const { data, error, loading, reload } = useLoad(() => api<CandidatesView>(`/properties/${id}/candidates`), [id])
   const link = data?.applyCode ? `${window.location.origin}/candidature/${data.applyCode}` : null
+  const { data: property, reload: reloadProperty } = useLoad(() => api<PropertyView>(`/properties/${id}`), [id])
+  const { data: profile } = useLoad(() => api<ProfileView>('/profile'))
+  const ad = property?.file.ad ?? {}
+  const requested = (ad.requestedDocs?.length ? ad.requestedDocs : (Object.keys(TENANT_DOCUMENTS) as TenantDocKey[])) as TenantDocKey[]
+  const guarantorDocs = ad.guarantorDocs !== false
+  const firstName = profile?.profile.firstNames ?? ''
+  const saveDocs = async (docs: TenantDocKey[], guarantor: boolean) => {
+    if (!docs.length) return toast.show('Gardez au moins une pièce.', 'error')
+    try {
+      await api(`/properties/${id}`, { method: 'PUT', body: { ad: { ...ad, requestedDocs: docs, guarantorDocs: guarantor } } })
+      reloadProperty()
+    } catch (e) {
+      toast.error(e)
+    }
+  }
 
   const act = async (fn: () => Promise<unknown>, done?: string) => {
     try {
@@ -88,6 +108,7 @@ export default function Candidats() {
           </div>
           <div className="split-aside" style={{ gap: 24 }}>
             <div className="grow">
+              {link ? <ReplyMessage link={link} title={data.offer.title} docs={requested} landlord={firstName} /> : null}
               {data.candidates.length ? (
                 [...data.candidates]
                   .sort((a, b) => ORDER[a.status] - ORDER[b.status])
@@ -114,6 +135,15 @@ export default function Candidats() {
                         {c.email}
                         {c.phone ? ` · ${c.phone}` : ''}
                       </span>
+                      {c.documents.length ? (
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                          {c.documents.map((d) => (
+                            <TextLink key={`${d.who}-${d.category}`} onClick={() => void openDoc(`/files/${d.fileId}`).catch(toast.error)} style={{ fontSize: 14 }}>
+                              {d.label}
+                            </TextLink>
+                          ))}
+                        </div>
+                      ) : null}
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                         {c.dossierFacileUrl ? (
                           <a href={c.dossierFacileUrl} target="_blank" rel="noreferrer" style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
@@ -179,6 +209,13 @@ export default function Candidats() {
                   Rédiger l’annonce
                 </TextLink>
               </Card>
+              <Card title="Pièces demandées aux candidats">
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Seulement parmi celles que la loi autorise. Enregistré dans la fiche du logement.</span>
+                {(Object.keys(TENANT_DOCUMENTS) as TenantDocKey[]).map((k) => (
+                  <Check key={k} checked={requested.includes(k)} onChange={(v) => void saveDocs(v ? [...requested, k] : requested.filter((x) => x !== k), guarantorDocs)} label={TENANT_DOCUMENTS[k]} />
+                ))}
+                <Check checked={guarantorDocs} onChange={(v) => void saveDocs(requested, v)} label="Les mêmes pièces pour le garant" />
+              </Card>
               <Card title="Ce que vous ne pouvez pas demander">
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
                   {data.forbiddenDocuments.map((d) => (
@@ -193,5 +230,73 @@ export default function Candidats() {
         </>
       )}
     </AppShell>
+  )
+}
+
+/**
+ * Message à copier pour répondre aux personnes intéressées sur Leboncoin, SeLoger, PAP… : un mot aimable et le lien
+ * pour déposer son dossier, avec les pièces demandées. Modifiable avant de le copier.
+ */
+function ReplyMessage({ link, title, docs, landlord }: { link: string; title: string; docs: TenantDocKey[]; landlord: string }) {
+  const toast = useToast()
+  const build = () =>
+    [
+      'Bonjour,',
+      '',
+      `Merci pour votre intérêt pour ${title.charAt(0).toLowerCase()}${title.slice(1)}.`,
+      'Pour étudier votre candidature, je vous invite à compléter votre dossier en ligne. Cela prend quelques minutes et ne demande aucun compte :',
+      link,
+      '',
+      `Vous pourrez y déposer : ${docs.map((d) => TENANT_DOCUMENTS[d].toLowerCase()).join(', ')}. Si vous avez un garant, les mêmes pièces le concernant.`,
+      'Vos documents ne seront visibles que par moi. Ils sont effacés au plus tard trois mois après votre candidature si elle n’est pas retenue.',
+      '',
+      'Je reviens vers vous rapidement.',
+      'Bien cordialement,',
+      landlord,
+    ]
+      .join('\n')
+      .trim()
+  const [text, setText] = useState(build)
+  // Le message suit les pièces choisies tant qu'il n'a pas été modifié à la main.
+  const [edited, setEdited] = useState(false)
+  useEffect(() => {
+    if (!edited) setText(build())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docs.join(','), landlord, link])
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.show('Message copié. Collez-le dans votre réponse.')
+    } catch {
+      window.prompt('Copiez le message :', text)
+    }
+  }
+  return (
+    <Card title="Répondre aux personnes intéressées">
+      <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Sur Leboncoin, SeLoger, PAP ou ailleurs : copiez ce message et collez-le en réponse. Le candidat dépose son dossier ici, tout seul.</span>
+      <TextArea
+        label="Message"
+        value={text}
+        onChange={(v) => {
+          setText(v)
+          setEdited(true)
+        }}
+        rows={12}
+      />
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Btn onClick={() => void copy()}>Copier le message</Btn>
+        {edited ? (
+          <Btn
+            variant="ghost"
+            onClick={() => {
+              setEdited(false)
+              setText(build())
+            }}
+          >
+            Revenir au message proposé
+          </Btn>
+        ) : null}
+      </div>
+    </Card>
   )
 }

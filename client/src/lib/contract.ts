@@ -155,7 +155,7 @@ export interface PropertyFile {
   smokeDetectors?: N<number>
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge ». */
   keys?: N<string>
-  ad?: N<{ title?: N<string>; description?: N<string>; rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'FORFAIT'>; depositCents?: N<number>; complementCents?: N<number>; availableFrom?: N<string> }>
+  ad?: N<{ title?: N<string>; description?: N<string>; rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'FORFAIT'>; depositCents?: N<number>; complementCents?: N<number>; availableFrom?: N<string>; requestedDocs?: N<TenantDocKey[]>; guarantorDocs?: N<boolean> }>
 }
 
 export type Situation = 'EMPLOYEE' | 'SELF_EMPLOYED' | 'STUDENT' | 'APPRENTICE' | 'RETIRED' | 'OTHER'

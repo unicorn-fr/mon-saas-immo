@@ -217,6 +217,10 @@ export const propertyFileSchema = z.object({
       depositCents: opt(cents),
       complementCents: opt(cents),
       availableFrom: opt(isoDate),
+      /** Pièces demandées aux candidats (parmi celles autorisées par le décret n° 2015-1437). */
+      requestedDocs: opt(z.array(z.enum(['identity', 'home', 'activity', 'taxNotice', 'income'])).max(5)),
+      /** Les mêmes pièces sont demandées pour le garant, s'il y en a un. */
+      guarantorDocs: opt(z.boolean()),
     }),
   ),
 })

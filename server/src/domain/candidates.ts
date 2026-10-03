@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 /**
- * Candidatures : le candidat remplit un formulaire public, sans compte et sans pièce jointe
- * (ses justificatifs restent dans DossierFacile, le dossier de location de l'État).
+ * Candidatures : le candidat remplit un formulaire public, sans compte, et dépose les pièces que le propriétaire
+ * a choisies pour ce logement (seulement parmi celles que la loi autorise), ou partage son DossierFacile.
  * Pièces qu'un bailleur peut demander : décret n° 2015-1437 du 5 novembre 2015 ; pièces interdites :
  * loi n° 89-462 du 6 juillet 1989, art. 22-2. Aucune question sur l'origine, la santé, la famille…
  */
@@ -89,8 +89,21 @@ export const FORBIDDEN_DOCUMENTS: string[] = [
 ]
 
 /** Fiche locataire pré-remplie à partir d'une candidature retenue : rien n'est ressaisi. */
-export function tenantFromCandidate(c: CandidateData) {
+/** Pièce déposée par le candidat (fichier gardé chez le propriétaire, effacé avec la candidature). */
+export interface CandidateDoc {
+  category: string
+  who: 'TENANT' | 'GUARANTOR'
+  fileId: string
+  label: string
+}
+export const DEFAULT_REQUESTED_DOCS = ['identity', 'home', 'activity', 'taxNotice', 'income']
+
+export function tenantFromCandidate(c: CandidateData & { documents?: CandidateDoc[] }) {
+  // Les pièces déposées rejoignent la fiche, marquées « envoyées par le locataire » : à vérifier par le propriétaire.
+  const docs = (who: CandidateDoc['who']) => (c.documents ?? []).filter((d) => d.who === who).map((d) => ({ category: d.category, received: true, fileId: d.fileId, label: d.label, source: 'TENANT' as const }))
   return {
+    monthlyIncomeCents: c.monthlyIncomeCents,
+    documents: docs('TENANT'),
     civility: c.civility ?? null,
     firstNames: c.firstNames,
     lastName: c.lastName,
@@ -100,6 +113,6 @@ export function tenantFromCandidate(c: CandidateData) {
     situation: c.situation,
     guarantee: c.guarantee,
     living: c.occupants && c.occupants > 1 ? undefined : 'ALONE',
-    guarantor: c.guarantee === 'CAUTION' && c.guarantor ? { firstNames: c.guarantor.firstNames, lastName: c.guarantor.lastName, email: c.guarantor.email || null } : null,
+    guarantor: c.guarantee === 'CAUTION' && c.guarantor ? { firstNames: c.guarantor.firstNames, lastName: c.guarantor.lastName, email: c.guarantor.email || null, documents: docs('GUARANTOR') } : null,
   }
 }
