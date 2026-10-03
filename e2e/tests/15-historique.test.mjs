@@ -37,6 +37,8 @@ test('nouveau bail : loyer du locataire précédent, dernier versement, dernièr
 test('échéances fiscales : occupation des logements après un nouveau bail, CFE en meublé', async () => {
   const { token } = await newAccount()
   const { leaseId } = await completeLease(token)
+  // Entrée il y a une semaine : le nouvel occupant est à signaler sur impots.gouv.fr
+  await api(`/leases/${leaseId}/terms`, { method: 'PUT', token, body: { startDate: iso(new Date(Date.now() - 7 * 86_400_000)) } })
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
   const today = await api('/today', { token })
   const labels = today.upcoming.map((u) => u.label).join(' | ')

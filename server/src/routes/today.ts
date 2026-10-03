@@ -14,6 +14,8 @@ import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
 import { upcomingInterventions } from './contacts.js'
+import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
+import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
 
 /**
@@ -180,18 +182,21 @@ router.get('/today', async (req, res) => {
     upcoming.push({ date: short(r.dueDate), label, sort: r.dueDate.getTime() })
   }
   for (const i of await upcomingInterventions(user.id)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
-  // Échéances fiscales, déduites des loyers et des baux (dates indicatives : à vérifier chaque année sur impots.gouv.fr).
+  // Échéances fiscales, déduites des loyers et des baux (calendrier vérifié par année : domain/fiscalCalendar.ts).
   const y = now.getUTCFullYear()
   const lastYearPaid = leases.some((l) => l.payments.some((p) => p.period.startsWith(String(y - 1))))
   if (lastYearPaid && now.getUTCMonth() <= 5) {
-    const d = new Date(Date.UTC(y, 4, 31))
-    upcoming.push({ date: 'fin mai', label: `Déclaration des revenus ${y - 1} : vos loyers et dépenses sont prêts dans Argent`, sort: d.getTime() })
+    const deadline = declarationDeadline(y, readProfile(user).postalCode)
+    const d = deadline.date ? new Date(`${deadline.date}T00:00:00Z`) : new Date(Date.UTC(y, 4, 31))
+    if (d >= today) upcoming.push({ date: deadline.date ? short(d) : 'fin mai', label: `Déclaration des revenus ${y - 1} en ligne${deadline.date ? '' : ' (date à confirmer sur impots.gouv.fr)'} : vos loyers et dépenses sont prêts dans Argent`, sort: d.getTime() })
   }
-  // Occupation des logements (« Gérer mes biens immobiliers ») : à mettre à jour avant le 1er juillet après un changement de locataire.
-  const july = new Date(Date.UTC(now.getUTCMonth() >= 6 ? y + 1 : y, 6, 1))
-  const yearBefore = new Date(Date.UTC(july.getUTCFullYear() - 1, 6, 1))
-  const changed = leases.some((l) => (l.status !== 'DRAFT' && l.startDate >= yearBefore && l.startDate < july) || (l.status === 'ENDED' && l.endDate >= yearBefore && l.endDate < july))
-  if (changed) upcoming.push({ date: short(july), label: 'Déclarer l’occupation de vos logements sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: july.getTime() - 1 })
+  // Occupation des logements (« Gérer mes biens immobiliers ») : changement d'occupant entre le 2 janvier de l'an
+  // dernier et le 1er janvier : à déclarer avant le 1er juillet ; un changement récent : à déclarer dès maintenant.
+  const changes = leases.flatMap((l) => [...(l.status !== 'DRAFT' ? [iso(l.startDate)!] : []), ...(l.status === 'ENDED' ? [iso(l.endDate)!] : [])])
+  const july = new Date(Date.UTC(y, 6, 1))
+  if (now < july && occupancyDeclarationDue(y, changes)) upcoming.push({ date: short(july), label: 'Déclarer l’occupation de vos logements sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: july.getTime() - 1 })
+  const recent = changes.some((d) => d <= iso(today)! && d >= iso(new Date(today.getTime() - 30 * DAY))!)
+  if (recent) upcoming.push({ date: 'ce mois-ci', label: 'Nouvel occupant ou logement libéré : à signaler sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: today.getTime() })
   // Location meublée : cotisation foncière des entreprises (CFE) le 15 décembre, sauf recettes de 5 000 € ou moins.
   if (now.getUTCMonth() >= 9 && leases.some((l) => l.type === 'FURNISHED' && (l.status === 'ACTIVE' || l.status === 'IMPORTED'))) {
     const cfe = new Date(Date.UTC(y, 11, 15))
