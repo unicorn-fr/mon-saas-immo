@@ -19,7 +19,7 @@ import RecevoirStep from './pages/tunnel/RecevoirStep'
 import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
-import { MentionsLegales, Conditions, Confidentialite, Contact, NotFound } from './pages/legal/Legal'
+import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement } from './pages/legal/Legal'
 
 
 type EspaceModule = typeof import('./pages/espace/index')
@@ -101,6 +101,23 @@ function ScrollToTop() {
   return null
 }
 
+/** Titre de l'onglet propre à chaque page (RGAA 8.6) : repris du titre principal (h1) de la page affichée. */
+function PageTitle() {
+  useEffect(() => {
+    const base = 'Bailio · Le bail et le suivi de votre location'
+    const update = () => {
+      const h1 = document.querySelector('main h1, h1')?.textContent?.replace(/\s+/g, ' ').trim()
+      const title = h1 && h1 !== 'Bailio' ? `${h1} · Bailio` : base
+      if (document.title !== title) document.title = title
+    }
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(document.getElementById('root') ?? document.body, { childList: true, subtree: true, characterData: true })
+    return () => observer.disconnect()
+  }, [])
+  return null
+}
+
 /** Premier élément atteint au clavier : passe directement au contenu de la page (RGAA 12.7). */
 function SkipLink() {
   return (
@@ -129,6 +146,7 @@ export default function App() {
           <ToastProvider>
             <ScrollToTop />
             <SkipLink />
+            <PageTitle />
             <Pages />
           </ToastProvider>
         </DraftProvider>
@@ -200,6 +218,9 @@ function Pages() {
               <Route path="/conditions" element={<Conditions />} />
               <Route path="/confidentialite" element={<Confidentialite />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
+              <Route path="/accessibilite" element={<Accessibilite />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -32,6 +32,14 @@
   - chaque champ a un intitulé (`hideLabel` pour les lignes répétées d'une liste) ; chaque image un `alt` ; icônes `aria-hidden` ;
   - lien « Aller au contenu » (`SkipLink`, `App.tsx`) et contour de focus bleu cerclé de crème (`styles.css`).
 
+## Pages légales (`client/src/pages/legal/Legal.tsx`)
+
+- `/mentions-legales` (LCEN art. 6-III : coordonnées de l'éditeur dans `EDITOR`, `config.ts`, affichées dès qu'elles sont renseignées), `/conditions` (CGU, acceptées à la création de l'espace), `/confidentialite` (RGPD art. 13 : bases légales, prestataires et garanties, durées, droits), `/cookies`, `/prix-et-remboursement` (rétractation 14 jours L221-18, remboursement L221-24, résiliation en ligne L215-1-1), `/accessibilite`.
+- Aucun cookie ni traceur : seul le stockage strictement nécessaire (`bailio.session`, `bailio.draft`, `bailio.boot`, `bailio.recover`), exempté de consentement (loi 78-17 art. 82) : pas de bandeau. Tout nouvel outil tiers (mesure d'audience, police, script externe) exige d'abord un consentement et une mise à jour de `/cookies`.
+- Avant toute offre payante : désigner un médiateur de la consommation (`MEDIATOR`, `config.ts`, L612-1), ajouter le bouton de résiliation et de rétractation dans « Mon compte ». Plus de lien vers la plateforme européenne RLL (fermée le 20 juillet 2025).
+- Tout nouveau prestataire ou nouvelle donnée collectée : mettre à jour les tableaux de `/confidentialite` et la date `UPDATED`.
+- Chaque page a son titre d'onglet, repris de son h1 (`PageTitle`, `App.tsx`).
+
 ## Rédaction
 
 - Tout en français, on **vouvoie** le propriétaire, phrases courtes, zéro jargon technique.

@@ -7,7 +7,7 @@ let browser
 before(async () => (browser = await launch()))
 after(() => browser?.close())
 
-const PAGES = ['/', '/connexion', '/inscription', '/importer', '/mentions-legales', '/conditions', '/confidentialite', '/contact']
+const PAGES = ['/', '/connexion', '/inscription', '/importer', '/mentions-legales', '/conditions', '/confidentialite', '/contact', '/cookies', '/prix-et-remboursement', '/accessibilite']
 
 for (const [viewport, label] of [[{ width: 1280, height: 900 }, 'ordinateur'], [{ width: 390, height: 844 }, 'téléphone']]) {
   test(`pages publiques (${label})`, async () => {
