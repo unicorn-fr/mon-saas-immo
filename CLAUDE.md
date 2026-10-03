@@ -53,6 +53,7 @@ Tests : `server/src/domain/notices.test.ts`, `server/src/domain/letters.test.ts`
 
 Chaque information saisie est enregistrée et réutilisée :
 - courriers : la saisie en cours est gardée automatiquement (`lease.data.letterDrafts`), et les faits utiles d'un courrier enregistré sont retenus avec le bail (`tenantNotice`, `depositReceivedAt`, `boilerServiceDate`…) puis repris par les courriers suivants ;
+- état des lieux : aucune grille de vétusté annoncée par défaut (elle se convient entre les parties et se joint au bail) ;
 - état des lieux de sortie : nouvelle adresse du locataire et date de remise des clés reprises dans sa fiche et le solde de tout compte ;
 - toute écriture dans `lease.data` relit les données juste avant (`patchLeaseData`) pour ne rien effacer.
 - bail signé : le PDF du bail reste la copie figée (`contractFor`), mais quittances, courriers, états des lieux et envois utilisent `liveContract` (coordonnées actuelles des fiches : email ajouté après la signature, nouvelle adresse, adresse, IBAN et signature du bailleur) ;
@@ -61,6 +62,7 @@ Chaque information saisie est enregistrée et réutilisée :
 ## Mise en location
 
 - Annonce (`domain/ad.ts`, `/espace/logements/:id/annonce`) : mentions obligatoires (loyer charges comprises par mois, charges, dépôt, surface, classes DPE, dépenses d'énergie estimées, « Logement à consommation énergétique excessive » en F et G). Réglages gardés dans la fiche du logement (`ad`), repris du dernier bail (`services/ad.ts`).
+- Honoraires dans l'annonce : « pas de frais d'agence » seulement sans mandataire ; avec un mandataire (profil `agent.enabled`), honoraires TTC à la charge du locataire exigés (`ad.tenantFeesCents`).
 - Rédaction avec une IA (`adPrompt`, `parseAiAd`) : consigne prête à copier, tirée de la fiche (sans adresse exacte ni nom, sans montants ni DPE, ajoutés ensuite comme mentions obligatoires) ; le propriétaire colle la réponse (`POST /properties/:id/ad/paste`) ou écrit lui-même. Bailio n'appelle aucune IA.
 - Candidats (`domain/candidates.ts`, `routes/candidates.ts`, table `Candidate`) : lien public `/candidature/:code` à coller sur Leboncoin, SeLoger… (message prêt à copier sur la page Candidats), sans compte. Pièces demandées choisies par le propriétaire (`ad.requestedDocs`, `ad.guarantorDocs`), déposées après l'envoi (`/candidature/:code/document`, jeton de 24 h). « Choisir ce candidat » crée la fiche du locataire (pièces reprises, `source: 'TENANT'`, à vérifier) et efface la candidature ; les autres sont effacées avec leurs pièces après 90 jours (tâche quotidienne). Pièces autorisées : décret 2015-1437 ; interdites : art. 22-2.
 

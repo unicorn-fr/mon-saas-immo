@@ -20,6 +20,8 @@ export interface AdSettings {
   complementCents?: number | null
   availableFrom?: string | null
   highlights?: string | null
+  /** Location par un mandataire : honoraires TTC à la charge du locataire (mention obligatoire de l'annonce). */
+  tenantFeesCents?: number | null
 }
 
 export interface AdCheck {
@@ -39,7 +41,7 @@ export interface Ad {
 const e = (cents: number) => formatEuros(cents)
 const plural = (n: number, w: string) => `${n} ${w}${n > 1 ? 's' : ''}`
 
-export function buildAd(p: PropertyFile, s: AdSettings): Ad {
+export function buildAd(p: PropertyFile, s: AdSettings, opts: { agent?: boolean } = {}): Ad {
   const furnished = Boolean(p.furnished)
   const kind = p.habitat === 'INDIVIDUAL' ? 'Maison' : 'Appartement'
   const rent = s.rentCents ?? null
@@ -62,7 +64,8 @@ export function buildAd(p: PropertyFile, s: AdSettings): Ad {
   }
   if (p.market?.refRentMaxCentsM2) lines.push(`Loyer de référence majoré : ${e(p.market.refRentMaxCentsM2)} par m² et par mois.`)
   if (s.depositCents !== null && s.depositCents !== undefined) lines.push(s.depositCents ? `Dépôt de garantie : ${e(s.depositCents)}.` : 'Pas de dépôt de garantie.')
-  lines.push('Location entre particuliers : pas de frais d’agence.')
+  if (!opts.agent) lines.push('Location entre particuliers : pas de frais d’agence.')
+  else if (s.tenantFeesCents !== null && s.tenantFeesCents !== undefined) lines.push(s.tenantFeesCents ? `Honoraires à la charge du locataire : ${e(s.tenantFeesCents)} TTC.` : 'Aucun honoraire à la charge du locataire.')
   lines.push('')
   if (dpe?.class) {
     lines.push(`Classe énergie : ${dpe.class}${dpe.ges ? `. Classe climat : ${dpe.ges}` : ''}.`)
@@ -77,6 +80,7 @@ export function buildAd(p: PropertyFile, s: AdSettings): Ad {
     { label: 'Montant des charges', ok: s.chargesCents !== null && s.chargesCents !== undefined, hint: 'Indiquez les charges (0 si aucune).' },
     { label: 'Dépôt de garantie', ok: s.depositCents !== null && s.depositCents !== undefined, hint: 'Indiquez le dépôt de garantie (0 si aucun).' },
     { label: 'Surface habitable', ok: Boolean(p.surface), hint: 'À compléter dans la fiche du logement.' },
+    ...(opts.agent ? [{ label: 'Honoraires à la charge du locataire', ok: s.tenantFeesCents !== null && s.tenantFeesCents !== undefined, hint: 'Vous passez par un mandataire : indiquez ses honoraires TTC à la charge du locataire (0 s’il n’y en a pas).' }] : []),
     { label: 'Ville', ok: Boolean(p.city), hint: 'À compléter dans la fiche du logement.' },
     { label: 'Classes énergie et climat (DPE)', ok: Boolean(dpe?.class && dpe?.ges), hint: 'À compléter dans la fiche du logement, rubrique diagnostics.' },
     { label: 'Dépenses d’énergie estimées', ok: Boolean(dpe?.costMin && dpe?.costMax), hint: 'Fourchette indiquée sur le DPE : à reporter dans la fiche du logement.' },

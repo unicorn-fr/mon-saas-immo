@@ -93,7 +93,7 @@ export function InventoryDocument(i: InventoryInput) {
             <P>{d.notes}</P>
           </>
         ) : null}
-        {d.vetusteGrid ? <P small>Une grille de vétusté est annexée : elle fixe la durée de vie des revêtements et équipements pour le calcul des éventuelles retenues à la sortie.</P> : null}
+        <P small>L’usure normale et la vétusté ne sont pas à la charge du locataire. Si les parties ont convenu d’une grille de vétusté, elle est jointe au bail.</P>
 
         <View wrap={false}>
           <P small>

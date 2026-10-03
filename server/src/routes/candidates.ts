@@ -8,7 +8,7 @@ import { HttpError } from '../lib/http.js'
 import { limitPerVisitor } from '../lib/rateLimit.js'
 import { newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
-import { propertyName, readProperty } from '../services/contract.js'
+import { propertyName, readProfile, readProperty } from '../services/contract.js'
 import { buildAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, rentShare, tenantFromCandidate, type CandidateData, type CandidateDoc } from '../domain/candidates.js'
@@ -40,10 +40,10 @@ async function deleteCandidateFiles(rows: Array<{ data: unknown }>) {
 }
 
 /** Ce que voit le candidat : l'annonce (sans adresse exacte) et les pièces qu'on peut lui demander. */
-function publicOffer(p: Awaited<ReturnType<typeof ownProperty>>) {
+function publicOffer(p: Awaited<ReturnType<typeof ownProperty>>, agent = false) {
   const file = readProperty(p)
   const settings = adSettings(p, p.leases)
-  const ad = buildAd(file, settings)
+  const ad = buildAd(file, settings, { agent })
   return {
     title: ad.title,
     text: ad.text,
@@ -57,9 +57,9 @@ function publicOffer(p: Awaited<ReturnType<typeof ownProperty>>) {
 // ── Public ───────────────────────────────────────────────────────────────────
 
 router.get('/candidature/:code', async (req, res) => {
-  const p = await prisma.property.findUnique({ where: { applyCode: String(req.params.code) }, include: { leases: { orderBy: { startDate: 'desc' } } } })
+  const p = await prisma.property.findUnique({ where: { applyCode: String(req.params.code) }, include: { leases: { orderBy: { startDate: 'desc' } }, user: true } })
   if (!p) throw new HttpError(404, 'Ce lien de candidature n’est plus actif.')
-  res.json({ success: true, data: publicOffer(p) })
+  res.json({ success: true, data: publicOffer(p, Boolean(readProfile(p.user).agent?.enabled)) })
 })
 
 router.post('/candidature/:code', limitPerVisitor(60, 5), async (req, res) => {
@@ -107,7 +107,7 @@ router.post('/candidature/:code/document', limitPerVisitor(60, 40), upload.singl
 
 router.get('/properties/:id/candidates', requireUser, async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
-  const offer = publicOffer(p)
+  const offer = publicOffer(p, Boolean(readProfile(req.user!).agent?.enabled))
   const rows = await prisma.candidate.findMany({ where: { propertyId: p.id }, orderBy: { createdAt: 'desc' } })
   res.json({
     success: true,

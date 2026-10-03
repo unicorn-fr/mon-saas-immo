@@ -47,3 +47,12 @@ test('texte collé depuis une IA : titre séparé, mise en forme retirée', () =
   assert.equal(r.description, 'Un séjour clair.\n\nBalcon')
   assert.deepEqual(parseAiAd('Juste un texte.'), { title: null, description: 'Juste un texte.' })
 })
+
+test('annonce : honoraires du mandataire au lieu de « pas de frais d’agence »', () => {
+  const s = { rentCents: 70000, chargesCents: 5000, depositCents: 70000 }
+  assert.match(buildAd(flat, s).text, /pas de frais d’agence/)
+  const agent = buildAd(flat, s, { agent: true })
+  assert.ok(!/pas de frais d’agence/.test(agent.text))
+  assert.ok(agent.checks.some((c) => c.label === 'Honoraires à la charge du locataire' && !c.ok))
+  assert.match(buildAd(flat, { ...s, tenantFeesCents: 45000 }, { agent: true }).text, /Honoraires à la charge du locataire : 450 € TTC/)
+})

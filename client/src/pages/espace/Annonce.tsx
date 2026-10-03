@@ -18,6 +18,7 @@ interface AdSettings {
   complementCents?: number | null
   availableFrom?: string | null
   highlights?: string | null
+  tenantFeesCents?: number | null
 }
 interface AdView {
   settings: AdSettings
@@ -110,6 +111,9 @@ export default function Annonce() {
               <Money label="Dépôt de garantie" cents={settings.depositCents} onChange={(c) => set({ depositCents: c })} />
               <Input label="Disponible à partir du" type="date" value={settings.availableFrom ?? ''} onChange={(v) => set({ availableFrom: v || null })} />
             </Fields>
+            {view.checks.some((c) => c.label === 'Honoraires à la charge du locataire') ? (
+              <Money label="Honoraires du mandataire à la charge du locataire (TTC)" cents={settings.tenantFeesCents} onChange={(c) => set({ tenantFeesCents: c })} hint="Mention obligatoire de l’annonce quand un mandataire s’occupe de la location. 0 s’il n’y en a pas." />
+            ) : null}
             <Money label="Dont complément de loyer (zone d’encadrement)" cents={settings.complementCents} onChange={(c) => set({ complementCents: c })} hint="Seulement si la commune encadre les loyers et que le logement le justifie. Sinon, laissez vide." />
           </Card>
           <Writer

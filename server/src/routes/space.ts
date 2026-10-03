@@ -273,7 +273,7 @@ router.get('/properties/:id/ad', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const settings = adSettings(p, p.leases)
   const file = readProperty(p)
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: Boolean(file.ad) } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: Boolean(file.ad) } })
 })
 
 router.put('/properties/:id/ad', async (req, res) => {
@@ -283,7 +283,7 @@ router.put('/properties/:id/ad', async (req, res) => {
   const current = readProperty(p)
   const file = propertyFileSchema.parse({ ...current, ad: settings, rent: { ...(current.rent ?? {}), ...rentPatch(settings) } })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: true } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: true } })
 })
 
 /** Texte rédigé par une IA (ou ailleurs) et collé par le propriétaire : titre et description enregistrés. */
@@ -295,7 +295,7 @@ router.post('/properties/:id/ad/paste', async (req, res) => {
   const settings = { ...adSettings(p, p.leases), description: parsed.description, ...(parsed.title ? { title: parsed.title } : {}) }
   const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings: file.ad, ad: buildAd(file, file.ad ?? {}), prompt: adPrompt(file, file.ad ?? {}), habitat: file.habitat ?? null, saved: true } })
+  res.json({ success: true, data: { settings: file.ad, ad: buildAd(file, file.ad ?? {}, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, file.ad ?? {}), habitat: file.habitat ?? null, saved: true } })
 })
 
 router.delete('/properties/:id', async (req, res) => {

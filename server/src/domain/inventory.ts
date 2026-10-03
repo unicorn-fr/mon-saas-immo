@@ -85,7 +85,8 @@ export function initialInventory(p: PropertyFile, kind: 'ENTRY' | 'EXIT', previo
     ],
     rooms: allRooms.map((name) => ({ name, done: false, items: itemsForRoom(name).map((label) => ({ label })) })),
     furniture: p.furnished ? (p.furniture?.inventory ?? []).map((i) => ({ item: i.room ? `${i.room} : ${i.item}` : i.item, count: i.count })) : [],
-    vetusteGrid: true,
+    // Pas de grille de vétusté par défaut : elle se convient entre les parties et se joint au bail (décret n° 2016-382).
+    vetusteGrid: false,
   }
 }
 

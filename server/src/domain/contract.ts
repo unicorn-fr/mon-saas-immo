@@ -232,6 +232,7 @@ export const propertyFileSchema = z.object({
       depositCents: opt(cents),
       complementCents: opt(cents),
       availableFrom: opt(isoDate),
+      tenantFeesCents: opt(cents),
       /** Points forts que le propriétaire veut voir dans l'annonce (repris dans la consigne pour une IA). */
       highlights: opt(text(600)),
       /** Pièces demandées aux candidats (parmi celles autorisées par le décret n° 2015-1437). */
