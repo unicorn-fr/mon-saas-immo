@@ -63,7 +63,7 @@ export function PhotoButton({ onPhotos, label = 'Photo', count = 0, dark = true 
 }
 
 /** Image protégée par la session (photo d'état des lieux, fichier joint). */
-export function AuthImage({ id, size = 72, onRemove }: { id: string; size?: number; onRemove?: () => void }) {
+export function AuthImage({ id, size = 72, onRemove, alt = 'Photo' }: { id: string; size?: number; onRemove?: () => void; alt?: string }) {
   const [url, setUrl] = useState<string | null>(null)
   useEffect(() => {
     let u: string | null = null
@@ -79,7 +79,7 @@ export function AuthImage({ id, size = 72, onRemove }: { id: string; size?: numb
   }, [id])
   return (
     <span style={{ position: 'relative', width: size, height: size, borderRadius: 10, overflow: 'hidden', background: BAI.skeleton, display: 'inline-flex', flexShrink: 0 }}>
-      {url ? <img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+      {url ? <img src={url} alt={alt} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
       {onRemove ? (
         <button type="button" aria-label="Retirer la photo" onClick={onRemove} style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, border: 'none', background: BAI.night, color: BAI.surface, fontSize: 14, lineHeight: 1, cursor: 'pointer' }}>
           ×

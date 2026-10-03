@@ -580,7 +580,7 @@ function StepPhotos({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile
       {photos.length ? (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {photos.map((p) => (
-            <AuthImage key={p} id={p} size={96} onRemove={() => set({ photos: photos.filter((x) => x !== p) })} />
+            <AuthImage key={p} id={p} alt="Photo du logement" size={96} onRemove={() => set({ photos: photos.filter((x) => x !== p) })} />
           ))}
         </div>
       ) : null}

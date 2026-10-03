@@ -152,7 +152,7 @@ export function Parcours() {
               const isNext = s === next
               const muted = s.status === 'NA' || s.status === 'LATER'
               return (
-                <li key={s.key} style={{ background: BAI.surface, border: isNext ? `2px solid ${BAI.owner}` : `1px solid ${BAI.divider}`, borderRadius: 18, padding: 'clamp(16px, 3vw, 22px)', display: 'flex', gap: 16, opacity: s.status === 'NA' ? 0.6 : 1 }}>
+                <li key={s.key} style={{ background: s.status === 'NA' ? BAI.bg : BAI.surface, border: isNext ? `2px solid ${BAI.owner}` : s.status === 'NA' ? `1px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 18, padding: 'clamp(16px, 3vw, 22px)', display: 'flex', gap: 16 }}>
                   <span style={{ width: 30, height: 30, borderRadius: 15, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, ...(s.status === 'DONE' ? { background: BAI.greenLight } : isNext ? { background: BAI.owner, color: BAI.surface } : { border: `1.5px solid ${BAI.dashed}`, color: BAI.inkSoft }) }}>
                     {s.status === 'DONE' ? <Check size={16} /> : i + 1}
                   </span>

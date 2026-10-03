@@ -82,7 +82,7 @@ export function Crumbs({ items }: { items: Array<{ label: string; to?: string }>
 
 /** Ligne « intitulé … valeur ». */
 export function Line({ label, value, tone, dark, strong, border }: { label: ReactNode; value: ReactNode; tone?: 'green' | 'error' | 'caramel'; dark?: boolean; strong?: boolean; border?: boolean }) {
-  const color = tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? BAI.caramel : dark ? BAI.surface : BAI.ink
+  const color = tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? (dark ? BAI.caramel : BAI.caramelInk) : dark ? BAI.surface : BAI.ink
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 15, ...(border ? { borderTop: `1px solid ${dark ? BAI.nightLine : BAI.dividerSoft}`, paddingTop: 12 } : {}) }}>
       <span style={{ color: dark ? BAI.onDarkMuted : BAI.inkSoft }}>{label}</span>
@@ -117,9 +117,9 @@ export function Avatar({ text, size = 40, dark }: { text: string; size?: number;
   )
 }
 
-export function Progress({ percent, height = 6 }: { percent: number; height?: number }) {
+export function Progress({ percent, height = 6, label = 'Avancement' }: { percent: number; height?: number; label?: string }) {
   return (
-    <div role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} style={{ height, background: BAI.divider, borderRadius: height / 2, display: 'flex', overflow: 'hidden' }}>
+    <div role="progressbar" aria-label={label} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} style={{ height, background: BAI.divider, borderRadius: height / 2, display: 'flex', overflow: 'hidden' }}>
       <div style={{ width: `${Math.max(0, Math.min(100, percent))}%`, background: percent >= 100 ? BAI.green : BAI.owner, borderRadius: height / 2, transition: 'width .3s' }} />
     </div>
   )
@@ -312,16 +312,18 @@ export const fieldStyle = (big = false, invalid = false): CSSProperties => ({
 
 interface FieldShell {
   label: ReactNode
+  /** Intitulé lu par les lecteurs d'écran mais non affiché (lignes répétées d'une liste). */
+  hideLabel?: boolean
   hint?: ReactNode
   error?: string | null
   big?: boolean
   style?: CSSProperties
 }
 
-function Shell({ label, hint, error, big, style, id, children }: FieldShell & { id: string; children: ReactNode }) {
+function Shell({ label, hideLabel, hint, error, big, style, id, children }: FieldShell & { id: string; children: ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '1 1 0', minWidth: 0, ...style }}>
-      <label htmlFor={id} style={{ fontSize: big ? 15 : 14, fontWeight: 600 }}>
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : undefined} style={{ fontSize: big ? 15 : 14, fontWeight: 600 }}>
         {label}
       </label>
       {children}
@@ -336,10 +338,10 @@ function Shell({ label, hint, error, big, style, id, children }: FieldShell & { 
   )
 }
 
-export function Input({ label, hint, error, big, style, value, onChange, type = 'text', placeholder, suffix, autoComplete, inputMode, maxLength, disabled, onBlur, autoFocus, list }: FieldShell & { value: string | number | null | undefined; onChange: (v: string) => void; type?: string; placeholder?: string; suffix?: string; autoComplete?: string; inputMode?: 'numeric' | 'decimal' | 'email' | 'tel' | 'text'; maxLength?: number; disabled?: boolean; onBlur?: () => void; autoFocus?: boolean; list?: string }) {
+export function Input({ label, hideLabel, hint, error, big, style, value, onChange, type = 'text', placeholder, suffix, autoComplete, inputMode, maxLength, disabled, onBlur, autoFocus, list }: FieldShell & { value: string | number | null | undefined; onChange: (v: string) => void; type?: string; placeholder?: string; suffix?: string; autoComplete?: string; inputMode?: 'numeric' | 'decimal' | 'email' | 'tel' | 'text'; maxLength?: number; disabled?: boolean; onBlur?: () => void; autoFocus?: boolean; list?: string }) {
   const id = useId()
   return (
-    <Shell id={id} label={label} hint={hint} error={error} big={big} style={style}>
+    <Shell id={id} label={label} hideLabel={hideLabel} hint={hint} error={error} big={big} style={style}>
       <div style={{ position: 'relative' }}>
         <input
           id={id}
@@ -364,7 +366,7 @@ export function Input({ label, hint, error, big, style, value, onChange, type = 
 }
 
 /** Montant en euros, stocké en centimes. */
-export function Money({ label, hint, error, big, style, cents, onChange, placeholder }: FieldShell & { cents: number | null | undefined; onChange: (c: number | null) => void; placeholder?: string }) {
+export function Money({ label, hideLabel, hint, error, big, style, cents, onChange, placeholder }: FieldShell & { cents: number | null | undefined; onChange: (c: number | null) => void; placeholder?: string }) {
   const [text, setText] = useState(cents === null || cents === undefined ? '' : centsToInput(cents))
   const last = useRef(cents)
   useEffect(() => {
@@ -376,6 +378,7 @@ export function Money({ label, hint, error, big, style, cents, onChange, placeho
   return (
     <Input
       label={label}
+      hideLabel={hideLabel}
       hint={hint}
       error={error}
       big={big}
@@ -394,7 +397,7 @@ export function Money({ label, hint, error, big, style, cents, onChange, placeho
   )
 }
 
-export function NumberField({ label, hint, error, big, style, value, onChange, suffix, step }: FieldShell & { value: number | null | undefined; onChange: (n: number | null) => void; suffix?: string; step?: 'int' | 'decimal' }) {
+export function NumberField({ label, hideLabel, hint, error, big, style, value, onChange, suffix, step }: FieldShell & { value: number | null | undefined; onChange: (n: number | null) => void; suffix?: string; step?: 'int' | 'decimal' }) {
   const [text, setText] = useState(value === null || value === undefined ? '' : String(value).replace('.', ','))
   const last = useRef(value)
   useEffect(() => {
@@ -406,6 +409,7 @@ export function NumberField({ label, hint, error, big, style, value, onChange, s
   return (
     <Input
       label={label}
+      hideLabel={hideLabel}
       hint={hint}
       error={error}
       big={big}
@@ -425,10 +429,10 @@ export function NumberField({ label, hint, error, big, style, value, onChange, s
   )
 }
 
-export function Select<T extends string>({ label, hint, error, big, style, value, onChange, options, placeholder }: FieldShell & { value: T | null | undefined; onChange: (v: T) => void; options: Array<{ value: T; label: string }>; placeholder?: string }) {
+export function Select<T extends string>({ label, hideLabel, hint, error, big, style, value, onChange, options, placeholder }: FieldShell & { value: T | null | undefined; onChange: (v: T) => void; options: Array<{ value: T; label: string }>; placeholder?: string }) {
   const id = useId()
   return (
-    <Shell id={id} label={label} hint={hint} error={error} big={big} style={style}>
+    <Shell id={id} label={label} hideLabel={hideLabel} hint={hint} error={error} big={big} style={style}>
       <select id={id} value={value ?? ''} onChange={(e) => onChange(e.target.value as T)} style={{ ...fieldStyle(big, Boolean(error)), appearance: 'auto' }}>
         {placeholder !== undefined || !value ? <option value="">{placeholder ?? 'Choisir'}</option> : null}
         {options.map((o) => (

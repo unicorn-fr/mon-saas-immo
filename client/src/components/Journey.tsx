@@ -46,13 +46,13 @@ export function Journey({ propertyId, steps: initial }: { propertyId: string; st
         const showAction = Boolean(s.action) && (s.state === 'TODO' || s.state === 'WAITING')
         const canSkip = Boolean(s.optional) && !isDone
         return (
-          <div key={s.key} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '12px 0', borderTop: `1px solid ${BAI.dividerSoft}`, opacity: s.state === 'LOCKED' ? 0.6 : 1 }}>
+          <div key={s.key} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '12px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
             <span aria-hidden style={{ width: 30, height: 30, borderRadius: 15, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, ...(isDone ? { background: BAI.greenLight, color: BAI.green } : isCurrent ? { background: BAI.owner, color: BAI.surface } : { border: `1.5px solid ${BAI.dashed}`, color: BAI.inkSoft }) }}>
               {isDone ? <Check size={15} /> : n}
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
               <span style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: isDone ? BAI.inkMid : BAI.ink }}>{s.title}</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: isDone || s.state === 'LOCKED' ? BAI.inkMid : BAI.ink }}>{s.title}</span>
                 <span style={{ fontSize: 13, fontWeight: 600, color: s.state === 'TODO' ? BAI.caramelInk : s.state === 'WAITING' ? BAI.owner : BAI.inkSoft }}>
                   {STATE_LABEL[s.state]}
                   {s.optional && s.state !== 'SKIPPED' ? ', facultatif' : ''}

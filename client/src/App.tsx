@@ -101,6 +101,25 @@ function ScrollToTop() {
   return null
 }
 
+/** Premier élément atteint au clavier : passe directement au contenu de la page (RGAA 12.7). */
+function SkipLink() {
+  return (
+    <a
+      href="#contenu"
+      className="skip-link"
+      onClick={(e) => {
+        const main = document.querySelector('main')
+        if (!main) return
+        e.preventDefault()
+        main.setAttribute('tabindex', '-1')
+        main.focus()
+      }}
+    >
+      Aller au contenu
+    </a>
+  )
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
@@ -109,6 +128,7 @@ export default function App() {
         <DraftProvider>
           <ToastProvider>
             <ScrollToTop />
+            <SkipLink />
             <Pages />
           </ToastProvider>
         </DraftProvider>

@@ -681,8 +681,8 @@ function ChargesFields({ letter, set }: { letter: Letter; set: (p: Record<string
         <span style={{ fontSize: 14, fontWeight: 600 }}>Charges récupérables réelles</span>
         {lines.map((l, i) => (
           <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-            <Input label={i === 0 ? 'Nature de la charge' : ''} value={l.label} onChange={(v) => setLine(i, { label: v })} placeholder="Taxe d’enlèvement des ordures ménagères" style={{ flex: '2 1 0' }} />
-            <Money label={i === 0 ? 'Montant réel' : ''} cents={l.amountCents} onChange={(c) => setLine(i, { amountCents: c ?? 0 })} style={{ flex: '1 1 0' }} />
+            <Input label="Nature de la charge" hideLabel={i > 0} value={l.label} onChange={(v) => setLine(i, { label: v })} placeholder="Taxe d’enlèvement des ordures ménagères" style={{ flex: '2 1 0' }} />
+            <Money label="Montant réel" hideLabel={i > 0} cents={l.amountCents} onChange={(c) => setLine(i, { amountCents: c ?? 0 })} style={{ flex: '1 1 0' }} />
             <Btn variant="ghost" size="sm" onClick={() => set({ lines: lines.filter((_, j) => j !== i) })} title="Retirer" style={{ height: 50 }}>
               Retirer
             </Btn>

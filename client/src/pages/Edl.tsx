@@ -172,7 +172,7 @@ function Flow({ inv }: { inv: InventoryView }) {
                   </div>
                 ) : null}
                 {!m.notApplicable ? <Input label="Numéro du compteur (facultatif)" value={m.number ?? ''} onChange={(v) => update((d) => ({ ...d, meters: (d.meters ?? []).map((x, j) => (j === i ? { ...x, number: v } : x)) }))} /> : null}
-                {m.photoId ? <AuthImage id={m.photoId} size={96} onRemove={() => update((d) => ({ ...d, meters: (d.meters ?? []).map((x, j) => (j === i ? { ...x, photoId: null } : x)) }))} /> : null}
+                {m.photoId ? <AuthImage id={m.photoId} alt="Photo du compteur" size={96} onRemove={() => update((d) => ({ ...d, meters: (d.meters ?? []).map((x, j) => (j === i ? { ...x, photoId: null } : x)) }))} /> : null}
                 <button type="button" onClick={() => update((d) => ({ ...d, meters: (d.meters ?? []).map((x, j) => (j === i ? { ...x, notApplicable: !x.notApplicable } : x)) }))} style={linkBtn}>
                   {m.notApplicable ? 'Ce compteur existe' : 'Pas de compteur de ce type'}
                 </button>
@@ -402,7 +402,7 @@ function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: {
           {it.photoIds?.length ? (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {it.photoIds.map((p) => (
-                <AuthImage key={p} id={p} size={64} onRemove={() => setItem(i, { photoIds: (it.photoIds ?? []).filter((x) => x !== p) })} />
+                <AuthImage key={p} id={p} alt="Photo de l’élément" size={64} onRemove={() => setItem(i, { photoIds: (it.photoIds ?? []).filter((x) => x !== p) })} />
               ))}
             </div>
           ) : null}

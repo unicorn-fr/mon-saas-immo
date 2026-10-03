@@ -174,7 +174,7 @@ function Verify({ e }: { e: ExpenseDetails }) {
             {reading?.tenantRepairHint ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>{reading.tenantRepairHint} Suggestion de Bailio, à confirmer selon la situation.</span> : null}
             <div className="grid-2" style={{ gap: 10 }}>
               {(['OWNER', 'TENANT'] as const).map((v) => (
-                <label key={v} style={{ ...fieldStyle(), display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', border: chargeTo === v ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.border}`, height: 48 }}>
+                <label key={v} style={{ ...fieldStyle(), display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', border: chargeTo === v ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, height: 48 }}>
                   <input type="radio" name="chargeTo" checked={chargeTo === v} onChange={() => setChargeTo(v)} style={{ accentColor: BAI.owner }} />
                   {v === 'OWNER' ? 'À ma charge' : 'À refacturer au locataire'}
                 </label>

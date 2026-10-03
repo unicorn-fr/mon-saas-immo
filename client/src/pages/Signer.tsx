@@ -172,7 +172,7 @@ export default function Signer() {
             onDrop={guarantor ? (e) => e.preventDefault() : undefined}
             rows={guarantor ? 7 : 1}
             disabled={!data.codeVerified}
-            style={{ border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '14px 16px', fontSize: 16, lineHeight: 1.5, fontFamily: 'inherit', background: BAI.surface, color: BAI.ink, resize: 'vertical', minHeight: 60 }}
+            style={{ border: `1.5px solid ${BAI.borderStrong}`, borderRadius: 14, padding: '14px 16px', fontSize: 16, lineHeight: 1.5, fontFamily: 'inherit', background: BAI.surface, color: BAI.ink, resize: 'vertical', minHeight: 60 }}
           />
         </label>
       </Step>
@@ -227,7 +227,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Step({ n, title, done, disabled, children }: { n: number; title: string; done?: boolean; disabled?: boolean; children: React.ReactNode }) {
   return (
-    <section style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 26px)', display: 'flex', flexDirection: 'column', gap: 14, opacity: disabled ? 0.55 : 1 }}>
+    <section style={{ background: disabled ? BAI.bg : BAI.surface, border: disabled ? `1px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 26px)', display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ width: 30, height: 30, borderRadius: 15, background: done ? BAI.green : BAI.night, color: BAI.surface, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>{done ? '✓' : n}</span>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>{title}</h2>

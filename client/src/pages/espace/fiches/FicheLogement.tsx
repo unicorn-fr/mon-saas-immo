@@ -290,9 +290,9 @@ function RoomList({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {rooms.map((r, i) => (
         <div key={i} className="col-md" style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-          <Input label={i === 0 ? 'Pièce' : ''} value={r.name} onChange={(v) => upd(i, { name: v })} style={{ flex: '2 1 0' }} />
-          <Input label={i === 0 ? 'Niveau' : ''} value={r.level} onChange={(v) => upd(i, { level: v })} placeholder="Rez-de-chaussée" />
-          <Input label={i === 0 ? 'Remarque' : ''} value={r.note} onChange={(v) => upd(i, { note: v })} style={{ flex: '2 1 0' }} />
+          <Input label="Pièce" hideLabel={i > 0} value={r.name} onChange={(v) => upd(i, { name: v })} style={{ flex: '2 1 0' }} />
+          <Input label="Niveau" hideLabel={i > 0} value={r.level} onChange={(v) => upd(i, { level: v })} placeholder="Rez-de-chaussée" />
+          <Input label="Remarque" hideLabel={i > 0} value={r.note} onChange={(v) => upd(i, { note: v })} style={{ flex: '2 1 0' }} />
           <Btn variant="ghost" size="sm" onClick={() => set({ roomList: rooms.filter((_, j) => j !== i) })} style={{ height: 50 }}>
             Retirer
           </Btn>
@@ -311,10 +311,10 @@ function FurnitureInventory({ f, set }: { f: PropertyFile; set: (p: Partial<Prop
       <span style={{ fontSize: 14, fontWeight: 600 }}>Inventaire du mobilier</span>
       {inv.map((x, i) => (
         <div key={i} className="col-md" style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-          <Input label={i === 0 ? 'Pièce' : ''} value={x.room} onChange={(v) => upd(i, { room: v })} />
-          <Input label={i === 0 ? 'Élément' : ''} value={x.item} onChange={(v) => upd(i, { item: v })} style={{ flex: '2 1 0' }} />
-          <NumberField label={i === 0 ? 'Nombre' : ''} value={x.count} onChange={(v) => upd(i, { count: Math.max(1, v ?? 1) })} />
-          <Select label={i === 0 ? 'État' : ''} value={x.state ?? ''} onChange={(v) => upd(i, { state: v })} options={['Neuf', 'Bon', 'Usé', 'Mauvais'].map((s) => ({ value: s, label: s }))} />
+          <Input label="Pièce" hideLabel={i > 0} value={x.room} onChange={(v) => upd(i, { room: v })} />
+          <Input label="Élément" hideLabel={i > 0} value={x.item} onChange={(v) => upd(i, { item: v })} style={{ flex: '2 1 0' }} />
+          <NumberField label="Nombre" hideLabel={i > 0} value={x.count} onChange={(v) => upd(i, { count: Math.max(1, v ?? 1) })} />
+          <Select label="État" hideLabel={i > 0} value={x.state ?? ''} onChange={(v) => upd(i, { state: v })} options={['Neuf', 'Bon', 'Usé', 'Mauvais'].map((s) => ({ value: s, label: s }))} />
           <Btn variant="ghost" size="sm" onClick={() => set({ furniture: { ...f.furniture, inventory: inv.filter((_, j) => j !== i) } })} style={{ height: 50 }}>
             Retirer
           </Btn>
@@ -358,7 +358,7 @@ function Photos({ f, set, onError }: { f: PropertyFile; set: (p: Partial<Propert
       {photos.length ? (
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {photos.map((p) => (
-            <AuthImage key={p} id={p} size={96} onRemove={() => set({ photos: photos.filter((x) => x !== p) })} />
+            <AuthImage key={p} id={p} alt="Photo du logement" size={96} onRemove={() => set({ photos: photos.filter((x) => x !== p) })} />
           ))}
         </div>
       ) : null}

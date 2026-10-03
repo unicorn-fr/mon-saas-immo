@@ -82,7 +82,7 @@ export default function Home() {
           <form
             onSubmit={start}
             className="col-md"
-            style={{ marginTop: 12, width: '100%', maxWidth: 760, background: BAI.surface, border: `1.5px solid ${BAI.border}`, borderRadius: 20, padding: 10, display: 'flex', gap: 10, alignItems: 'center', boxShadow: '0 12px 40px rgba(26,26,46,0.08)' }}
+            style={{ marginTop: 12, width: '100%', maxWidth: 760, background: BAI.surface, border: `1.5px solid ${BAI.borderStrong}`, borderRadius: 20, padding: 10, display: 'flex', gap: 10, alignItems: 'center', boxShadow: '0 12px 40px rgba(26,26,46,0.08)' }}
           >
             <label htmlFor="home-address" className="sr-only">
               Adresse du logement

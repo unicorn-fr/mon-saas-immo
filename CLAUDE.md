@@ -25,6 +25,12 @@
 - Fond crème `BAI.bg`, encre `BAI.ink`, action principale bleu `BAI.owner`, accent `BAI.caramel`, validé `BAI.green`.
 - Une seule action principale par écran. Champs de 60 px de haut, rayon 14 px.
 - Mobile d'abord : `clamp()` pour les tailles, classes `.col-md`, `.hide-md`, `.grid-*` pour les ruptures.
+- Accessibilité (RGAA 4.1 / WCAG 2.1 AA), contrôlée par axe-core sur toutes les pages (`e2e/tests/16-accessibilite.test.mjs`) :
+  - texte ≥ 4,5:1 : `BAI.caramel` seulement sur fond sombre (`night`), sur fond clair `BAI.caramelInk` ;
+  - bord des champs et boutons à choix `BAI.borderStrong` (≥ 3:1) ;
+  - jamais d'`opacity` pour estomper un texte (étape verrouillée : fond `BAI.bg` et bord pointillé) ; seuls les boutons et champs désactivés peuvent l'être ;
+  - chaque champ a un intitulé (`hideLabel` pour les lignes répétées d'une liste) ; chaque image un `alt` ; icônes `aria-hidden` ;
+  - lien « Aller au contenu » (`SkipLink`, `App.tsx`) et contour de focus bleu cerclé de crème (`styles.css`).
 
 ## Rédaction
 

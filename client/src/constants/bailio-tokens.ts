@@ -19,7 +19,7 @@ export const BAI = {
   onDarkNav: '#c9c4d6', // liens du menu latéral
   // Bordures
   border: '#e3dccf',
-  borderStrong: '#d7cfc1',
+  borderStrong: '#8a8274', // bord des champs et boutons à choix : contraste 3:1 minimum (WCAG 1.4.11)
   divider: '#ebe4d8',
   dividerSoft: '#efe9df',
   rule: '#ddd5c7',
