@@ -1,3 +1,4 @@
+import { AccountNotice } from '../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { safePath } from '../lib/safePath'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -88,6 +89,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
         <Button type="submit" full loading={loading} height={58}>
           {signup ? 'Créer mon espace' : 'Recevoir mon lien de connexion'}
         </Button>
+        {signup ? <AccountNotice action="Créer mon espace" /> : null}
       </form>
       <div style={{ fontSize: 15, color: BAI.inkMid, textAlign: 'center' }}>
         {signup ? (

@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
-import { tenantFileSchema } from '../domain/contract.js'
+import { DOSSIER_YEARS, minimizeTenantFile, NO_LEASE_MONTHS, PHOTO_YEARS, staleWithoutLease, yearsAgo } from '../domain/retention.js'
 import { readTenant } from './contract.js'
 
 /**
@@ -14,11 +14,6 @@ import { readTenant } from './contract.js'
  * - photo prise à la signature : effacée (le certificat garde la date, l'heure et l'empreinte).
  * La clôture des comptes est la remise des clés (date de fin du bail).
  */
-export const DOSSIER_YEARS = 3
-export const PHOTO_YEARS = 3
-
-const yearsAgo = (n: number, now: Date) => new Date(Date.UTC(now.getUTCFullYear() - n, now.getUTCMonth(), now.getUTCDate()))
-
 export async function purgeAfterLease(now = new Date()): Promise<{ tenants: number; photos: number }> {
   let tenants = 0
   const ended = await prisma.lease.findMany({ where: { status: 'ENDED' }, select: { tenantIds: true, endDate: true } })
@@ -33,25 +28,7 @@ export async function purgeAfterLease(now = new Date()): Promise<{ tenants: numb
     if (!t) continue
     const f = readTenant(t)
     if (f.purgedAt) continue
-    const ids = [...(f.documents ?? []), ...(f.guarantor?.documents ?? [])].map((d) => d.fileId).filter((x): x is string => Boolean(x))
-    const clear = (docs: typeof f.documents) => (docs ?? []).map((d) => ({ ...d, fileId: null, label: 'Effacé 3 ans après la fin du bail' }))
-    const g = f.guarantor
-    const next = tenantFileSchema.parse({
-      ...f,
-      birthDate: null,
-      birthPlace: null,
-      phone: null,
-      currentAddress: null,
-      situation: null,
-      employer: null,
-      occupation: null,
-      monthlyIncomeCents: null,
-      visaleNumber: null,
-      dossierFacileUrl: null,
-      review: [],
-      documents: clear(f.documents),
-      ...(g ? { guarantor: { civility: g.civility, firstNames: g.firstNames, lastName: g.lastName, documents: clear(g.documents) } } : {}),
-    })
+    const { file: next, fileIds: ids } = minimizeTenantFile(f, 'Effacé 3 ans après la fin du bail')
     if (ids.length) await prisma.fileBlob.deleteMany({ where: { id: { in: ids }, userId: t.userId } })
     await prisma.tenant.update({ where: { id }, data: { data: { ...next, purgedAt: now.toISOString() } as unknown as Prisma.InputJsonObject } })
     tenants += 1
@@ -61,4 +38,23 @@ export async function purgeAfterLease(now = new Date()): Promise<{ tenants: numb
     data: { photo: null },
   })
   return { tenants, photos: photos.count }
+}
+
+/**
+ * Dossier d'un locataire qui n'a jamais eu de bail (candidat retenu puis abandonné, fiche jamais utilisée) :
+ * réduit au nom et à l'email 3 mois après sa dernière modification (référentiel CNIL, candidats non retenus).
+ */
+export async function purgeWithoutLease(now = new Date()): Promise<number> {
+  const withLease = new Set((await prisma.lease.findMany({ select: { tenantIds: true } })).flatMap((l) => l.tenantIds))
+  const candidates = await prisma.tenant.findMany({ where: { updatedAt: { lt: new Date(now.getTime() - 80 * 86_400_000) } } })
+  let count = 0
+  for (const t of candidates) {
+    const f = readTenant(t)
+    if (!staleWithoutLease({ updatedAt: t.updatedAt, hasLease: withLease.has(t.id), purged: Boolean(f.purgedAt) }, now)) continue
+    const { file, fileIds } = minimizeTenantFile(f, `Effacé ${NO_LEASE_MONTHS} mois sans bail`)
+    if (fileIds.length) await prisma.fileBlob.deleteMany({ where: { id: { in: fileIds }, userId: t.userId } })
+    await prisma.tenant.update({ where: { id: t.id }, data: { data: { ...file, purgedAt: now.toISOString() } as unknown as Prisma.InputJsonObject } })
+    count += 1
+  }
+  return count
 }

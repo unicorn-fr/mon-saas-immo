@@ -1,3 +1,4 @@
+import { ThirdPartyNotice } from '../components/DataNotice'
 import { useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
@@ -48,6 +49,7 @@ export default function EspaceLocataire() {
             <Insurance code={code} info={data} onDone={reload} />
             {data.boiler ? <Boiler code={code} info={data} onDone={reload} /> : null}
             <EReceipt code={code} info={data} onDone={reload} />
+            <ThirdPartyNotice landlord={data.landlord} purpose="la gestion de votre location (assurance, entretien, quittances)" keep="Elles sont gardées avec le bail, pendant la location puis trois ans." />
           </>
         )}
       </main>

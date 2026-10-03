@@ -1,3 +1,4 @@
+import { ThirdPartyNotice } from '../components/DataNotice'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
@@ -139,7 +140,7 @@ export default function Signer() {
 
       <Step n={3} title="Prenez-vous en photo (facultatif)" done={Boolean(data.photoAt) || noPhoto} disabled={!data.codeVerified}>
         <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
-          Une photo de votre visage, prise maintenant. Elle est datée à la seconde par notre serveur et jointe au certificat de preuve : elle montre que c’est bien vous qui signez. Elle n’est visible que des signataires du bail. Elle est facultative.
+          Une photo de votre visage, prise maintenant. Elle est datée à la seconde par notre serveur et jointe au certificat de preuve : elle montre que c’est bien vous qui signez. Elle n’est visible que des signataires du bail et sera effacée trois ans après la fin du bail. Elle est facultative : vous pouvez signer sans photo.
         </p>
         {data.codeVerified ? (
           <SelfieCapture
@@ -190,6 +191,7 @@ export default function Signer() {
             Signer le document
           </Btn>
         </div>
+        <ThirdPartyNotice landlord={data.landlord} purpose="établir le bail et prouver les signatures" keep="La preuve de signature est gardée avec le bail, pendant la location puis trois ans." />
       </Step>
 
       <Others others={data.others} />

@@ -1,3 +1,4 @@
+import { AccountNotice } from '../../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { MailLinks } from '../../components/MailLinks'
 import { useNavigate } from 'react-router-dom'
@@ -122,6 +123,7 @@ export default function RecevoirStep() {
             <div style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.6 }}>
               Gratuit, sans carte bancaire. Vous recevez un lien pour confirmer votre adresse : votre espace est créé à ce moment-là. Pas de mot de passe.
             </div>
+            <AccountNotice action={imported ? 'Enregistrer mon bail' : 'Recevoir le lien'} />
           </>
         )}
         {error ? <Notice tone="warning">{error}</Notice> : null}

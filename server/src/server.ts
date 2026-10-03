@@ -4,7 +4,7 @@ import { env } from './env.js'
 import { runDailyReminders } from './jobs/reminderEmails.js'
 import { purgeOldCandidates } from './routes/candidates.js'
 import { purgeTrash } from './services/trash.js'
-import { purgeAfterLease } from './services/retention.js'
+import { purgeAfterLease, purgeWithoutLease } from './services/retention.js'
 
 const app = createApp()
 app.listen(env.PORT, () => console.info(`[bailio] API prête sur le port ${env.PORT}`))
@@ -18,4 +18,5 @@ cron.schedule('0 8 * * *', () => {
   purgeTrash().catch((err) => console.error('[corbeille]', err))
   // Fin de location (référentiel CNIL) : justificatifs, informations inutiles et photo de signature effacés après 3 ans.
   purgeAfterLease().catch((err) => console.error('[conservation]', err))
+  purgeWithoutLease().catch((err) => console.error('[conservation sans bail]', err))
 }, { timezone: 'Europe/Paris' })

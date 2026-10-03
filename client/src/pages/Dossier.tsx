@@ -1,3 +1,4 @@
+import { ThirdPartyNotice } from '../components/DataNotice'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
@@ -92,6 +93,7 @@ export default function Dossier() {
             <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>
               Ces pièces sont celles que la loi autorise à demander (décret n° 2015-1437). Vous pouvez masquer sur vos documents les informations inutiles à leur vérification. Elles ne sont visibles que de votre bailleur.
             </span>
+            <ThirdPartyNotice landlord={v.landlord} purpose="préparer votre bail et vérifier votre dossier" keep="Elles sont gardées pendant la location, puis trois ans ; les justificatifs sont ensuite effacés. Si aucun bail n’est préparé avec vous, les justificatifs et les informations autres que vos nom et email sont effacés trois mois après la dernière modification." />
             <Btn onClick={() => void finish()} style={{ alignSelf: 'flex-start' }}>
               J’ai terminé
             </Btn>

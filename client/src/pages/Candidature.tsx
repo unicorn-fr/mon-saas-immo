@@ -1,3 +1,4 @@
+import { ThirdPartyNotice } from '../components/DataNotice'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
@@ -104,9 +105,9 @@ export default function Candidature() {
               </Fields>
               <Fields>
                 <Input label="Email" type="email" value={f.email} onChange={(v) => set({ email: v })} autoComplete="email" inputMode="email" />
-                <Input label="Téléphone" value={f.phone} onChange={(v) => set({ phone: v })} autoComplete="tel" inputMode="tel" />
+                <Input label="Téléphone" hint="Facultatif." value={f.phone} onChange={(v) => set({ phone: v })} autoComplete="tel" inputMode="tel" />
               </Fields>
-              <Input label="Adresse actuelle" value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} autoComplete="street-address" />
+              <Input label="Adresse actuelle" hint="Facultatif." value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} autoComplete="street-address" />
               <Select
                 label="Situation professionnelle"
                 value={f.situation}
@@ -124,7 +125,7 @@ export default function Candidature() {
                 <Money label="Revenus nets du foyer, par mois" cents={f.monthlyIncomeCents} onChange={(c) => set({ monthlyIncomeCents: c })} />
                 <NumberField label="Personnes qui vivront dans le logement" value={f.occupants} onChange={(v) => set({ occupants: v })} />
               </Fields>
-              <Input label="Date d’entrée souhaitée" type="date" value={f.moveInDate} onChange={(v) => set({ moveInDate: v })} />
+              <Input label="Date d’entrée souhaitée" hint="Facultatif." type="date" value={f.moveInDate} onChange={(v) => set({ moveInDate: v })} />
             </Card>
             <Card title="Votre garantie">
               <Chips
@@ -175,7 +176,8 @@ export default function Candidature() {
               <TextArea label="Message" value={f.message} onChange={(v) => set({ message: v })} rows={4} hint="Facultatif." />
               {/* Champ invisible : les robots le remplissent, pas les personnes. */}
               <input tabIndex={-1} autoComplete="off" aria-hidden value={f.website} onChange={(e) => set({ website: e.target.value })} style={{ position: 'absolute', left: -9999, width: 1, height: 1 }} />
-              <Check checked={f.consent} onChange={(v) => set({ consent: v })} label="J’accepte que ces informations soient transmises au propriétaire pour étudier ma candidature." sub="Elles sont effacées au plus tard trois mois après leur envoi." />
+              <Check checked={f.consent} onChange={(v) => set({ consent: v })} label="J’ai compris que ces informations sont transmises au propriétaire pour étudier ma candidature." />
+              <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
             </Card>
             <Callout tone="tip">Le propriétaire ne peut pas vous demander de photo, de relevés bancaires, de carte Vitale ni de chèque de réservation. La loi interdit aussi toute discrimination.</Callout>
             <div>

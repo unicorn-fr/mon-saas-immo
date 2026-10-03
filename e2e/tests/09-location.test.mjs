@@ -66,7 +66,7 @@ test('candidature : formulaire public sans compte, choix du candidat, fiche loca
   await page.getByLabel('Situation professionnelle').selectOption('EMPLOYEE')
   await page.getByLabel('Revenus nets du foyer, par mois').fill('2400')
   await page.getByRole('button', { name: 'Garantie Visale' }).click()
-  await page.getByText('J’accepte que ces informations').click()
+  await page.getByText('J’ai compris que ces informations').click()
   await shot(page, 'candidature')
   await page.getByRole('button', { name: 'Envoyer ma candidature' }).click()
   await page.getByText('Candidature envoyée.').waitFor()

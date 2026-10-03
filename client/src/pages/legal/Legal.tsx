@@ -306,6 +306,7 @@ export function Confidentialite() {
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes ;</li>
         <li>Les candidatures : trois mois au plus après leur envoi, pièces comprises. Celle que le propriétaire retient devient la fiche du locataire ;</li>
         <li>Le dossier d'un locataire et de son garant : gardé pendant la location, puis trois ans après la fin du dernier bail (délai pendant lequel une action liée au bail reste possible, comme le recommande la CNIL). Ensuite, les justificatifs et les informations devenues inutiles (revenus, situation, naissance, téléphone, garant) sont effacés ; restent le nom et l'email, qui figurent dans les quittances et le bail ;</li>
+        <li>Le dossier d'un locataire pour qui aucun bail n'a été préparé : réduit de la même façon (nom et email seulement) trois mois après sa dernière modification ;</li>
         <li>La photo prise à la signature : effacée trois ans après la fin du bail. La date, l'heure et l'empreinte de la photo restent dans le certificat de signature ;</li>
         <li>Les éléments supprimés vont dans la corbeille : effacés définitivement après 30 jours.</li>
       </ul>

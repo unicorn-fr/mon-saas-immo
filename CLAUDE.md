@@ -39,6 +39,9 @@
 - Avant toute offre payante : désigner un médiateur de la consommation (`MEDIATOR`, `config.ts`, L612-1), ajouter le bouton de résiliation et de rétractation dans « Mon compte ». Plus de lien vers la plateforme européenne RLL (fermée le 20 juillet 2025).
 - Tout nouveau prestataire ou nouvelle donnée collectée : mettre à jour les tableaux de `/confidentialite` et la date `UPDATED`.
 - Chaque page a son titre d'onglet, repris de son h1 (`PageTitle`, `App.tsx`).
+- Information au moment de la collecte (RGPD art. 13, `components/DataNotice.tsx`) : `AccountNotice` sous chaque création d'espace (vaut acceptation des CGU), `ThirdPartyNotice` sous les formulaires du locataire, du candidat et du signataire (propriétaire responsable, Bailio sous-traitant, durée, droits). Tout nouveau formulaire public en reçoit une. Champs non indispensables marqués « Facultatif ».
+- Conservation (`domain/retention.ts`, testé) : dossier réduit au nom et à l'email 3 ans après la fin du bail (`purgeAfterLease`) ou 3 mois après sa dernière modification s'il n'a jamais eu de bail (`purgeWithoutLease`), tâche quotidienne.
+- Agents d'IA et moteurs : `robots.txt` (liens privés exclus), `sitemap.xml` et `llms.txt` générés par `vite.config.ts` (prix repris de `config.ts`) ; `<noscript>` descriptif dans `index.html`. Nouvelle page publique : l'ajouter à `PUBLIC_PAGES` et à `llms.txt`.
 
 ## Rédaction
 
