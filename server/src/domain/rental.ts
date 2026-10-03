@@ -44,6 +44,8 @@ export interface RentalFacts {
     startDate: string
   }
   today: string
+  /** Logement interdit à la location (DPE) : motif, ou null. */
+  forbidden?: string | null
 }
 
 const list = (labels: string[], max = 3) => {
@@ -105,7 +107,7 @@ export function rentalSteps(f: RentalFacts): RentalStep[] {
   else tenant = { key: 'TENANT', title: `Le locataire : ${t.name}`, state: 'DONE', text: 'Son dossier est complet.' }
   steps.push(tenant)
 
-  const canLease = !essentials.length && tenant.state === 'DONE'
+  const canLease = !essentials.length && tenant.state === 'DONE' && !f.forbidden
   steps.push(
     l
       ? l.status === 'DRAFT' && !l.ready
@@ -115,7 +117,7 @@ export function rentalSteps(f: RentalFacts): RentalStep[] {
           key: 'LEASE',
           title: 'Créer le bail',
           state: canLease ? 'TODO' : 'LOCKED',
-          text: canLease ? 'Bailio réunit la fiche du logement et celle du locataire et ne vous demande que les conditions : loyer, charges, dépôt, date d’entrée.' : 'Possible dès que la fiche du logement et le dossier du locataire ont l’essentiel.',
+          text: f.forbidden ? f.forbidden : canLease ? 'Bailio réunit la fiche du logement et celle du locataire et ne vous demande que les conditions : loyer, charges, dépôt, date d’entrée.' : 'Possible dès que la fiche du logement et le dossier du locataire ont l’essentiel.',
           action: canLease ? { label: 'Créer le bail', to: `/espace/baux/nouveau?logement=${f.propertyId}${t ? `&locataire=${t.id}` : ''}` } : undefined,
         },
   )

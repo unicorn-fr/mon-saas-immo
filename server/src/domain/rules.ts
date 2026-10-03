@@ -92,6 +92,19 @@ export function energyRentalWarning(dpe: string | null | undefined, onDate = new
   return null
 }
 
+/**
+ * Logement interdit à la location à cette date (critère de performance énergétique de la décence : art. 6 de la loi
+ * et décret n° 2002-120) : classe G depuis le 1er janvier 2025, F au 1er janvier 2028, E au 1er janvier 2034.
+ * Aucun nouveau bail ne peut être fait ni signé. Renvoie le motif, ou null.
+ */
+export function rentalForbidden(dpe: string | null | undefined, onDate = new Date()): string | null {
+  const day = onDate.toISOString().slice(0, 10)
+  const from: Record<string, string> = { G: '2025-01-01', F: '2028-01-01', E: '2034-01-01' }
+  const start = dpe ? from[dpe] : undefined
+  if (!start || day < start) return null
+  return `Logement classé ${dpe} au DPE : il ne peut plus être loué depuis le ${start === '2025-01-01' ? '1er janvier 2025' : start === '2028-01-01' ? '1er janvier 2028' : '1er janvier 2034'} (logement non décent, article 6 de la loi du 6 juillet 1989). Des travaux de rénovation énergétique et un nouveau DPE sont nécessaires avant de signer un bail.`
+}
+
 export interface DiagnosticRule {
   key: 'dpe' | 'erp' | 'electricity' | 'gas' | 'lead' | 'asbestos' | 'noise'
   label: string

@@ -2,6 +2,7 @@ import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
 import { essential, leaseMissing, propertyLeaseMissing } from '../domain/checklist.js'
 import { rentalSteps, type RentalStep } from '../domain/rental.js'
+import { rentalForbidden } from '../domain/rules.js'
 import { pendingReview, tenantLeaseMissing } from '../domain/tenantFile.js'
 import { contractFor, readProperty, readTenant, tenantName } from './contract.js'
 
@@ -68,6 +69,7 @@ export async function rentalJourneys(user: User, propertyIds?: string[]): Promis
             }
           : null,
         today,
+        forbidden: rentalForbidden(file.diagnostics?.dpe?.class),
       }),
     )
   }

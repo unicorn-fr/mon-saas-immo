@@ -14,6 +14,7 @@ import {
   maxDepositFor,
   rentControlLikely,
   rentRevisionAllowed,
+  rentalForbidden,
 } from './rules.js'
 import { toIsoDate } from './lease.js'
 
@@ -138,4 +139,15 @@ test('courriers : loyer révisé à l’IRL, échéance de restitution du dépô
   assert.deepEqual(reg.computed, [{ label: 'Reste à payer par le locataire', cents: 2600 }])
   const dep = letterContent({ type: 'DEPOSIT_RETURN', depositCents: 90000, keysDate: '2026-08-31', conform: false, deductions: [{ label: 'Trous', justification: 'Devis', amountCents: 8500 }, { label: 'Hotte', justification: 'Facture', amountCents: 3000 }] }, { tenantName: 'Marc Petit', propertyAddress: 'Pézenas' })
   assert.equal(dep.computed?.[0].cents, 78500)
+})
+
+test('logement interdit à la location : G depuis 2025, F en 2028, E en 2034', () => {
+  assert.match(rentalForbidden('G', new Date('2026-10-03')) ?? '', /1er janvier 2025/)
+  assert.equal(rentalForbidden('G', new Date('2024-12-31')), null)
+  assert.equal(rentalForbidden('F', new Date('2027-12-31')), null)
+  assert.match(rentalForbidden('F', new Date('2028-01-01')) ?? '', /1er janvier 2028/)
+  assert.equal(rentalForbidden('E', new Date('2033-12-31')), null)
+  assert.match(rentalForbidden('E', new Date('2034-01-01')) ?? '', /2034/)
+  assert.equal(rentalForbidden('D', new Date('2040-01-01')), null)
+  assert.equal(rentalForbidden(null), null)
 })

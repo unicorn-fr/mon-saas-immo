@@ -27,6 +27,7 @@ import {
   renewalLabel,
   rentControlLikely,
   rentRevisionAllowed,
+  rentalForbidden,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { toTrash } from '../services/trash.js'
@@ -237,6 +238,9 @@ router.post('/leases', async (req, res) => {
   if (tenants.length !== body.tenantIds.length) throw new HttpError(404, 'Locataire introuvable.')
 
   const file = readProperty(property)
+  // Logement interdit à la location (DPE) : pas de nouveau bail.
+  const forbidden = rentalForbidden(file.diagnostics?.dpe?.class)
+  if (forbidden) throw new HttpError(409, forbidden)
   const profile = readProfile(user)
   const first = readTenant(tenants[0])
   const colocation = tenants.length > 1 || first.living === 'COLOCATION'
@@ -424,6 +428,8 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
     throw new HttpError(400, `Il manque encore : ${missing.join(', ')}.`)
   }
   const c = await currentContract(user, lease)
+  const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class)
+  if (forbidden && lease.status === 'DRAFT') throw new HttpError(409, forbidden)
   // Seules les informations primordiales bloquent : les autres laissent une ligne à compléter dans le bail.
   if (lease.status === 'DRAFT') assertComplete(essential(leaseMissing(c)))
   return c

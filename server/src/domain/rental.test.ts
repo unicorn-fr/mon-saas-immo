@@ -56,3 +56,11 @@ test('bail en préparation incomplet : reprendre le bail', () => {
   assert.equal(step.find((x) => x.key === 'CHECK')?.state, 'LOCKED')
   assert.ok(!step.some((x) => x.key === 'DEPOSIT'))
 })
+
+test('logement interdit à la location : le bail reste bloqué, avec le motif', () => {
+  const t = { id: 't1', name: 'Lucas', essentialMissing: [], formSent: false, toReview: 0 }
+  const lease = rentalSteps({ ...base, tenant: t, forbidden: 'Logement classé G au DPE : il ne peut plus être loué.' }).find((x) => x.key === 'LEASE')!
+  assert.equal(lease.state, 'LOCKED')
+  assert.match(lease.text, /classé G/)
+  assert.equal(lease.action, undefined)
+})
