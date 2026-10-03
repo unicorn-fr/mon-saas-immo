@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { rememberRent, rentPatch } from '../services/rent.js'
+import { amountsAt, amountsForPeriod, historyOf, withStep } from '../domain/rentHistory.js'
 import { z } from 'zod'
 import type { Lease, Prisma, Property, User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -13,7 +14,7 @@ import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readP
 import { leaseTermsSchema, type ContractInput, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
 import { essential, leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
-import { formatDateFr, monthYearFr, parseIsoDate } from '../domain/lease.js'
+import { formatDateFr, formatEuros, monthYearFr, parseIsoDate } from '../domain/lease.js'
 import {
   allowedChargesModes,
   contractEndDate,
@@ -253,6 +254,13 @@ router.post('/leases', async (req, res) => {
   const dpe = file.diagnostics?.dpe?.class
   // Locataire précédent : dernier bail de ce logement terminé depuis moins de 18 mois.
   const prev = property.leases.find((l) => l.status !== 'DRAFT' && l.endDate.getTime() > Date.now() - 548 * 86_400_000)
+  // Locataire précédent et travaux depuis son départ : repris de ce que Bailio sait déjà (paiements, révision, interventions).
+  const prevFacts = (prev?.data ?? {}) as { lastRevisionDate?: string; keysDate?: string }
+  const prevEnd = prev ? (prevFacts.keysDate ?? prev.endDate.toISOString().slice(0, 10)) : null
+  const lastPayment = prev ? await prisma.payment.findFirst({ where: { leaseId: prev.id }, orderBy: { receivedAt: 'desc' } }) : null
+  const works = prevEnd ? await prisma.intervention.findMany({ where: { userId: user.id, propertyId: property.id, status: 'DONE', date: { gte: new Date(`${prevEnd}T00:00:00Z`) } }, orderBy: { date: 'asc' } }) : []
+  const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+  const worksText = works.map((w) => `${w.title}${w.costCents || w.date ? ` (${[w.costCents ? formatEuros(w.costCents) : null, w.date ? `${MONTHS[w.date.getUTCMonth()]} ${w.date.getUTCFullYear()}` : null].filter(Boolean).join(', ')})` : ''}`).join(' ; ')
   // Date d'entrée : celle choisie, sinon la date de disponibilité indiquée dans l'annonce.
   const startDate = body.terms?.startDate ?? file.ad?.availableFrom ?? undefined
   // Loyer, charges et dépôt : repris de la fiche du logement (saisis une seule fois), dans les limites de la loi.
@@ -270,7 +278,15 @@ router.post('/leases', async (req, res) => {
     paymentTerm: 'ADVANCE',
     paymentMethod: 'TRANSFER',
     zone: { tense: file.market?.tense ?? (rentControlLikely(file.inseeCode) ? true : undefined), control: rentControlLikely(file.inseeCode) },
-    previous: prev ? { rentedWithin18Months: true, lastRentCents: prev.rentCents, lastRevisionDate: undefined, lastPaymentDate: undefined } : undefined,
+    previous: prev
+      ? {
+          rentedWithin18Months: true,
+          lastRentCents: amountsAt(historyOf(prev), prevEnd ?? prev.endDate.toISOString().slice(0, 10)).rentCents,
+          lastRevisionDate: prevFacts.lastRevisionDate ?? undefined,
+          lastPaymentDate: lastPayment ? lastPayment.receivedAt.toISOString().slice(0, 10) : undefined,
+        }
+      : undefined,
+    works: worksText ? { sinceLast: worksText.slice(0, 600) } : undefined,
     revision: { enabled: kind !== 'MOBILITE' && rentRevisionAllowed(dpe), date: startDate ? startDate.slice(5) : undefined, irlQuarter: irl?.quarter, irlValue: irl?.value },
     clauses: { resolutoire: true, solidarite: colocation },
     signature: { place: profile.city ?? undefined, mode: 'PAPER' },
@@ -322,10 +338,15 @@ router.put('/leases/:id/terms', async (req, res) => {
   const data = lease.data as Record<string, unknown>
   // Bail en préparation : le loyer saisi ici devient celui de la fiche du logement.
   if (lease.status === 'DRAFT') await rememberRent(lease.propertyId, rentPatch(patch))
+  // Bail signé modifié (avenant) : le nouveau montant entre dans l'historique à partir d'aujourd'hui.
+  const history =
+    lease.status === 'ACTIVE' && ((terms.rentCents ?? lease.rentCents) !== lease.rentCents || (terms.chargesCents ?? lease.chargesCents) !== lease.chargesCents)
+      ? withStep(historyOf(lease), { from: new Date().toISOString().slice(0, 10), rentCents: terms.rentCents ?? lease.rentCents, chargesCents: terms.chargesCents ?? lease.chargesCents, reason: 'AMENDMENT' })
+      : null
   await prisma.lease.update({
     where: { id: lease.id },
     data: {
-      data: { ...data, terms, ...(lease.status === 'ACTIVE' ? { dirty: true } : {}) },
+      data: { ...data, terms, ...(lease.status === 'ACTIVE' ? { dirty: true } : {}), ...(history ? { rentHistory: history } : {}) } as unknown as Prisma.InputJsonObject,
       ...(tenantIds ? { tenantIds } : {}),
       ...(lease.status === 'DRAFT' ? leaseColumns(terms, user) : { rentCents: terms.rentCents ?? lease.rentCents, chargesCents: terms.chargesCents ?? lease.chargesCents, paymentDay: terms.paymentDay ?? lease.paymentDay }),
     },
@@ -509,8 +530,7 @@ function receiptInput(c: ContractInput, lease: Lease, period: string, kind: Rece
     propertyAddress: propertyAddress(c.property),
     year: y,
     month: m,
-    rentCents: lease.rentCents,
-    chargesCents: lease.chargesCents,
+    ...amountsForPeriod(lease, period),
     chargesLabel: chargesMode === 'FORFAIT' ? 'Forfait de charges' : 'Provision pour charges',
     paidCents: payment?.amountCents,
     paidOn: payment?.receivedAt ?? null,
@@ -532,7 +552,8 @@ router.post('/leases/:id/payments', async (req, res) => {
       receivedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     })
     .parse(req.body ?? {})
-  const due = lease.rentCents + lease.chargesCents
+  const periodAmounts = amountsForPeriod(lease, body.period)
+  const due = periodAmounts.rentCents + periodAmounts.chargesCents
   const amount = body.amountCents ?? due
   const receivedAt = body.receivedAt ? parseIsoDate(body.receivedAt) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const payment = await prisma.payment.upsert({
@@ -579,7 +600,8 @@ router.get('/leases/:id/receipts/:period.pdf', async (req, res) => {
   const lease = await leaseOwned(user.id, String(req.params.id))
   const period = z.string().regex(periodRe).parse(req.params.period)
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
-  const due = lease.rentCents + lease.chargesCents
+  const amounts = amountsForPeriod(lease, period)
+  const due = amounts.rentCents + amounts.chargesCents
   const kind = !payment || payment.amountCents >= due ? 'RECEIPT' : 'PARTIAL'
   const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
@@ -617,7 +639,8 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   if (link?.eReceiptWithdrawnAt && !link.eReceiptConsent) throw new HttpError(400, 'Votre locataire a retiré son accord pour recevoir ses quittances par email : remettez-la-lui sur papier.')
   const to = [...new Set([...c.tenants.map((t) => t.email), link?.eReceiptConsent?.email].filter((e): e is string => Boolean(e)))]
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer sa quittance.')
-  const full = payment.amountCents >= lease.rentCents + lease.chargesCents
+  const periodAmounts = amountsForPeriod(lease, period)
+  const full = payment.amountCents >= periodAmounts.rentCents + periodAmounts.chargesCents
   const pdf = await renderReceiptPdf(receiptInput(c, lease, period, full ? 'RECEIPT' : 'PARTIAL', payment))
   const [y, m] = period.split('-').map(Number)
   const what = full ? 'quittance' : 'reçu'
@@ -696,7 +719,6 @@ async function rememberRecipient(userId: string, lease: Lease, letter: LetterInp
 /** Mois échus non payés (ou payés partiellement), du plus ancien au plus récent. */
 async function unpaid(lease: Lease) {
   const payments = await prisma.payment.findMany({ where: { leaseId: lease.id } })
-  const due = lease.rentCents + lease.chargesCents
   const out: { period: string; missing: number }[] = []
   const now = new Date()
   for (let i = 12; i >= 0; i--) {
@@ -704,6 +726,8 @@ async function unpaid(lease: Lease) {
     if (d < lease.startDate || d > now) continue
     const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
     const paid = payments.find((p) => p.period === period)?.amountCents ?? 0
+    const a = amountsForPeriod(lease, period)
+    const due = a.rentCents + a.chargesCents
     if (paid < due) out.push({ period, missing: due - paid })
   }
   return out
@@ -755,7 +779,11 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   } else if (type === 'CHARGES') {
     const year = new Date().getUTCFullYear() - 1
     const payments = await prisma.payment.findMany({ where: { leaseId: lease.id, period: { startsWith: String(year) } } })
-    const provisions = payments.reduce((a, p) => a + Math.min(lease.chargesCents, Math.max(0, p.amountCents - lease.rentCents)), 0)
+    // Provisions versées : pour chaque mois, la part du paiement au-delà du loyer de ce mois, au plus la provision de ce mois.
+    const provisions = payments.reduce((a, p) => {
+      const m = amountsForPeriod(lease, p.period)
+      return a + Math.min(m.chargesCents, Math.max(0, p.amountCents - m.rentCents))
+    }, 0)
     const expenses = await prisma.expense.findMany({ where: { userId: user.id, propertyId: lease.propertyId, recoverableCents: { gt: 0 }, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } } })
     data = { type, year, provisionsCents: provisions, lines: expenses.map((e) => ({ label: e.description || e.vendor, amountCents: e.recoverableCents })) }
   } else if (type === 'TENANT_NOTICE') {
@@ -913,10 +941,16 @@ router.post('/leases/:id/letters', async (req, res) => {
   await rememberRecipient(user.id, lease, letter)
   // Révision : le nouveau loyer s'applique au bail et devient la nouvelle référence.
   if (letter.type === 'REVISION') {
+    // Le nouveau loyer prend effet à la date indiquée dans la lettre : avant, quittances et loyers attendus gardent l'ancien montant.
     const next = revisedRent(letter.oldRentCents, letter.irlRef.value, letter.irlNew.value)
     const terms = readTerms(lease)
-    await prisma.lease.update({ where: { id: lease.id }, data: { rentCents: next } })
-    await patchLeaseData(lease.id, () => ({ terms: { ...terms, rentCents: next, revision: { ...terms.revision, irlQuarter: letter.irlNew.quarter, irlValue: letter.irlNew.value } } }))
+    const fresh = await prisma.lease.findUniqueOrThrow({ where: { id: lease.id } })
+    const history = withStep(historyOf(fresh), { from: letter.effectiveDate, rentCents: next, chargesCents: amountsAt(historyOf(fresh), letter.effectiveDate).chargesCents, reason: 'REVISION' })
+    await patchLeaseData(lease.id, () => ({ rentHistory: history, lastRevisionDate: letter.effectiveDate, terms: { ...terms, rentCents: next, revision: { ...terms.revision, irlQuarter: letter.irlNew.quarter, irlValue: letter.irlNew.value } } }))
+    const today = new Date().toISOString().slice(0, 10)
+    await prisma.lease.update({ where: { id: lease.id }, data: { rentCents: amountsAt(history, today).rentCents } })
+    // Le loyer révisé devient celui de la fiche du logement (prochaine annonce, prochain bail).
+    await rememberRent(lease.propertyId, { rentCents: next })
     await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'RENT_REVISION', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
   }
   if (letter.type === 'INSURANCE') {

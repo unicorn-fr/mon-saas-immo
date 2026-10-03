@@ -15,6 +15,7 @@ import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
 import { rentPatch } from '../services/rent.js'
+import { amountsForPeriod } from '../domain/rentHistory.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
@@ -54,9 +55,10 @@ router.put('/profile', async (req, res) => {
 const monthKey = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
 
 /** Situation du loyer du mois pour un bail en cours. */
-export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'paymentDay' | 'startDate' | 'status'>, payments: Pick<Payment, 'period' | 'amountCents' | 'receivedAt'>[], now = new Date()) {
+export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'paymentDay' | 'startDate' | 'status' | 'data'>, payments: Pick<Payment, 'period' | 'amountCents' | 'receivedAt'>[], now = new Date()) {
   const period = monthKey(now)
-  const due = lease.rentCents + lease.chargesCents
+  const amounts = amountsForPeriod(lease, period)
+  const due = amounts.rentCents + amounts.chargesCents
   const p = payments.find((x) => x.period === period)
   const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), lease.paymentDay))
   if (lease.status === 'DRAFT') return { key: 'DRAFT', label: 'Bail en préparation', lateDays: 0 }

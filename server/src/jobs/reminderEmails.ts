@@ -1,4 +1,5 @@
 import { prisma } from '../db.js'
+import { amountsAt, amountsForPeriod, historyOf } from '../domain/rentHistory.js'
 import { env } from '../env.js'
 import { formatDateFr } from '../domain/lease.js'
 import { layout, sendEmail } from '../lib/email.js'
@@ -21,6 +22,12 @@ const LABELS: Record<string, string> = {
 export async function runDailyReminders(now = new Date()): Promise<void> {
   const leases = await prisma.lease.findMany({ where: { status: { in: ['ACTIVE', 'IMPORTED'] } } })
   for (const l of leases) await ensureReminders(l)
+  // Révision qui prend effet aujourd'hui : le loyer en vigueur du bail suit son historique.
+  const today = now.toISOString().slice(0, 10)
+  for (const l of leases) {
+    const current = amountsAt(historyOf(l), today)
+    if (current.rentCents !== l.rentCents || current.chargesCents !== l.chargesCents) await prisma.lease.update({ where: { id: l.id }, data: current })
+  }
 
   const users = await prisma.user.findMany({ where: { followUpSince: { not: null }, OR: [{ notifyUrgent: true }, { notifyWeekly: true }] } })
   const monday = now.getUTCDay() === 1
@@ -36,7 +43,8 @@ export async function runDailyReminders(now = new Date()): Promise<void> {
       const late = running.filter((l) => {
         const paid = l.payments.reduce((a, p) => a + p.amountCents, 0)
         const days = Math.floor((now.getTime() - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), l.paymentDay)) / 86_400_000)
-        return paid < l.rentCents + l.chargesCents && days > 0 ? days : false
+        const due = amountsForPeriod(l, period)
+        return paid < due.rentCents + due.chargesCents && days > 0 ? days : false
       })
       const line = (r: (typeof reminders)[number]) => `${formatDateFr(r.dueDate)} · ${LABELS[r.type] ?? 'Échéance'} · ${r.lease.property.label || r.lease.property.address}`
       const lateLine = (l: (typeof running)[number]) => `Loyer de ${l.property.label || l.property.address} pas encore reçu (attendu le ${l.paymentDay === 1 ? '1er' : l.paymentDay})`

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { amountsForPeriod } from '../domain/rentHistory.js'
 import { BINDER_UPLOADS } from '../domain/binder.js'
 import { z } from 'zod'
 import type { Document as DocRow, User } from '@prisma/client'
@@ -229,7 +230,7 @@ router.get('/money/report', async (req, res) => {
       name: propertyName(p),
       year,
       purchasePriceCents: readProperty(p).purchase?.priceCents ?? null,
-      payments: pays.map((x) => ({ period: x.period, ...splitPayment(x.amountCents, x.lease.rentCents) })),
+      payments: pays.map((x) => ({ period: x.period, ...splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents) })),
       expenses: expenses.filter((e) => e.propertyId === p.id),
       leases: mine.map((l) => ({ status: l.status, start: iso(l.startDate)!, end: iso(l.endDate)!, rentCents: l.rentCents, chargesCents: l.chargesCents })),
       unpaidCents: Math.max(0, expected - received),
@@ -273,7 +274,7 @@ router.get('/money/tax', async (req, res) => {
         id: p.id,
         name: propertyName(p),
         furnished,
-        payments: mine.filter((x) => (leaseKindOf(x.lease) !== 'VIDE') === furnished).map((x) => splitPayment(x.amountCents, x.lease.rentCents)),
+        payments: mine.filter((x) => (leaseKindOf(x.lease) !== 'VIDE') === furnished).map((x) => splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents)),
         expenses: kinds.size > 1 && furnished ? [] : expenses.filter((e) => e.propertyId === p.id),
         extra: file.tax?.[String(year)] ?? null,
       })
