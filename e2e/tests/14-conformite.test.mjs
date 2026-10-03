@@ -36,3 +36,36 @@ test('encadrement : loyer au-dessus du loyer de référence majoré refusé', as
   assert.deepEqual(view.computed.rentIssues.map((i) => i.code), ['CEILING'])
   await assert.rejects(api(`/leases/${leaseId}/sign`, { method: 'POST', token }), /loyer de référence majoré/)
 })
+
+const API_URL = process.env.E2E_API ?? 'http://localhost:5000/api'
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+const tmpPdf = (buf) => {
+  const f = join(mkdtempSync(join(tmpdir(), 'bail-')), 'b.pdf')
+  writeFileSync(f, buf)
+  return f
+}
+const pdfPages = (buf) => Number(/Pages:\s+(\d+)/.exec(execFileSync('pdfinfo', [tmpPdf(buf)]).toString())?.[1] ?? 0)
+const pdfText = (buf) => execFileSync('pdftotext', [tmpPdf(buf), '-']).toString()
+
+test('diagnostics : le fichier déposé est joint au PDF du bail ; un diagnostic expiré bloque la signature', async () => {
+  const { token } = await newAccount()
+  const { leaseId, propertyId } = await completeLease(token)
+  const get = async () => Buffer.from(await (await fetch(`${API_URL}/leases/${leaseId}/lease.pdf`, { headers: { Authorization: `Bearer ${token}` } })).arrayBuffer())
+  const before = pdfPages(await get())
+  const form = new FormData()
+  form.append('file', new Blob([await import('node:fs').then((fs) => fs.readFileSync(new URL('../fixtures/selfie.jpg', import.meta.url)))], { type: 'image/jpeg' }), 'dpe.jpg')
+  form.append('kind', 'DIAGNOSTIC')
+  form.append('diagnostic', 'dpe')
+  form.append('propertyId', propertyId)
+  const up = await fetch(`${API_URL}/documents`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form })
+  assert.equal(up.status, 201)
+  const after = await get()
+  assert.ok(pdfPages(after) >= before + 2, 'page de titre et diagnostic ajoutés')
+  assert.match(pdfText(after), /dossier de diagnostic technique/)
+  // DPE fait en 2019 : plus valable depuis le 1er janvier 2025
+  await api(`/properties/${propertyId}`, { method: 'PUT', token, body: { diagnostics: { dpe: { class: 'C', ges: 'B', date: '2019-06-01', costMin: 610, costMax: 870, costYear: 2023 }, erp: { date: '2026-09-01' }, electricity: { installOver15: false }, gas: { hasGas: false } } } })
+  await assert.rejects(api(`/leases/${leaseId}/sign`, { method: 'POST', token }), /ne sont plus valables : Performance énergétique/)
+})

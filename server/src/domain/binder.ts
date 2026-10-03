@@ -1,5 +1,5 @@
 import type { PropertyFile } from './contract.js'
-import { diagnosticsFor } from './rules.js'
+import { diagnosticValidUntil, diagnosticsFor } from './rules.js'
 
 /**
  * Dossier du logement : tout ce qu'un propriétaire doit avoir et garder, rangé par rubrique, avec ce qui manque
@@ -62,6 +62,8 @@ export interface BinderInput {
     individualBoiler: boolean
   }
   invoices: number
+  /** Date du jour (AAAA-MM-JJ), pour la validité des diagnostics. */
+  today?: string
 }
 
 const latest = (docs: BinderDoc[], pred: (d: BinderDoc) => boolean) => docs.filter(pred).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]?.id ?? null
@@ -98,12 +100,14 @@ export function propertyBinder(i: BinderInput): BinderSection[] {
       .map((d) => {
         const v = f.diagnostics?.[d.key]
         const docId = v?.fileId ?? latest(i.docs, (x) => x.diagnostic === d.key)
+        const until = diagnosticValidUntil(d.key, v?.date)
+        const expired = Boolean(until && until < (i.today ?? new Date().toISOString().slice(0, 10)))
         return {
           key: `diag.${d.key}`,
           label: d.label,
-          why: d.reason,
+          why: expired ? `Plus valable depuis le ${until!.split('-').reverse().join('/')} : à refaire avant le prochain bail.` : d.reason,
           keep: `Valable ${d.validity}`,
-          state: docId || v?.date ? 'OK' : 'MISSING',
+          state: expired ? 'MISSING' : docId || v?.date ? 'OK' : 'MISSING',
           docId,
           upload: 'diagnostic' as const,
           diagnostic: d.key,

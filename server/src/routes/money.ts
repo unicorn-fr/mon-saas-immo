@@ -8,7 +8,7 @@ import { requireUser } from '../services/session.js'
 import { documentText, ocrAvailable } from '../services/import/ocr.js'
 import { matchProperty, parseInvoice } from '../services/import/invoice.js'
 import { contractFor, leaseKindOf, leaseOwned, propertyName, readProperty } from '../services/contract.js'
-import { renderContractPdf } from '../pdf/contract.js'
+import { renderLeasePdf } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf, type LetterRender } from '../pdf/letter.js'
@@ -379,11 +379,11 @@ export async function documentBytes(user: User, doc: DocRow): Promise<{ bytes: B
   if (!snap) throw new HttpError(404, 'Document introuvable.')
   switch (doc.kind) {
     case 'LEASE':
-      if ('landlord' in snap && 'terms' in snap) return { bytes: await renderContractPdf(snap as unknown as ContractInput), mime: 'application/pdf' }
+      if ('landlord' in snap && 'terms' in snap) return { bytes: await renderLeasePdf(snap as unknown as ContractInput, doc.propertyId), mime: 'application/pdf' }
       if (doc.leaseId) {
         // Ancien bail du tunnel : rendu depuis ses réponses d'origine.
         const lease = await leaseOwned(user.id, doc.leaseId)
-        return { bytes: await renderContractPdf(await contractFor(user, lease)), mime: 'application/pdf' }
+        return { bytes: await renderLeasePdf(await contractFor(user, lease), lease.propertyId), mime: 'application/pdf' }
       }
       break
     case 'GUARANTEE':

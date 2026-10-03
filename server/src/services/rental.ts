@@ -2,7 +2,7 @@ import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
 import { essential, leaseMissing, propertyLeaseMissing } from '../domain/checklist.js'
 import { rentalSteps, type RentalStep } from '../domain/rental.js'
-import { rentalForbidden } from '../domain/rules.js'
+import { expiredDiagnostics, rentalForbidden } from '../domain/rules.js'
 import { pendingReview, tenantLeaseMissing } from '../domain/tenantFile.js'
 import { contractFor, readProperty, readTenant, tenantName } from './contract.js'
 
@@ -46,7 +46,11 @@ export async function rentalJourneys(user: User, propertyIds?: string[]): Promis
       p.id,
       rentalSteps({
         propertyId: p.id,
-        propertyMissing: propertyLeaseMissing(file, lease?.type === 'FURNISHED' || file.furnished ? 'MEUBLE' : 'VIDE'),
+        propertyMissing: [
+          ...propertyLeaseMissing(file, lease?.type === 'FURNISHED' || file.furnished ? 'MEUBLE' : 'VIDE'),
+          // Avant un nouveau bail : les diagnostics qui ne seront plus valables à la signature sont à refaire.
+          ...(!lease || lease.status === 'DRAFT' ? expiredDiagnostics(file).map((d) => ({ label: `${d.label} à refaire (plus valable depuis le ${d.until.split('-').reverse().join('/')})`, level: 'ESSENTIAL' as const, section: 'diagnostics' })) : []),
+        ],
         skipped: file.skippedSteps ?? [],
         adWritten: Boolean(file.ad?.description),
         applyOpen: Boolean(p.applyCode),

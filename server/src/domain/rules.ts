@@ -1,5 +1,5 @@
 import type { LandlordProfile, LeaseKind, LeaseTerms, PropertyFile } from './contract.js'
-import { addDays, addMonths, parseIsoDate } from './lease.js'
+import { addDays, addMonths, parseIsoDate, toIsoDate as toIso } from './lease.js'
 
 /**
  * Règles de la loi n° 89-462 du 6 juillet 1989 appliquées aux fiches Bailio.
@@ -144,6 +144,42 @@ export function rentIssues(input: {
       out.push({ code: 'RELET_TENSE', message: `Zone tendue : le loyer ne peut pas dépasser celui du locataire précédent (${eur(prev.lastRentCents)}), sauf si la dernière révision n’a pas été faite, après des travaux importants, ou si l’ancien loyer était manifestement sous-évalué. Indiquez le motif, ou baissez le loyer.` })
   }
   return out
+}
+
+/**
+ * Fin de validité d'un diagnostic fait à cette date (null : sans limite, ou date inconnue).
+ * DPE : 10 ans, mais ceux réalisés entre 2013 et 2017 ne valent plus depuis le 1er janvier 2023, et ceux réalisés
+ * entre le 1er janvier 2018 et le 30 juin 2021 depuis le 1er janvier 2025 (décret n° 2020-1610). État des risques :
+ * moins de 6 mois à la signature. Électricité et gaz : 6 ans. Plomb : 6 ans (illimité sans plomb, à vérifier sur le
+ * constat). Amiante et bruit : sans limite.
+ */
+export function diagnosticValidUntil(key: DiagnosticRule['key'], date: string | null | undefined): string | null {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  const add = (months: number) => toIso(addMonths(parseIsoDate(date), months))
+  switch (key) {
+    case 'dpe':
+      if (date < '2013-01-01') return '2017-12-31'
+      if (date < '2018-01-01') return '2022-12-31'
+      if (date < '2021-07-01') return '2024-12-31'
+      return add(120)
+    case 'erp':
+      return add(6)
+    case 'electricity':
+    case 'gas':
+    case 'lead':
+      return add(72)
+    default:
+      return null
+  }
+}
+
+/** Diagnostics exigés et joints au bail qui ne seront plus valables à la date de signature. */
+export function expiredDiagnostics(p: PropertyFile, onDate = new Date()): Array<{ key: DiagnosticRule['key']; label: string; until: string }> {
+  const day = onDate.toISOString().slice(0, 10)
+  return diagnosticsFor(p)
+    .filter((d) => d.required && d.annexed)
+    .map((d) => ({ key: d.key, label: d.label, until: diagnosticValidUntil(d.key, p.diagnostics?.[d.key]?.date) }))
+    .filter((d): d is { key: DiagnosticRule['key']; label: string; until: string } => Boolean(d.until && d.until < day))
 }
 
 export interface DiagnosticRule {

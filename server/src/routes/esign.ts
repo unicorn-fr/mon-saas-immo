@@ -14,7 +14,8 @@ import { leaseOwned } from '../services/contract.js'
 import type { ContractInput } from '../domain/contract.js'
 import { CODE_ATTEMPTS, CODE_MINUTES, LINK_DAYS, READ_AND_APPROVED, SIGN_WINDOW_MINUTES, linkExpiry, maskEmail, mentionMatches } from '../domain/esign.js'
 import type { CertificateData } from '../pdf/certificate.js'
-import { renderContractPdf, type SignatureMark } from '../pdf/contract.js'
+import type { SignatureMark } from '../pdf/contract.js'
+import { renderLeasePdf } from '../services/annexes.js'
 import { cautionMention, renderGuaranteePdf } from '../pdf/guarantee.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { activateLease, assertReadyToSign } from './leases.js'
@@ -102,7 +103,7 @@ router.post('/leases/:id/esign', requireUser, async (req, res) => {
   // Une seule signature en cours par bail : la précédente est annulée.
   await prisma.signatureRequest.updateMany({ where: { leaseId: lease.id, status: 'PENDING' }, data: { status: 'CANCELLED' } })
 
-  const leasePdf = await renderContractPdf(c)
+  const leasePdf = await renderLeasePdf(c, lease.propertyId)
   const hashes: Hashes = { lease: sha256(leasePdf), leaseFile: await storePdf(user.id, 'bail-a-signer.pdf', leasePdf), guarantees: {}, amendment }
   for (const [i, g] of c.guarantors.entries()) {
     const pdf = await renderGuaranteePdf(c, g)
@@ -324,7 +325,8 @@ async function finalize(r: RequestWithSigners) {
   const landlord = r.signers.find((s) => s.role === 'LANDLORD')
   const tenants = r.signers.filter((s) => s.role === 'TENANT').sort((a, b) => a.position - b.position)
   const leaseSigners = [landlord, ...tenants].filter((s): s is Signer => Boolean(s))
-  const leasePdf = await renderContractPdf(c, { landlord: mark(landlord), tenants: c.tenants.map((_, i) => mark(tenants.find((t) => t.position === i))), certificate: cert(h.amendment ? 'Contrat de location, nouvelle version (avenant)' : 'Contrat de location', h.lease, leaseSigners) })
+  const leaseRow = await prisma.lease.findUnique({ where: { id: r.leaseId }, select: { propertyId: true } })
+  const leasePdf = await renderLeasePdf(c, leaseRow?.propertyId, { landlord: mark(landlord), tenants: c.tenants.map((_, i) => mark(tenants.find((t) => t.position === i))), certificate: cert(h.amendment ? 'Contrat de location, nouvelle version (avenant)' : 'Contrat de location', h.lease, leaseSigners) })
   const guarantees = new Map<number, Buffer>()
   for (const g of r.signers.filter((s) => s.role === 'GUARANTOR')) {
     const gf = c.guarantors[g.position]

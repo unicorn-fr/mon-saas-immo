@@ -29,3 +29,10 @@ test('sans bail : la location viendra plus tard, l’assurance du propriétaire 
   assert.equal(all.invoices.state, 'OK')
   assert.ok(!s.some((x) => x.key === 'COPRO'))
 })
+
+test('dossier du logement : diagnostic expiré à refaire', () => {
+  const s = propertyBinder({ propertyId: 'p1', file: { constructionPeriod: '1990_2005', diagnostics: { dpe: { class: 'D', date: '2019-06-01' } } }, docs: [], lease: null, invoices: 0, today: '2026-10-03' })
+  const dpe = s.flatMap((x) => x.items).find((x) => x.key === 'diag.dpe')!
+  assert.equal(dpe.state, 'MISSING')
+  assert.match(dpe.why, /Plus valable depuis le 31\/12\/2024/)
+})

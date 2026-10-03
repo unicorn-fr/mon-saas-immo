@@ -170,3 +170,16 @@ test('plafonds du loyer : encadrement, complément, logement F ou G, zone tendue
   assert.deepEqual(codes({ rentCents: 70000, dpe: 'G', previous: prev }), [])
   assert.deepEqual(codes({ rentCents: 72000, zone: { tense: true }, previous: { rentedWithin18Months: false, lastRentCents: 70000 } }), [])
 })
+
+test('validité des diagnostics : anciens DPE, état des risques de 6 mois, électricité et gaz 6 ans', async () => {
+  const { diagnosticValidUntil, expiredDiagnostics } = await import('./rules.js')
+  assert.equal(diagnosticValidUntil('dpe', '2016-05-10'), '2022-12-31')
+  assert.equal(diagnosticValidUntil('dpe', '2020-03-01'), '2024-12-31')
+  assert.equal(diagnosticValidUntil('dpe', '2022-03-01'), '2032-03-01')
+  assert.equal(diagnosticValidUntil('erp', '2026-05-01'), '2026-11-01')
+  assert.equal(diagnosticValidUntil('electricity', '2021-01-15'), '2027-01-15')
+  assert.equal(diagnosticValidUntil('asbestos', '1999-01-01'), null)
+  assert.equal(diagnosticValidUntil('dpe', null), null)
+  const p = { constructionPeriod: '1990_2005' as const, diagnostics: { dpe: { class: 'D' as const, date: '2019-06-01' }, erp: { date: '2026-01-10' } } }
+  assert.deepEqual(expiredDiagnostics(p, new Date('2026-10-03')).map((d) => d.key), ['dpe', 'erp'])
+})

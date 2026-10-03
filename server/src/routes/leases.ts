@@ -29,11 +29,12 @@ import {
   rentRevisionAllowed,
   rentalForbidden,
   rentIssues,
+  expiredDiagnostics,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
-import { renderContractPdf } from '../pdf/contract.js'
+import { renderLeasePdf } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
@@ -382,7 +383,7 @@ router.get('/leases/:id/lease.pdf', async (req, res) => {
     if (signedDoc?.file) return sendPdf(res, Buffer.from(signedDoc.file), `bail-signe.pdf`, download)
   }
   const c = await currentContract(user, lease)
-  const pdf = await renderContractPdf(c)
+  const pdf = await renderLeasePdf(c, lease.propertyId)
   sendPdf(res, pdf, `bail-${fileSlug(c.tenants.map((t) => t.lastName).join('-'))}.pdf`, download)
 })
 
@@ -402,7 +403,7 @@ router.get('/leases/:id/guarantee/:tenantId.pdf', async (req, res) => {
  */
 export async function activateLease(user: User, lease: LeaseWithProperty, c: ContractInput, signed?: { leasePdf: Buffer; guarantees: Map<number, Buffer> }) {
   const view = await leaseView(user, lease)
-  const pdf = signed?.leasePdf ?? (await renderContractPdf(c))
+  const pdf = signed?.leasePdf ?? (await renderLeasePdf(c, lease.propertyId))
   const { version: _v, ...snapshot } = c
   await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
   // Actes de caution : un document par garant.
@@ -433,6 +434,9 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
   const c = await currentContract(user, lease)
   const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class)
   if (forbidden && lease.status === 'DRAFT') throw new HttpError(409, forbidden)
+  const expired = expiredDiagnostics(c.property)
+  if (expired.length && lease.status === 'DRAFT')
+    throw new HttpError(400, `Ces diagnostics ne sont plus valables : ${expired.map((d) => `${d.label} (fin de validité le ${formatDateFr(parseIsoDate(d.until))})`).join(', ')}. Faites-les refaire et indiquez la nouvelle date dans la fiche du logement avant de signer.`)
   const issues = rentIssues({ rentCents: c.terms.rentCents, surface: c.property.surface, dpe: c.property.diagnostics?.dpe?.class, zone: c.terms.zone, previous: c.terms.previous })
   if (issues.length && lease.status === 'DRAFT') throw new HttpError(400, issues.map((i) => i.message).join(' '))
   // Seules les informations primordiales bloquent : les autres laissent une ligne à compléter dans le bail.
@@ -475,7 +479,7 @@ router.post('/leases/:id/send', async (req, res) => {
   const c = await currentContract(user, lease)
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le bail.')
-  const pdf = await renderContractPdf(c)
+  const pdf = await renderLeasePdf(c, lease.propertyId)
   const landlord = personName({ firstNames: c.landlord.firstNames, lastName: c.landlord.lastName }, false) || 'Votre bailleur'
   const mail = layout({
     title: 'Votre bail de location.',
