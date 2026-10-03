@@ -7,6 +7,7 @@ import { z } from 'zod'
 const trimmed = (max: number) => z.string().trim().max(max)
 
 export const personSchema = z.object({
+  civility: z.enum(['MADAME', 'MONSIEUR']).optional(),
   firstName: trimmed(80).min(1, 'Le prénom est obligatoire'),
   lastName: trimmed(80).min(1, 'Le nom est obligatoire'),
 })
@@ -29,6 +30,14 @@ export const propertySchema = z.object({
   rooms: z.number().int().min(1).max(30),
   dpeClass: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']).optional(),
   dpeNumber: trimmed(40).optional(),
+  /** Mentions primordiales du bail (contrat type, rubrique II.A), demandées dès le formulaire de départ. */
+  floorDoor: trimmed(120).optional(),
+  habitat: z.enum(['COLLECTIVE', 'INDIVIDUAL']).optional(),
+  legalRegime: z.enum(['MONO', 'COPRO']).optional(),
+  constructionPeriod: z.enum(['BEFORE_1949', '1949_1974', '1975_1989', '1990_2005', 'AFTER_2005']).optional(),
+  heatingMode: z.enum(['INDIVIDUAL', 'COLLECTIVE']).optional(),
+  heatingEnergy: z.enum(['GAS', 'ELECTRIC', 'HEAT_PUMP', 'FUEL', 'WOOD', 'NETWORK']).optional(),
+  hotWaterMode: z.enum(['INDIVIDUAL', 'COLLECTIVE']).optional(),
 })
 
 export const landlordSchema = personSchema.extend({
@@ -43,6 +52,7 @@ export const rentSchema = z.object({
   depositCents: z.number().int().min(0).optional(),
   startDate: isoDate,
   paymentDay: z.number().int().min(1).max(28).default(5),
+  chargesMode: z.enum(['PROVISION', 'FORFAIT']).optional(),
 })
 
 export const leaseTypeSchema = z.enum(['UNFURNISHED', 'FURNISHED'])

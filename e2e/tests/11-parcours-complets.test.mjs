@@ -160,49 +160,96 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   assert.equal(t.file.guarantor.maxCents, 1500000)
   const after = await api(`/tenants/${tenantId}/missing`, { token })
   assert.ok(!after.missing.some((m) => m.key === 'birthDate' || m.key === 'doc.identity'))
+  // Le propriétaire vérifie ce que le locataire a envoyé
+  const review = await api(`/tenants/${tenantId}/review`, { token })
+  assert.ok(review.some((r) => r.key === 'birthPlace' && r.value === 'Montpellier'))
+  assert.ok(review.some((r) => r.key === 'doc.identity' && r.fileId))
+  const octx = await signedInContext(browser, token)
+  const op = await octx.newPage()
+  await op.goto(`${BASE}/espace/locataires/${tenantId}`)
+  await op.getByText(/envoyés? par le locataire, à vérifier/).waitFor()
+  await op.getByText('Vérifier maintenant').click()
+  const row = op.locator('div').filter({ has: op.getByText('Pièce d’identité', { exact: true }) }).filter({ has: op.getByRole('button', { name: 'Conforme' }) }).last()
+  await row.getByRole('button', { name: 'Conforme' }).click()
+  const birth = op.locator('div').filter({ has: op.getByText('Lieu de naissance', { exact: true }) }).filter({ has: op.getByRole('button', { name: 'À corriger' }) }).last()
+  await birth.getByRole('button', { name: 'À corriger' }).click()
+  await shot(op, 'verification-dossier')
+  await octx.close()
+  const left = await api(`/tenants/${tenantId}/review`, { token })
+  assert.ok(!left.some((r) => r.key === 'doc.identity' || r.key === 'birthPlace'))
+  const t2 = await api(`/tenants/${tenantId}`, { token })
+  assert.ok(t2.file.documents.find((d) => d.category === 'identity').verifiedAt)
+  assert.equal(t2.file.birthPlace, null)
   // Le courrier pour un locataire sans email
   const r = await fetch(`http://localhost:5000/api/tenants/${tenantId}/request.pdf`, { headers: { Authorization: `Bearer ${token}` } })
   assert.equal(r.headers.get('content-type'), 'application/pdf')
 })
 
-test('créer un bail : logement complet d’abord, puis locataire complet, puis les conditions', async () => {
+test('créer un bail : primordial du logement, puis du locataire et du garant ; le reste laisse une ligne à compléter', async () => {
   const { token } = await newAccount()
   const p = await api('/properties', { method: 'POST', token, body: { address: '4 rue Neuve, 34200 Sète', habitat: 'COLLECTIVE', legalRegime: 'MONO', furnished: false } })
-  const t = await api('/tenants', { method: 'POST', token, body: { civility: 'MONSIEUR', firstNames: 'Paul', lastName: 'Vidal', email: `paul+${Date.now()}@example.fr`, propertyId: p.id, guarantee: 'NONE' } })
+  const t = await api('/tenants', { method: 'POST', token, body: { civility: 'MONSIEUR', firstNames: 'Paul', lastName: 'Vidal', email: `paul+${Date.now()}@example.fr`, propertyId: p.id, guarantee: 'CAUTION', guarantor: { firstNames: 'Anne', lastName: 'Vidal' } } })
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/baux/nouveau?logement=${p.id}`)
-  await page.getByText('Le logement doit être complet avant le bail').waitFor()
-  await page.getByText(/identifiant fiscal du logement/).waitFor()
+  await page.getByText('Informations primordiales du logement à compléter').waitFor()
+  await page.getByText(/la surface habitable/).waitFor()
   await next(page)
-  await page.getByText('Complétez d’abord le logement').waitFor()
-  // Le logement est complété (comme par le parcours), puis on revient au bail.
+  await page.getByText('Complétez d’abord les informations primordiales du logement.').waitFor()
+  // Primordial seulement : sans identifiant fiscal, sans dépenses d'énergie ni diagnostics datés
   await api(`/properties/${p.id}`, {
     method: 'PUT',
     token,
-    body: {
-      fiscalId: '341234567891', constructionPeriod: 'AFTER_2005', surface: 40, rooms: 2, roomList: [{ name: 'Séjour' }, { name: 'Chambre' }],
-      heating: { mode: 'INDIVIDUAL', energy: 'ELECTRIC' }, hotWater: { mode: 'INDIVIDUAL' }, equipments: ['kitchen'], smokeDetectors: 1, tv: 'COLLECTIVE', internet: 'FIBER',
-      diagnostics: { dpe: { class: 'C', costMin: 500, costMax: 700, costYear: 2023 }, erp: { date: '2026-09-01' }, electricity: { installOver15: false }, gas: { hasGas: false } },
-    },
+    body: { constructionPeriod: 'AFTER_2005', surface: 40, rooms: 2, roomList: [{ name: 'Séjour' }, { name: 'Chambre' }], heating: { mode: 'INDIVIDUAL', energy: 'ELECTRIC' }, hotWater: { mode: 'INDIVIDUAL' }, diagnostics: { dpe: { class: 'C' } } },
   })
   await page.reload()
-  await page.getByText('Le logement doit être complet avant le bail').waitFor({ state: 'detached' }).catch(() => undefined)
-  assert.equal(await page.getByText('Le logement doit être complet avant le bail').count(), 0)
+  await page.getByText('Vous pouvez continuer').waitFor()
+  await page.getByText(/l’identifiant fiscal du logement/).waitFor()
   await next(page)
-  // Locataire : sa naissance manque, on peut la lui demander
+  // Locataire : l'acte de caution exige l'adresse, le montant et la durée ; la naissance n'est que recommandée
   await page.getByText('Pour le bail, il manque pour Paul Vidal').waitFor()
-  await page.getByText('Le demander par email').waitFor()
   await shot(page, 'parcours-bail-locataire-incomplet')
   await next(page)
-  await page.getByText('Complétez d’abord ce qui manque au locataire').waitFor()
-  await api(`/tenants/${t.id}`, { method: 'PUT', token, body: { birthDate: '1990-01-15', birthPlace: 'Béziers' } })
+  await page.getByText('Complétez d’abord ce qui est primordial pour le locataire et son garant.').waitFor()
+  await api(`/tenants/${t.id}`, { method: 'PUT', token, body: { guarantor: { firstNames: 'Anne', lastName: 'Vidal', address: '2 place Aristide Briand, 34200 Sète', maxCents: 1500000, duration: 'OPEN', engagement: 'SOLIDAIRE' } } })
   await page.reload()
+  await page.getByText('Paul Vidal : à compléter si possible').waitFor()
   await next(page)
-  // Conditions : le bail est créé, on arrive à « Bailio a presque tout »
   await page.getByText('Bailio a presque tout.').waitFor()
+  await ctx.close()
+  assert.deepEqual(errors, [])
+})
+
+test('formulaire du début : maison ou appartement, copropriété, construction, chauffage et eau chaude exigés', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const page = await ctx.newPage()
+  const errors = []
+  watch(page, errors, { allow: ['/geo/'] })
+  await page.goto(`${BASE}/commencer`)
+  await page.getByRole('button', { name: /Vide/ }).click()
+  await page.getByLabel('Adresse', { exact: true }).fill('5 rue des Hortensias, 34200 Sète')
+  await page.getByLabel('Surface habitable').fill('48')
+  await page.getByRole('button', { name: '2', exact: true }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByText('Indiquez s’il s’agit d’un appartement ou d’une maison.').waitFor()
+  await page.getByRole('button', { name: 'Une maison' }).click()
+  await page.getByRole('button', { name: '1975 à 1989' }).click()
+  await page.getByRole('button', { name: 'Individuel', exact: true }).click()
+  await page.getByRole('button', { name: 'Gaz', exact: true }).click()
+  await page.getByRole('button', { name: 'Individuelle', exact: true }).click()
+  await shot(page, 'formulaire-debut-logement')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'Qui signe le bail ?' }).waitFor()
+  const token = await page.evaluate(() => localStorage.getItem('bailio.draft'))
+  const draft = await fetch(`${BASE.replace(/\/$/, '')}/api/drafts/current`, { headers: { 'X-Draft-Token': token } }).then((r) => r.json())
+  const p = draft.data.data.property
+  assert.equal(p.habitat, 'INDIVIDUAL')
+  assert.equal(p.legalRegime, 'MONO')
+  assert.equal(p.constructionPeriod, '1975_1989')
+  assert.equal(p.heatingEnergy, 'GAS')
+  assert.equal(p.hotWaterMode, 'INDIVIDUAL')
   await ctx.close()
   assert.deepEqual(errors, [])
 })

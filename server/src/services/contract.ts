@@ -98,9 +98,15 @@ export function isLegacy(data: unknown): data is LeaseInput {
 export function legacyToContract(input: LeaseInput): ContractInput {
   const kind: LeaseKind = input.type === 'FURNISHED' ? 'MEUBLE' : 'VIDE'
   return {
-    landlord: { kind: 'PERSON', firstNames: input.landlord.firstName, lastName: input.landlord.lastName, address: input.landlord.address },
+    landlord: { kind: 'PERSON', civility: input.landlord.civility, firstNames: input.landlord.firstName, lastName: input.landlord.lastName, address: input.landlord.address },
     property: {
       address: input.property.address,
+      floorDoor: input.property.floorDoor,
+      habitat: input.property.habitat,
+      legalRegime: input.property.legalRegime,
+      constructionPeriod: input.property.constructionPeriod,
+      heating: input.property.heatingMode ? { mode: input.property.heatingMode, energy: input.property.heatingEnergy } : undefined,
+      hotWater: input.property.hotWaterMode ? { mode: input.property.hotWaterMode } : undefined,
       postalCode: input.property.postalCode,
       city: input.property.city,
       inseeCode: input.property.inseeCode,
@@ -109,14 +115,14 @@ export function legacyToContract(input: LeaseInput): ContractInput {
       furnished: kind === 'MEUBLE',
       diagnostics: { dpe: { class: input.property.dpeClass, number: input.property.dpeNumber } },
     },
-    tenants: input.tenants.map((t) => ({ firstNames: t.firstName, lastName: t.lastName, email: t.email || undefined })),
-    guarantors: input.guarantor ? [{ firstNames: input.guarantor.firstName, lastName: input.guarantor.lastName, address: input.guarantor.address, engagement: 'SOLIDAIRE' }] : [],
+    tenants: input.tenants.map((t) => ({ civility: t.civility, firstNames: t.firstName, lastName: t.lastName, email: t.email || undefined })),
+    guarantors: input.guarantor ? [{ civility: input.guarantor.civility, firstNames: input.guarantor.firstName, lastName: input.guarantor.lastName, address: input.guarantor.address, engagement: 'SOLIDAIRE' }] : [],
     terms: {
       kind,
       startDate: input.rent.startDate,
       rentCents: input.rent.rentCents,
       chargesCents: input.rent.chargesCents,
-      chargesMode: 'PROVISION',
+      chargesMode: input.rent.chargesMode ?? 'PROVISION',
       depositCents: input.rent.depositCents,
       paymentDay: input.rent.paymentDay,
       paymentTerm: 'ADVANCE',

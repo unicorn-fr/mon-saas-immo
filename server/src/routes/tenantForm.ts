@@ -10,7 +10,7 @@ import { newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
 import { propertyName, readProfile, readTenant, tenantName } from '../services/contract.js'
 import { TENANT_DOCUMENTS, guarantorSchema, tenantFileSchema, type TenantFile } from '../domain/contract.js'
-import { DOC_KEYS, GUARANTOR_EDITABLE, TENANT_EDITABLE, tenantLeaseMissing, tenantMissing } from '../domain/tenantFile.js'
+import { DOC_KEYS, GUARANTOR_EDITABLE, TENANT_EDITABLE, applyReview, pendingReview, tenantLeaseMissing, tenantMissing } from '../domain/tenantFile.js'
 import { landlordName } from '../pdf/labels.js'
 import { renderLetterPdf } from '../pdf/letter.js'
 import { sendPdf, storeFile, upload } from './helpers.js'
@@ -48,7 +48,7 @@ async function openLink(t: Tenant): Promise<string> {
 
 router.get('/tenants/:id/missing', requireUser, async (req, res) => {
   const t = await ownTenant(req.user!.id, String(req.params.id))
-  res.json({ success: true, data: { missing: tenantMissing(readTenant(t)), forLease: tenantLeaseMissing(readTenant(t)), link: linkActive(t) ? { url: formUrl(t.formCode!), sentAt: t.formSentAt!.toISOString() } : null } })
+  res.json({ success: true, data: { missing: tenantMissing(readTenant(t)), forLease: tenantLeaseMissing(readTenant(t)), toReview: pendingReview(readTenant(t)).length, link: linkActive(t) ? { url: formUrl(t.formCode!), sentAt: t.formSentAt!.toISOString() } : null } })
 })
 
 /** Envoie au locataire le lien pour compléter son dossier (ou le crée seulement, pour un courrier). */
@@ -105,6 +105,20 @@ router.get('/tenants/:id/request.pdf', requireUser, async (req, res) => {
   sendPdf(res, pdf, 'demande-dossier.pdf', req.query.download === '1')
 })
 
+/** Ce que le locataire a envoyé et que le propriétaire doit vérifier. */
+router.get('/tenants/:id/review', requireUser, async (req, res) => {
+  const t = await ownTenant(req.user!.id, String(req.params.id))
+  res.json({ success: true, data: pendingReview(readTenant(t)) })
+})
+
+router.post('/tenants/:id/review', requireUser, async (req, res) => {
+  const t = await ownTenant(req.user!.id, String(req.params.id))
+  const { key, ok } = z.object({ key: z.string().max(60), ok: z.boolean() }).parse(req.body)
+  const next = applyReview(readTenant(t), key, ok, new Date().toISOString())
+  await prisma.tenant.update({ where: { id: t.id }, data: { data: tenantFileSchema.parse(next) } })
+  res.json({ success: true, data: pendingReview(next) })
+})
+
 router.delete('/tenants/:id/request', requireUser, async (req, res) => {
   const t = await ownTenant(req.user!.id, String(req.params.id))
   await prisma.tenant.update({ where: { id: t.id }, data: { formCode: null, formSentAt: null } })
@@ -149,10 +163,17 @@ router.post('/dossier/:code', limitPerVisitor(60, 60), async (req, res) => {
   const body = z.object({ tenant: tenantPatch.optional(), guarantor: guarantorPatch.optional() }).parse(req.body)
   const f = readTenant(t)
   const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined))
+  // Ce que le locataire change est marqué « à vérifier » pour le propriétaire.
+  const changed = (o: Record<string, unknown>, before: Record<string, unknown> | null | undefined, prefix = '') =>
+    Object.entries(o)
+      .filter(([k, v]) => v !== undefined && v !== null && v !== '' && v !== before?.[k])
+      .map(([k]) => `${prefix}${k}`)
+  const touched = [...changed(clean(body.tenant ?? {}), f as Record<string, unknown>), ...(f.guarantee === 'CAUTION' ? changed(clean(body.guarantor ?? {}), f.guarantor as Record<string, unknown>, 'guarantor.') : [])]
   const next: TenantFile = {
     ...f,
     ...clean(body.tenant ?? {}),
     ...(f.guarantee === 'CAUTION' && body.guarantor ? { guarantor: { ...f.guarantor, ...clean(body.guarantor) } } : {}),
+    review: [...new Set([...(f.review ?? []), ...touched])].slice(0, 60),
   }
   await prisma.tenant.update({ where: { id: t.id }, data: { data: tenantFileSchema.parse(next) } })
   res.json({ success: true, data: publicView(await byCode(String(req.params.code))) })
@@ -165,7 +186,7 @@ router.post('/dossier/:code/document', limitPerVisitor(60, 40), upload.single('f
   const f = readTenant(t)
   if (who === 'GUARANTOR' && f.guarantee !== 'CAUTION') throw new HttpError(400, 'Aucun garant n’est prévu pour ce dossier.')
   const stored = await storeFile(t.userId, req.file)
-  const entry = { category, received: true, fileId: stored.id, label: stored.name.slice(0, 150) }
+  const entry = { category, received: true, fileId: stored.id, label: stored.name.slice(0, 150), source: 'TENANT' as const }
   const next: TenantFile =
     who === 'GUARANTOR'
       ? { ...f, guarantor: { ...f.guarantor, documents: [...(f.guarantor?.documents ?? []).filter((d) => d.category !== category), entry] } }

@@ -33,6 +33,12 @@ test('mentions de 2024 : identifiant fiscal et dépenses d’énergie du DPE exi
   assert.ok(keys(collective).includes('property.heatingSplit'))
 })
 
+test('primordial ou à compléter : identifiant fiscal et diagnostics ne bloquent pas, la surface oui', () => {
+  const m = leaseMissing({ ...SAMPLE_CONTRACT, property: { ...SAMPLE_CONTRACT.property, surface: undefined } })
+  assert.equal(m.find((x) => x.key === 'property.fiscalId')?.level, 'RECOMMENDED')
+  assert.equal(m.find((x) => x.key === 'property.surface')?.level, 'ESSENTIAL')
+})
+
 test('lien de signature valable 14 jours', () => {
   const from = new Date('2026-10-01T10:00:00Z')
   assert.equal(LINK_DAYS, 14)

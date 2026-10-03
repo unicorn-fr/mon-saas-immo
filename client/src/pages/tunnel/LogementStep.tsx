@@ -80,6 +80,10 @@ export default function LogementStep() {
     if (address.trim().length < 5) e.address = "Indiquez l'adresse du logement."
     if (!surfaceValue || surfaceValue <= 0) e.surface = 'Indiquez la surface habitable.'
     if (!rooms) e.rooms = 'Choisissez le nombre de pièces.'
+    if (!p.habitat) e.habitat = 'Indiquez s’il s’agit d’un appartement ou d’une maison.'
+    if (!p.legalRegime) e.legalRegime = 'Indiquez si le logement est en copropriété.'
+    if (!p.constructionPeriod) e.period = 'Indiquez la période de construction.'
+    if (!p.heatingMode || !p.hotWaterMode) e.heating = 'Indiquez le chauffage et l’eau chaude.'
     setErrors(e)
     if (Object.keys(e).length) return
     update((prev) => ({ property: { ...prev.property, address: address.trim(), surface: surfaceValue, rooms } }), 'personnes')
@@ -192,7 +196,97 @@ export default function LogementStep() {
         </span>
       </fieldset>
 
+      <TextField label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
+
+      <ChipGroup
+        legend="C’est"
+        error={errors.habitat}
+        value={p.habitat}
+        onChange={(v) => patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })}
+        options={[
+          { value: 'COLLECTIVE', label: 'Un appartement' },
+          { value: 'INDIVIDUAL', label: 'Une maison' },
+        ]}
+      />
+      <ChipGroup
+        legend="En copropriété ?"
+        hint="Copropriété : il y a un syndic et un règlement de copropriété."
+        error={errors.legalRegime}
+        value={p.legalRegime}
+        onChange={(v) => patch({ legalRegime: v })}
+        options={[
+          { value: 'COPRO', label: 'Oui' },
+          { value: 'MONO', label: 'Non' },
+        ]}
+      />
+      <ChipGroup
+        legend="Période de construction"
+        hint="Elle figure dans le bail et décide des diagnostics à fournir. Une estimation suffit."
+        error={errors.period}
+        value={p.constructionPeriod}
+        onChange={(v) => patch({ constructionPeriod: v })}
+        options={[
+          { value: 'BEFORE_1949', label: 'Avant 1949' },
+          { value: '1949_1974', label: '1949 à 1974' },
+          { value: '1975_1989', label: '1975 à 1989' },
+          { value: '1990_2005', label: '1990 à 2005' },
+          { value: 'AFTER_2005', label: 'Depuis 2005' },
+        ]}
+      />
+      <ChipGroup
+        legend="Le chauffage est"
+        error={errors.heating}
+        value={p.heatingMode}
+        onChange={(v) => patch({ heatingMode: v })}
+        options={[
+          { value: 'INDIVIDUAL', label: 'Individuel' },
+          { value: 'COLLECTIVE', label: 'Collectif (pour tout l’immeuble)' },
+        ]}
+      />
+      <ChipGroup
+        legend="Il fonctionne à"
+        value={p.heatingEnergy}
+        onChange={(v) => patch({ heatingEnergy: v })}
+        options={[
+          { value: 'ELECTRIC', label: 'Électricité' },
+          { value: 'GAS', label: 'Gaz' },
+          { value: 'HEAT_PUMP', label: 'Pompe à chaleur' },
+          { value: 'FUEL', label: 'Fioul' },
+          { value: 'WOOD', label: 'Bois' },
+          { value: 'NETWORK', label: 'Réseau de chaleur' },
+        ]}
+      />
+      <ChipGroup
+        legend="L’eau chaude est"
+        value={p.hotWaterMode}
+        onChange={(v) => patch({ hotWaterMode: v })}
+        options={[
+          { value: 'INDIVIDUAL', label: 'Individuelle' },
+          { value: 'COLLECTIVE', label: 'Collective' },
+        ]}
+      />
+
       <StepNav back="/commencer" next={next} />
     </TunnelLayout>
+  )
+}
+
+/** Choix en boutons, comme le nombre de pièces. */
+function ChipGroup<T extends string>({ legend, hint, error, value, onChange, options }: { legend: string; hint?: string; error?: string; value?: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }> }) {
+  return (
+    <fieldset style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
+      <legend style={{ fontSize: 15, fontWeight: 600, padding: 0, marginBottom: 10 }}>{legend}</legend>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {options.map((o) => {
+          const selected = value === o.value
+          return (
+            <button key={o.value} type="button" aria-pressed={selected} onClick={() => onChange(o.value)} style={{ minHeight: 52, padding: '0 18px', border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 16, fontWeight: selected ? 700 : 600, borderRadius: 12, fontFamily: 'inherit' }}>
+              {o.label}
+            </button>
+          )
+        })}
+      </div>
+      {error || hint ? <span style={{ fontSize: 14, color: error ? BAI.error : BAI.inkSoft, marginTop: 10 }}>{error ?? hint}</span> : null}
+    </fieldset>
   )
 }

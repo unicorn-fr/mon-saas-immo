@@ -11,7 +11,7 @@ import { ensureReminders } from '../services/reminders.js'
 import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { leaseTermsSchema, type ContractInput, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
-import { leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
+import { essential, leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
 import { formatDateFr, monthYearFr, parseIsoDate } from '../domain/lease.js'
 import {
   allowedChargesModes,
@@ -105,7 +105,7 @@ function withLinks(missing: Missing[], lease: LeaseWithProperty) {
       GUARANTOR: tenantId ? `/espace/locataires/${tenantId}/caution#${m.section}` : `/espace/baux/${lease.id}/contrat#parties`,
       TERMS: `/espace/baux/${lease.id}/contrat#${m.section}`,
     }[m.where]
-    return { key: m.key, label: m.label, where: m.where, to }
+    return { key: m.key, label: m.label, where: m.where, to, level: m.level ?? 'ESSENTIAL' }
   })
 }
 
@@ -124,7 +124,7 @@ export function assertComplete(missing: Missing[]) {
 async function reopenInfo(lease: LeaseWithProperty, c: ContractInput, paymentCount: number, inventorySigned: boolean) {
   const legacy = (lease.data as { legacy?: { source?: string } }).legacy
   if (lease.status !== 'ACTIVE' || !legacy || legacy.source === 'import') return null
-  const missing = leaseMissing(c).length
+  const missing = essential(leaseMissing(c)).length
   if (!missing) return null
   const esign = await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'COMPLETED' }, select: { id: true } })
   return { missing, allowed: paymentCount === 0 && !inventorySigned && !esign }
@@ -166,7 +166,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
   return {
     id: lease.id,
     status: lease.status,
-    ready: lease.status === 'DRAFT' && completion.percent === 100 && checklist.length === 0,
+    ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
     facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null },
     checklist,
@@ -404,7 +404,8 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
     throw new HttpError(400, `Il manque encore : ${missing.join(', ')}.`)
   }
   const c = await currentContract(user, lease)
-  if (lease.status === 'DRAFT') assertComplete(leaseMissing(c))
+  // Seules les informations primordiales bloquent : les autres laissent une ligne à compléter dans le bail.
+  if (lease.status === 'DRAFT') assertComplete(essential(leaseMissing(c)))
   return c
 }
 

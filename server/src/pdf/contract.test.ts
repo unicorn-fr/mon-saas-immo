@@ -55,3 +55,10 @@ test('bail meublé : annexe 2, lettres propres au meublé, inventaire', { skip: 
   assert.match(t, /inventaire et état détaillé du mobilier/)
   assert.match(t, /reconduit tacitement pour un an/)
 })
+
+test('clause résolutoire pour impayés et dépôt non versé toujours présente (loi n° 2023-668)', { skip: !hasPoppler && 'pdftotext absent', timeout: 60_000 }, async () => {
+  const c = { ...SAMPLE_CONTRACT, terms: { ...SAMPLE_CONTRACT.terms, clauses: { resolutoire: false, custom: [] } } }
+  const t = await text(c)
+  assert.match(t, /VIII\. CLAUSE RÉSOLUTOIRE Le présent contrat sera résilié de plein droit : – six semaines après un commandement de payer/)
+  assert.doesNotMatch(t, /à défaut de souscription d’une assurance des risques locatifs/)
+})

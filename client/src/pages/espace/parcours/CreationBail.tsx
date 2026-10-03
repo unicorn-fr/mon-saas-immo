@@ -105,13 +105,13 @@ export default function CreationBail() {
       switch (step) {
         case 1:
           if (!propertyId) throw new Error('Choisissez le logement.')
-          if (propertyBlockers?.length) throw new Error('Complétez d’abord le logement : le bail reprend toutes ses informations.')
+          if (propertyBlockers?.some((b) => (b.level ?? 'ESSENTIAL') === 'ESSENTIAL')) throw new Error('Complétez d’abord les informations primordiales du logement.')
           if (id && lease && lease.property.id !== propertyId) throw new Error('Le logement d’un bail en préparation ne peut pas changer. Créez un autre bail.')
           goto(2)
           return
         case 2: {
           if (!tenantIds.length) throw new Error('Choisissez au moins un locataire.')
-          if (tenantIds.some((t) => tenantBlockers[t]?.length)) throw new Error('Complétez d’abord ce qui manque au locataire pour le bail, ou demandez-le-lui.')
+          if (tenantIds.some((t) => tenantBlockers[t]?.some((b) => b.level === 'ESSENTIAL'))) throw new Error('Complétez d’abord ce qui est primordial pour le locataire et son garant.')
           if (!id) {
             const p = properties?.find((x) => x.id === propertyId)
             const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.furnished ? 'MEUBLE' : 'VIDE' } } })
@@ -196,12 +196,17 @@ export default function CreationBail() {
             ))}
           </div>
           <TextLink to="/espace/logements/nouveau?retour=bail">+ Un autre logement</TextLink>
-          {propertyId && propertyBlockers?.length ? (
-            <Callout tone="warn" title="Le logement doit être complet avant le bail">
-              Il manque : {propertyBlockers.map((b) => b.label.toLowerCase()).join(', ')}.{' '}
-              <TextLink to={`/espace/logements/nouveau?id=${propertyId}&etape=${PROPERTY_STEP[propertyBlockers[0].section] ?? 'type'}&retour=bail`} style={{ fontSize: 13 }}>
+          {propertyId && propertyBlockers?.some((b) => (b.level ?? 'ESSENTIAL') === 'ESSENTIAL') ? (
+            <Callout tone="warn" title="Informations primordiales du logement à compléter">
+              Il manque : {propertyBlockers.filter((b) => (b.level ?? 'ESSENTIAL') === 'ESSENTIAL').map((b) => b.label.toLowerCase()).join(', ')}.{' '}
+              <TextLink to={`/espace/logements/nouveau?id=${propertyId}&etape=${PROPERTY_STEP[propertyBlockers.find((b) => (b.level ?? 'ESSENTIAL') === 'ESSENTIAL')!.section] ?? 'type'}&retour=bail`} style={{ fontSize: 13 }}>
                 Compléter le logement
               </TextLink>
+            </Callout>
+          ) : null}
+          {propertyId && propertyBlockers?.length && !propertyBlockers.some((b) => (b.level ?? 'ESSENTIAL') === 'ESSENTIAL') ? (
+            <Callout tone="info" title="Vous pouvez continuer">
+              Le bail laissera une ligne à compléter pour : {propertyBlockers.map((b) => b.label.toLowerCase()).join(', ')}. Vous pourrez l’ajouter avant la signature.
             </Callout>
           ) : null}
         </>
@@ -355,7 +360,7 @@ export default function CreationBail() {
               label="Révision annuelle du loyer"
               sub={terms.kind === 'MOBILITE' ? 'Impossible en bail mobilité.' : !c.revisionAllowed ? 'Interdite pour un logement classé F ou G.' : `Le loyer suit l’indice officiel chaque ${terms.startDate ? dateFr(terms.startDate, false) : 'année'}. Conseillé.`}
             />
-            <Toggle checked={terms.clauses?.resolutoire !== false} onChange={(v) => setT({ clauses: { ...terms.clauses, resolutoire: v } })} label="Clause de fin de bail en cas d’impayé" sub="Permet de résilier plus simplement en cas de loyers impayés. Conseillé." />
+            <Toggle checked={terms.clauses?.resolutoire !== false} onChange={(v) => setT({ clauses: { ...terms.clauses, resolutoire: v } })} label="Étendre la clause de fin de bail" sub="Au défaut d’assurance et aux troubles de voisinage. La clause pour loyers impayés et dépôt non versé est toujours incluse : la loi l’impose depuis 2023." />
             <Toggle checked={Boolean(terms.clauses?.solidarite)} disabled={(lease?.tenants.length ?? 1) < 2 && !terms.colocation} onChange={(v) => setT({ clauses: { ...terms.clauses, solidarite: v } })} label="Solidarité entre colocataires" sub="Chacun peut être tenu de payer tout le loyer. Seulement pour plusieurs locataires." />
           </div>
           <CustomClauses clauses={terms.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => setT({ clauses: { ...terms.clauses, custom } })} />
@@ -443,6 +448,7 @@ interface TenantBlocker {
   key: string
   label: string
   ask: boolean
+  level: 'ESSENTIAL' | 'RECOMMENDED'
 }
 
 /** Ce qu'il manque au locataire pour le bail : à compléter soi-même, ou à lui demander. */
@@ -450,6 +456,7 @@ function TenantCheck({ tenantId, name, email, blockers, propertyId }: { tenantId
   const toast = useToast()
   const [sent, setSent] = useState(false)
   if (!blockers.length) return null
+  const blocking = blockers.some((b) => b.level === 'ESSENTIAL')
   const step = blockers[0].key.startsWith('guarantor') ? 'guarantor' : TENANT_STEP[blockers[0].key] ?? 'identity'
   const askable = blockers.some((b) => b.ask)
   const ask = async () => {
@@ -462,7 +469,7 @@ function TenantCheck({ tenantId, name, email, blockers, propertyId }: { tenantId
     }
   }
   return (
-    <Callout tone="warn" title={`Pour le bail, il manque pour ${name}`}>
+    <Callout tone={blocking ? 'warn' : 'info'} title={blocking ? `Pour le bail, il manque pour ${name}` : `${name} : à compléter si possible`}>
       {blockers.map((b) => b.label.toLowerCase()).join(', ')}.{' '}
       <TextLink to={`/espace/locataires/nouveau?id=${tenantId}&etape=${step}${propertyId ? `&logement=${propertyId}` : ''}`} style={{ fontSize: 13 }}>
         Compléter

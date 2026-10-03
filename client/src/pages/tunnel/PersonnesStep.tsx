@@ -68,6 +68,7 @@ export default function PersonnesStep() {
 
       <section className="stack" style={{ gap: 14 }}>
         <h2 style={{ ...overline, margin: 0 }}>Vous, le propriétaire</h2>
+        <Civility value={landlord.civility} onChange={(v) => save({ landlord: { ...landlord, civility: v } })} />
         <div className="col-md" style={{ display: 'flex', gap: 16 }}>
           <TextField label="Prénom" name="l-first" autoComplete="given-name" value={landlord.firstName ?? ''} error={errors['l.firstName']} onChange={(e) => save({ landlord: { ...landlord, firstName: e.target.value } })} />
           <TextField label="Nom" name="l-last" autoComplete="family-name" value={landlord.lastName ?? ''} error={errors['l.lastName']} onChange={(e) => save({ landlord: { ...landlord, lastName: e.target.value } })} />
@@ -92,6 +93,7 @@ export default function PersonnesStep() {
               </button>
             ) : null}
           </div>
+          <Civility value={t.civility} onChange={(v) => setTenant(i, { civility: v })} />
           <div className="col-md" style={{ display: 'flex', gap: 16 }}>
             <TextField label="Prénom" name={`t${i}-first`} value={t.firstName ?? ''} error={errors[`t${i}.firstName`]} onChange={(e) => setTenant(i, { firstName: e.target.value })} />
             <TextField label="Nom" name={`t${i}-last`} value={t.lastName ?? ''} error={errors[`t${i}.lastName`]} onChange={(e) => setTenant(i, { lastName: e.target.value })} />
@@ -153,5 +155,21 @@ export default function PersonnesStep() {
 
       <StepNav back="/commencer/logement" next={next} />
     </TunnelLayout>
+  )
+}
+
+/** Madame / Monsieur : écrit tel quel dans le bail. */
+function Civility({ value, onChange }: { value?: 'MADAME' | 'MONSIEUR'; onChange: (v: 'MADAME' | 'MONSIEUR') => void }) {
+  return (
+    <div role="group" aria-label="Civilité" style={{ display: 'flex', gap: 10 }}>
+      {(['MADAME', 'MONSIEUR'] as const).map((c) => {
+        const selected = value === c
+        return (
+          <button key={c} type="button" aria-pressed={selected} onClick={() => onChange(c)} style={{ minHeight: 48, padding: '0 18px', border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 15, fontWeight: selected ? 700 : 600, borderRadius: 12, fontFamily: 'inherit' }}>
+            {c === 'MADAME' ? 'Madame' : 'Monsieur'}
+          </button>
+        )
+      })}
+    </div>
   )
 }

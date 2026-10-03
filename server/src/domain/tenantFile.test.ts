@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { tenantLeaseMissing, tenantMissing } from './tenantFile.js'
+import { applyReview, pendingReview, tenantLeaseMissing, tenantMissing } from './tenantFile.js'
 
 const keys = (t: Parameters<typeof tenantMissing>[0]) => tenantMissing(t).map((m) => m.key)
 
@@ -28,5 +28,20 @@ test('avant le bail : naissance du locataire, acte de caution (montant et durée
   const k = m.map((x) => x.key)
   assert.ok(k.includes('birthDate') && k.includes('guarantor.address') && k.includes('guarantor.max') && k.includes('guarantor.duration'))
   assert.equal(m.find((x) => x.key === 'guarantor.max')?.ask, false)
+  assert.equal(m.find((x) => x.key === 'birthDate')?.level, 'RECOMMENDED')
+  assert.equal(m.find((x) => x.key === 'guarantor.max')?.level, 'ESSENTIAL')
   assert.ok(!k.some((x) => x.startsWith('doc.')))
+})
+
+test('vérification : ce que le locataire envoie est à vérifier ; refusé, il redevient à fournir', () => {
+  const t = { firstNames: 'Inès', lastName: 'Roche', birthPlace: 'Montpellier', review: ['birthPlace'], documents: [{ category: 'identity' as const, received: true, fileId: '00000000-0000-4000-8000-000000000001', source: 'TENANT' as const }] }
+  assert.deepEqual(pendingReview(t).map((r) => r.key), ['birthPlace', 'doc.identity'])
+  const ok = applyReview(t, 'doc.identity', true, '2026-10-03T10:00:00.000Z')
+  assert.equal(ok.documents?.[0].verifiedAt, '2026-10-03T10:00:00.000Z')
+  assert.deepEqual(pendingReview(ok).map((r) => r.key), ['birthPlace'])
+  const refused = applyReview(ok, 'birthPlace', false, 'x')
+  assert.equal(refused.birthPlace, null)
+  assert.ok(tenantMissing(refused).some((m) => m.key === 'birthPlace'))
+  const docRefused = applyReview(t, 'doc.identity', false, 'x')
+  assert.ok(tenantMissing(docRefused).some((m) => m.key === 'doc.identity'))
 })

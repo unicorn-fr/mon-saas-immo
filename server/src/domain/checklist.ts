@@ -17,7 +17,18 @@ export interface Missing {
   section: string
   /** Rang du locataire concerné (fiches locataire et caution). */
   tenant?: number
+  /**
+   * ESSENTIAL : sans elle, pas de bail (création et signature bloquées).
+   * RECOMMENDED : mention à compléter si possible ; le bail se fait, avec une ligne à remplir.
+   */
+  level?: 'ESSENTIAL' | 'RECOMMENDED'
 }
+
+/** Mentions que le propriétaire peut ne pas avoir sous la main : le bail laisse une ligne à compléter. */
+const RECOMMENDED = [/^property\.(fiscalId|dpeCost|equipments|tv|smoke|heatingSplit|hotWaterSplit|furniture)$/, /^property\.diag\./, /^terms\.irl$/]
+export const levelOf = (key: string): 'ESSENTIAL' | 'RECOMMENDED' => (RECOMMENDED.some((r) => r.test(key)) ? 'RECOMMENDED' : 'ESSENTIAL')
+const withLevel = (list: Missing[]) => list.map((m) => ({ ...m, level: levelOf(m.key) }))
+export const essential = (list: Missing[]) => withLevel(list).filter((m) => m.level === 'ESSENTIAL')
 
 const has = (v: unknown) => v !== undefined && v !== null && v !== '' && !(Array.isArray(v) && v.length === 0)
 
@@ -60,7 +71,7 @@ export function propertyLeaseMissing(p: ContractInput['property'], kind: NonNull
   }
   if (kind !== 'VIDE' && (p.furniture?.present?.length ?? 0) < 11) push('property.furniture', 'Les 11 éléments de mobilier obligatoires', 'PROPERTY', 'furniture')
 
-  return out
+  return withLevel(out)
 }
 
 /** Tout ce que le contrat type exige pour un bail complet, sans ligne laissée en blanc. */
@@ -102,5 +113,5 @@ export function leaseMissing(c: ContractInput): Missing[] {
     if (!g?.maxCents) push(`guarantor.${i}.max`, 'Le montant maximum garanti par la caution', 'GUARANTOR', 'duration', i)
     if (!g?.duration || (g.duration === 'FIXED' && !has(g.until))) push(`guarantor.${i}.duration`, 'La durée de l’engagement de la caution', 'GUARANTOR', 'duration', i)
   })
-  return out
+  return withLevel(out)
 }

@@ -90,6 +90,7 @@ export interface LeaseBlocker {
   key: string
   label: string
   section: string
+  level?: 'ESSENTIAL' | 'RECOMMENDED'
 }
 export type PropertyView = Omit<PropertyDetails, 'completion'> & { completion: Completion; leaseMissing?: LeaseBlocker[] }
 
@@ -352,4 +353,6 @@ export interface MissingItem {
   label: string
   where: 'LANDLORD' | 'PROPERTY' | 'TENANT' | 'TERMS' | 'GUARANTOR'
   to: string
+  /** ESSENTIAL : bloque le bail ; RECOMMENDED : le bail laisse une ligne à compléter. */
+  level?: 'ESSENTIAL' | 'RECOMMENDED'
 }

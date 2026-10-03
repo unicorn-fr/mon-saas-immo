@@ -78,6 +78,20 @@ export default function LoyerStep() {
         <TextField label="Loyer hors charges" name="rent" inputMode="decimal" suffix="€" value={rent} error={errors.rent} onChange={(e) => setRent(e.target.value.replace(/[^\d,.\s]/g, ''))} />
         <TextField label="Charges" name="charges" inputMode="decimal" suffix="€" value={charges} error={errors.charges} placeholder="0" onChange={(e) => setCharges(e.target.value.replace(/[^\d,.\s]/g, ''))} />
       </div>
+      <div role="group" aria-label="Les charges sont" className="stack" style={{ gap: 8 }}>
+        <span style={{ fontSize: 15, fontWeight: 600 }}>Les charges sont</span>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {([['PROVISION', 'Une provision, régularisée chaque année'], ['FORFAIT', 'Un forfait fixe']] as const).map(([v, label]) => {
+            const selected = (r.chargesMode ?? 'PROVISION') === v
+            return (
+              <button key={v} type="button" aria-pressed={selected} onClick={() => update((prev) => ({ rent: { ...prev.rent, chargesMode: v } }))} style={{ minHeight: 48, padding: '0 16px', border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 15, fontWeight: selected ? 700 : 600, borderRadius: 12, fontFamily: 'inherit' }}>
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Provision : une avance sur les dépenses réelles. En location vide, le forfait n’est possible qu’en colocation.</span>
+      </div>
       <TextField label="Date d'entrée du locataire" name="startDate" type="date" value={startDate} error={errors.startDate} onChange={(e) => setStartDate(e.target.value)} />
 
       <div className="stack" style={{ background: BAI.night, borderRadius: 20, padding: '24px 26px 10px' }} aria-live="polite">

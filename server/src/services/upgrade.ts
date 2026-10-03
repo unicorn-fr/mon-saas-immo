@@ -37,7 +37,7 @@ async function upgradeOne(user: User, lease: Lease & { property: import('@prisma
         data: {
           userId: user.id,
           propertyId: lease.property.id,
-          data: { firstNames: t.firstNames, lastName: t.lastName, email: t.email ?? undefined, living: contract.tenants.length > 1 ? 'COLOCATION' : 'ALONE', ...(g ? { guarantee: 'CAUTION', guarantor: g } : {}) },
+          data: { civility: t.civility ?? undefined, firstNames: t.firstNames, lastName: t.lastName, email: t.email ?? undefined, living: contract.tenants.length > 1 ? 'COLOCATION' : 'ALONE', ...(g ? { guarantee: 'CAUTION', guarantor: g } : {}) },
         },
       })
       ids.push(row.id)

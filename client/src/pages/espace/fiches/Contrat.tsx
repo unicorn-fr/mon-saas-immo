@@ -327,7 +327,7 @@ export default function Contrat() {
       ) : null}
 
       <FicheSection id="clauses" guides={['clauses']} n={++n} title="Clauses" reference="loi n° 89-462 du 6 juillet 1989, art. 4" done={done('clauses')}>
-        <Check checked={t.clauses?.resolutoire !== false} onChange={(v) => set({ clauses: { ...t.clauses, resolutoire: v } })} label="Clause résolutoire" sub="Défaut de paiement, dépôt de garantie non versé, défaut d’assurance, troubles de voisinage constatés par le juge." />
+        <Check checked={t.clauses?.resolutoire !== false} onChange={(v) => set({ clauses: { ...t.clauses, resolutoire: v } })} label="Étendre la clause résolutoire" sub="Au défaut d’assurance et aux troubles de voisinage constatés par le juge. La clause pour loyers impayés et dépôt de garantie non versé est obligatoire : elle est toujours dans le bail (loi du 27 juillet 2023)." />
         <Check checked={Boolean(t.clauses?.solidarite)} onChange={(v) => set({ clauses: { ...t.clauses, solidarite: v } })} label="Clause de solidarité entre colocataires" sub={view.tenants.length > 1 || t.colocation ? 'Chacun peut être tenu de payer la totalité du loyer.' : 'Seulement s’il y a plusieurs locataires.'} />
         <Custom clauses={t.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => set({ clauses: { ...t.clauses, custom } })} />
         <Callout tone="tip">Clauses interdites que Bailio signale : interdire tout animal domestique, imposer un assureur, facturer l’état des lieux, prévoir des pénalités de retard, interdire d’héberger ses proches, rendre le locataire responsable des dégradations collectives.</Callout>

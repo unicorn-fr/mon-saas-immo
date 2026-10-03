@@ -53,14 +53,70 @@ export const GUARANTOR_EDITABLE = ['civility', 'firstNames', 'lastName', 'birthD
  * Ce qui doit être connu avant le bail : identité complète du locataire (nom, naissance) et, s'il y a une caution,
  * de quoi établir l'acte de caution. `ask` : le locataire peut le compléter lui-même ; sinon, c'est au propriétaire.
  */
-export function tenantLeaseMissing(t: TenantFile): Array<FileMissing & { ask: boolean }> {
-  const lease = new Set(['name', 'birthDate', 'birthPlace', 'guarantor.name', 'guarantor.birth', 'guarantor.address', 'visaleNumber'])
-  const out: Array<FileMissing & { ask: boolean }> = tenantMissing(t).filter((m) => lease.has(m.key)).map((m) => ({ ...m, ask: true }))
+export function tenantLeaseMissing(t: TenantFile): Array<FileMissing & { ask: boolean; level: 'ESSENTIAL' | 'RECOMMENDED' }> {
+  // Primordial : le nom du locataire (rubrique I) et ce que l'acte de caution exige. La naissance est recommandée.
+  const essentialKeys = new Set(['name', 'guarantor.name', 'guarantor.address'])
+  const recommendedKeys = new Set(['birthDate', 'birthPlace', 'guarantor.birth', 'visaleNumber'])
+  const out: Array<FileMissing & { ask: boolean; level: 'ESSENTIAL' | 'RECOMMENDED' }> = tenantMissing(t)
+    .filter((m) => essentialKeys.has(m.key) || recommendedKeys.has(m.key))
+    .map((m) => ({ ...m, ask: true, level: essentialKeys.has(m.key) ? 'ESSENTIAL' : 'RECOMMENDED' }))
   if (t.guarantee === 'CAUTION') {
     const g = t.guarantor ?? {}
-    if (!g.maxCents) out.push({ key: 'guarantor.max', label: 'Le montant maximum garanti par la caution', who: 'GUARANTOR', kind: 'INFO', ask: false })
-    if (!g.duration || (g.duration === 'FIXED' && !g.until)) out.push({ key: 'guarantor.duration', label: 'La durée de l’engagement de la caution', who: 'GUARANTOR', kind: 'INFO', ask: false })
+    if (!g.maxCents) out.push({ key: 'guarantor.max', label: 'Le montant maximum garanti par la caution', who: 'GUARANTOR', kind: 'INFO', ask: false, level: 'ESSENTIAL' })
+    if (!g.duration || (g.duration === 'FIXED' && !g.until)) out.push({ key: 'guarantor.duration', label: 'La durée de l’engagement de la caution', who: 'GUARANTOR', kind: 'INFO', ask: false, level: 'ESSENTIAL' })
   }
-  if (!t.guarantee) out.push({ key: 'guarantee', label: 'La garantie (caution, Visale, assurance ou aucune)', who: 'TENANT', kind: 'INFO', ask: false })
   return out
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  civility: 'Civilité', firstNames: 'Prénom(s)', lastName: 'Nom', usageName: 'Nom d’usage', birthDate: 'Date de naissance', birthPlace: 'Lieu de naissance',
+  email: 'Email', phone: 'Téléphone', currentAddress: 'Adresse actuelle', address: 'Adresse', situation: 'Situation professionnelle', employer: 'Employeur ou activité',
+  occupation: 'Métier ou formation', monthlyIncomeCents: 'Revenus nets par mois', visaleNumber: 'Numéro du visa Visale',
+}
+
+export interface ReviewItem {
+  key: string
+  label: string
+  who: 'TENANT' | 'GUARANTOR'
+  kind: 'INFO' | 'DOCUMENT'
+  value?: string | number | null
+  fileId?: string | null
+}
+
+/** Ce que le locataire a envoyé depuis son lien et que le propriétaire n'a pas encore vérifié. */
+export function pendingReview(t: TenantFile): ReviewItem[] {
+  const out: ReviewItem[] = []
+  for (const key of t.review ?? []) {
+    const guarantor = key.startsWith('guarantor.')
+    const field = guarantor ? key.slice(10) : key
+    const src = (guarantor ? t.guarantor : t) as Record<string, unknown> | null | undefined
+    out.push({ key, label: `${FIELD_LABELS[field] ?? field}${guarantor ? ' du garant' : ''}`, who: guarantor ? 'GUARANTOR' : 'TENANT', kind: 'INFO', value: (src?.[field] as string | number | null) ?? null })
+  }
+  for (const d of t.documents ?? []) if (d.source === 'TENANT' && d.received && !d.verifiedAt) out.push({ key: `doc.${d.category}`, label: TENANT_DOCUMENTS[d.category as DocKey], who: 'TENANT', kind: 'DOCUMENT', fileId: d.fileId ?? null })
+  for (const d of t.guarantor?.documents ?? []) if (d.source === 'TENANT' && d.received && !d.verifiedAt) out.push({ key: `guarantor.doc.${d.category}`, label: `${TENANT_DOCUMENTS[d.category as DocKey]} du garant`, who: 'GUARANTOR', kind: 'DOCUMENT', fileId: d.fileId ?? null })
+  return out
+}
+
+/**
+ * Décision du propriétaire sur un élément envoyé par le locataire : conforme (il est marqué vérifié),
+ * ou à corriger (il est retiré et redevient « à fournir », pour être redemandé).
+ */
+export function applyReview(t: TenantFile, key: string, ok: boolean, now: string): TenantFile {
+  const next: TenantFile = { ...t, review: (t.review ?? []).filter((k) => k !== key) }
+  const docMatch = /^(guarantor\.)?doc\.(\w+)$/.exec(key)
+  if (docMatch) {
+    const guarantor = Boolean(docMatch[1])
+    const category = docMatch[2]
+    const update = (docs: TenantFile['documents']) => (docs ?? []).flatMap((d) => (d.category !== category ? [d] : ok ? [{ ...d, verifiedAt: now }] : []))
+    if (guarantor) next.guarantor = { ...t.guarantor, documents: update(t.guarantor?.documents) }
+    else next.documents = update(t.documents)
+    return next
+  }
+  if (!ok) {
+    const guarantor = key.startsWith('guarantor.')
+    const field = guarantor ? key.slice(10) : key
+    if (guarantor) next.guarantor = { ...t.guarantor, [field]: null }
+    else (next as Record<string, unknown>)[field] = null
+  }
+  return next
 }

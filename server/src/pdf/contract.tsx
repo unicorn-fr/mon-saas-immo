@@ -444,21 +444,19 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
           <P>Sans objet{colocation ? ' : les parties ont convenu de ne pas prévoir de solidarité entre les colocataires' : ' : un seul locataire'}.</P>
         )}
 
-        {/* VIII. Clause résolutoire */}
+        {/* VIII. Clause résolutoire : obligatoire pour impayés et dépôt non versé (art. 24, I, loi n° 2023-668) */}
         <Rubric n="VIII" title="Clause résolutoire" />
+        <P>Le présent contrat sera résilié de plein droit :</P>
+        <Dash>
+          six semaines après un commandement de payer demeuré infructueux, à défaut de paiement aux termes convenus de tout ou partie du loyer et des charges dûment justifiées{mobility ? '' : ', ou de versement du dépôt de garantie'} ;
+        </Dash>
         {showResolutoire ? (
           <>
-            <P>Le présent contrat sera résilié de plein droit :</P>
-            <Dash>
-              six semaines après un commandement de payer demeuré infructueux, à défaut de paiement aux termes convenus de tout ou partie du loyer et des charges dûment justifiées{mobility ? '' : ', ou de versement du dépôt de garantie'} ;
-            </Dash>
             <Dash>un mois après un commandement demeuré infructueux, à défaut de souscription d’une assurance des risques locatifs ;</Dash>
             <Dash>en cas de non-respect de l’obligation d’user paisiblement des locaux loués, résultant de troubles de voisinage constatés par une décision de justice passée en force de chose jugée.</Dash>
-            <P>Le commandement est délivré par commissaire de justice et reproduit les mentions prévues à l’article 24 de la loi du 6 juillet 1989.</P>
           </>
-        ) : (
-          <P>Sans objet : les parties ont convenu de ne pas prévoir de clause résolutoire.</P>
-        )}
+        ) : null}
+        <P>Le commandement est délivré par commissaire de justice et reproduit les mentions prévues à l’article 24 de la loi du 6 juillet 1989.</P>
 
         {/* IX. Honoraires */}
         <Rubric n="IX" title="Honoraires de location" />

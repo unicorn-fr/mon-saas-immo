@@ -235,7 +235,21 @@ export const TENANT_DOCUMENTS = {
   taxNotice: 'Dernier avis d’imposition',
   income: 'Justificatifs de ressources',
 } as const
-const documentsSchema = opt(z.array(z.object({ category: z.enum(Object.keys(TENANT_DOCUMENTS) as [string, ...string[]]), label: opt(text(160)), received: z.boolean(), fileId: opt(z.string().uuid()) })).max(20))
+const documentsSchema = opt(
+  z
+    .array(
+      z.object({
+        category: z.enum(Object.keys(TENANT_DOCUMENTS) as [string, ...string[]]),
+        label: opt(text(160)),
+        received: z.boolean(),
+        fileId: opt(z.string().uuid()),
+        /** Envoyé par le locataire depuis son lien : à vérifier par le propriétaire. */
+        source: opt(z.enum(['OWNER', 'TENANT'])),
+        verifiedAt: opt(text(40)),
+      }),
+    )
+    .max(20),
+)
 const situationSchema = z.enum(['EMPLOYEE', 'SELF_EMPLOYED', 'STUDENT', 'APPRENTICE', 'RETIRED', 'OTHER'])
 
 export const guarantorSchema = z.object({
@@ -286,6 +300,8 @@ export const tenantFileSchema = z.object({
   documents: documentsSchema,
   insurance: opt(z.object({ insurer: opt(text(120)), expiresAt: opt(isoDate), fileId: opt(z.string().uuid()) })),
   newAddress: opt(text(300)),
+  /** Informations saisies par le locataire depuis son lien, à vérifier par le propriétaire (« birthDate », « guarantor.address »…). */
+  review: opt(z.array(text(60)).max(60)),
 })
 export type TenantFile = z.infer<typeof tenantFileSchema>
 
