@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { BINDER_UPLOADS } from '../domain/binder.js'
 import { z } from 'zod'
 import type { Document as DocRow, User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -344,7 +345,7 @@ router.post('/documents', upload.single('file'), async (req, res) => {
   const user = req.user!
   const f = req.file
   if (!f) throw new HttpError(400, 'Ajoutez un fichier.')
-  const body = z.object({ kind: z.enum(['DIAGNOSTIC', 'INVOICE', 'OTHER', 'LEASE_IMPORTED']).default('OTHER'), title: z.string().trim().max(160).optional(), propertyId: z.uuid().optional(), leaseId: z.uuid().optional(), tenantId: z.uuid().optional(), diagnostic: z.string().max(20).optional() }).parse(req.body)
+  const body = z.object({ kind: z.enum(['DIAGNOSTIC', 'INVOICE', 'OTHER', 'LEASE_IMPORTED']).default('OTHER'), title: z.string().trim().max(160).optional(), propertyId: z.uuid().optional(), leaseId: z.uuid().optional(), tenantId: z.uuid().optional(), diagnostic: z.string().max(20).optional(), binder: z.enum(BINDER_UPLOADS).optional() }).parse(req.body)
   await checkProperty(user.id, body.propertyId)
   if (body.leaseId) await leaseOwned(user.id, body.leaseId)
   if (body.tenantId && !(await prisma.tenant.findFirst({ where: { id: body.tenantId, userId: user.id } }))) throw new HttpError(404, 'Locataire introuvable.')
@@ -364,7 +365,7 @@ router.post('/documents', upload.single('file'), async (req, res) => {
       propertyId: body.propertyId ?? null,
       leaseId: body.leaseId ?? null,
       tenantId: body.tenantId ?? null,
-      meta: body.diagnostic ? { diagnostic: body.diagnostic } : undefined,
+      meta: body.diagnostic || body.binder ? { ...(body.diagnostic ? { diagnostic: body.diagnostic } : {}), ...(body.binder ? { binder: body.binder } : {}) } : undefined,
     },
   })
   await prisma.fileBlob.delete({ where: { id: stored.id } })

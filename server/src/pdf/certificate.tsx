@@ -1,4 +1,4 @@
-import { Page, Text, View } from '@react-pdf/renderer'
+import { Image, Page, Text, View } from '@react-pdf/renderer'
 import { INK, MUTED, RULE, s } from './theme.js'
 
 /**
@@ -16,6 +16,10 @@ export interface CertificateSigner {
   ip: string | null
   userAgent: string | null
   mention: string | null
+  /** Photo prise au moment de signer (JPEG en data URL), horodatée par le serveur, et son empreinte SHA-256. */
+  photo?: string | null
+  photoAt?: string | null
+  photoHash?: string | null
 }
 
 export interface CertificateData {
@@ -38,8 +42,8 @@ const when = (isoDate: string | null) => {
 function Line({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flexDirection: 'row', paddingVertical: 2.5 }} wrap={false}>
-      <Text style={{ width: '30%', fontSize: 8.5, color: MUTED }}>{label}</Text>
-      <Text style={{ width: '70%', fontSize: 8.5, lineHeight: 1.4 }}>{value}</Text>
+      <Text style={{ width: '36%', fontSize: 8.5, color: MUTED, paddingRight: 6 }}>{label}</Text>
+      <Text style={{ width: '64%', fontSize: 8.5, lineHeight: 1.4 }}>{value}</Text>
     </View>
   )
 }
@@ -53,7 +57,7 @@ export function CertificatePage({ data }: { data: CertificateData }) {
       </View>
       <Text style={{ fontSize: 8.5, lineHeight: 1.5, textAlign: 'justify', marginBottom: 10 }}>
         Le présent document a été signé électroniquement au moyen de la plateforme Bailio. Chaque signataire a reçu un lien personnel à son adresse électronique, puis un code à usage
-        unique envoyé à cette même adresse, qu’il a saisi avant de signer. Le document présenté est identifié par son empreinte numérique : toute modification, même d’un caractère,
+        unique envoyé à cette même adresse, qu’il a saisi avant de signer, puis s’est pris en photo ; la photo est horodatée par le serveur et identifiée par son empreinte. Le document présenté est identifié par son empreinte numérique : toute modification, même d’un caractère,
         changerait cette empreinte. Ce procédé constitue une signature électronique au sens de l’article 1367 du Code civil et de l’article 25 du règlement (UE) n° 910/2014 dit
         « eIDAS ». L’écrit électronique a la même force probante que l’écrit sur support papier (article 1366 du Code civil).
       </Text>
@@ -70,12 +74,19 @@ export function CertificatePage({ data }: { data: CertificateData }) {
           <Text style={{ fontSize: 9.5, fontWeight: 700, marginBottom: 4 }}>
             {x.role} : {x.name}
           </Text>
-          <Line label="Adresse électronique" value={x.email} />
-          <Line label="Code à usage unique vérifié le" value={when(x.codeVerifiedAt)} />
-          <Line label="Signé le" value={when(x.signedAt)} />
-          <Line label="Adresse IP" value={x.ip ?? '—'} />
-          <Line label="Appareil" value={(x.userAgent ?? '—').slice(0, 160)} />
-          {x.mention ? <Line label="Mention recopiée" value={`« ${x.mention} »`} /> : null}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={{ flexGrow: 1, flexBasis: 0 }}>
+              <Line label="Adresse électronique" value={x.email} />
+              <Line label="Code à usage unique vérifié le" value={when(x.codeVerifiedAt)} />
+              {x.photoAt ? <Line label="Photo prise le" value={when(x.photoAt)} /> : null}
+              <Line label="Signé le" value={when(x.signedAt)} />
+              <Line label="Adresse IP" value={x.ip ?? '—'} />
+              <Line label="Appareil" value={(x.userAgent ?? '—').slice(0, 160)} />
+              {x.photoHash ? <Line label="Empreinte SHA-256 de la photo" value={x.photoHash} /> : null}
+              {x.mention ? <Line label="Mention recopiée" value={`« ${x.mention} »`} /> : null}
+            </View>
+            {x.photo ? <Image src={x.photo} style={{ width: 78, height: 104, objectFit: 'cover', borderWidth: 0.8, borderColor: RULE }} /> : null}
+          </View>
         </View>
       ))}
       <Text style={{ fontSize: 7.5, color: MUTED, lineHeight: 1.45, marginTop: 6 }}>

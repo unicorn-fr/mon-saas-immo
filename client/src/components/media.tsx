@@ -174,3 +174,125 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     </div>
   )
 }
+
+/** Photo réduite (1 024 px au plus) en data URL JPEG, depuis un fichier ou une image de la caméra. */
+async function toJpegDataUrl(source: CanvasImageSource & { width: number; height: number }): Promise<string> {
+  const scale = Math.min(1, 1024 / Math.max(source.width, source.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(source.width * scale)
+  canvas.height = Math.round(source.height * scale)
+  canvas.getContext('2d')?.drawImage(source, 0, 0, canvas.width, canvas.height)
+  return canvas.toDataURL('image/jpeg', 0.85)
+}
+
+/**
+ * Photo du signataire au moment de signer : caméra de l'ordinateur si elle existe, sinon l'appareil photo
+ * du téléphone (caméra avant). La photo est horodatée par le serveur et jointe au certificat de preuve.
+ */
+export function SelfieCapture({ value, onPhoto, disabled }: { value: string | null; onPhoto: (dataUrl: string) => Promise<void>; disabled?: boolean }) {
+  const toast = useToast()
+  const video = useRef<HTMLVideoElement>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [busy, setBusy] = useState(false)
+  const canLive = typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
+  useEffect(() => {
+    if (video.current && stream) {
+      video.current.srcObject = stream
+      void video.current.play().catch(() => undefined)
+    }
+    return () => stream?.getTracks().forEach((t) => t.stop())
+  }, [stream])
+  const send = async (dataUrl: string) => {
+    setBusy(true)
+    try {
+      await onPhoto(dataUrl)
+    } catch (e) {
+      toast.error(e)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const openCamera = async () => {
+    try {
+      setStream(await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }))
+    } catch {
+      toast.show('La caméra n’est pas accessible. Utilisez le bouton « Prendre une photo ».', 'error')
+    }
+  }
+  const snap = async () => {
+    const v = video.current
+    if (!v || !v.videoWidth) return
+    const frame = Object.assign(v, { width: v.videoWidth, height: v.videoHeight })
+    const dataUrl = await toJpegDataUrl(frame)
+    stream?.getTracks().forEach((t) => t.stop())
+    setStream(null)
+    await send(dataUrl)
+  }
+  const fromFile = async (file: File) => {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      const dataUrl = await toJpegDataUrl(bitmap)
+      bitmap.close()
+      await send(dataUrl)
+    } catch {
+      toast.show('Cette image ne peut pas être lue. Reprenez la photo.', 'error')
+    }
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {stream ? (
+        <video ref={video} muted playsInline aria-label="Aperçu de la caméra" style={{ width: '100%', maxWidth: 360, borderRadius: 14, background: BAI.night, transform: 'scaleX(-1)' }} />
+      ) : value ? (
+        <img src={value} alt="Votre photo" style={{ width: 150, height: 200, objectFit: 'cover', borderRadius: 14, border: `1px solid ${BAI.divider}` }} />
+      ) : null}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        {stream ? (
+          <button type="button" onClick={() => void snap()} style={selfieBtn(true)}>
+            Prendre la photo
+          </button>
+        ) : (
+          <>
+            <label style={{ ...selfieBtn(!value), opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
+              {busy ? <Spinner size={14} /> : <Camera size={18} color={value ? BAI.owner : BAI.surface} />}
+              {value ? 'Reprendre la photo' : 'Prendre une photo'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="sr-only"
+                aria-label="Prendre une photo de vous"
+                disabled={disabled}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''
+                  if (f) void fromFile(f)
+                }}
+              />
+            </label>
+            {canLive ? (
+              <button type="button" onClick={() => void openCamera()} disabled={disabled} className="hide-md" style={selfieBtn(false)}>
+                Utiliser la caméra de l’ordinateur
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const selfieBtn = (primary: boolean): React.CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 8,
+  height: 48,
+  padding: '0 18px',
+  borderRadius: 12,
+  border: primary ? 'none' : `1.5px solid ${BAI.owner}`,
+  background: primary ? BAI.owner : BAI.surface,
+  color: primary ? BAI.surface : BAI.owner,
+  fontFamily: 'inherit',
+  fontSize: 15,
+  fontWeight: 600,
+  cursor: 'pointer',
+})

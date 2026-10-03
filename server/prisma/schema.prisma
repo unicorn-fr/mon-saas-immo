@@ -410,6 +410,10 @@ model Signer {
   // Mention recopiée (« Lu et approuvé », ou mention de l'article 2297 pour le garant)
   mention        String?
   image          String?
+  // Photo du signataire prise au moment de signer (JPEG en data URL), horodatée par le serveur, avec son empreinte SHA-256.
+  photo          String?
+  photoAt        DateTime?
+  photoHash      String?
   signedAt       DateTime?
   ip             String?
   userAgent      String?

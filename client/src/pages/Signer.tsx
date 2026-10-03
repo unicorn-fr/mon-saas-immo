@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
-import { SignaturePad } from '../components/media'
+import { SelfieCapture, SignaturePad } from '../components/media'
 import { Guide } from '../components/Sources'
 import { Btn, Callout, Card, Check, Input, LoadError, Loader, useLoad, useToast } from '../components/kit'
 import { display } from '../components/ui'
@@ -19,6 +19,7 @@ interface SignView {
   property: string
   mention: string
   codeVerified: boolean
+  photoAt: string | null
   signedAt: string | null
   completed: boolean
   others: Array<{ roleLabel: string; name: string; signed: boolean }>
@@ -36,6 +37,7 @@ export default function Signer() {
   const [mention, setMention] = useState('')
   const [image, setImage] = useState<string | null>(null)
   const [consent, setConsent] = useState(false)
+  const [photo, setPhoto] = useState<string | null>(null)
   const pdf = `/api${base}/document.pdf`
   // Le document est affiché depuis une copie locale (blob) : le site interdit d'intégrer ses propres pages en cadre.
   const [blob, setBlob] = useState<string | null>(null)
@@ -134,7 +136,25 @@ export default function Signer() {
         )}
       </Step>
 
-      <Step n={3} title={guarantor ? 'Recopiez la mention de caution' : 'Recopiez la mention'} disabled={!data.codeVerified}>
+      <Step n={3} title="Prenez-vous en photo" done={Boolean(data.photoAt)} disabled={!data.codeVerified}>
+        <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
+          Une photo de votre visage, prise maintenant. Elle est datée à la seconde par notre serveur et jointe au certificat de preuve : elle montre que c’est bien vous qui signez. Elle n’est visible que des signataires du bail.
+        </p>
+        {data.codeVerified ? (
+          <SelfieCapture
+            value={photo}
+            onPhoto={async (dataUrl) => {
+              await api(`${base}/photo`, { method: 'POST', body: { photo: dataUrl } })
+              setPhoto(dataUrl)
+              toast.show('Photo enregistrée.')
+              reload()
+            }}
+          />
+        ) : null}
+        {data.photoAt ? <span style={{ fontSize: 14, color: BAI.green, fontWeight: 600 }}>Photo enregistrée le {new Date(data.photoAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'medium' })}.</span> : null}
+      </Step>
+
+      <Step n={4} title={guarantor ? 'Recopiez la mention de caution' : 'Recopiez la mention'} disabled={!data.codeVerified}>
         <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
           {guarantor
             ? 'La loi exige que la caution écrive elle-même cette mention (article 2297 du Code civil). Tapez-la entièrement : le copier-coller est désactivé.'
@@ -155,16 +175,16 @@ export default function Signer() {
         </label>
       </Step>
 
-      <Step n={4} title="Signez" disabled={!data.codeVerified}>
+      <Step n={5} title="Signez" disabled={!data.codeVerified || !data.photoAt}>
         {data.codeVerified ? <SignaturePad value={image} onChange={setImage} label="Signez avec le doigt ou la souris" /> : null}
         <Check
           checked={consent}
           onChange={setConsent}
           label="J’accepte de signer ce document électroniquement."
-          sub="Ma signature électronique a la même valeur qu’une signature à la main. La date, l’heure, mon adresse IP et le code vérifié sont conservés comme preuve."
+          sub="Ma signature électronique a la même valeur qu’une signature à la main. La date, l’heure, mon adresse IP, le code vérifié et ma photo sont conservés comme preuve."
         />
         <div>
-          <Btn size="lg" onClick={() => sign().catch(toast.error)} disabled={!data.codeVerified || !consent || !mention.trim() || !image}>
+          <Btn size="lg" onClick={() => sign().catch(toast.error)} disabled={!data.codeVerified || !data.photoAt || !consent || !mention.trim() || !image}>
             Signer le document
           </Btn>
         </div>
@@ -175,8 +195,8 @@ export default function Signer() {
       <Card title="Est-ce que c’est légal ?">
         <p style={{ margin: 0, fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
           Oui. Un écrit électronique a la même valeur qu’un écrit sur papier (Code civil, article 1366), et la signature électronique est valable dès lors qu’elle identifie la personne qui
-          signe et garantit son lien avec le document (article 1367). Votre identité est vérifiée par un code envoyé à votre adresse, le document est figé par son empreinte numérique, et un
-          certificat de preuve est joint au document signé.
+          signe et garantit son lien avec le document (article 1367). Votre identité est vérifiée par un code envoyé à votre adresse et par une photo datée, le document est figé par son
+          empreinte numérique, et un certificat de preuve est joint au document signé.
         </p>
         <div style={{ display: 'flex', gap: '4px 16px', flexWrap: 'wrap' }}>
           <Guide to="signature" />

@@ -80,6 +80,13 @@ Chaque information saisie est enregistrée et réutilisée :
 - Formulaire du début (tunnel public) : civilité, étage et porte, type d'habitat, régime juridique, période de construction, chauffage et eau chaude, mode des charges.
 - Clause résolutoire (rubrique VIII) : toujours présente pour le loyer, les charges et le dépôt (loi n° 2023-668) ; l'option ne fait que l'étendre à l'assurance et aux troubles de voisinage.
 
+## Guidage et dossier du logement
+
+- Mise en location (`domain/rental.ts`, testé dans `rental.test.ts` ; `services/rental.ts`) : fiche du logement, annonce et candidatures (facultatives, `skippedSteps`), locataire (fiche, lien, vérification), bail, relecture (`lease.data.checkedAt`), signature, état des lieux d'entrée, dépôt, assurance, premier loyer. État déduit des données ; chaque étape à faire devient une tâche `STEP` d'« Aujourd'hui » et la page du logement affiche le parcours (`components/Journey.tsx`).
+- Dossier du logement (`domain/binder.ts`, testé ; onglet « Dossier du logement ») : documents à avoir et à garder, ce qui manque, durée de conservation (service-public F19134, loi de 1989 art. 7-1). Dépôt via `POST /documents` avec `binder`.
+- Signature en ligne : photo du signataire obligatoire avant de signer (`POST /esign/:token/photo`), réencodée par `sharp` sans métadonnées, horodatée par le serveur, empreinte SHA-256, dans le certificat (`pdf/certificate.tsx`).
+- Après l'envoi d'un lien par email : boutons vers la messagerie (`lib/mail.ts`, `components/MailLinks.tsx`). Annonce : liens de dépôt Leboncoin, SeLoger, PAP, Facebook Marketplace.
+
 ## Lien du locataire
 
 `routes/tenantLink.ts`, page publique `/locataire/:code` (colonne `Lease.tenantCode`) : sans compte, le locataire envoie son attestation d'assurance (fiches des locataires et rappel mis à jour), l'attestation d'entretien de la chaudière (bail et fiche du logement) et donne ou retire son accord pour la quittance par email (art. 21, avec la date). Les fichiers rejoignent les documents du bail (`meta.from = 'TENANT'`). Côté propriétaire : carte « Documents du locataire » sur la page du bail, et tâches d'« Aujourd'hui » (assurance, chaudière) qui envoient le lien.

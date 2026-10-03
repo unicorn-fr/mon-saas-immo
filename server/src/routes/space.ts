@@ -14,6 +14,7 @@ import { iso, mergeFile } from './helpers.js'
 import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
+import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
 
@@ -212,6 +213,46 @@ router.put('/properties/:id', async (req, res) => {
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
+})
+
+// Dossier du logement : tout ce qu'il faut avoir et garder, avec ce qui manque (domain/binder.ts).
+router.get('/properties/:id/binder', async (req, res) => {
+  const userId = req.user!.id
+  const p = await ownProperty(userId, String(req.params.id))
+  const file = readProperty(p)
+  const lease = [...p.leases].sort((a, b) => b.startDate.getTime() - a.startDate.getTime()).find((l) => l.status !== 'ENDED') ?? null
+  const [docs, inventories, tenants, invoices] = await Promise.all([
+    prisma.document.findMany({ where: { userId, OR: [{ propertyId: p.id }, { leaseId: { in: p.leases.map((l) => l.id) } }] }, select: { id: true, kind: true, meta: true, leaseId: true, createdAt: true } }),
+    lease ? prisma.inventory.findMany({ where: { userId, leaseId: lease.id, kind: 'ENTRY', status: 'SIGNED' }, select: { id: true } }) : Promise.resolve([]),
+    lease ? prisma.tenant.findMany({ where: { userId, id: { in: lease.tenantIds } } }) : Promise.resolve([]),
+    prisma.expense.count({ where: { userId, propertyId: p.id } }),
+  ])
+  const facts = (lease?.data ?? {}) as { depositReceivedAt?: string; boilerServiceDate?: string }
+  const files = tenants.map(readTenant)
+  const signed = Boolean(lease && lease.status !== 'DRAFT')
+  const old = Boolean(lease && (lease.status === 'IMPORTED' || (lease.status === 'ACTIVE' && Date.now() - lease.startDate.getTime() > 60 * 86_400_000)))
+  const sections = propertyBinder({
+    propertyId: p.id,
+    file,
+    docs: docs.map((d) => ({ id: d.id, kind: d.kind, binder: (d.meta as { binder?: string } | null)?.binder ?? null, diagnostic: (d.meta as { diagnostic?: string } | null)?.diagnostic ?? null, leaseId: d.leaseId, createdAt: d.createdAt.toISOString() })),
+    lease: lease
+      ? {
+          id: lease.id,
+          signed,
+          furnished: lease.type === 'FURNISHED',
+          guarantors: files.filter((t) => t.guarantee === 'CAUTION').length,
+          entryInventorySigned: inventories.length > 0,
+          insurance: files.some((t) => Boolean(t.insurance?.expiresAt || t.insurance?.fileId)),
+          depositReceived: Boolean(facts.depositReceivedAt) || old,
+          depositCents: lease.depositCents,
+          receipts: lease.payments.length,
+          boilerDate: facts.boilerServiceDate ?? file.heating?.lastMaintenance ?? null,
+          individualBoiler: file.heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(file.heating?.energy)),
+        }
+      : null,
+    invoices,
+  })
+  res.json({ success: true, data: { sections, missing: binderMissing(sections).length } })
 })
 
 // Étape facultative de la mise en location écartée (ou reprise) : annonce, candidatures.

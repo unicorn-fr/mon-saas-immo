@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Binder } from '../../components/Binder'
 import { Journey } from '../../components/Journey'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
@@ -13,9 +14,10 @@ import { documentPath, openDoc } from '../../lib/docs'
 import { dateNum, dateShort, eurosCents } from '../../lib/format'
 import type { Expense, PropertyView } from '../../lib/space'
 
-type Tab = 'overview' | 'lease' | 'expenses' | 'diagnostics' | 'inventories'
+type Tab = 'overview' | 'binder' | 'lease' | 'expenses' | 'diagnostics' | 'inventories'
 const TABS: Array<{ value: Tab; label: string }> = [
   { value: 'overview', label: 'Vue d’ensemble' },
+  { value: 'binder', label: 'Dossier du logement' },
   { value: 'lease', label: 'Bail et locataire' },
   { value: 'expenses', label: 'Travaux et dépenses' },
   { value: 'diagnostics', label: 'Diagnostics' },
@@ -56,6 +58,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
       {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
       <Tabs label="Sections du logement" tabs={TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
       {tab === 'overview' ? <Overview p={p} /> : null}
+      {tab === 'binder' ? <Binder propertyId={p.id} /> : null}
       {tab === 'lease' ? <LeaseTab p={p} /> : null}
       {tab === 'expenses' ? <ExpensesTab p={p} reload={reload} /> : null}
       {tab === 'diagnostics' ? <DiagnosticsTab p={p} reload={reload} /> : null}

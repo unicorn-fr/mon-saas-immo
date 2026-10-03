@@ -85,7 +85,7 @@ export function Confidentialite() {
         <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
         <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
         <li>
-          Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée et signature dessinée. Elle figure
+          Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et photo du signataire prise au moment de signer (réencodée sans données de localisation, datée par notre serveur). Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367). Elle est conservée aussi longtemps que le bail.
         </li>
         <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie, lien DossierFacile et, si le propriétaire les demande, les justificatifs que la loi autorise (décret n° 2015-1437). Elles ne sont visibles que du propriétaire. Celles qui ne sont pas retenues sont effacées, pièces comprises, au plus tard 90 jours après leur envoi ;</li>

@@ -148,6 +148,11 @@ export async function signAs(browser, url, { name, mobile = false } = {}) {
     await page.getByRole('button', { name: 'Valider' }).click()
     await page.getByText('Identité confirmée par le code').waitFor()
   }
+  // Photo du signataire, datée par le serveur
+  if (!(await page.getByText(/Photo enregistrée le/).count())) {
+    await page.getByLabel('Prendre une photo de vous').setInputFiles(new URL('./fixtures/selfie.jpg', import.meta.url).pathname)
+    await page.getByText(/Photo enregistrée le/).waitFor()
+  }
   const mention = (await page.locator('div', { hasText: /^« / }).last().innerText()).replace(/^« /, '').replace(/ »$/, '')
   await page.locator('textarea').fill(mention)
   const canvas = page.locator('canvas')

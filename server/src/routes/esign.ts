@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto'
+import sharp from 'sharp'
 import { Router, type Request } from 'express'
 import { z } from 'zod'
 import type { Prisma, SignatureRequest, Signer, User } from '@prisma/client'
@@ -197,6 +198,7 @@ router.get('/esign/:token', limitPerVisitor(5, 60), async (req, res) => {
       property: propertyAddress(c.property),
       mention: expectedMention(signer, c),
       codeVerified: Boolean(signer.codeVerifiedAt && Date.now() - signer.codeVerifiedAt.getTime() < SIGN_WINDOW_MINUTES * 60_000),
+      photoAt: signer.photoAt?.toISOString() ?? null,
       signedAt: signer.signedAt?.toISOString() ?? null,
       completed: request.status === 'COMPLETED',
       others: request.signers.filter((s) => s.id !== signer.id).map((s) => ({ roleLabel: ROLE_LABEL[s.role], name: s.name, signed: Boolean(s.signedAt) })),
@@ -244,6 +246,26 @@ router.post('/esign/:token/verify', limitPerVisitor(10, 20), async (req, res) =>
   res.json({ success: true, data: { verified: true } })
 })
 
+/**
+ * Photo du signataire, prise avec l'appareil photo au moment de signer : réencodée (sans données de localisation
+ * ni métadonnées), horodatée par le serveur et identifiée par son empreinte. Elle figure dans le certificat de preuve.
+ */
+router.post('/esign/:token/photo', limitPerVisitor(10, 10), async (req, res) => {
+  const { signer, request } = await signerOf(req)
+  if (signer.signedAt || request.status !== 'PENDING') throw new HttpError(409, 'Ce document est déjà signé.')
+  if (!signer.codeVerifiedAt || Date.now() - signer.codeVerifiedAt.getTime() > SIGN_WINDOW_MINUTES * 60_000) throw new HttpError(400, 'Confirmez d’abord votre identité avec le code reçu par email.')
+  const { photo } = z.object({ photo: z.string().max(8_000_000).regex(/^data:image\/(jpeg|png|webp);base64,/, 'Photo invalide.') }).parse(req.body)
+  let jpeg: Buffer
+  try {
+    jpeg = await sharp(Buffer.from(photo.split(',')[1], 'base64'), { limitInputPixels: 40_000_000 }).rotate().resize(640, 640, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 78 }).toBuffer()
+  } catch {
+    throw new HttpError(400, 'Cette image ne peut pas être lue. Reprenez la photo.')
+  }
+  const photoAt = new Date()
+  await prisma.signer.update({ where: { id: signer.id }, data: { photo: `data:image/jpeg;base64,${jpeg.toString('base64')}`, photoAt, photoHash: sha256(jpeg) } })
+  res.json({ success: true, data: { photoAt: photoAt.toISOString() } })
+})
+
 router.post('/esign/:token/sign', limitPerVisitor(10, 10), async (req, res) => {
   const { signer, request } = await signerOf(req)
   if (signer.signedAt) throw new HttpError(409, 'Vous avez déjà signé ce document.')
@@ -256,6 +278,7 @@ router.post('/esign/:token/sign', limitPerVisitor(10, 10), async (req, res) => {
       consent: z.literal(true, { message: 'Cochez la case pour accepter de signer électroniquement.' }),
     })
     .parse(req.body)
+  if (!signer.photo || !signer.photoAt) throw new HttpError(400, 'Prenez-vous en photo avant de signer : elle est jointe au certificat de preuve.')
   const c = contractOf(request)
   const expected = expectedMention(signer, c)
   if (!mentionMatches(expected, body.mention)) throw new HttpError(400, signer.role === 'GUARANTOR' ? 'La mention recopiée ne correspond pas au texte demandé. Vérifiez en particulier le montant et la durée.' : `Recopiez la mention « ${READ_AND_APPROVED} ».`)
@@ -296,7 +319,7 @@ async function finalize(r: RequestWithSigners) {
     documentHash: hash,
     createdAt: r.createdAt.toISOString(),
     completedAt: completedAt.toISOString(),
-    signers: signers.map((s) => ({ role: ROLE_LABEL[s.role], name: s.name, email: s.email, codeVerifiedAt: s.codeVerifiedAt?.toISOString() ?? null, signedAt: s.signedAt?.toISOString() ?? null, ip: s.ip, userAgent: s.userAgent, mention: s.mention })),
+    signers: signers.map((s) => ({ role: ROLE_LABEL[s.role], name: s.name, email: s.email, codeVerifiedAt: s.codeVerifiedAt?.toISOString() ?? null, signedAt: s.signedAt?.toISOString() ?? null, ip: s.ip, userAgent: s.userAgent, mention: s.mention, photo: s.photo, photoAt: s.photoAt?.toISOString() ?? null, photoHash: s.photoHash })),
   })
   const landlord = r.signers.find((s) => s.role === 'LANDLORD')
   const tenants = r.signers.filter((s) => s.role === 'TENANT').sort((a, b) => a.position - b.position)
