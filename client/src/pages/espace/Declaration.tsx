@@ -26,7 +26,7 @@ interface PropertyTax {
 interface TaxView {
   year: number
   properties: PropertyTax[]
-  empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number; better: 'MICRO' | 'REAL' | null; deficit?: { totalCents: number; globalCents: number; carriedCents: number } | null } | null
+  empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number; better: 'MICRO' | 'REAL' | null; deficit?: { totalCents: number; globalCents: number; carriedCents: number; ceilingCents?: number } | null } | null
   furnished: { receiptsCents: number; microAllowed: boolean; microTaxableCents: number } | null
   unassignedExpensesCents: number
   extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }>
@@ -122,7 +122,7 @@ export default function Declaration() {
                 {p.resultCents < 0 ? <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Un déficit foncier, hors intérêts d’emprunt, se déduit de votre revenu global dans la limite de 10 700 € par an ; le reste se reporte sur vos revenus fonciers des dix années suivantes.</span> : null}
                 {p === data.properties.filter((x) => !x.furnished).at(-1) && data.empty?.deficit && data.empty.better === 'REAL' ? (
                   <Callout tone="info" title="Déficit foncier de l’année">
-                    {eurosCents(data.empty.deficit.totalCents)} au total : {eurosCents(data.empty.deficit.globalCents)} à déduire de votre revenu global (case 4BC), {eurosCents(data.empty.deficit.carriedCents)} à reporter sur vos revenus fonciers des dix années suivantes (case 4BD). Le plafond de 10 700 € est porté à 21 400 € pour certains travaux de rénovation énergétique : vérifiez sur impots.gouv.fr.
+                    {eurosCents(data.empty.deficit.totalCents)} au total : {eurosCents(data.empty.deficit.globalCents)} à déduire de votre revenu global (case 4BC), {eurosCents(data.empty.deficit.carriedCents)} à reporter sur vos revenus fonciers des dix années suivantes (case 4BD). {data.empty.deficit.ceilingCents && data.empty.deficit.ceilingCents > 1_070_000 ? `Plafond porté à ${eurosCents(data.empty.deficit.ceilingCents)} grâce à vos travaux de rénovation énergétique (le logement doit passer de E, F ou G à A, B, C ou D ; gardez le DPE avant et après).` : 'Le plafond de 10 700 € monte jusqu’à 21 400 € si le déficit vient de travaux de rénovation énergétique : classez-les « Rénovation énergétique ».'}
                   </Callout>
                 ) : null}
                 {p.unclassifiedCents ? <span style={{ fontSize: 14, color: BAI.caramelInk }}>{eurosCents(p.unclassifiedCents)} de dépenses sont classées « autre » : précisez leur catégorie dans l’onglet Argent pour les déduire.</span> : null}

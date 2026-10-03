@@ -62,8 +62,19 @@ test('régime réel : agrandissement non déductible, régularisation des provis
   assert.equal(prop.nonDeductibleCents, 3_000_000)
   assert.equal(prop.lines.find((l) => l.line === '230')?.cents, -20000)
   // 600 000 de loyers ; charges hors intérêts : 2 000 + 2 000 000 + 120 000 − 20 000 ; intérêts : 300 000
-  assert.deepEqual(s.empty?.deficit, { totalCents: 2000 + 2_000_000 + 100000 + 300000 - 600000, globalCents: 1_070_000, carriedCents: 2000 + 2_000_000 + 100000 + 300000 - 600000 - 1_070_000 })
+  assert.deepEqual(s.empty?.deficit, { totalCents: 2000 + 2_000_000 + 100000 + 300000 - 600000, globalCents: 1_070_000, carriedCents: 2000 + 2_000_000 + 100000 + 300000 - 600000 - 1_070_000, ceilingCents: 1_070_000 })
   // Intérêts supérieurs aux loyers : ils ne s'imputent pas sur le revenu global
-  assert.deepEqual(foncierDeficit(500000, 700000, 300000), { totalCents: 500000, globalCents: 300000, carriedCents: 200000 })
+  assert.deepEqual(foncierDeficit(500000, 700000, 300000), { totalCents: 500000, globalCents: 300000, carriedCents: 200000, ceilingCents: 1_070_000 })
   assert.equal(foncierDeficit(500000, 100000, 100000), null)
+})
+
+test('déficit foncier : plafond porté jusqu’à 21 400 € par des travaux de rénovation énergétique (2023 à 2027)', () => {
+  const p = (category: string): TaxProperty => ({ id: 'e', name: 'T3', furnished: false, payments: months(12, 50000, 0), expenses: [{ category, amountCents: 3_000_000, recoverableCents: 0 }] })
+  const energy = taxSummary(2026, [p('ENERGY_RENOVATION')])
+  assert.equal(energy.properties[0].lines.find((l) => l.line === '224')?.cents, 3_000_000)
+  assert.equal(energy.empty?.deficit?.ceilingCents, 2_140_000)
+  assert.equal(energy.empty?.deficit?.globalCents, 2_140_000)
+  assert.equal(taxSummary(2026, [p('REPAIR')]).empty?.deficit?.ceilingCents, 1_070_000)
+  assert.equal(taxSummary(2028, [p('ENERGY_RENOVATION')]).empty?.deficit?.ceilingCents, 1_070_000, 'hors période')
+  assert.equal(foncierDeficit(0, 0, 1_500_000, 400_000)?.ceilingCents, 1_470_000, 'majoré à hauteur des travaux')
 })

@@ -14,6 +14,13 @@ export const MICRO_BIC_CEILING_CENTS = 77_700_00
 export const MANAGEMENT_FLAT_CENTS = 20_00
 /** Déficit foncier imputable sur le revenu global (hors intérêts d'emprunt), par an. */
 export const DEFICIT_GLOBAL_CEILING_CENTS = 10_700_00
+/**
+ * Plafond porté à 21 400 € quand le déficit vient de travaux de rénovation énergétique faisant passer le logement
+ * d'une classe E, F ou G à A, B, C ou D (devis accepté depuis le 5 novembre 2022, dépenses payées de 2023 à 2027 :
+ * prolongation de la loi de finances pour 2026, à vérifier sur impots.gouv.fr). CGI, art. 156, I-3°.
+ */
+export const DEFICIT_ENERGY_CEILING_CENTS = 21_400_00
+export const DEFICIT_ENERGY_YEARS = [2023, 2027] as const
 
 export interface TaxProperty {
   id: string
@@ -80,7 +87,7 @@ export function propertyTax(p: TaxProperty): PropertyTax {
         { line: '221', label: 'Frais d’administration et de gestion', cents: p.extra?.adminFeesCents ?? 0 },
         { line: '222', label: 'Autres frais de gestion (forfait de 20 € par logement)', cents: rent > 0 ? MANAGEMENT_FLAT_CENTS : 0 },
         { line: '223', label: 'Primes d’assurance', cents: owner(['INSURANCE']) },
-        { line: '224', label: 'Travaux de réparation, d’entretien et d’amélioration', cents: owner(['REPAIR', 'MAINTENANCE']) },
+        { line: '224', label: 'Travaux de réparation, d’entretien et d’amélioration', cents: owner(['REPAIR', 'MAINTENANCE', 'ENERGY_RENOVATION']) },
         { line: '227', label: 'Taxe foncière (hors taxe d’ordures ménagères récupérable)', cents: owner(['TAX']) },
         { line: '229', label: 'Provisions pour charges de copropriété (part non récupérable)', cents: owner(['COPRO']) },
         { line: '230', label: 'Régularisation des provisions de l’année précédente (à déduire)', cents: -(p.extra?.coproRegularizationCents ?? 0) },
@@ -109,6 +116,7 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
   const microTaxable = Math.round(gross * 0.7)
   const receipts = sum(furnished, (p) => p.rentCents + p.chargesCents)
   const interest = sum(empty, (p) => p.lines.find((l) => l.line === '250')?.cents ?? 0)
+  const energyWorks = year >= DEFICIT_ENERGY_YEARS[0] && year <= DEFICIT_ENERGY_YEARS[1] ? sum(input.filter((p) => !p.furnished), (p) => sum(p.expenses.filter((e) => e.category === 'ENERGY_RENOVATION'), (e) => e.amountCents - e.recoverableCents)) : 0
   return {
     year,
     properties,
@@ -119,7 +127,7 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
           microTaxableCents: microTaxable,
           realResultCents: real,
           better: gross <= MICRO_FONCIER_CEILING_CENTS ? (real < microTaxable ? 'REAL' : 'MICRO') : 'REAL',
-          deficit: foncierDeficit(gross, interest, gross - real - interest),
+          deficit: foncierDeficit(gross, interest, gross - real - interest, energyWorks),
         }
       : null,
     furnished: furnished.length ? { receiptsCents: receipts, microAllowed: receipts <= MICRO_BIC_CEILING_CENTS, microTaxableCents: Math.round(receipts * 0.5) } : null,
@@ -135,16 +143,15 @@ export function splitPayment(amountCents: number, rentCents: number): { rentCent
 /**
  * Déficit foncier au régime réel (CGI, art. 156, I-3°) : la part due aux intérêts d'emprunt ne s'impute que sur les
  * revenus fonciers des 10 années suivantes ; le reste s'impute sur le revenu global dans la limite de 10 700 € par an,
- * l'excédent étant reporté. Plafond porté à 21 400 € pour certains travaux de rénovation énergétique (2023 à 2025) :
- * non pris en compte ici, à vérifier sur impots.gouv.fr.
+ * l'excédent étant reporté. Plafond porté à 21 400 € pour les travaux de rénovation énergétique (voir
+ * DEFICIT_ENERGY_CEILING_CENTS).
  */
-export function foncierDeficit(grossCents: number, interestCents: number, otherChargesCents: number): { totalCents: number; globalCents: number; carriedCents: number } | null {
+export function foncierDeficit(grossCents: number, interestCents: number, otherChargesCents: number, energyWorksCents = 0): { totalCents: number; globalCents: number; carriedCents: number; ceilingCents: number } | null {
   const total = interestCents + otherChargesCents - grossCents
   if (total <= 0) return null
-  if (interestCents >= grossCents) {
-    const global = Math.min(otherChargesCents, DEFICIT_GLOBAL_CEILING_CENTS)
-    return { totalCents: total, globalCents: global, carriedCents: total - global }
-  }
-  const global = Math.min(total, DEFICIT_GLOBAL_CEILING_CENTS)
-  return { totalCents: total, globalCents: global, carriedCents: total - global }
+  // Plafond majoré à hauteur des travaux de rénovation énergétique, sans dépasser 21 400 €.
+  const ceiling = Math.min(DEFICIT_ENERGY_CEILING_CENTS, DEFICIT_GLOBAL_CEILING_CENTS + Math.max(0, energyWorksCents))
+  const imputable = interestCents >= grossCents ? otherChargesCents : total
+  const global = Math.min(imputable, ceiling)
+  return { totalCents: total, globalCents: global, carriedCents: total - global, ceilingCents: ceiling }
 }

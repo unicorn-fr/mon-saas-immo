@@ -25,7 +25,7 @@ interface ReportView {
   purchases: Record<string, { priceCents?: number | null; date?: string | null } | null>
 }
 
-const CATEGORY: Record<string, string> = { REPAIR: 'Réparations', MAINTENANCE: 'Entretien', EXTENSION: 'Construction, agrandissement', TAX: 'Taxe foncière et impôts', COPRO: 'Copropriété', INSURANCE: 'Assurance', OTHER: 'Autres' }
+const CATEGORY: Record<string, string> = { REPAIR: 'Réparations', MAINTENANCE: 'Entretien', ENERGY_RENOVATION: 'Rénovation énergétique', EXTENSION: 'Construction, agrandissement', TAX: 'Taxe foncière et impôts', COPRO: 'Copropriété', INSURANCE: 'Assurance', OTHER: 'Autres' }
 const thisYear = new Date().getFullYear()
 
 /** Bilan de l'année et prévision de la suivante, logement par logement. */

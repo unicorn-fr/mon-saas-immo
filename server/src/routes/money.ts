@@ -27,8 +27,8 @@ const router = Router()
 // Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
 router.use(['/documents', '/expenses', '/files', '/money', '/properties'], requireUser)
 
-const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'EXTENSION', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
-export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', EXTENSION: 'construction ou agrandissement', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }
+const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'ENERGY_RENOVATION', 'EXTENSION', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
+export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', ENERGY_RENOVATION: 'rénovation énergétique', EXTENSION: 'construction ou agrandissement', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }
 
 const expenseSchema = z.object({
   propertyId: z.uuid().nullable().optional(),
