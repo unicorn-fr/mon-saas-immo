@@ -99,6 +99,7 @@ export default function FicheLocataire() {
           ]}
         />
         {f.guarantee === 'VISALE' ? <Input label="Numéro de visa Visale" value={f.visaleNumber} onChange={(v) => set({ visaleNumber: v })} /> : null}
+        <Input label="Lien DossierFacile (facultatif)" value={f.dossierFacileUrl ?? ''} onChange={(v) => set({ dossierFacileUrl: v.trim() || null })} placeholder="https://locataire.dossierfacile.logement.gouv.fr/…" hint="Le dossier gratuit de l’État, avec des pièces déjà vérifiées." />
         {f.guarantee === 'CAUTION' ? (
           <Fields>
             <Input label="Prénoms du garant" value={f.guarantor?.firstNames} onChange={(v) => set({ guarantor: { ...f.guarantor, firstNames: v } })} />

@@ -155,6 +155,8 @@ export interface PropertyFile {
   smokeDetectors?: N<number>
   /** Clés et moyens d'accès remis : « 2 clés, 1 badge ». */
   keys?: N<string>
+  /** Loyer du logement, saisi une fois et repris par l'annonce et le bail. */
+  rent?: N<{ rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'PERIODIC' | 'FORFAIT'>; depositCents?: N<number>; paymentDay?: N<number> }>
   ad?: N<{ title?: N<string>; description?: N<string>; rentCents?: N<number>; chargesCents?: N<number>; chargesMode?: N<'PROVISION' | 'FORFAIT'>; depositCents?: N<number>; complementCents?: N<number>; availableFrom?: N<string>; requestedDocs?: N<TenantDocKey[]>; guarantorDocs?: N<boolean> }>
 }
 
@@ -203,6 +205,7 @@ export interface TenantFile {
   coTenants?: N<Array<{ civility?: N<Civility>; firstNames?: N<string>; lastName?: N<string>; email?: N<string> }>>
   guarantee?: N<'CAUTION' | 'VISALE' | 'GLI' | 'NONE'>
   visaleNumber?: N<string>
+  dossierFacileUrl?: N<string>
   guarantor?: N<Guarantor>
   documents?: N<DocEntry[]>
   insurance?: N<{ insurer?: N<string>; expiresAt?: N<string>; fileId?: N<string> }>

@@ -27,7 +27,9 @@ async function upgradeOne(user: User, lease: Lease & { property: import('@prisma
     }
     // Logement : la fiche reprend adresse, surface, pièces, DPE, meublé.
     const current = readProperty(lease.property)
-    const file = propertyFileSchema.parse({ ...contract.property, ...Object.fromEntries(Object.entries(current).filter(([, v]) => v !== undefined && v !== null)) })
+    const t = contract.terms
+    const rent = { rentCents: t.rentCents ?? undefined, chargesCents: t.chargesCents ?? undefined, chargesMode: t.chargesMode ?? undefined, depositCents: t.depositCents ?? undefined, paymentDay: t.paymentDay ?? undefined }
+    const file = propertyFileSchema.parse({ ...contract.property, rent, ...Object.fromEntries(Object.entries(current).filter(([, v]) => v !== undefined && v !== null)) })
     await tx.property.update({ where: { id: lease.property.id }, data: { data: file } })
     // Locataires : une fiche chacun, le garant rattaché au premier.
     const ids: string[] = []

@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, useLoad, useToast } from '../components/kit'
+import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast } from '../components/kit'
 import { Spinner, display } from '../components/ui'
 import { api } from '../lib/api'
 import { SITUATION_LABEL, type Situation } from '../lib/contract'
 
-type Person = Record<string, string | number | null>
+type Person = Record<string, string | number | null | Array<Record<string, string | null>>>
 interface View {
   landlord: string
   property: string | null
@@ -81,11 +81,11 @@ export default function Dossier() {
             ) : (
               <Callout tone="tip">Votre dossier est complet. Vous pouvez encore corriger une information.</Callout>
             )}
-            <PersonCard title="Vous" code={code} who="tenant" person={v.tenant} showVisale={v.guarantee === 'VISALE'} onSaved={setView} />
+            <TenantCard code={code} person={v.tenant} onSaved={setView} />
             <DocsCard title="Vos justificatifs" code={code} who="TENANT" status={v.documents} labels={v.labels} onSaved={setView} />
             {v.guarantor ? (
               <>
-                <PersonCard title="Votre garant" code={code} who="guarantor" person={v.guarantor} onSaved={setView} />
+                <GuarantorCard key="guarantor" code={code} person={v.guarantor} onSaved={setView} />
                 <DocsCard title="Justificatifs de votre garant" code={code} who="GUARANTOR" status={v.guarantorDocuments ?? {}} labels={v.labels} onSaved={setView} />
               </>
             ) : null}
@@ -106,18 +106,18 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   return <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{title}</h2>}>{children}</Card>
 }
 
-function PersonCard({ title, code, who, person, showVisale, onSaved }: { title: string; code: string; who: 'tenant' | 'guarantor'; person: Person; showVisale?: boolean; onSaved: (v: View) => void }) {
+type Val = string | number | null | Array<Record<string, string | null>>
+const DOSSIER_FACILE = 'https://www.dossierfacile.logement.gouv.fr/'
+
+/** Enregistrement d'une partie du dossier : seules les valeurs remplies sont envoyées. */
+function useSave(code: string, who: 'tenant' | 'guarantor', onSaved: (v: View) => void) {
   const toast = useToast()
-  const [p, setP] = useState<Person>(person)
   const [busy, setBusy] = useState(false)
-  const str = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : '')
-  const setK = (k: string, val: string | number | null) => setP({ ...p, [k]: val })
-  const save = async () => {
+  const save = async (p: Person) => {
     setBusy(true)
     try {
       const body = Object.fromEntries(Object.entries(p).filter(([, val]) => val !== null && val !== ''))
-      const v = await api<View>(`/dossier/${encodeURIComponent(code)}`, { method: 'POST', body: { [who]: body } })
-      onSaved(v)
+      onSaved(await api<View>(`/dossier/${encodeURIComponent(code)}`, { method: 'POST', body: { [who]: body } }))
       toast.show('Enregistré.')
     } catch (e) {
       toast.error(e)
@@ -125,8 +125,98 @@ function PersonCard({ title, code, who, person, showVisale, onSaved }: { title: 
       setBusy(false)
     }
   }
+  return { busy, save }
+}
+
+const Sub = ({ children }: { children: ReactNode }) => <span style={{ fontSize: 15, fontWeight: 700, paddingTop: 6 }}>{children}</span>
+
+/**
+ * Le locataire remplit exactement ce que son bailleur remplirait dans « Ajouter un locataire » :
+ * identité, naissance, coordonnées, situation, foyer, garantie. Ce qu'il remplit, le bailleur n'a pas à le saisir.
+ */
+function TenantCard({ code, person, onSaved }: { code: string; person: Person; onSaved: (v: View) => void }) {
+  const [p, setP] = useState<Person>(person)
+  const { busy, save } = useSave(code, 'tenant', onSaved)
+  const str = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : '')
+  const setK = (k: string, val: Val) => setP({ ...p, [k]: val as never })
+  const co = (Array.isArray(p.coTenants) ? p.coTenants : []) as Array<Record<string, string | null>>
   return (
-    <Section title={title}>
+    <Section title="Vous">
+      <Sub>Identité</Sub>
+      <Chips value={(p.civility as 'MADAME' | 'MONSIEUR' | null) ?? null} onChange={(val) => setK('civility', val)} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
+      <Fields>
+        <Input label="Prénom(s)" value={str('firstNames')} onChange={(val) => setK('firstNames', val)} hint="Comme sur votre pièce d’identité." />
+        <Input label="Nom de naissance" value={str('lastName')} onChange={(val) => setK('lastName', val)} />
+      </Fields>
+      <Input label="Nom d’usage (facultatif)" value={str('usageName')} onChange={(val) => setK('usageName', val)} hint="Par exemple votre nom d’époux ou d’épouse." />
+      <Sub>Naissance</Sub>
+      <Fields>
+        <Input label="Date de naissance" type="date" value={str('birthDate')} onChange={(val) => setK('birthDate', val || null)} />
+        <Input label="Lieu de naissance" value={str('birthPlace')} onChange={(val) => setK('birthPlace', val)} placeholder="Ville (et pays si à l’étranger)" />
+      </Fields>
+      <Sub>Coordonnées</Sub>
+      <Fields>
+        <Input label="Email" type="email" inputMode="email" value={str('email')} onChange={(val) => setK('email', val)} />
+        <Input label="Téléphone" type="tel" inputMode="tel" value={str('phone')} onChange={(val) => setK('phone', val)} />
+      </Fields>
+      <Input label="Adresse actuelle" value={str('currentAddress')} onChange={(val) => setK('currentAddress', val)} />
+      <Sub>Situation</Sub>
+      <Chips legend="Situation professionnelle" value={(p.situation as Situation | null) ?? null} onChange={(val) => setK('situation', val)} options={(Object.keys(SITUATION_LABEL) as Situation[]).map((k) => ({ value: k, label: SITUATION_LABEL[k] }))} />
+      <Fields>
+        <Input label="Employeur, établissement ou activité" value={str('employer')} onChange={(val) => setK('employer', val)} />
+        <Input label="Métier ou formation" value={str('occupation')} onChange={(val) => setK('occupation', val)} />
+      </Fields>
+      <Money label="Revenus nets par mois" cents={typeof p.monthlyIncomeCents === 'number' ? p.monthlyIncomeCents : null} onChange={(c) => setK('monthlyIncomeCents', c)} hint="Salaires, bourses, allocations…" />
+      <Sub>Votre foyer</Sub>
+      <Chips legend="Vous vivrez dans le logement" value={(p.living as 'ALONE' | 'COUPLE' | 'COLOCATION' | null) ?? null} onChange={(val) => setK('living', val)} options={[{ value: 'ALONE', label: 'Seul' }, { value: 'COUPLE', label: 'En couple ou en famille' }, { value: 'COLOCATION', label: 'En colocation' }]} />
+      {p.living === 'COUPLE' || p.living === 'COLOCATION' ? (
+        <>
+          {co.map((c, i) => (
+            <Fields key={i}>
+              <Input label="Prénom de l’autre personne au bail" value={c.firstNames ?? ''} onChange={(val) => setK('coTenants', co.map((x, j) => (j === i ? { ...x, firstNames: val } : x)))} />
+              <Input label="Nom" value={c.lastName ?? ''} onChange={(val) => setK('coTenants', co.map((x, j) => (j === i ? { ...x, lastName: val } : x)))} />
+            </Fields>
+          ))}
+          {co.length < 5 ? (
+            <TextLink onClick={() => setK('coTenants', [...co, { firstNames: '', lastName: '' }])} style={{ fontSize: 14 }}>
+              + Ajouter une personne qui signera aussi le bail
+            </TextLink>
+          ) : null}
+        </>
+      ) : null}
+      <Sub>Garantie</Sub>
+      {p.guarantee === 'GLI' ? (
+        <span style={{ fontSize: 15, color: BAI.inkMid }}>Votre bailleur a souscrit une assurance loyers impayés : pas besoin de garant.</span>
+      ) : (
+        <Chips
+          legend="Qui se porte garant pour vous ?"
+          value={(p.guarantee as 'CAUTION' | 'VISALE' | 'NONE' | null) ?? null}
+          onChange={(val) => setK('guarantee', val)}
+          options={[
+            { value: 'CAUTION', label: 'Une personne (parent, ami…)' },
+            { value: 'VISALE', label: 'Visale (garantie gratuite de l’État)' },
+            { value: 'NONE', label: 'Pas de garant' },
+          ]}
+          hint={<>Visale : gratuit pour les moins de 31 ans et de nombreux salariés. <a href="https://www.visale.fr/" target="_blank" rel="noreferrer">visale.fr</a></>}
+        />
+      )}
+      {p.guarantee === 'VISALE' ? <Input label="Numéro du visa Visale" value={str('visaleNumber')} onChange={(val) => setK('visaleNumber', val)} /> : null}
+      <Sub>DossierFacile</Sub>
+      <Input label="Lien de partage de votre DossierFacile (facultatif)" value={str('dossierFacileUrl')} onChange={(val) => setK('dossierFacileUrl', val.trim())} placeholder="https://locataire.dossierfacile.logement.gouv.fr/…" hint={<>Le dossier gratuit de l’État : vos pièces y sont vérifiées une fois pour toutes. <a href={DOSSIER_FACILE} target="_blank" rel="noreferrer">Créer mon DossierFacile</a></>} />
+      <Btn variant="outline" onClick={() => void save(p)} loading={busy} style={{ alignSelf: 'flex-start' }}>
+        Enregistrer
+      </Btn>
+    </Section>
+  )
+}
+
+function GuarantorCard({ code, person, onSaved }: { code: string; person: Person; onSaved: (v: View) => void }) {
+  const [p, setP] = useState<Person>(person)
+  const { busy, save } = useSave(code, 'guarantor', onSaved)
+  const str = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : '')
+  const setK = (k: string, val: string | number | null) => setP({ ...p, [k]: val })
+  return (
+    <Section title="Votre garant">
       <Chips value={(p.civility as 'MADAME' | 'MONSIEUR' | null) ?? null} onChange={(val) => setK('civility', val)} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
       <Fields>
         <Input label="Prénom(s)" value={str('firstNames')} onChange={(val) => setK('firstNames', val)} />
@@ -136,18 +226,18 @@ function PersonCard({ title, code, who, person, showVisale, onSaved }: { title: 
         <Input label="Date de naissance" type="date" value={str('birthDate')} onChange={(val) => setK('birthDate', val || null)} />
         <Input label="Lieu de naissance" value={str('birthPlace')} onChange={(val) => setK('birthPlace', val)} />
       </Fields>
+      <Input label="Adresse" value={str('address')} onChange={(val) => setK('address', val)} />
       <Fields>
-        <Input label="Email" type="email" inputMode="email" value={str('email')} onChange={(val) => setK('email', val)} />
+        <Input label="Email" type="email" inputMode="email" value={str('email')} onChange={(val) => setK('email', val)} hint="Pour signer l’acte de caution en ligne." />
         <Input label="Téléphone" type="tel" inputMode="tel" value={str('phone')} onChange={(val) => setK('phone', val)} />
       </Fields>
-      {who === 'tenant' ? <Input label="Adresse actuelle" value={str('currentAddress')} onChange={(val) => setK('currentAddress', val)} /> : <Input label="Adresse" value={str('address')} onChange={(val) => setK('address', val)} />}
+      <Input label="Lien avec vous" value={str('link')} onChange={(val) => setK('link', val)} placeholder="Père, mère, ami…" />
       <Chips legend="Situation professionnelle" value={(p.situation as Situation | null) ?? null} onChange={(val) => setK('situation', val)} options={(Object.keys(SITUATION_LABEL) as Situation[]).map((k) => ({ value: k, label: SITUATION_LABEL[k] }))} />
       <Fields>
-        <Input label="Employeur, établissement ou activité" value={str('employer')} onChange={(val) => setK('employer', val)} />
+        <Input label="Employeur ou activité" value={str('employer')} onChange={(val) => setK('employer', val)} />
         <Money label="Revenus nets par mois" cents={typeof p.monthlyIncomeCents === 'number' ? p.monthlyIncomeCents : null} onChange={(c) => setK('monthlyIncomeCents', c)} />
       </Fields>
-      {showVisale ? <Input label="Numéro du visa Visale" value={str('visaleNumber')} onChange={(val) => setK('visaleNumber', val)} /> : null}
-      <Btn variant="outline" onClick={() => void save()} loading={busy} style={{ alignSelf: 'flex-start' }}>
+      <Btn variant="outline" onClick={() => void save(p)} loading={busy} style={{ alignSelf: 'flex-start' }}>
         Enregistrer
       </Btn>
     </Section>

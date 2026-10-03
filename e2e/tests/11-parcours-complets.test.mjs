@@ -69,6 +69,10 @@ test('ajouter un logement : appartement meublé en copropriété, toutes les men
   await page.getByLabel('Prix de l’année').fill('2023')
   await shot(page, 'parcours-logement-diagnostics')
   await next(page)
+  // Loyer : saisi une fois, repris par l'annonce et le bail
+  await page.getByLabel('Loyer hors charges, par mois').fill('640')
+  await page.getByLabel('Charges, par mois', { exact: true }).fill('40')
+  await next(page)
   // Photos : facultatif
   await page.getByRole('button', { name: 'Enregistrer le logement' }).click()
   await page.waitForURL(/\/espace\/logements\/[0-9a-f-]{36}$/)
@@ -81,6 +85,8 @@ test('ajouter un logement : appartement meublé en copropriété, toutes les men
   assert.equal(p.file.heating.split, 'Selon les tantièmes de copropriété')
   assert.equal(p.file.diagnostics.dpe.costMax, 880)
   assert.equal(p.file.tv, 'COLLECTIVE')
+  assert.equal(p.file.rent.rentCents, 64000)
+  assert.equal(p.file.rent.depositCents, 128000)
   assert.ok(p.file.roomList.length >= 3)
   assert.ok((await api('/contacts', { token })).some((c) => c.kind === 'SYNDIC' && c.name === 'Cabinet Lagarde'))
 })

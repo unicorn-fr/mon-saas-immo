@@ -14,6 +14,7 @@ import { iso, mergeFile } from './helpers.js'
 import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
+import { rentPatch } from '../services/rent.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
@@ -278,7 +279,9 @@ router.get('/properties/:id/ad', async (req, res) => {
 router.put('/properties/:id/ad', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const settings = propertyFileSchema.shape.ad.parse(req.body) ?? {}
-  const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
+  // Le loyer de l'annonce est celui du logement : un seul endroit, repris par le prochain bail.
+  const current = readProperty(p)
+  const file = propertyFileSchema.parse({ ...current, ad: settings, rent: { ...(current.rent ?? {}), ...rentPatch(settings) } })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
   res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: true } })
 })
@@ -354,7 +357,7 @@ router.get('/tenants', async (req, res) => {
 router.post('/tenants', async (req, res) => {
   const body = tenantFileSchema.extend({ propertyId: z.uuid().optional().nullable() }).parse(req.body)
   const { propertyId, ...file } = body
-  if (!file.lastName && !file.firstNames) throw new HttpError(400, 'Indiquez le nom du locataire.')
+  if (!file.lastName && !file.firstNames && !file.email) throw new HttpError(400, 'Indiquez le nom du locataire, ou son email pour qu’il remplisse lui-même son dossier.')
   if (propertyId && !(await prisma.property.findFirst({ where: { id: propertyId, userId: req.user!.id } }))) throw new HttpError(404, 'Logement introuvable.')
   const t = await prisma.tenant.create({ data: { userId: req.user!.id, propertyId: propertyId ?? null, data: file } })
   res.status(201).json({ success: true, data: { id: t.id } })

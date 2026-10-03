@@ -151,6 +151,12 @@ export default function Candidature() {
                 Juste après l’envoi, vous pourrez déposer les pièces demandées : {data.requestedDocs.map((d) => d.label.toLowerCase()).join(', ')}. Vous avez un DossierFacile, le dossier gratuit de l’État ? Collez aussi son lien de partage.
               </span>
               <Input label="Lien de votre DossierFacile" value={f.dossierFacileUrl} onChange={(v) => set({ dossierFacileUrl: v })} placeholder="https://locataire.dossierfacile.logement.gouv.fr/…" hint="Facultatif, mais il accélère beaucoup la réponse." />
+              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>
+                Pas encore de DossierFacile ? C’est gratuit, fait par l’État, et vos pièces y sont vérifiées une fois pour toutes.{' '}
+                <a href="https://www.dossierfacile.logement.gouv.fr/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
+                  Créer mon DossierFacile
+                </a>
+              </span>
               <details style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
                 {data.allowedDocuments.map((g) => (

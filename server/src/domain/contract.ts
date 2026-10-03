@@ -196,6 +196,19 @@ export const propertyFileSchema = z.object({
   photos: opt(z.array(z.string().uuid()).max(60)),
   /** Autorisation préalable de mise en location (« permis de louer »), exigée dans certaines communes. */
   rentalPermit: opt(z.object({ required: opt(z.boolean()), reference: opt(text(80)), date: opt(isoDate) })),
+  /**
+   * Loyer du logement, saisi une seule fois (fiche du logement) puis repris par l'annonce et le bail ;
+   * mis à jour quand le propriétaire le change dans l'annonce ou dans un bail en préparation.
+   */
+  rent: opt(
+    z.object({
+      rentCents: opt(cents),
+      chargesCents: opt(cents),
+      chargesMode: opt(z.enum(['PROVISION', 'PERIODIC', 'FORFAIT'])),
+      depositCents: opt(cents),
+      paymentDay: opt(z.number().int().min(1).max(28)),
+    }),
+  ),
   /** Étapes facultatives de la mise en location écartées par le propriétaire (« je n'en ai pas besoin »). */
   skippedSteps: opt(z.array(z.enum(['AD', 'CANDIDATES'])).max(2)),
   /** Détecteurs de fumée installés (code de la construction et de l'habitation). */
@@ -260,6 +273,13 @@ const documentsSchema = opt(
 )
 const situationSchema = z.enum(['EMPLOYEE', 'SELF_EMPLOYED', 'STUDENT', 'APPRENTICE', 'RETIRED', 'OTHER'])
 
+/** Lien de partage DossierFacile : seulement depuis le site de l'État. */
+export const dossierFacileUrl = z
+  .string()
+  .trim()
+  .max(300)
+  .regex(/^https:\/\/([a-z0-9-]+\.)*dossierfacile\.(logement\.gouv\.)?fr\//, 'Le lien doit venir de DossierFacile.')
+
 export const guarantorSchema = z.object({
   civility: opt(civility),
   lastName: opt(text(80)),
@@ -304,6 +324,8 @@ export const tenantFileSchema = z.object({
   coTenants: opt(z.array(z.object({ civility: opt(civility), firstNames: opt(text(120)), lastName: opt(text(80)), email: opt(z.email().or(z.literal(''))) })).max(5)),
   guarantee: opt(z.enum(['CAUTION', 'VISALE', 'GLI', 'NONE'])),
   visaleNumber: opt(text(40)),
+  /** Lien de partage du DossierFacile du locataire (dossier gratuit de l'État, pièces déjà vérifiées). */
+  dossierFacileUrl: opt(dossierFacileUrl),
   guarantor: opt(guarantorSchema),
   documents: documentsSchema,
   insurance: opt(z.object({ insurer: opt(text(120)), expiresAt: opt(isoDate), fileId: opt(z.string().uuid()) })),

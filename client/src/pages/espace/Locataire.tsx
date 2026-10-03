@@ -81,6 +81,16 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
             <Line label="Téléphone" value={f.phone || 'À compléter'} />
             <Line label={f.civility === 'MADAME' ? 'Née le' : 'Né le'} value={f.birthDate ? `${dateFr(f.birthDate)}${f.birthPlace ? ` à ${f.birthPlace}` : ''}` : 'À compléter'} />
             {f.newAddress ? <Line label="Nouvelle adresse" value={f.newAddress} /> : null}
+            {f.dossierFacileUrl ? (
+              <Line
+                label="DossierFacile"
+                value={
+                  <a href={f.dossierFacileUrl} target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
+                    Ouvrir son dossier
+                  </a>
+                }
+              />
+            ) : null}
             <span style={{ fontSize: 13, color: BAI.inkSoft }}>Fiche complétée à {t.completion.percent} %</span>
           </Card>
           <Card title="Garantie" action={g ? <TextLink to={`/espace/locataires/${t.id}/caution`} style={{ fontSize: 14 }}>Acte de caution</TextLink> : null}>

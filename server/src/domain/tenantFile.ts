@@ -46,8 +46,9 @@ export function tenantMissing(t: TenantFile): FileMissing[] {
 }
 
 /** Informations que le locataire peut lui-même compléter depuis son lien (jamais le loyer, la durée ou le montant garanti). */
-export const TENANT_EDITABLE = ['civility', 'firstNames', 'lastName', 'usageName', 'birthDate', 'birthPlace', 'email', 'phone', 'currentAddress', 'situation', 'employer', 'occupation', 'monthlyIncomeCents', 'visaleNumber'] as const
-export const GUARANTOR_EDITABLE = ['civility', 'firstNames', 'lastName', 'birthDate', 'birthPlace', 'address', 'email', 'phone', 'situation', 'employer', 'monthlyIncomeCents'] as const
+// Les mêmes informations que dans « Ajouter un locataire » : ce que le locataire remplit, le propriétaire n'a pas à le faire.
+export const TENANT_EDITABLE = ['civility', 'firstNames', 'lastName', 'usageName', 'birthDate', 'birthPlace', 'email', 'phone', 'currentAddress', 'situation', 'employer', 'occupation', 'monthlyIncomeCents', 'living', 'coTenants', 'guarantee', 'visaleNumber', 'dossierFacileUrl'] as const
+export const GUARANTOR_EDITABLE = ['civility', 'firstNames', 'lastName', 'birthDate', 'birthPlace', 'address', 'email', 'phone', 'link', 'situation', 'employer', 'monthlyIncomeCents'] as const
 
 /**
  * Ce qui doit être connu avant le bail : identité complète du locataire (nom, naissance) et, s'il y a une caution,
@@ -72,6 +73,7 @@ const FIELD_LABELS: Record<string, string> = {
   civility: 'Civilité', firstNames: 'Prénom(s)', lastName: 'Nom', usageName: 'Nom d’usage', birthDate: 'Date de naissance', birthPlace: 'Lieu de naissance',
   email: 'Email', phone: 'Téléphone', currentAddress: 'Adresse actuelle', address: 'Adresse', situation: 'Situation professionnelle', employer: 'Employeur ou activité',
   occupation: 'Métier ou formation', monthlyIncomeCents: 'Revenus nets par mois', visaleNumber: 'Numéro du visa Visale',
+  living: 'Il vit seul, en couple ou en colocation', coTenants: 'Autres personnes au bail', guarantee: 'Garantie choisie', dossierFacileUrl: 'Lien DossierFacile', link: 'Lien avec le locataire',
 }
 
 export interface ReviewItem {

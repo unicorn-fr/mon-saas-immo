@@ -49,6 +49,8 @@ export default function AjoutLocataire() {
   const [loading, setLoading] = useState(Boolean(id))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Qui remplit le dossier : le propriétaire, ou le locataire lui-même avec un lien (rien à ressaisir ensuite).
+  const [mode, setMode] = useState<'SELF' | 'LINK'>('SELF')
   const set = (patch: Partial<TenantFile>) => setF((x) => ({ ...x, ...patch }))
   const steps = stepsFor(f)
   const asked = params.get('etape') as StepId | null
@@ -77,7 +79,23 @@ export default function AjoutLocataire() {
     window.scrollTo(0, 0)
   }
 
+  const invite = async () => {
+    if (!f.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return setError('Indiquez l’adresse email de votre locataire : le lien lui sera envoyé.')
+    setBusy(true)
+    try {
+      const created = await api<{ id: string }>('/tenants', { method: 'POST', body: { civility: f.civility, firstNames: f.firstNames, lastName: f.lastName, email: f.email.trim(), propertyId } })
+      await api(`/tenants/${created.id}/request`, { method: 'POST' })
+      toast.show('Lien envoyé. Votre locataire remplit son dossier lui-même : vous serez prévenu, et vous vérifierez ce qu’il envoie.')
+      navigate(`/espace/locataires/${created.id}`, { replace: true })
+    } catch (e) {
+      setError(errorMessage(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const next = async () => {
+    if (!id && current === 'identity' && mode === 'LINK') return invite()
     const problem = validate(current, f)
     if (problem) return setError(problem)
     if (current === 'done') {
@@ -112,7 +130,7 @@ export default function AjoutLocataire() {
       onBack={index > 0 ? () => goto(steps[index - 1]) : undefined}
       onNext={next}
       busy={busy}
-      nextLabel={current === 'done' ? 'Préparer son bail' : 'Continuer'}
+      nextLabel={current === 'done' ? 'Préparer son bail' : !id && current === 'identity' && mode === 'LINK' ? 'Envoyer le lien au locataire' : 'Continuer'}
       extra={
         current === 'done' ? (
           <Btn variant="ghost" to={`/espace/locataires/${id}`}>
@@ -122,7 +140,24 @@ export default function AjoutLocataire() {
       }
     >
       {error ? <Callout tone="warn">{error}</Callout> : null}
-      {current === 'identity' ? (
+      {current === 'identity' && !id ? (
+        <div className="grid-2" style={{ gap: 14 }}>
+          <ChoiceCard column selected={mode === 'SELF'} onClick={() => setMode('SELF')} title="Je remplis son dossier" sub="Identité, situation, garant, justificatifs : une question à la fois." />
+          <ChoiceCard column selected={mode === 'LINK'} onClick={() => setMode('LINK')} title="Mon locataire le remplit lui-même" sub="Il reçoit un lien par email, sans compte. Vous vérifiez ensuite ce qu’il envoie." />
+        </div>
+      ) : null}
+      {current === 'identity' && !id && mode === 'LINK' ? (
+        <>
+          <StepTitle>À qui envoyer le lien ?</StepTitle>
+          <Input big label="Email du locataire" type="email" inputMode="email" value={f.email ?? ''} onChange={(v) => set({ email: v })} autoFocus />
+          <Fields>
+            <Input label="Prénom (facultatif)" value={f.firstNames ?? ''} onChange={(v) => set({ firstNames: v })} />
+            <Input label="Nom (facultatif)" value={f.lastName ?? ''} onChange={(v) => set({ lastName: v })} />
+          </Fields>
+          <StepNote>Il remplira exactement les mêmes informations que vous : identité, naissance, coordonnées, situation, foyer, garant et justificatifs. Le lien est valable 30 jours.</StepNote>
+        </>
+      ) : null}
+      {current === 'identity' && (id || mode === 'SELF') ? (
         <>
           <StepTitle>Comment s’appelle votre locataire ?</StepTitle>
           <Chips big value={f.civility ?? null} onChange={(v) => set({ civility: v })} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />

@@ -4,7 +4,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
 import { AuthImage, uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
+import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
@@ -214,6 +214,18 @@ export default function FicheLogement() {
           })}
         </div>
         {d.dpe?.class === 'G' || d.dpe?.class === 'F' ? <Callout tone="warn">Classe G : le logement ne peut plus être loué depuis 2025. Classe F ou G : le loyer ne peut plus être augmenté, ni en cours de bail, ni au changement de locataire.</Callout> : null}
+      </FicheSection>
+
+      <FicheSection id="rent" n={++n} title="Loyer" intro="Saisi une seule fois : il est repris dans l’annonce et dans le bail, et mis à jour partout si vous le changez." reference="loi n° 89-462 du 6 juillet 1989, art. 22 (dépôt de garantie)">
+        <Fields>
+          <Money label="Loyer hors charges, par mois" cents={f.rent?.rentCents ?? null} onChange={(c) => set({ rent: { ...f.rent, rentCents: c } })} />
+          <Money label="Charges, par mois" cents={f.rent?.chargesCents ?? null} onChange={(c) => set({ rent: { ...f.rent, chargesCents: c } })} />
+        </Fields>
+        <Chips legend="Les charges sont" value={f.rent?.chargesMode === 'FORFAIT' ? 'FORFAIT' : 'PROVISION'} onChange={(v) => set({ rent: { ...f.rent, chargesMode: v } })} options={[{ value: 'PROVISION', label: 'Une provision, régularisée chaque année' }, { value: 'FORFAIT', label: 'Un forfait' }]} />
+        <Fields>
+          <Money label="Dépôt de garantie" cents={f.rent?.depositCents ?? null} onChange={(c) => set({ rent: { ...f.rent, depositCents: c } })} hint={`Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`} />
+          <NumberField label="Jour de paiement du loyer" value={f.rent?.paymentDay ?? 5} onChange={(v) => set({ rent: { ...f.rent, paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null } })} />
+        </Fields>
       </FicheSection>
 
       <FicheSection id="market" guides={['encadrement', 'zonesTendues']} n={++n} title="Loyer de marché et encadrement" reference="loi n° 89-462 du 6 juillet 1989, art. 17 et 18" done={done('market')}>

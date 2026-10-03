@@ -112,6 +112,7 @@ export function tenantFromCandidate(c: CandidateData & { documents?: CandidateDo
     currentAddress: c.currentAddress ?? null,
     situation: c.situation,
     guarantee: c.guarantee,
+    dossierFacileUrl: c.dossierFacileUrl || null,
     living: c.occupants && c.occupants > 1 ? undefined : 'ALONE',
     guarantor: c.guarantee === 'CAUTION' && c.guarantor ? { firstNames: c.guarantor.firstNames, lastName: c.guarantor.lastName, email: c.guarantor.email || null, documents: docs('GUARANTOR') } : null,
   }

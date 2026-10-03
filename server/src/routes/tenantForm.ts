@@ -162,17 +162,20 @@ router.post('/dossier/:code', limitPerVisitor(60, 60), async (req, res) => {
   const t = await byCode(String(req.params.code))
   const body = z.object({ tenant: tenantPatch.optional(), guarantor: guarantorPatch.optional() }).parse(req.body)
   const f = readTenant(t)
+  // L'assurance loyers impayés (GLI) est souscrite par le propriétaire : le locataire ne la choisit pas et ne la retire pas.
+  if (body.tenant?.guarantee === 'GLI' || (f.guarantee === 'GLI' && body.tenant?.guarantee)) delete body.tenant.guarantee
+  const guarantee = body.tenant?.guarantee ?? f.guarantee
   const clean = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined))
   // Ce que le locataire change est marqué « à vérifier » pour le propriétaire.
   const changed = (o: Record<string, unknown>, before: Record<string, unknown> | null | undefined, prefix = '') =>
     Object.entries(o)
       .filter(([k, v]) => v !== undefined && v !== null && v !== '' && v !== before?.[k])
       .map(([k]) => `${prefix}${k}`)
-  const touched = [...changed(clean(body.tenant ?? {}), f as Record<string, unknown>), ...(f.guarantee === 'CAUTION' ? changed(clean(body.guarantor ?? {}), f.guarantor as Record<string, unknown>, 'guarantor.') : [])]
+  const touched = [...changed(clean(body.tenant ?? {}), f as Record<string, unknown>), ...(guarantee === 'CAUTION' ? changed(clean(body.guarantor ?? {}), f.guarantor as Record<string, unknown>, 'guarantor.') : [])]
   const next: TenantFile = {
     ...f,
     ...clean(body.tenant ?? {}),
-    ...(f.guarantee === 'CAUTION' && body.guarantor ? { guarantor: { ...f.guarantor, ...clean(body.guarantor) } } : {}),
+    ...(guarantee === 'CAUTION' && body.guarantor ? { guarantor: { ...f.guarantor, ...clean(body.guarantor) } } : {}),
     review: [...new Set([...(f.review ?? []), ...touched])].slice(0, 60),
   }
   await prisma.tenant.update({ where: { id: t.id }, data: { data: tenantFileSchema.parse(next) } })

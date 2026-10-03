@@ -85,7 +85,7 @@ export function propertyName(p: Pick<Property, 'label' | 'address'>): string {
 }
 
 export function tenantName(t: TenantFile): string {
-  return [t.firstNames?.split(/\s+/)[0], t.lastName].filter(Boolean).join(' ') || 'Locataire sans nom'
+  return [t.firstNames?.split(/\s+/)[0], t.lastName].filter(Boolean).join(' ') || t.email || 'Locataire sans nom'
 }
 
 // ── Anciens baux (tunnel) ────────────────────────────────────────────────────

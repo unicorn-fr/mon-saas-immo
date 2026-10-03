@@ -6,14 +6,14 @@ import { AddressField } from '../../../components/AddressField'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
 import { AuthImage, uploadPhotos } from '../../../components/media'
-import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, NumberField, Pill, TextArea, errorMessage, useToast } from '../../../components/kit'
+import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, Money, NumberField, Pill, TextArea, errorMessage, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { Camera } from '../../../components/Icons'
 import { api } from '../../../lib/api'
 import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
 import type { PropertyView } from '../../../lib/space'
 
-type StepId = 'address' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'photos'
+type StepId = 'address' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'rent' | 'photos'
 const LABELS: Record<StepId, string> = {
   address: 'Adresse',
   type: 'Type de location',
@@ -24,11 +24,12 @@ const LABELS: Record<StepId, string> = {
   equipments: 'Équipements',
   furniture: 'Mobilier',
   diagnostics: 'Diagnostics',
+  rent: 'Loyer',
   photos: 'Photos',
 }
 /** Étapes utiles pour ce logement : la copropriété et le mobilier seulement quand ils le concernent. */
 const stepsFor = (f: PropertyFile): StepId[] =>
-  (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'photos'] as const).filter(
+  (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'rent', 'photos'] as const).filter(
     (x): x is StepId => Boolean(x),
   )
 
@@ -142,6 +143,7 @@ export default function AjoutLogement() {
           propertyId={id}
         />
       ) : null}
+      {current === 'rent' ? <StepRent f={f} set={set} /> : null}
       {current === 'photos' ? <StepPhotos f={f} set={set} /> : null}
       {current === 'photos' ? (
         <button type="button" onClick={next} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, padding: 0, cursor: 'pointer' }}>
@@ -178,6 +180,14 @@ function validate(step: StepId, f: PropertyFile): string | null {
       return null
     case 'diagnostics':
       return f.diagnostics?.dpe?.class ? null : 'Indiquez la classe énergie du DPE.'
+    case 'rent': {
+      const r = f.rent ?? {}
+      if (!r.rentCents) return 'Indiquez le loyer hors charges.'
+      if (r.chargesCents === null || r.chargesCents === undefined) return 'Indiquez les charges par mois (0 s’il n’y en a pas).'
+      const max = r.rentCents * (f.furnished ? 2 : 1)
+      if (r.depositCents && r.depositCents > max) return `Le dépôt de garantie ne peut pas dépasser ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`
+      return null
+    }
     default:
       return null
   }
@@ -204,6 +214,8 @@ function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
       return { furniture: { ...f.furniture, present: f.furniture?.present ?? [] } }
     case 'diagnostics':
       return { diagnostics: f.diagnostics, constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997 }
+    case 'rent':
+      return { rent: { ...f.rent, chargesMode: f.rent?.chargesMode ?? 'PROVISION', depositCents: f.rent?.depositCents ?? (f.rent?.rentCents ? f.rent.rentCents * (f.furnished ? 2 : 1) : null), paymentDay: f.rent?.paymentDay ?? 5 } }
     default:
       return { photos: f.photos ?? [] }
   }
@@ -573,6 +585,36 @@ function StepPhotos({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile
         </div>
       ) : null}
       {photos.length ? <Pill tone="green">{photos.length} photo{photos.length > 1 ? 's' : ''}</Pill> : null}
+    </>
+  )
+}
+
+function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const r = f.rent ?? {}
+  const sr = (patch: NonNullable<PropertyFile['rent']>) => set({ rent: { ...r, ...patch } })
+  const max = r.rentCents ? r.rentCents * (f.furnished ? 2 : 1) : null
+  return (
+    <>
+      <StepTitle>Quel loyer demandez-vous ?</StepTitle>
+      <Fields>
+        <Money big label="Loyer hors charges, par mois" cents={r.rentCents ?? null} onChange={(c) => sr({ rentCents: c })} />
+        <Money big label="Charges, par mois" cents={r.chargesCents ?? null} onChange={(c) => sr({ chargesCents: c })} hint="0 s’il n’y en a pas." />
+      </Fields>
+      <Chips
+        legend="Les charges sont"
+        value={r.chargesMode ?? 'PROVISION'}
+        onChange={(v) => sr({ chargesMode: v })}
+        options={[
+          { value: 'PROVISION', label: 'Une provision, régularisée chaque année' },
+          { value: 'FORFAIT', label: 'Un forfait' },
+        ]}
+        hint={f.furnished ? 'Provision : le locataire paie une avance, comparée chaque année aux dépenses réelles. Forfait : un montant fixe, sans régularisation.' : 'En location vide, le forfait n’est permis qu’en colocation.'}
+      />
+      <Fields>
+        <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
+        <NumberField label="Jour de paiement du loyer" value={r.paymentDay ?? 5} onChange={(v) => sr({ paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null })} />
+      </Fields>
+      <StepNote>Ce loyer sera repris dans l’annonce et dans le bail. Vous pourrez toujours le changer : il sera mis à jour partout.</StepNote>
     </>
   )
 }

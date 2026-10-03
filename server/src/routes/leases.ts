@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { rememberRent, rentPatch } from '../services/rent.js'
 import { z } from 'zod'
 import type { Lease, Prisma, Property, User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -244,12 +245,20 @@ router.post('/leases', async (req, res) => {
   const dpe = file.diagnostics?.dpe?.class
   // Locataire précédent : dernier bail de ce logement terminé depuis moins de 18 mois.
   const prev = property.leases.find((l) => l.status !== 'DRAFT' && l.endDate.getTime() > Date.now() - 548 * 86_400_000)
-  const startDate = body.terms?.startDate
+  // Date d'entrée : celle choisie, sinon la date de disponibilité indiquée dans l'annonce.
+  const startDate = body.terms?.startDate ?? file.ad?.availableFrom ?? undefined
+  // Loyer, charges et dépôt : repris de la fiche du logement (saisis une seule fois), dans les limites de la loi.
+  const rent = file.rent ?? {}
+  const modes = allowedChargesModes(kind, colocation)
+  const rentCents = rent.rentCents ?? undefined
   const defaults: LeaseTerms = {
     kind,
     colocation,
-    chargesMode: kind === 'MOBILITE' ? 'FORFAIT' : 'PROVISION',
-    paymentDay: 5,
+    chargesMode: rent.chargesMode && modes.includes(rent.chargesMode) ? rent.chargesMode : kind === 'MOBILITE' ? 'FORFAIT' : 'PROVISION',
+    rentCents,
+    chargesCents: rent.chargesCents ?? undefined,
+    depositCents: kind === 'MOBILITE' ? 0 : rent.depositCents != null && rentCents ? Math.min(rent.depositCents, maxDepositFor(kind, rentCents)) : (rent.depositCents ?? undefined),
+    paymentDay: rent.paymentDay ?? 5,
     paymentTerm: 'ADVANCE',
     paymentMethod: 'TRANSFER',
     zone: { tense: file.market?.tense ?? (rentControlLikely(file.inseeCode) ? true : undefined), control: rentControlLikely(file.inseeCode) },
@@ -258,7 +267,7 @@ router.post('/leases', async (req, res) => {
     clauses: { resolutoire: true, solidarite: colocation },
     signature: { place: profile.city ?? undefined, mode: 'PAPER' },
   }
-  const terms = leaseTermsSchema.parse(mergeFile(defaults as Record<string, unknown>, (body.terms ?? {}) as Record<string, unknown>))
+  const terms = leaseTermsSchema.parse(mergeFile({ ...defaults, ...(startDate ? { startDate } : {}) } as Record<string, unknown>, (body.terms ?? {}) as Record<string, unknown>))
   const lease = await prisma.lease.create({
     data: { userId: user.id, propertyId: property.id, status: 'DRAFT', tenantIds: body.tenantIds, data: { terms }, ...leaseColumns(terms, user) },
   })
@@ -303,6 +312,8 @@ router.put('/leases/:id/terms', async (req, res) => {
     if (count !== tenantIds.length) throw new HttpError(404, 'Locataire introuvable.')
   }
   const data = lease.data as Record<string, unknown>
+  // Bail en préparation : le loyer saisi ici devient celui de la fiche du logement.
+  if (lease.status === 'DRAFT') await rememberRent(lease.propertyId, rentPatch(patch))
   await prisma.lease.update({
     where: { id: lease.id },
     data: {
