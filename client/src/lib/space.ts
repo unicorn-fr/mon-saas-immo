@@ -92,7 +92,16 @@ export interface LeaseBlocker {
   section: string
   level?: 'ESSENTIAL' | 'RECOMMENDED'
 }
-export type PropertyView = Omit<PropertyDetails, 'completion'> & { completion: Completion; leaseMissing?: LeaseBlocker[] }
+/** Mise en location d'un logement, étape par étape (server/src/domain/rental.ts). */
+export interface RentalStep {
+  key: 'PROPERTY' | 'AD' | 'CANDIDATES' | 'TENANT' | 'LEASE' | 'CHECK' | 'SIGN' | 'INVENTORY' | 'DEPOSIT' | 'INSURANCE' | 'RENT'
+  title: string
+  text: string
+  state: 'DONE' | 'TODO' | 'WAITING' | 'LOCKED' | 'SKIPPED'
+  optional?: boolean
+  action?: { label: string; to: string }
+}
+export type PropertyView = Omit<PropertyDetails, 'completion'> & { completion: Completion; leaseMissing?: LeaseBlocker[]; journey?: RentalStep[] }
 
 export interface TenantSummary {
   id: string
@@ -176,6 +185,7 @@ export interface LeaseView {
   /** Ancien bail du tunnel enregistré comme signé alors qu'il est incomplet. */
   reopen?: { missing: number; allowed: boolean } | null
   dirty: boolean
+  checkedAt?: string | null
   signedAt: string | null
   kind: LeaseKind
   property: { id: string; name: string; address: string }
@@ -200,7 +210,7 @@ export interface LeaseView {
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -213,6 +223,7 @@ export interface Task {
   inventoryId?: string
   amountCents?: number
   period?: string
+  step?: { key: string; label: string; to: string; optional: boolean }
 }
 
 export interface TodayView {

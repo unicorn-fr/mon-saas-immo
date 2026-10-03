@@ -132,7 +132,20 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           ) : null}
           {l.computed.energyWarning ? <Callout tone="warn">{l.computed.energyWarning}</Callout> : null}
 
-          {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} /> : null}
+          {l.status === 'DRAFT' && l.ready && !l.checkedAt ? (
+            <Card title="Relisez le bail avant de l’envoyer">
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>
+                Vérifiez les noms, l’adresse, le loyer, les charges, le dépôt et les dates. Une erreur ? Corrigez la fiche du logement, du locataire ou les conditions : le bail se met à jour tout seul.
+              </span>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <Btn variant="outline" onClick={guard(() => openDoc(pdf))}>
+                  Ouvrir le bail
+                </Btn>
+                <Btn onClick={guard(async () => setLease(await api<LeaseView>(`/leases/${l.id}/checked`, { method: 'POST' })))}>J’ai relu, tout est juste</Btn>
+              </div>
+            </Card>
+          ) : null}
+          <div id="signature">{l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} /> : null}</div>
 
           <Card title="Que voulez-vous faire ?">
             <div className="grid-2" style={{ gap: 12 }}>
@@ -317,7 +330,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} style={{ textDecoration: 'none' }}>{g.name}</Link>} />
             ))}
           </Card>
-          {l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}
+          <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>
         </aside>
       </div>
 

@@ -13,6 +13,7 @@ import { propertyColumns, propertyName, readProfile, readProperty, readTenant, r
 import { iso, mergeFile } from './helpers.js'
 import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
+import { rentalJourneys } from '../services/rental.js'
 import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
 
@@ -190,6 +191,7 @@ router.get('/properties/:id', async (req, res) => {
       diagnostics: diagnosticsFor(f),
       /** Ce qui manque au logement pour faire un bail (contrat type, diagnostics, mobilier). */
       leaseMissing: propertyLeaseMissing(f, f.furnished ? 'MEUBLE' : 'VIDE'),
+      journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [],
       energyWarning: energyRentalWarning(f.diagnostics?.dpe?.class),
       rentControlLikely: rentControlLikely(f.inseeCode),
       leases: p.leases.map((l) => ({ id: l.id, status: l.status, kind: leaseKindOf(l), tenantName: leaseTenantLabel(l, names), startDate: iso(l.startDate), endDate: iso(l.endDate), rentCents: l.rentCents, chargesCents: l.chargesCents, depositCents: l.depositCents, rent: rentStatus(l, l.payments) })),
@@ -212,13 +214,24 @@ router.put('/properties/:id', async (req, res) => {
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
 })
 
+// Étape facultative de la mise en location écartée (ou reprise) : annonce, candidatures.
+router.post('/properties/:id/steps/:key', async (req, res) => {
+  const p = await ownProperty(req.user!.id, String(req.params.id))
+  const key = z.enum(['AD', 'CANDIDATES']).parse(req.params.key)
+  const { skip } = z.object({ skip: z.boolean() }).parse(req.body)
+  const file = readProperty(p)
+  const skippedSteps = [...new Set([...(file.skippedSteps ?? []).filter((k) => k !== key), ...(skip ? [key] : [])])]
+  await prisma.property.update({ where: { id: p.id }, data: { data: propertyFileSchema.parse({ ...file, skippedSteps }) } })
+  res.json({ success: true, data: { journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [] } })
+})
+
 // ── Annonce ──────────────────────────────────────────────────────────────────
 
 router.get('/properties/:id/ad', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const settings = adSettings(p, p.leases)
   const file = readProperty(p)
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), saved: Boolean(file.ad) } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: Boolean(file.ad) } })
 })
 
 router.put('/properties/:id/ad', async (req, res) => {
@@ -226,7 +239,7 @@ router.put('/properties/:id/ad', async (req, res) => {
   const settings = propertyFileSchema.shape.ad.parse(req.body) ?? {}
   const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), saved: true } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: true } })
 })
 
 /** Texte rédigé par une IA (ou ailleurs) et collé par le propriétaire : titre et description enregistrés. */
@@ -238,7 +251,7 @@ router.post('/properties/:id/ad/paste', async (req, res) => {
   const settings = { ...adSettings(p, p.leases), description: parsed.description, ...(parsed.title ? { title: parsed.title } : {}) }
   const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings: file.ad, ad: buildAd(file, file.ad ?? {}), prompt: adPrompt(file, file.ad ?? {}), saved: true } })
+  res.json({ success: true, data: { settings: file.ad, ad: buildAd(file, file.ad ?? {}), prompt: adPrompt(file, file.ad ?? {}), habitat: file.habitat ?? null, saved: true } })
 })
 
 router.delete('/properties/:id', async (req, res) => {

@@ -3,6 +3,7 @@ import { safePath } from '../lib/safePath'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Callout, Input } from '../components/kit'
+import { MailLinks } from '../components/MailLinks'
 import { Button, Spinner, display } from '../components/ui'
 import { api, ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -71,6 +72,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
         <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, lineHeight: 1.55 }}>
           {signup ? `Un lien pour ouvrir votre espace vient de partir vers ${email}.` : `Si un espace Bailio existe avec ${email}, un lien de connexion vient de partir.`} Il est valable 30 minutes.
         </p>
+        <MailLinks email={email} />
         <span style={{ fontSize: 14, color: BAI.inkSoft }}>Rien reçu ? Regardez dans les indésirables, ou <button type="button" onClick={() => setSent(false)} style={{ background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>recommencez</button>.</span>
       </>
     )

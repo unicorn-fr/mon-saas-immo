@@ -173,6 +173,8 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     esignPending,
     reopen,
     dirty: Boolean((lease.data as { dirty?: boolean }).dirty),
+    /** Le propriétaire a relu le bail avant de l'envoyer à la signature. */
+    checkedAt: (lease.data as { checkedAt?: string }).checkedAt ?? null,
     signedAt: iso(lease.signedAt),
     kind: leaseKindOf(lease),
     property: { id: lease.property.id, name: propertyName(lease.property), address: propertyAddress(c.property) },
@@ -268,6 +270,13 @@ router.post('/leases', async (req, res) => {
 router.get('/leases/:id', async (req, res) => {
   const lease = await leaseOwned(req.user!.id, String(req.params.id))
   res.json({ success: true, data: await leaseView(req.user!, lease) })
+})
+
+// « J'ai relu le bail » : étape du parcours de mise en location, avant l'envoi pour signature.
+router.post('/leases/:id/checked', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  await patchLeaseData(lease.id, () => ({ checkedAt: new Date().toISOString() }))
+  res.json({ success: true, data: await leaseView(req.user!, await leaseOwned(req.user!.id, lease.id)) })
 })
 
 router.put('/leases/:id/terms', async (req, res) => {

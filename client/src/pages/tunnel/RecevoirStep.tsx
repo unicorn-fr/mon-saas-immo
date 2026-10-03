@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { MailLinks } from '../../components/MailLinks'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Check } from '../../components/Icons'
@@ -99,6 +100,9 @@ export default function RecevoirStep() {
           <Notice tone="success">
             <strong>Regardez vos emails.</strong> Nous venons d’envoyer un lien à {checkEmail}. Cliquez dessus pour confirmer votre adresse : votre bail vous attend dans votre espace. Pensez à regarder dans les indésirables.
           </Notice>
+        ) : null}
+        {checkEmail ? (
+          <MailLinks email={checkEmail} />
         ) : user ? (
           <>
             <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Il sera rangé dans votre espace, avec le compte {user.email}.</p>

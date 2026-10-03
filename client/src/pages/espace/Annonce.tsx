@@ -23,6 +23,7 @@ interface AdView {
   settings: AdSettings
   ad: { title: string; text: string; checks: Array<{ label: string; ok: boolean; hint?: string }>; warnings: string[] }
   prompt: string
+  habitat: 'COLLECTIVE' | 'INDIVIDUAL' | null
   saved: boolean
 }
 
@@ -134,6 +135,19 @@ export default function Annonce() {
             <span style={{ fontSize: 17, fontWeight: 700 }}>{view.title}</span>
             <div style={{ whiteSpace: 'pre-wrap', fontSize: 15, lineHeight: 1.6, color: BAI.inkMid }}>{view.text}</div>
           </Card>
+          <Card title="Publier votre annonce">
+            <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>Copiez l’annonce, puis collez-la sur un ou plusieurs de ces sites. Ajoutez vos photos sur le site.</span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {adSites(data.habitat).map((a) => (
+                <Btn key={a.label} variant="outline" size="sm" href={a.href} newTab>
+                  {a.label}
+                </Btn>
+              ))}
+            </div>
+            <TextLink to={`/espace/logements/${id}/candidats`} style={{ fontSize: 14 }}>
+              Ensuite : le message avec votre lien de candidature, à envoyer aux personnes intéressées
+            </TextLink>
+          </Card>
           <Card title="Mentions obligatoires" action={<span style={{ fontSize: 14, color: missing.length ? BAI.caramelInk : BAI.green, fontWeight: 600 }}>{missing.length ? `${missing.length} à compléter` : 'Complètes'}</span>}>
             {view.checks.map((c) => (
               <div key={c.label} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14 }}>
@@ -155,6 +169,14 @@ export default function Annonce() {
     </AppShell>
   )
 }
+
+/** Sites où un particulier publie une annonce de location (liens de dépôt vérifiés en octobre 2026). */
+const adSites = (habitat: AdView['habitat']) => [
+  { label: 'Leboncoin', href: 'https://www.leboncoin.fr/deposer-une-annonce' },
+  { label: 'SeLoger', href: 'https://www.seloger.com/depot-annonce/location' },
+  { label: 'PAP', href: `https://www.pap.fr/publier-annonce/location/${habitat === 'INDIVIDUAL' ? 'maison' : 'appartement'}` },
+  { label: 'Facebook Marketplace', href: 'https://www.facebook.com/marketplace/create/rental' },
+]
 
 const ASSISTANTS = [
   { label: 'ChatGPT', href: 'https://chatgpt.com/' },

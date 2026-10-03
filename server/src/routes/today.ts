@@ -14,6 +14,7 @@ import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
 import { upcomingInterventions } from './contacts.js'
+import { rentalJourneys } from '../services/rental.js'
 
 /**
  * « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé, et les prochaines échéances.
@@ -29,7 +30,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -42,6 +43,8 @@ export interface Task {
   inventoryId?: string
   amountCents?: number
   period?: string
+  /** Étape de la mise en location (type STEP) : bouton vers la bonne page, et « je n'en ai pas besoin » si facultative. */
+  step?: { key: string; label: string; to: string; optional: boolean }
 }
 
 router.get('/today', async (req, res) => {
@@ -153,8 +156,16 @@ router.get('/today', async (req, res) => {
   for (const e of toVerify) {
     tasks.push({ id: `exp-${e.id}`, type: 'INVOICE', tag: 'Facture à vérifier', tone: 'green', place: e.property ? propertyName(e.property) : 'Sans logement', title: `${e.vendor}, ${formatEuros(e.amountCents)}${e.property ? `, rangée dans ${propertyName(e.property)}` : ''}`, expenseId: e.id })
   }
-  for (const l of leases.filter((x) => x.status === 'DRAFT')) {
-    tasks.push({ id: `draft-${l.id}`, type: 'DRAFT_LEASE', tag: 'Bail en préparation', tone: 'owner', place: propertyName(l.property), title: `Le bail de ${leaseTenantLabel(l, names) || 'votre locataire'} est en préparation`, leaseId: l.id })
+  // Mise en location : chaque étape à faire, dans l'ordre, pour chaque logement (fiche, annonce, locataire, bail, signature…).
+  const journeys = await rentalJourneys(user)
+  for (const p of properties) {
+    const steps = journeys.get(p.id) ?? []
+    for (const st of steps) {
+      if (st.state !== 'TODO' || !st.action || st.key === 'RENT') continue
+      // Déjà signalé par un rappel (état des lieux, assurance) : pas de doublon.
+      if ((st.key === 'INVENTORY' || st.key === 'INSURANCE') && tasks.some((t) => t.type === st.key && leases.some((l) => l.id === t.leaseId && l.propertyId === p.id))) continue
+      tasks.push({ id: `step-${p.id}-${st.key}`, type: 'STEP', tag: st.optional ? 'Mise en location, facultatif' : 'Mise en location', tone: st.key === 'PROPERTY' || st.key === 'TENANT' ? 'caramel' : 'owner', place: propertyName(p), title: st.title, text: st.text, propertyId: p.id, step: { key: st.key, label: st.action.label, to: st.action.to, optional: Boolean(st.optional) } })
+    }
   }
 
   // Prochaines échéances : loyers du mois suivant, rappels à venir, dernier jour pour donner congé.

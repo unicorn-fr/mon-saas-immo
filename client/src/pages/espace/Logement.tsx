@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Journey } from '../../components/Journey'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
@@ -52,6 +53,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
           </>
         }
       />
+      {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
       <Tabs label="Sections du logement" tabs={TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
       {tab === 'overview' ? <Overview p={p} /> : null}
       {tab === 'lease' ? <LeaseTab p={p} /> : null}

@@ -207,6 +207,14 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
         { label: 'Me le rappeler dans un mois', variant: 'ghost', onClick: () => run(() => api(`/leases/${t.leaseId}/snooze/BOILER`, { method: 'POST' }), 'Rappel reporté d’un mois.') },
       ]
       break
+    case 'STEP':
+      if (t.step) {
+        const step = t.step
+        actions = [{ label: step.label, onClick: () => navigate(step.to) }]
+        if (step.optional) actions.push({ label: 'Je n’en ai pas besoin', variant: 'ghost', onClick: () => run(() => api(`/properties/${t.propertyId}/steps/${step.key}`, { method: 'POST', body: { skip: true } }), 'C’est noté. Vous pourrez changer d’avis sur la page du logement.') })
+        actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
+      }
+      break
     case 'INVOICE':
       break
   }
