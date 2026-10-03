@@ -93,7 +93,9 @@ Chaque information saisie est enregistrée et réutilisée :
 
 - Mise en location (`domain/rental.ts`, testé dans `rental.test.ts` ; `services/rental.ts`) : fiche du logement, annonce et candidatures (facultatives, `skippedSteps`), locataire (fiche, lien, vérification), bail, relecture (`lease.data.checkedAt`), signature, état des lieux d'entrée, dépôt, assurance, premier loyer. État déduit des données ; chaque étape à faire devient une tâche `STEP` d'« Aujourd'hui » et la page du logement affiche le parcours (`components/Journey.tsx`).
 - Dossier du logement (`domain/binder.ts`, testé ; onglet « Dossier du logement ») : documents à avoir et à garder, ce qui manque, durée de conservation (service-public F19134, loi de 1989 art. 7-1). Dépôt via `POST /documents` avec `binder`.
-- Signature en ligne : photo du signataire obligatoire avant de signer (`POST /esign/:token/photo`), réencodée par `sharp` sans métadonnées, horodatée par le serveur, empreinte SHA-256, dans le certificat (`pdf/certificate.tsx`).
+- Signature en ligne : photo du signataire facultative (`POST /esign/:token/photo`, ou « Signer sans photo » indiqué dans le certificat), réencodée par `sharp` sans métadonnées, horodatée par le serveur, empreinte SHA-256, dans le certificat (`pdf/certificate.tsx`).
+- Conservation (`services/retention.ts`, tâche quotidienne) : justificatifs du locataire et du garant effacés 3 ans après la fin du dernier bail, photo de signature 5 ans après (à vérifier avec le référentiel CNIL « gestion locative »).
+- Régularisation des charges au prorata des jours d'occupation (`occupancyShare`, `occupiedFrom`/`occupiedTo` repris du bail) ; solde de tout compte majoré de 10 % du loyer mensuel par mois de retard commencé après la date limite (`depositLatePenalty`, art. 22).
 - Après l'envoi d'un lien par email : boutons vers la messagerie (`lib/mail.ts`, `components/MailLinks.tsx`). Annonce : liens de dépôt Leboncoin, SeLoger, PAP, Facebook Marketplace.
 
 ## Lien du locataire

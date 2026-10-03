@@ -44,6 +44,9 @@ export const letterSchema = z.discriminatedUnion('type', [
     year: z.number().int().min(2000).max(2100),
     lines: z.array(z.object({ label: z.string().max(160), amountCents: cents })).min(1).max(30),
     provisionsCents: cents,
+    /** Locataire présent une partie de l'année seulement : les charges de l'année sont réparties au prorata des jours. */
+    occupiedFrom: isoDate.optional().nullable(),
+    occupiedTo: isoDate.optional().nullable(),
   }),
   z.object({
     type: z.literal('TENANT_NOTICE'),
@@ -64,6 +67,9 @@ export const letterSchema = z.discriminatedUnion('type', [
     chargesBalanceCents: z.number().int().min(-10_000_000).max(10_000_000).default(0),
     /** Immeuble collectif : provision gardée jusqu'à l'approbation des comptes (20 % du dépôt au plus, art. 22). */
     heldCents: cents.default(0),
+    /** Date du courrier et loyer mensuel hors charges : majoration de 10 % par mois de retard commencé (art. 22). */
+    writtenOn: isoDate.optional().nullable(),
+    monthlyRentCents: cents.optional().nullable(),
   }),
   z.object({ type: z.literal('GUARANTOR_CALL'), amountCents: cents, periods: z.array(z.string()).min(1).max(24), delayDays: z.number().int().min(8).max(60).default(15), commandDate: isoDate.optional().nullable() }),
   z.object({ type: z.literal('NUISANCE'), facts: z.string().min(1).max(2000), dates: z.string().max(300).optional().nullable(), delayDays: z.number().int().min(1).max(60).default(8) }),
@@ -175,6 +181,31 @@ export function depositDeadline(keysDateIso: string, conform: boolean): Date {
   return new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + (conform ? 1 : 2), k.getUTCDate()))
 }
 
+/** Part de l'année occupée par le locataire (jours d'occupation ÷ jours de l'année), entre 0 et 1. */
+export function occupancyShare(year: number, from?: string | null, to?: string | null): { share: number; days: number; yearDays: number } {
+  const start = `${year}-01-01`
+  const end = `${year}-12-31`
+  const a = from && from > start ? from : start
+  const b = to && to < end ? to : end
+  const day = (x: string) => Date.UTC(Number(x.slice(0, 4)), Number(x.slice(5, 7)) - 1, Number(x.slice(8, 10)))
+  const yearDays = Math.round((day(end) - day(start)) / 86_400_000) + 1
+  const days = b < a ? 0 : Math.round((day(b) - day(a)) / 86_400_000) + 1
+  return { share: days / yearDays, days, yearDays }
+}
+
+/**
+ * Restitution du dépôt en retard (art. 22) : 10 % du loyer mensuel hors charges pour chaque mois commencé après la
+ * date limite. Rien si le courrier est dans les délais.
+ */
+export function depositLatePenalty(deadline: Date, writtenOnIso: string, monthlyRentCents: number): { months: number; cents: number } {
+  const w = parseIsoDate(writtenOnIso)
+  if (w <= deadline) return { months: 0, cents: 0 }
+  let months = (w.getUTCFullYear() - deadline.getUTCFullYear()) * 12 + (w.getUTCMonth() - deadline.getUTCMonth())
+  if (w.getUTCDate() > deadline.getUTCDate()) months += 1
+  months = Math.max(1, months)
+  return { months, cents: Math.round(monthlyRentCents * 0.1) * months }
+}
+
 export interface LetterContext {
   tenantName: string
   propertyAddress: string
@@ -284,13 +315,17 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
       }
     }
     case 'CHARGES': {
-      const real = l.lines.reduce((a, x) => a + x.amountCents, 0)
+      const yearTotal = l.lines.reduce((a, x) => a + x.amountCents, 0)
+      const occ = occupancyShare(l.year, l.occupiedFrom, l.occupiedTo)
+      const partial = occ.days < occ.yearDays
+      const real = partial ? Math.round(yearTotal * occ.share) : yearTotal
       const diff = real - l.provisionsCents
       return {
         subject: `Régularisation des charges ${l.year}`,
         recommended: false,
         paragraphs: [
           `Voici le décompte des charges récupérables de l’année ${l.year}, par nature de charges, comparé aux provisions que vous avez versées.`,
+          ...(partial ? [`Vous avez occupé le logement ${occ.days} jours sur ${occ.yearDays} en ${l.year} : votre part est calculée au prorata de cette durée.`] : []),
           diff > 0
             ? `Les charges réelles dépassent vos provisions de ${e(diff)}. Ce complément est à régler avec votre prochain loyer.`
             : diff < 0
@@ -301,7 +336,13 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
         table: {
           columns: ['Charge récupérable', 'Montant réel'],
           widths: [70, 30],
-          rows: [...l.lines.map((x) => [x.label, e(x.amountCents)]), ['Total des charges réelles', e(real)], ['Provisions versées', e(l.provisionsCents)], [diff >= 0 ? 'Reste à payer' : 'À rembourser', e(Math.abs(diff))]],
+          rows: [
+            ...l.lines.map((x) => [x.label, e(x.amountCents)]),
+            ['Total des charges réelles de l’année', e(yearTotal)],
+            ...(partial ? [[`Votre part (${occ.days} jours sur ${occ.yearDays})`, e(real)]] : []),
+            ['Provisions versées', e(l.provisionsCents)],
+            [diff >= 0 ? 'Reste à payer' : 'À rembourser', e(Math.abs(diff))],
+          ],
         },
         computed: [{ label: diff >= 0 ? 'Reste à payer par le locataire' : 'À rembourser au locataire', cents: Math.abs(diff) }],
       }
@@ -310,14 +351,16 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
       const retained = l.deductions.reduce((x, y) => x + y.amountCents, 0)
       const owed = retained + (l.unpaidCents ?? 0) + (l.chargesBalanceCents ?? 0)
       const held = l.heldCents ?? 0
-      const balance = l.depositCents - owed - held
-      const back = Math.max(0, balance)
       const deadline = depositDeadline(l.keysDate, l.conform)
+      const late = l.writtenOn && l.monthlyRentCents && l.depositCents - owed - held > 0 ? depositLatePenalty(deadline, l.writtenOn, l.monthlyRentCents) : { months: 0, cents: 0 }
+      const balance = l.depositCents - owed - held + late.cents
+      const back = Math.max(0, balance)
       const rows: string[][] = [['Dépôt de garantie versé', '', e(l.depositCents)]]
       for (const x of l.deductions) rows.push([`Retenue : ${x.label}`, x.justification, `- ${e(x.amountCents)}`])
       if (l.unpaidCents) rows.push(['Loyers et charges restant dus', '', `- ${e(l.unpaidCents)}`])
       if (l.chargesBalanceCents) rows.push([l.chargesBalanceCents > 0 ? 'Régularisation des charges à votre charge' : 'Régularisation des charges en votre faveur', 'Décompte joint', l.chargesBalanceCents > 0 ? `- ${e(l.chargesBalanceCents)}` : `+ ${e(-l.chargesBalanceCents)}`])
       if (held) rows.push(['Provision gardée jusqu’à l’approbation des comptes de l’immeuble', 'Article 22', `- ${e(held)}`])
+      if (late.cents) rows.push([`Majoration de retard (${late.months} mois commencé${late.months > 1 ? 's' : ''})`, 'Article 22', `+ ${e(late.cents)}`])
       rows.push([balance >= 0 ? 'Solde à vous restituer' : 'Solde restant à votre charge', '', e(Math.abs(balance))])
       return {
         subject: 'Restitution du dépôt de garantie et solde de tout compte',
@@ -330,6 +373,7 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
           balance >= 0
             ? `La somme de ${e(back)} vous sera versée au plus tard le ${formatDateFr(deadline)}.`
             : `Le dépôt de garantie ne couvre pas les sommes dues : il reste ${e(-balance)} à régler. Je vous remercie de procéder au paiement dans un délai de quinze jours.`,
+          ...(late.cents ? [`La date limite de restitution (${formatDateFr(deadline)}) est dépassée : la somme due est majorée de 10 % du loyer mensuel hors charges par mois de retard commencé, soit ${e(late.cents)} (article 22 de la loi n° 89-462 du 6 juillet 1989).`] : []),
           ...(held ? [`La provision de ${e(held)} sera régularisée dans le mois qui suit l’approbation définitive des comptes de l’immeuble (article 22 de la loi n° 89-462 du 6 juillet 1989).`] : []),
         ],
         table: rows.length > 2 ? { columns: ['Ligne', 'Justificatif', 'Montant'], widths: [52, 26, 22], rows } : undefined,

@@ -38,6 +38,7 @@ export default function Signer() {
   const [image, setImage] = useState<string | null>(null)
   const [consent, setConsent] = useState(false)
   const [photo, setPhoto] = useState<string | null>(null)
+  const [noPhoto, setNoPhoto] = useState(false)
   const pdf = `/api${base}/document.pdf`
   // Le document est affiché depuis une copie locale (blob) : le site interdit d'intégrer ses propres pages en cadre.
   const [blob, setBlob] = useState<string | null>(null)
@@ -87,7 +88,7 @@ export default function Signer() {
   }
   const sign = async () => {
     if (!image) return toast.show('Dessinez votre signature dans le cadre.', 'error')
-    await api(`${base}/sign`, { method: 'POST', body: { mention, image, consent } })
+    await api(`${base}/sign`, { method: 'POST', body: { mention, image, consent, noPhoto: !data.photoAt && noPhoto } })
     reload()
   }
 
@@ -136,9 +137,9 @@ export default function Signer() {
         )}
       </Step>
 
-      <Step n={3} title="Prenez-vous en photo" done={Boolean(data.photoAt)} disabled={!data.codeVerified}>
+      <Step n={3} title="Prenez-vous en photo (facultatif)" done={Boolean(data.photoAt) || noPhoto} disabled={!data.codeVerified}>
         <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
-          Une photo de votre visage, prise maintenant. Elle est datée à la seconde par notre serveur et jointe au certificat de preuve : elle montre que c’est bien vous qui signez. Elle n’est visible que des signataires du bail.
+          Une photo de votre visage, prise maintenant. Elle est datée à la seconde par notre serveur et jointe au certificat de preuve : elle montre que c’est bien vous qui signez. Elle n’est visible que des signataires du bail. Elle est facultative.
         </p>
         {data.codeVerified ? (
           <SelfieCapture
@@ -151,6 +152,7 @@ export default function Signer() {
             }}
           />
         ) : null}
+        {data.codeVerified && !data.photoAt ? <Check checked={noPhoto} onChange={setNoPhoto} label="Signer sans photo" sub="C’est possible : le certificat indiquera que vous avez choisi de signer sans photo." /> : null}
         {data.photoAt ? <span style={{ fontSize: 14, color: BAI.green, fontWeight: 600 }}>Photo enregistrée le {new Date(data.photoAt).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'medium' })}.</span> : null}
       </Step>
 
@@ -175,16 +177,16 @@ export default function Signer() {
         </label>
       </Step>
 
-      <Step n={5} title="Signez" disabled={!data.codeVerified || !data.photoAt}>
+      <Step n={5} title="Signez" disabled={!data.codeVerified || (!data.photoAt && !noPhoto)}>
         {data.codeVerified ? <SignaturePad value={image} onChange={setImage} label="Signez avec le doigt ou la souris" /> : null}
         <Check
           checked={consent}
           onChange={setConsent}
           label="J’accepte de signer ce document électroniquement."
-          sub="Ma signature électronique a la même valeur qu’une signature à la main. La date, l’heure, mon adresse IP, le code vérifié et ma photo sont conservés comme preuve."
+          sub="Ma signature électronique a la même valeur qu’une signature à la main. La date, l’heure, mon adresse IP, le code vérifié et, le cas échéant, ma photo sont conservés comme preuve."
         />
         <div>
-          <Btn size="lg" onClick={() => sign().catch(toast.error)} disabled={!data.codeVerified || !data.photoAt || !consent || !mention.trim() || !image}>
+          <Btn size="lg" onClick={() => sign().catch(toast.error)} disabled={!data.codeVerified || (!data.photoAt && !noPhoto) || !consent || !mention.trim() || !image}>
             Signer le document
           </Btn>
         </div>

@@ -4,6 +4,7 @@ import { env } from './env.js'
 import { runDailyReminders } from './jobs/reminderEmails.js'
 import { purgeOldCandidates } from './routes/candidates.js'
 import { purgeTrash } from './services/trash.js'
+import { purgeAfterLease } from './services/retention.js'
 
 const app = createApp()
 app.listen(env.PORT, () => console.info(`[bailio] API prête sur le port ${env.PORT}`))
@@ -15,4 +16,6 @@ cron.schedule('0 8 * * *', () => {
   purgeOldCandidates().catch((err) => console.error('[candidatures]', err))
   // Corbeille : éléments supprimés depuis plus de 30 jours, effacés pour de bon.
   purgeTrash().catch((err) => console.error('[corbeille]', err))
+  // Fin de location : justificatifs effacés après 3 ans, photo de signature après 5 ans.
+  purgeAfterLease().catch((err) => console.error('[conservation]', err))
 }, { timezone: 'Europe/Paris' })

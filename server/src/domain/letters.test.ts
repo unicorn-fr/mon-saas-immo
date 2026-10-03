@@ -68,3 +68,17 @@ test('sinistre et réclamation à un artisan : destinataire tiers, textes de loi
   assert.ok(contractor.paragraphs.some((p) => /article 1344.*article 1222/.test(p)))
   assert.throws(() => letterSchema.parse({ type: 'CONTRACTOR_CLAIM', recipient: { name: '' }, work: 'x', problems: 'y' }))
 })
+
+test('régularisation des charges au prorata de l’occupation, majoration du dépôt rendu en retard', async () => {
+  const { occupancyShare, depositLatePenalty, depositDeadline, letterContent } = await import('./letters.js')
+  assert.deepEqual(occupancyShare(2025, '2025-07-01', null), { share: 184 / 365, days: 184, yearDays: 365 })
+  assert.equal(occupancyShare(2025, '2024-01-01', '2026-01-01').days, 365)
+  const deadline = depositDeadline('2026-03-10', true) // 10 avril
+  assert.deepEqual(depositLatePenalty(deadline, '2026-04-10', 60000), { months: 0, cents: 0 })
+  assert.deepEqual(depositLatePenalty(deadline, '2026-04-11', 60000), { months: 1, cents: 6000 })
+  assert.deepEqual(depositLatePenalty(deadline, '2026-06-12', 60000), { months: 3, cents: 18000 })
+  const ctx = { tenantName: 'Lucas Garnier', propertyAddress: '14 quai de Bosc, Sète' }
+  const charges = letterContent({ type: 'CHARGES', year: 2025, lines: [{ label: 'Eau froide', amountCents: 36500 }], provisionsCents: 10000, occupiedFrom: '2025-07-01', occupiedTo: null }, ctx as never)
+  assert.ok(charges.paragraphs.some((p) => /184 jours sur 365/.test(p)))
+  assert.equal(charges.computed?.[0].cents, Math.round(36500 * 184 / 365) - 10000)
+})

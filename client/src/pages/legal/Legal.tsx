@@ -85,7 +85,7 @@ export function Confidentialite() {
         <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
         <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
         <li>
-          Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et photo du signataire prise au moment de signer (réencodée sans données de localisation, datée par notre serveur). Elle figure
+          Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et, s'il l'accepte, photo du signataire prise au moment de signer (facultative, réencodée sans données de localisation, datée par notre serveur). Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367). Elle est conservée aussi longtemps que le bail.
         </li>
         <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie, lien DossierFacile et, si le propriétaire les demande, les justificatifs que la loi autorise (décret n° 2015-1437). Elles ne sont visibles que du propriétaire. Celles qui ne sont pas retenues sont effacées, pièces comprises, au plus tard 90 jours après leur envoi ;</li>
@@ -128,6 +128,8 @@ export function Confidentialite() {
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes.</li>
         <li>Les candidatures : trois mois au plus après leur envoi. Celle que le propriétaire retient devient la fiche du locataire.</li>
+        <li>Les justificatifs du dossier d'un locataire et de son garant : effacés trois ans après la fin du dernier bail (délai pendant lequel une action liée au bail reste possible) ;</li>
+        <li>La photo prise à la signature : effacée cinq ans après la fin du bail. La date, l'heure et l'empreinte de la photo restent dans le certificat de signature.</li>
       </ul>
       <H2>Vos droits</H2>
       <p>

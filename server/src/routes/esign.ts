@@ -277,9 +277,11 @@ router.post('/esign/:token/sign', limitPerVisitor(10, 10), async (req, res) => {
       mention: z.string().trim().min(2).max(3000),
       image: z.string().max(400_000).regex(/^data:image\/png;base64,/, 'Signature invalide.'),
       consent: z.literal(true, { message: 'Cochez la case pour accepter de signer électroniquement.' }),
+      /** Photo facultative : le signataire peut choisir de signer sans (c'est indiqué dans le certificat). */
+      noPhoto: z.boolean().optional(),
     })
     .parse(req.body)
-  if (!signer.photo || !signer.photoAt) throw new HttpError(400, 'Prenez-vous en photo avant de signer : elle est jointe au certificat de preuve.')
+  if ((!signer.photo || !signer.photoAt) && !body.noPhoto) throw new HttpError(400, 'Prenez-vous en photo, ou choisissez « Signer sans photo ».')
   const c = contractOf(request)
   const expected = expectedMention(signer, c)
   if (!mentionMatches(expected, body.mention)) throw new HttpError(400, signer.role === 'GUARANTOR' ? 'La mention recopiée ne correspond pas au texte demandé. Vérifiez en particulier le montant et la durée.' : `Recopiez la mention « ${READ_AND_APPROVED} ».`)

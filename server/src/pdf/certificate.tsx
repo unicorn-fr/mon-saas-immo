@@ -57,7 +57,7 @@ export function CertificatePage({ data }: { data: CertificateData }) {
       </View>
       <Text style={{ fontSize: 8.5, lineHeight: 1.5, textAlign: 'justify', marginBottom: 10 }}>
         Le présent document a été signé électroniquement au moyen de la plateforme Bailio. Chaque signataire a reçu un lien personnel à son adresse électronique, puis un code à usage
-        unique envoyé à cette même adresse, qu’il a saisi avant de signer, puis s’est pris en photo ; la photo est horodatée par le serveur et identifiée par son empreinte. Le document présenté est identifié par son empreinte numérique : toute modification, même d’un caractère,
+        unique envoyé à cette même adresse, qu’il a saisi avant de signer, puis, s’il l’a accepté, s’est pris en photo ; la photo est horodatée par le serveur et identifiée par son empreinte. Le document présenté est identifié par son empreinte numérique : toute modification, même d’un caractère,
         changerait cette empreinte. Ce procédé constitue une signature électronique au sens de l’article 1367 du Code civil et de l’article 25 du règlement (UE) n° 910/2014 dit
         « eIDAS ». L’écrit électronique a la même force probante que l’écrit sur support papier (article 1366 du Code civil).
       </Text>
@@ -78,7 +78,7 @@ export function CertificatePage({ data }: { data: CertificateData }) {
             <View style={{ flexGrow: 1, flexBasis: 0 }}>
               <Line label="Adresse électronique" value={x.email} />
               <Line label="Code à usage unique vérifié le" value={when(x.codeVerifiedAt)} />
-              {x.photoAt ? <Line label="Photo prise le" value={when(x.photoAt)} /> : null}
+              {x.photoAt ? <Line label="Photo prise le" value={when(x.photoAt)} /> : <Line label="Photo" value="non fournie : le signataire a choisi de signer sans photo" />}
               <Line label="Signé le" value={when(x.signedAt)} />
               <Line label="Adresse IP" value={x.ip ?? '—'} />
               <Line label="Appareil" value={(x.userAgent ?? '—').slice(0, 160)} />

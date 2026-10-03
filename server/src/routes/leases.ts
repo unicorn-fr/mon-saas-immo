@@ -785,7 +785,9 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
       return a + Math.min(m.chargesCents, Math.max(0, p.amountCents - m.rentCents))
     }, 0)
     const expenses = await prisma.expense.findMany({ where: { userId: user.id, propertyId: lease.propertyId, recoverableCents: { gt: 0 }, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } } })
-    data = { type, year, provisionsCents: provisions, lines: expenses.map((e) => ({ label: e.description || e.vendor, amountCents: e.recoverableCents })) }
+    // Présence du locataire dans l'année : de l'entrée (ou du 1er janvier) à la remise des clés (ou au 31 décembre).
+    const end = facts.keysDate ?? (lease.status === 'ENDED' ? iso(lease.endDate) : null)
+    data = { type, year, provisionsCents: provisions, lines: expenses.map((e) => ({ label: e.description || e.vendor, amountCents: e.recoverableCents })), occupiedFrom: iso(lease.startDate), occupiedTo: end }
   } else if (type === 'TENANT_NOTICE') {
     const tense = Boolean(terms.zone?.tense)
     data = { type, receivedDate: iso(new Date()), reduced: leaseKindOf(lease) === 'VIDE' && tense, reducedReason: tense ? 'logement situé en zone tendue' : null }
@@ -796,7 +798,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   } else if (type === 'DEPOSIT_RETURN') {
     const keys = facts.keysDate ?? facts.tenantNotice?.endDate ?? iso(lease.endDate)
     const u = await unpaid(lease)
-    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [], unpaidCents: u.reduce((a, x) => a + x.missing, 0), chargesBalanceCents: 0, heldCents: 0 }
+    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [], unpaidCents: u.reduce((a, x) => a + x.missing, 0), chargesBalanceCents: 0, heldCents: 0, writtenOn: iso(new Date()), monthlyRentCents: lease.rentCents }
     if (u.length) note = `Loyers non réglés repris automatiquement : ${u.map((x) => monthLabel(x.period)).join(', ')}.`
   } else if (type === 'GUARANTOR_CALL') {
     const u = await unpaid(lease)

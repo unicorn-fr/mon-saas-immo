@@ -142,7 +142,7 @@ router.get('/today', async (req, res) => {
     if (keys && !lastLetter(l.id, 'DEPOSIT_RETURN')) {
       const limit = new Date(`${keys}T00:00:00Z`)
       limit.setUTCMonth(limit.getUTCMonth() + 1)
-      tasks.push({ id: `settle-${l.id}`, type: 'SETTLEMENT', tag: 'Dépôt de garantie', tone: limit < today ? 'error' : 'caramel', place, title: `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`, text: 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.', leaseId: l.id })
+      tasks.push({ id: `settle-${l.id}`, type: 'SETTLEMENT', tag: 'Dépôt de garantie', tone: limit < today ? 'error' : 'caramel', place, title: `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`, text: limit < today ? 'La date limite est passée : la somme à rendre est majorée de 10 % du loyer mensuel par mois de retard commencé (article 22). Le solde de tout compte la calcule.' : 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.', leaseId: l.id })
     }
     // Chaudière individuelle : attestation d'entretien chaque année.
     const heating = (l.property.data as { heating?: { mode?: string; energy?: string; lastMaintenance?: string } } | null)?.heating
