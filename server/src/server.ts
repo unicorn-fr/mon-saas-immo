@@ -16,6 +16,6 @@ cron.schedule('0 8 * * *', () => {
   purgeOldCandidates().catch((err) => console.error('[candidatures]', err))
   // Corbeille : éléments supprimés depuis plus de 30 jours, effacés pour de bon.
   purgeTrash().catch((err) => console.error('[corbeille]', err))
-  // Fin de location : justificatifs effacés après 3 ans, photo de signature après 5 ans.
+  // Fin de location (référentiel CNIL) : justificatifs, informations inutiles et photo de signature effacés après 3 ans.
   purgeAfterLease().catch((err) => console.error('[conservation]', err))
 }, { timezone: 'Europe/Paris' })

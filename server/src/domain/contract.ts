@@ -335,6 +335,8 @@ export const tenantFileSchema = z.object({
   newAddress: opt(text(300)),
   /** Informations saisies par le locataire depuis son lien, à vérifier par le propriétaire (« birthDate », « guarantor.address »…). */
   review: opt(z.array(text(60)).max(60)),
+  /** Données devenues inutiles effacées 3 ans après la fin du dernier bail (services/retention.ts). */
+  purgedAt: opt(text(40)),
 })
 export type TenantFile = z.infer<typeof tenantFileSchema>
 

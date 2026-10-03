@@ -128,8 +128,8 @@ export function Confidentialite() {
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes.</li>
         <li>Les candidatures : trois mois au plus après leur envoi. Celle que le propriétaire retient devient la fiche du locataire.</li>
-        <li>Les justificatifs du dossier d'un locataire et de son garant : effacés trois ans après la fin du dernier bail (délai pendant lequel une action liée au bail reste possible) ;</li>
-        <li>La photo prise à la signature : effacée cinq ans après la fin du bail. La date, l'heure et l'empreinte de la photo restent dans le certificat de signature.</li>
+        <li>Le dossier d'un locataire et de son garant : gardé pendant la location, puis trois ans après la fin du dernier bail (délai pendant lequel une action liée au bail reste possible, comme le recommande la CNIL). Ensuite, les justificatifs et les informations devenues inutiles (revenus, situation, naissance, téléphone, garant) sont effacés ; restent le nom et l'email, qui figurent dans les quittances et le bail ;</li>
+        <li>La photo prise à la signature : effacée trois ans après la fin du bail. La date, l'heure et l'empreinte de la photo restent dans le certificat de signature.</li>
       </ul>
       <H2>Vos droits</H2>
       <p>
