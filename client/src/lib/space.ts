@@ -167,6 +167,8 @@ export interface LeaseComputed {
   chargesModes: Array<'PROVISION' | 'PERIODIC' | 'FORFAIT'>
   revisionAllowed: boolean
   energyWarning: string | null
+  /** Plafonds du loyer non respectés (encadrement, zone tendue, DPE F ou G) : signature refusée. */
+  rentIssues?: Array<{ code: string; message: string }>
   rentControlLikely: boolean
   firstPayment: null | { fullMonth: boolean; days: number; daysInMonth: number; rentCents: number; chargesCents: number }
   clauseWarnings: Array<{ clause: string; reasons: string[] }>

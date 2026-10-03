@@ -105,6 +105,47 @@ export function rentalForbidden(dpe: string | null | undefined, onDate = new Dat
   return `Logement classé ${dpe} au DPE : il ne peut plus être loué depuis le ${start === '2025-01-01' ? '1er janvier 2025' : start === '2028-01-01' ? '1er janvier 2028' : '1er janvier 2034'} (logement non décent, article 6 de la loi du 6 juillet 1989). Des travaux de rénovation énergétique et un nouveau DPE sont nécessaires avant de signer un bail.`
 }
 
+export interface RentIssue {
+  code: 'CEILING' | 'COMPLEMENT_ENERGY' | 'COMPLEMENT_NO_CONTROL' | 'RELET_ENERGY' | 'RELET_TENSE'
+  message: string
+}
+
+/**
+ * Plafonds du loyer d'un nouveau bail, vérifiés avant la signature :
+ * - encadrement (loi ELAN, art. 140) : loyer de base au plus égal au loyer de référence majoré × surface habitable ;
+ *   complément de loyer seulement en zone encadrée, et jamais pour un logement classé F ou G ;
+ * - logement classé F ou G (art. 17 et 17-1, loi Climat et résilience) : pas plus que le loyer du locataire précédent ;
+ * - zone tendue (décret n° 2017-1198, reconduit chaque année) : pas plus que le loyer du locataire précédent,
+ *   sauf exception à justifier (révision non appliquée, travaux importants, loyer manifestement sous-évalué).
+ */
+export function rentIssues(input: {
+  rentCents?: number | null
+  surface?: number | null
+  dpe?: string | null
+  zone?: LeaseTerms['zone']
+  previous?: LeaseTerms['previous']
+}): RentIssue[] {
+  const out: RentIssue[] = []
+  const rent = input.rentCents ?? null
+  const z = input.zone ?? {}
+  const complement = z.complementCents ?? 0
+  const energy = input.dpe === 'F' || input.dpe === 'G'
+  const eur = (c: number) => `${(c / 100).toLocaleString('fr-FR', { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 })} €`
+  if (rent !== null && z.control && z.refRentMaxCentsM2 && input.surface) {
+    const cap = Math.round(z.refRentMaxCentsM2 * input.surface)
+    if (rent - complement > cap) out.push({ code: 'CEILING', message: `Le loyer de base (${eur(rent - complement)}) dépasse le loyer de référence majoré : ${eur(cap)} pour ${String(input.surface).replace('.', ',')} m². Baissez le loyer, ou justifiez un complément de loyer.` })
+  }
+  if (complement > 0 && !z.control) out.push({ code: 'COMPLEMENT_NO_CONTROL', message: 'Le complément de loyer n’existe que dans les communes où les loyers sont encadrés. Retirez-le, ou indiquez que la commune est encadrée.' })
+  if (complement > 0 && energy) out.push({ code: 'COMPLEMENT_ENERGY', message: `Logement classé ${input.dpe} : aucun complément de loyer n’est permis.` })
+  const prev = input.previous
+  if (rent !== null && prev?.rentedWithin18Months && prev.lastRentCents && rent > prev.lastRentCents) {
+    if (energy) out.push({ code: 'RELET_ENERGY', message: `Logement classé ${input.dpe} : le loyer ne peut pas dépasser celui du locataire précédent (${eur(prev.lastRentCents)}).` })
+    else if (z.tense && !prev.increaseReason?.trim())
+      out.push({ code: 'RELET_TENSE', message: `Zone tendue : le loyer ne peut pas dépasser celui du locataire précédent (${eur(prev.lastRentCents)}), sauf si la dernière révision n’a pas été faite, après des travaux importants, ou si l’ancien loyer était manifestement sous-évalué. Indiquez le motif, ou baissez le loyer.` })
+  }
+  return out
+}
+
 export interface DiagnosticRule {
   key: 'dpe' | 'erp' | 'electricity' | 'gas' | 'lead' | 'asbestos' | 'noise'
   label: string
@@ -145,6 +186,8 @@ const RENT_CONTROL = new Set([
   '69123', ...Array.from({ length: 9 }, (_, i) => String(69381 + i)), '69266', // Lyon, Villeurbanne
   '34172', // Montpellier
   '33063', // Bordeaux
+  '38185', // Grenoble (Grenoble-Alpes Métropole, une vingtaine de communes : à confirmer par le propriétaire)
+  '64102', '64122', '64024', // Bayonne, Biarritz, Anglet (Pays basque, 24 communes : à confirmer par le propriétaire)
 ])
 
 export function rentControlLikely(inseeCode: string | null | undefined): boolean {

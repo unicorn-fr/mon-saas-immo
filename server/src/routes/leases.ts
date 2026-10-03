@@ -28,6 +28,7 @@ import {
   rentControlLikely,
   rentRevisionAllowed,
   rentalForbidden,
+  rentIssues,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { toTrash } from '../services/trash.js'
@@ -87,6 +88,8 @@ function computed(c: ContractInput) {
     chargesModes: allowedChargesModes(kind, Boolean(t.colocation) || c.tenants.length > 1),
     revisionAllowed: kind !== 'MOBILITE' && rentRevisionAllowed(dpe),
     energyWarning: energyRentalWarning(dpe),
+    /** Plafonds du loyer non respectés : la signature est refusée tant qu'ils restent. */
+    rentIssues: rentIssues({ rentCents: t.rentCents, surface: c.property.surface, dpe, zone: t.zone, previous: t.previous }),
     rentControlLikely: rentControlLikely(c.property.inseeCode),
     firstPayment: t.startDate && t.rentCents !== undefined && t.rentCents !== null ? firstPayment(t.startDate, t.rentCents, t.chargesCents ?? 0) : null,
     clauseWarnings: (t.clauses?.custom ?? []).map((cl) => ({ clause: cl, reasons: forbiddenClauseReasons(cl) })).filter((x) => x.reasons.length),
@@ -430,6 +433,8 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
   const c = await currentContract(user, lease)
   const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class)
   if (forbidden && lease.status === 'DRAFT') throw new HttpError(409, forbidden)
+  const issues = rentIssues({ rentCents: c.terms.rentCents, surface: c.property.surface, dpe: c.property.diagnostics?.dpe?.class, zone: c.terms.zone, previous: c.terms.previous })
+  if (issues.length && lease.status === 'DRAFT') throw new HttpError(400, issues.map((i) => i.message).join(' '))
   // Seules les informations primordiales bloquent : les autres laissent une ligne à compléter dans le bail.
   if (lease.status === 'DRAFT') assertComplete(essential(leaseMissing(c)))
   return c

@@ -382,6 +382,8 @@ export const leaseTermsSchema = z.object({
       lastRentCents: opt(cents),
       lastPaymentDate: opt(isoDate),
       lastRevisionDate: opt(isoDate),
+      /** Zone tendue : motif d'un loyer supérieur à celui du locataire précédent (révision non faite, travaux, loyer sous-évalué). */
+      increaseReason: opt(text(600)),
     }),
   ),
   revision: opt(

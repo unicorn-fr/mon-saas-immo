@@ -326,7 +326,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
           {t.previous?.rentedWithin18Months === false
             ? 'sans objet, le précédent locataire ayant quitté le logement plus de dix-huit mois avant la signature (ou aucun locataire précédent)'
             : t.previous?.rentedWithin18Months
-              ? `${orBlank(euros(t.previous.lastRentCents))}, versé le ${orBlank(dateShort(t.previous.lastPaymentDate))} ; dernière révision le ${orBlank(dateShort(t.previous.lastRevisionDate))}`
+              ? `${orBlank(euros(t.previous.lastRentCents))}, versé le ${orBlank(dateShort(t.previous.lastPaymentDate))} ; dernière révision le ${orBlank(dateShort(t.previous.lastRevisionDate))}${t.previous.increaseReason?.trim() ? ` ; motif du loyer supérieur : ${t.previous.increaseReason.trim()}` : ''}`
               : BLANK}
         </Item>
         <Item label="2° Modalités de révision">

@@ -131,6 +131,14 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             </Callout>
           ) : null}
           {l.computed.energyWarning ? <Callout tone="warn">{l.computed.energyWarning}</Callout> : null}
+          {l.status === 'DRAFT' && l.computed.rentIssues?.length ? (
+            <Callout tone="warn" title="Le loyer dépasse ce que la loi permet">
+              {l.computed.rentIssues.map((i) => i.message).join(' ')}{' '}
+              <TextLink to={`/espace/baux/${l.id}/contrat#rent`} style={{ fontSize: 13 }}>
+                Corriger le loyer
+              </TextLink>
+            </Callout>
+          ) : null}
 
           {l.status === 'DRAFT' && l.ready && !l.checkedAt ? (
             <Card title="Relisez le bail avant de l’envoyer">

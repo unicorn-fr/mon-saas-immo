@@ -192,6 +192,11 @@ export default function Contrat() {
         {kind === 'VIDE' ? <Callout tone="tip">Un bail de durée réduite n’est possible que pour un bailleur personne physique, avec l’événement précis qui le justifie écrit dans le bail.</Callout> : null}
       </FicheSection>
 
+      {c.rentIssues?.length ? (
+        <Callout tone="warn" title="Le loyer dépasse ce que la loi permet">
+          {c.rentIssues.map((i) => i.message).join(' ')} Le bail ne pourra pas être signé tant que ce n’est pas corrigé.
+        </Callout>
+      ) : null}
       <FicheSection id="rent" guides={['loyer', 'paiement']} n={++n} title="Le loyer" reference="Contrat type, rubrique IV.A et IV.E" done={done('rent')}>
         <Money label="Loyer mensuel hors charges" cents={t.rentCents} onChange={(v) => set({ rentCents: v })} />
         <Fields>
@@ -232,6 +237,15 @@ export default function Contrat() {
               <Input label="Date de la dernière révision" type="date" value={t.previous.lastRevisionDate} onChange={(v) => set({ previous: { ...t.previous, lastRevisionDate: v || null } })} />
             </Fields>
             <Callout tone="tip">Ces trois informations sont obligatoires. Leur absence peut permettre au locataire de contester le loyer.</Callout>
+            {t.zone?.tense && t.rentCents && t.previous.lastRentCents && t.rentCents > t.previous.lastRentCents ? (
+              <TextArea
+                label="Pourquoi le loyer est-il plus élevé que celui du locataire précédent ?"
+                value={t.previous.increaseReason ?? ''}
+                onChange={(v) => set({ previous: { ...t.previous, increaseReason: v || null } })}
+                rows={3}
+                hint="Zone tendue : une hausse n’est permise que si la dernière révision n’a pas été faite, après des travaux importants (au moins la moitié d’une année de loyer), ou si l’ancien loyer était manifestement trop bas. Le motif figure dans le bail."
+              />
+            ) : null}
           </>
         ) : null}
       </FicheSection>

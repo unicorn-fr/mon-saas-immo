@@ -15,6 +15,7 @@ import {
   rentControlLikely,
   rentRevisionAllowed,
   rentalForbidden,
+  rentIssues,
 } from './rules.js'
 import { toIsoDate } from './lease.js'
 
@@ -150,4 +151,22 @@ test('logement interdit à la location : G depuis 2025, F en 2028, E en 2034', (
   assert.match(rentalForbidden('E', new Date('2034-01-01')) ?? '', /2034/)
   assert.equal(rentalForbidden('D', new Date('2040-01-01')), null)
   assert.equal(rentalForbidden(null), null)
+})
+
+test('plafonds du loyer : encadrement, complément, logement F ou G, zone tendue', () => {
+  const codes = (x: Parameters<typeof rentIssues>[0]) => rentIssues(x).map((i) => i.code)
+  // Encadrement : 25 €/m² × 30 m² = 750 € de loyer de base au plus
+  assert.deepEqual(codes({ rentCents: 75000, surface: 30, zone: { control: true, refRentMaxCentsM2: 2500 } }), [])
+  assert.deepEqual(codes({ rentCents: 80000, surface: 30, zone: { control: true, refRentMaxCentsM2: 2500 } }), ['CEILING'])
+  assert.deepEqual(codes({ rentCents: 80000, surface: 30, zone: { control: true, refRentMaxCentsM2: 2500, complementCents: 5000 } }), [])
+  assert.deepEqual(codes({ rentCents: 80000, surface: 30, dpe: 'F', zone: { control: true, refRentMaxCentsM2: 2500, complementCents: 5000 } }), ['COMPLEMENT_ENERGY'])
+  assert.deepEqual(codes({ rentCents: 80000, zone: { complementCents: 5000 } }), ['COMPLEMENT_NO_CONTROL'])
+  // Relocation
+  const prev = { rentedWithin18Months: true, lastRentCents: 70000 }
+  assert.deepEqual(codes({ rentCents: 72000, zone: { tense: true }, previous: prev }), ['RELET_TENSE'])
+  assert.deepEqual(codes({ rentCents: 72000, zone: { tense: true }, previous: { ...prev, increaseReason: 'Révision de 2025 non appliquée' } }), [])
+  assert.deepEqual(codes({ rentCents: 72000, zone: { tense: false }, previous: prev }), [])
+  assert.deepEqual(codes({ rentCents: 72000, dpe: 'G', zone: { tense: false }, previous: { ...prev, increaseReason: 'Travaux' } }), ['RELET_ENERGY'])
+  assert.deepEqual(codes({ rentCents: 70000, dpe: 'G', previous: prev }), [])
+  assert.deepEqual(codes({ rentCents: 72000, zone: { tense: true }, previous: { rentedWithin18Months: false, lastRentCents: 70000 } }), [])
 })

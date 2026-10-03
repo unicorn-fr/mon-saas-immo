@@ -228,7 +228,7 @@ export interface LeaseTerms {
   paymentMethod?: N<'TRANSFER' | 'CHEQUE' | 'CASH' | 'OTHER'>
   paymentPlace?: N<string>
   zone?: N<{ tense?: N<boolean>; control?: N<boolean>; refRentCentsM2?: N<number>; refRentMaxCentsM2?: N<number>; complementCents?: N<number>; complementJustification?: N<string> }>
-  previous?: N<{ rentedWithin18Months?: N<boolean>; lastRentCents?: N<number>; lastPaymentDate?: N<string>; lastRevisionDate?: N<string> }>
+  previous?: N<{ rentedWithin18Months?: N<boolean>; lastRentCents?: N<number>; lastPaymentDate?: N<string>; lastRevisionDate?: N<string>; increaseReason?: N<string> }>
   revision?: N<{ enabled?: N<boolean>; date?: N<string>; irlQuarter?: N<string>; irlValue?: N<number> }>
   works?: N<{ sinceLast?: N<string>; increase?: N<string>; decrease?: N<string>; energyContribution?: N<{ enabled?: N<boolean>; monthlyCents?: N<number>; description?: N<string> }> }>
   clauses?: N<{ resolutoire?: N<boolean>; solidarite?: N<boolean>; custom?: N<string[]> }>
