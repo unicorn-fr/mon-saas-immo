@@ -88,7 +88,7 @@ export function Confidentialite() {
           Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée et signature dessinée. Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367). Elle est conservée aussi longtemps que le bail.
         </li>
-        <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie et lien DossierFacile, sans aucune pièce jointe. Elles ne sont visibles que du propriétaire ;</li>
+        <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie, lien DossierFacile et, si le propriétaire les demande, les justificatifs que la loi autorise (décret n° 2015-1437). Elles ne sont visibles que du propriétaire. Celles qui ne sont pas retenues sont effacées, pièces comprises, au plus tard 90 jours après leur envoi ;</li>
         <li>Ce que le locataire complète lui-même par le lien « Votre dossier de location » envoyé par son futur bailleur : identité, naissance, coordonnées, situation et revenus, ceux de son garant, et les justificatifs que la loi autorise à demander (décret n° 2015-1437). Ils rejoignent sa fiche et ne sont visibles que du propriétaire. Le lien expire après 30 jours ;</li>
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date. Ces éléments sont rangés avec le bail et ne sont visibles que du propriétaire ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
@@ -106,7 +106,7 @@ export function Confidentialite() {
       <p>
         Vous seul. Les baux et les factures que vous importez sont lus sur notre serveur : ils ne sont transmis à aucun
         service d'intelligence artificielle ni à aucun autre tiers. Seule l'adresse du logement est vérifiée auprès de la Base
-        Adresse Nationale, un service public français.
+        Adresse Nationale, un service public français. Si vous utilisez un assistant d'IA pour rédiger votre annonce, c'est vous qui y copiez la consigne préparée par Bailio : elle décrit le logement, sans adresse exacte ni nom, et Bailio ne l'envoie nulle part.
       </p>
       <p>
         Deux prestataires techniques interviennent pour notre compte. Vercel sert les pages du site et transmet, chiffrés,

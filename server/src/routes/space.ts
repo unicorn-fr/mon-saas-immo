@@ -11,7 +11,7 @@ import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantComp
 import { diagnosticsFor, energyRentalWarning, rentControlLikely } from '../domain/rules.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { iso, mergeFile } from './helpers.js'
-import { buildAd } from '../domain/ad.js'
+import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { toTrash } from '../services/trash.js'
 import { publicUser } from './auth.js'
@@ -217,7 +217,8 @@ router.put('/properties/:id', async (req, res) => {
 router.get('/properties/:id/ad', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const settings = adSettings(p, p.leases)
-  res.json({ success: true, data: { settings, ad: buildAd(readProperty(p), settings), saved: Boolean(readProperty(p).ad) } })
+  const file = readProperty(p)
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), saved: Boolean(file.ad) } })
 })
 
 router.put('/properties/:id/ad', async (req, res) => {
@@ -225,7 +226,19 @@ router.put('/properties/:id/ad', async (req, res) => {
   const settings = propertyFileSchema.shape.ad.parse(req.body) ?? {}
   const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings), saved: true } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings), prompt: adPrompt(file, settings), saved: true } })
+})
+
+/** Texte rédigé par une IA (ou ailleurs) et collé par le propriétaire : titre et description enregistrés. */
+router.post('/properties/:id/ad/paste', async (req, res) => {
+  const p = await ownProperty(req.user!.id, String(req.params.id))
+  const { text } = z.object({ text: z.string().trim().min(1, 'Collez le texte de l’annonce.').max(6000) }).parse(req.body)
+  const parsed = parseAiAd(text)
+  if (!parsed.description) throw new HttpError(400, 'Le texte collé est vide.')
+  const settings = { ...adSettings(p, p.leases), description: parsed.description, ...(parsed.title ? { title: parsed.title } : {}) }
+  const file = propertyFileSchema.parse({ ...readProperty(p), ad: settings })
+  await prisma.property.update({ where: { id: p.id }, data: { data: file } })
+  res.json({ success: true, data: { settings: file.ad, ad: buildAd(file, file.ad ?? {}), prompt: adPrompt(file, file.ad ?? {}), saved: true } })
 })
 
 router.delete('/properties/:id', async (req, res) => {
@@ -245,6 +258,15 @@ async function ownTenant(userId: string, id: string) {
 
 async function leasesOfTenant(userId: string, tenantId: string) {
   return prisma.lease.findMany({ where: { userId, tenantIds: { has: tenantId } }, include: { payments: { orderBy: { period: 'desc' } }, property: true }, orderBy: { startDate: 'desc' } })
+}
+
+interface TenantHome { id: string; name: string; leaseId: string | null; status: string | null; startDate: string | null; endDate: string | null }
+/** Un locataire peut être lié à plusieurs logements (baux successifs ou simultanés, garage…) : un par logement, bail le plus récent. */
+function tenantHomes(t: Tenant & { property: Property | null }, leases: (LeaseFull & { property: Property })[]): TenantHome[] {
+  const homes = new Map<string, TenantHome>()
+  for (const l of leases) if (!homes.has(l.property.id)) homes.set(l.property.id, { id: l.property.id, name: propertyName(l.property), leaseId: l.id, status: l.status, startDate: iso(l.startDate), endDate: iso(l.endDate) })
+  if (t.property && !homes.has(t.property.id)) homes.set(t.property.id, { id: t.property.id, name: propertyName(t.property), leaseId: null, status: null, startDate: null, endDate: null })
+  return [...homes.values()]
 }
 
 const initials = (f: TenantFile) => `${f.firstNames?.[0] ?? ''}${f.lastName?.[0] ?? ''}`.toUpperCase() || '?'
@@ -312,6 +334,8 @@ router.get('/tenants/:id', async (req, res) => {
             property: { id: lease.property.id, name: propertyName(lease.property) },
           }
         : null,
+      /** Un locataire peut être lié à plusieurs logements (baux successifs ou simultanés, garage…). */
+      homes: tenantHomes(t, leases),
       payments: (lease?.payments ?? []).slice(0, 12).map((x) => ({ period: x.period, amountCents: x.amountCents, receivedAt: iso(x.receivedAt), full: lease ? x.amountCents >= lease.rentCents + lease.chargesCents : true })),
     },
   })

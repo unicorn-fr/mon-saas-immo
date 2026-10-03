@@ -123,6 +123,25 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
         </div>
 
         <div className="grow">
+          {t.homes.length ? (
+            <Card title={t.homes.length > 1 ? 'Ses logements' : 'Son logement'}>
+              {t.homes.map((h) => (
+                <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <TextLink to={`/espace/logements/${h.id}`}>{h.name}</TextLink>
+                    <span style={{ fontSize: 13, color: BAI.inkSoft }}>
+                      {!h.leaseId ? 'Pas encore de bail' : h.status === 'DRAFT' ? 'Bail en préparation' : h.status === 'ENDED' ? `Bail terminé${h.endDate ? ` le ${dateFr(h.endDate)}` : ''}` : `Bail depuis le ${dateFr(h.startDate!)}`}
+                    </span>
+                  </span>
+                  {h.leaseId ? (
+                    <TextLink to={`/espace/baux/${h.leaseId}`} style={{ fontSize: 14 }}>
+                      Voir le bail
+                    </TextLink>
+                  ) : null}
+                </div>
+              ))}
+            </Card>
+          ) : null}
           {lease ? (
             <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Son bail</h2><Pill tone={lease.status === 'DRAFT' ? 'caramel' : lease.status === 'ENDED' ? 'muted' : 'green'}>{lease.status === 'DRAFT' ? 'En préparation' : lease.status === 'ENDED' ? 'Terminé' : 'En cours'}</Pill></div>}>
               <Line label="Type" value={KIND_LABEL[lease.kind]} />

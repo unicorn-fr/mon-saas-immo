@@ -59,7 +59,8 @@ Chaque information saisie est enregistrée et réutilisée :
 ## Mise en location
 
 - Annonce (`domain/ad.ts`, `/espace/logements/:id/annonce`) : mentions obligatoires (loyer charges comprises par mois, charges, dépôt, surface, classes DPE, dépenses d'énergie estimées, « Logement à consommation énergétique excessive » en F et G). Réglages gardés dans la fiche du logement (`ad`), repris du dernier bail (`services/ad.ts`).
-- Candidats (`domain/candidates.ts`, `routes/candidates.ts`, table `Candidate`) : lien public `/candidature/:code`, sans compte ni pièce jointe (DossierFacile). « Choisir ce candidat » crée la fiche du locataire et efface la candidature ; les autres sont effacées après 90 jours (tâche quotidienne). Pièces autorisées : décret 2015-1437 ; interdites : art. 22-2.
+- Rédaction avec une IA (`adPrompt`, `parseAiAd`) : consigne prête à copier, tirée de la fiche (sans adresse exacte ni nom, sans montants ni DPE, ajoutés ensuite comme mentions obligatoires) ; le propriétaire colle la réponse (`POST /properties/:id/ad/paste`) ou écrit lui-même. Bailio n'appelle aucune IA.
+- Candidats (`domain/candidates.ts`, `routes/candidates.ts`, table `Candidate`) : lien public `/candidature/:code` à coller sur Leboncoin, SeLoger… (message prêt à copier sur la page Candidats), sans compte. Pièces demandées choisies par le propriétaire (`ad.requestedDocs`, `ad.guarantorDocs`), déposées après l'envoi (`/candidature/:code/document`, jeton de 24 h). « Choisir ce candidat » crée la fiche du locataire (pièces reprises, `source: 'TENANT'`, à vérifier) et efface la candidature ; les autres sont effacées avec leurs pièces après 90 jours (tâche quotidienne). Pièces autorisées : décret 2015-1437 ; interdites : art. 22-2.
 
 ## Aide à la déclaration des revenus
 
@@ -73,7 +74,11 @@ Chaque information saisie est enregistrée et réutilisée :
 
 - « Ajouter un logement » (`AjoutLogement.tsx`, étapes nommées, copropriété et mobilier seulement s'ils s'appliquent) demande tout ce que la rubrique II du contrat type, les diagnostics et le mobilier exigent ; « il manque… » côté serveur : `propertyLeaseMissing` (`domain/checklist.ts`).
 - « Ajouter un locataire » (`AjoutLocataire.tsx`) : identité, naissance, coordonnées, situation et revenus, garant (identité, engagement, montant, durée), 5 justificatifs autorisés (dont l'avis d'imposition), pour lui et son garant. Ce qui manque (`domain/tenantFile.ts`, `tenantMissing`) se demande au locataire par email ou par courrier (`routes/tenantForm.ts`) : lien sans compte `/dossier/:code` (colonne `Tenant.formCode`, 30 jours), il complète lui-même, tout arrive dans sa fiche.
-- « Créer un bail » refuse d'avancer tant que le logement (`leaseMissing` de la fiche) puis le locataire (`tenantLeaseMissing`) ne sont pas complets, avec le lien vers l'étape à compléter ou la demande au locataire.
+- « Créer un bail » refuse d'avancer tant que les informations **primordiales** du logement (`leaseMissing` de la fiche) puis du locataire (`tenantLeaseMissing`) manquent, avec le lien vers l'étape à compléter ou la demande au locataire. Chaque manque a un `level` (`domain/checklist.ts`) : `ESSENTIAL` bloque la création et la signature (`essential()`), `RECOMMENDED` laisse une ligne à compléter dans le bail.
+- Ce que le locataire envoie (lien `/dossier/:code`) est marqué à vérifier (`Tenant.data.review`, pièces `source: 'TENANT'`) : le propriétaire valide ou demande une correction (`/tenants/:id/review`, `applyReview`).
+- Un locataire peut être lié à plusieurs logements (`tenantHomes` : un par logement, bail le plus récent) ; le bail réunit la fiche du logement et celle du locataire.
+- Formulaire du début (tunnel public) : civilité, étage et porte, type d'habitat, régime juridique, période de construction, chauffage et eau chaude, mode des charges.
+- Clause résolutoire (rubrique VIII) : toujours présente pour le loyer, les charges et le dépôt (loi n° 2023-668) ; l'option ne fait que l'étendre à l'assurance et aux troubles de voisinage.
 
 ## Lien du locataire
 

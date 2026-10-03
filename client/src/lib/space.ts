@@ -109,6 +109,7 @@ export interface TenantSummary {
 
 export interface TenantView extends Omit<TenantSummary, 'completion'> {
   propertyId: string | null
+  homes: Array<{ id: string; name: string; leaseId: string | null; status: string | null; startDate: string | null; endDate: string | null }>
   file: TenantFile
   completion: Completion
   guarantorCompletion: Completion | null

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { buildAd } from './ad.js'
+import { adPrompt, buildAd, parseAiAd } from './ad.js'
 import type { PropertyFile } from './contract.js'
 
 const flat: PropertyFile = { habitat: 'COLLECTIVE', furnished: false, rooms: 2, surface: 42.5, city: 'Montpellier', postalCode: '34000', diagnostics: { dpe: { class: 'D', ges: 'C', costMin: 900, costMax: 1300, costYear: 2023 } } }
@@ -25,4 +25,25 @@ test('annonce : passoire énergétique, dépôt trop élevé, encadrement des lo
   assert.equal(ad.checks.find((c) => c.label.startsWith('Dépenses'))?.ok, false)
   // Meublé : deux mois de dépôt autorisés
   assert.ok(!buildAd({ ...flat, furnished: true }, { rentCents: 70000, chargesCents: 0, depositCents: 140000 }).warnings.some((w) => /dépôt/.test(w)))
+})
+
+test('consigne pour une IA : description du bien seulement, sans adresse ni montants', () => {
+  const p: PropertyFile = { ...flat, address: '12 rue des Lilas', equipments: ['kitchen', 'shower'], annexes: ['balcony'], heating: { mode: 'INDIVIDUAL', energy: 'GAS' } }
+  const prompt = adPrompt(p, { rentCents: 70000, highlights: 'Très lumineux' })
+  assert.match(prompt, /Appartement non meublé/)
+  assert.match(prompt, /Surface habitable : 42,5 m²/)
+  assert.match(prompt, /cuisine équipée, douche/)
+  assert.match(prompt, /Chauffage individuel au gaz/)
+  assert.match(prompt, /Points forts indiqués par le propriétaire : Très lumineux/)
+  assert.match(prompt, /N’inventez rien/)
+  assert.match(prompt, /la loi l’interdit/)
+  assert.ok(!prompt.includes('rue des Lilas'))
+  assert.ok(!prompt.includes('700'))
+})
+
+test('texte collé depuis une IA : titre séparé, mise en forme retirée', () => {
+  const r = parseAiAd('**Titre : « Bel appartement lumineux »**\n\n## Description\nUn séjour **clair**.\n\n\n- Balcon')
+  assert.equal(r.title, 'Bel appartement lumineux')
+  assert.equal(r.description, 'Un séjour clair.\n\nBalcon')
+  assert.deepEqual(parseAiAd('Juste un texte.'), { title: null, description: 'Juste un texte.' })
 })
