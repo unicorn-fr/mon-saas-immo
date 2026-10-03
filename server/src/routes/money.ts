@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { lmnpEstimate } from '../domain/lmnp.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { BINDER_UPLOADS } from '../domain/binder.js'
 import { z } from 'zod'
@@ -239,6 +240,17 @@ router.get('/money/report', async (req, res) => {
   res.json({ success: true, data: { year, properties: reports, purchases: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).purchase ?? null])) } })
 })
 
+// Meublé au réel : part du terrain et valeur du mobilier, gardées dans la fiche du logement.
+router.put('/properties/:id/lmnp', async (req, res) => {
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const body = propertyFileSchema.shape.lmnp.parse(req.body) ?? {}
+  const file = readProperty(p)
+  const next = propertyFileSchema.parse({ ...file, lmnp: { ...(file.lmnp ?? {}), ...body } })
+  await prisma.property.update({ where: { id: p.id }, data: { data: next } })
+  res.json({ success: true, data: next.lmnp })
+})
+
 // Prix d'achat d'un logement (rendement brut du bilan), gardé dans sa fiche.
 router.put('/properties/:id/purchase', async (req, res) => {
   const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
@@ -281,7 +293,31 @@ router.get('/money/tax', async (req, res) => {
     }
   }
   const unassigned = expenses.filter((e) => !e.propertyId).reduce((a, e) => a + e.amountCents, 0)
-  res.json({ success: true, data: { ...taxSummary(year, input), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])) } })
+  // Meublé : estimation au régime réel (amortissements) pour comparer avec le micro-BIC.
+  const furnishedProps = properties.filter((p) => input.some((x) => x.id === p.id && x.furnished))
+  const lmnp = furnishedProps.length
+    ? lmnpEstimate(
+        year,
+        furnishedProps.map((p) => {
+          const file = readProperty(p)
+          const pays = input.find((x) => x.id === p.id && x.furnished)!.payments
+          const exp = expenses.filter((e) => e.propertyId === p.id)
+          const extra = file.tax?.[String(year)]
+          return {
+            receiptsCents: pays.reduce((a, x) => a + x.rentCents + x.chargesCents, 0),
+            chargesCents: exp.filter((e) => ['REPAIR', 'MAINTENANCE', 'TAX', 'COPRO', 'INSURANCE'].includes(e.category)).reduce((a, e) => a + e.amountCents, 0),
+            worksCents: exp.filter((e) => ['EXTENSION', 'ENERGY_RENOVATION'].includes(e.category)).reduce((a, e) => a + e.amountCents, 0),
+            loanInterestCents: extra?.loanInterestCents ?? 0,
+            adminFeesCents: extra?.adminFeesCents ?? 0,
+            purchase: file.purchase,
+            landSharePercent: file.lmnp?.landSharePercent,
+            furnitureCents: file.lmnp?.furnitureCents,
+          }
+        }),
+        furnishedProps.reduce((a, p) => a + (readProperty(p).tax?.[String(year)]?.lmnpCarriedCents ?? 0), 0),
+      )
+    : null
+  res.json({ success: true, data: { ...taxSummary(year, input), lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])) } })
 })
 
 // Intérêts d'emprunt et honoraires de l'année, saisis une fois et gardés avec le logement.
@@ -289,7 +325,7 @@ router.put('/properties/:id/tax/:year', async (req, res) => {
   const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
   if (!p) throw new HttpError(404, 'Logement introuvable.')
   const year = z.string().regex(/^\d{4}$/).parse(req.params.year)
-  const body = z.object({ loanInterestCents: z.number().int().min(0).max(100_000_000).nullable().optional(), adminFeesCents: z.number().int().min(0).max(100_000_000).nullable().optional(), coproRegularizationCents: z.number().int().min(0).max(100_000_000).nullable().optional() }).parse(req.body)
+  const body = z.object({ loanInterestCents: z.number().int().min(0).max(100_000_000).nullable().optional(), adminFeesCents: z.number().int().min(0).max(100_000_000).nullable().optional(), coproRegularizationCents: z.number().int().min(0).max(100_000_000).nullable().optional(), lmnpCarriedCents: z.number().int().min(0).max(1_000_000_000).nullable().optional() }).parse(req.body)
   const file = readProperty(p)
   const next = propertyFileSchema.parse({ ...file, tax: { ...(file.tax ?? {}), [year]: { ...(file.tax?.[year] ?? {}), ...body } } })
   await prisma.property.update({ where: { id: p.id }, data: { data: next } })

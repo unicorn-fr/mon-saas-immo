@@ -3,7 +3,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Guide } from '../../components/Sources'
 import { display } from '../../components/ui'
-import { Callout, Card, Chips, Crumbs, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Callout, Card, Chips, Crumbs, Input, LoadError, Loader, Money, NumberField, Pill, TextLink, useLoad, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
 import { eurosCents } from '../../lib/format'
 
@@ -28,8 +28,10 @@ interface TaxView {
   properties: PropertyTax[]
   empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number; better: 'MICRO' | 'REAL' | null; deficit?: { totalCents: number; globalCents: number; carriedCents: number; ceilingCents?: number } | null } | null
   furnished: { receiptsCents: number; microAllowed: boolean; microTaxableCents: number } | null
+  lmnp?: { receiptsCents: number; chargesCents: number; resultBeforeAmortCents: number; amortYearCents: number; amortAvailableCents: number; amortUsedCents: number; amortCarriedCents: number; deficitCents: number; taxableCents: number; microTaxableCents: number; better: 'MICRO' | 'REAL'; missingPurchase: boolean } | null
+  lmnpSettings?: Record<string, { name: string; purchase: { priceCents?: number | null; date?: string | null } | null; landSharePercent: number | null; furnitureCents: number | null }>
   unassignedExpensesCents: number
-  extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }>
+  extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null; lmnpCarriedCents?: number | null }>
 }
 
 const thisYear = new Date().getFullYear()
@@ -44,7 +46,16 @@ export default function Declaration() {
   const { data, error, loading, reload } = useLoad(() => api<TaxView>(`/money/tax?year=${year}`), [year])
   // Enregistré quelques instants après la saisie, puis le calcul est relancé.
   const timers = useRef<Record<string, number>>({})
-  const saveExtra = (propertyId: string, patch: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }) => {
+  // Réglages du meublé au réel (terrain, mobilier, prix d'achat), gardés dans la fiche du logement.
+  const saveTo = (path: string, body: Record<string, unknown>) => {
+    window.clearTimeout(timers.current[path])
+    timers.current[path] = window.setTimeout(() => {
+      api(path, { method: 'PUT', body })
+        .then(() => reload())
+        .catch((e) => toast.error(e))
+    }, 700)
+  }
+  const saveExtra = (propertyId: string, patch: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null; lmnpCarriedCents?: number | null }) => {
     const key = `${propertyId}:${Object.keys(patch)[0]}`
     window.clearTimeout(timers.current[key])
     timers.current[key] = window.setTimeout(() => {
@@ -132,14 +143,42 @@ export default function Declaration() {
             <Card title="Location meublée : loueur en meublé non professionnel" action={<Guide to="impotsMeuble" label="Fiche officielle" />}>
               <Regime
                 title="Micro-BIC"
-                better
                 disabled={!data.furnished.microAllowed}
                 lines={[
                   ['Case 5ND de la déclaration 2042-C-PRO', eurosCents(data.furnished.receiptsCents)],
                   ['Imposé après l’abattement de 50 %', eurosCents(data.furnished.microTaxableCents)],
                 ]}
-                text="Recettes de l’année, charges comprises, si elles ne dépassent pas 77 700 €. Le régime réel demande une comptabilité : un expert-comptable s’en charge, souvent avec un amortissement du logement très avantageux."
+                better={data.lmnp ? data.lmnp.better === 'MICRO' : true}
+                text="Recettes de l’année, charges comprises, si elles ne dépassent pas 77 700 €."
               />
+              {data.lmnp ? (
+                <Regime
+                  title="Régime réel (estimation)"
+                  better={data.lmnp.better === 'REAL'}
+                  lines={[
+                    ['Recettes', eurosCents(data.lmnp.receiptsCents)],
+                    ['Charges, intérêts et frais', `- ${eurosCents(data.lmnp.chargesCents)}`],
+                    ['Amortissements déduits', `- ${eurosCents(data.lmnp.amortUsedCents)}`],
+                    ['Résultat imposable estimé', eurosCents(data.lmnp.taxableCents)],
+                    ...(data.lmnp.amortCarriedCents ? ([['Amortissements reportés aux années suivantes', eurosCents(data.lmnp.amortCarriedCents)]] as Array<[string, string]>) : []),
+                    ...(data.lmnp.deficitCents ? ([['Déficit reportable 10 ans (location meublée)', eurosCents(data.lmnp.deficitCents)]] as Array<[string, string]>) : []),
+                  ]}
+                  text="Amortissement simplifié : logement hors terrain sur 30 ans, mobilier sur 7 ans, travaux d’amélioration sur 15 ans. Il ne peut pas créer de déficit : le reste est reporté. Pour opter pour le réel, la liasse 2031 se fait avec un expert-comptable ou un logiciel agréé ; depuis 2025, les amortissements déduits sont repris dans la plus-value à la vente."
+                />
+              ) : null}
+              {data.lmnp?.missingPurchase ? <Callout tone="tip">Indiquez le prix d’achat de chaque logement meublé : sans lui, l’amortissement du logement n’est pas compté.</Callout> : null}
+              {Object.entries(data.lmnpSettings ?? {}).map(([id, st]) => (
+                <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>{st.name} : pour le régime réel</span>
+                  <div className="grid-2" style={{ gap: 12 }}>
+                    <Money label="Prix d’achat (frais de notaire compris)" cents={st.purchase?.priceCents ?? null} onChange={(c) => saveTo(`/properties/${id}/purchase`, { priceCents: c, date: st.purchase?.date ?? null })} />
+                    <Input label="Date d’achat ou de première location" type="date" value={st.purchase?.date ?? ''} onChange={(v) => saveTo(`/properties/${id}/purchase`, { priceCents: st.purchase?.priceCents ?? null, date: v || null })} />
+                    <NumberField label="Part du terrain dans le prix (%)" value={st.landSharePercent ?? 15} onChange={(v) => saveTo(`/properties/${id}/lmnp`, { landSharePercent: v })} hint="Le terrain ne s’amortit pas : 15 % est courant en appartement, davantage en maison." />
+                    <Money label="Valeur du mobilier" cents={st.furnitureCents ?? null} onChange={(c) => saveTo(`/properties/${id}/lmnp`, { furnitureCents: c })} />
+                    <Money label="Amortissements reportés des années précédentes" cents={data.extras[id]?.lmnpCarriedCents ?? null} onChange={(c) => saveExtra(id, { lmnpCarriedCents: c })} hint="Sur la liasse de l’an dernier, s’il y en a." />
+                  </div>
+                </div>
+              ))}
             </Card>
           ) : null}
           {data.unassignedExpensesCents ? <Callout tone="warn">{eurosCents(data.unassignedExpensesCents)} de dépenses ne sont rattachées à aucun logement : elles ne sont pas comptées. <TextLink to="/espace/argent" style={{ fontSize: 13 }}>Les rattacher</TextLink></Callout> : null}
