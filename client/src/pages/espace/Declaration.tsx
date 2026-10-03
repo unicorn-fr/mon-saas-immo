@@ -19,16 +19,17 @@ interface PropertyTax {
   rentCents: number
   chargesCents: number
   unclassifiedCents: number
+  nonDeductibleCents?: number
   lines: TaxLine[]
   resultCents: number
 }
 interface TaxView {
   year: number
   properties: PropertyTax[]
-  empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number; better: 'MICRO' | 'REAL' | null } | null
+  empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number; better: 'MICRO' | 'REAL' | null; deficit?: { totalCents: number; globalCents: number; carriedCents: number } | null } | null
   furnished: { receiptsCents: number; microAllowed: boolean; microTaxableCents: number } | null
   unassignedExpensesCents: number
-  extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null }>
+  extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }>
 }
 
 const thisYear = new Date().getFullYear()
@@ -43,7 +44,7 @@ export default function Declaration() {
   const { data, error, loading, reload } = useLoad(() => api<TaxView>(`/money/tax?year=${year}`), [year])
   // Enregistré quelques instants après la saisie, puis le calcul est relancé.
   const timers = useRef<Record<string, number>>({})
-  const saveExtra = (propertyId: string, patch: { loanInterestCents?: number | null; adminFeesCents?: number | null }) => {
+  const saveExtra = (propertyId: string, patch: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }) => {
     const key = `${propertyId}:${Object.keys(patch)[0]}`
     window.clearTimeout(timers.current[key])
     timers.current[key] = window.setTimeout(() => {
@@ -105,7 +106,7 @@ export default function Declaration() {
                     <span>
                       <span style={{ color: BAI.inkSoft, fontVariantNumeric: 'tabular-nums' }}>Ligne {l.line}</span> · {l.label}
                     </span>
-                    <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{l.line === '211' ? eurosCents(l.cents) : `- ${eurosCents(l.cents)}`}</span>
+                    <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{l.line === '211' ? eurosCents(l.cents) : l.cents < 0 ? `+ ${eurosCents(-l.cents)}` : `- ${eurosCents(l.cents)}`}</span>
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, borderTop: `1px solid ${BAI.divider}`, paddingTop: 10 }}>
@@ -115,8 +116,15 @@ export default function Declaration() {
                 <div className="grid-2" style={{ gap: 12 }}>
                   <Money label="Intérêts d’emprunt payés (ligne 250)" cents={data.extras[p.id]?.loanInterestCents ?? null} onChange={(c) => saveExtra(p.id, { loanInterestCents: c })} hint="Sur le tableau d’amortissement de votre banque, pour cette année. Enregistré avec le logement." />
                   <Money label="Honoraires et frais de gestion (ligne 221)" cents={data.extras[p.id]?.adminFeesCents ?? null} onChange={(c) => saveExtra(p.id, { adminFeesCents: c })} hint="Agence, frais de procédure, comptable…" />
+                  <Money label="Régularisation des provisions de copropriété de l’an dernier (ligne 230)" cents={data.extras[p.id]?.coproRegularizationCents ?? null} onChange={(c) => saveExtra(p.id, { coproRegularizationCents: c })} hint="Part non déductible des provisions déduites l’an dernier, indiquée sur le décompte annuel du syndic. 0 si vous n’êtes pas en copropriété." />
                 </div>
+                {p.nonDeductibleCents ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{eurosCents(p.nonDeductibleCents)} de travaux de construction ou d’agrandissement ne se déduisent pas des loyers. Gardez les factures : ils comptent pour la plus-value si vous vendez.</span> : null}
                 {p.resultCents < 0 ? <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Un déficit foncier, hors intérêts d’emprunt, se déduit de votre revenu global dans la limite de 10 700 € par an ; le reste se reporte sur vos revenus fonciers des dix années suivantes.</span> : null}
+                {p === data.properties.filter((x) => !x.furnished).at(-1) && data.empty?.deficit && data.empty.better === 'REAL' ? (
+                  <Callout tone="info" title="Déficit foncier de l’année">
+                    {eurosCents(data.empty.deficit.totalCents)} au total : {eurosCents(data.empty.deficit.globalCents)} à déduire de votre revenu global (case 4BC), {eurosCents(data.empty.deficit.carriedCents)} à reporter sur vos revenus fonciers des dix années suivantes (case 4BD). Le plafond de 10 700 € est porté à 21 400 € pour certains travaux de rénovation énergétique : vérifiez sur impots.gouv.fr.
+                  </Callout>
+                ) : null}
                 {p.unclassifiedCents ? <span style={{ fontSize: 14, color: BAI.caramelInk }}>{eurosCents(p.unclassifiedCents)} de dépenses sont classées « autre » : précisez leur catégorie dans l’onglet Argent pour les déduire.</span> : null}
               </Card>
             ))}

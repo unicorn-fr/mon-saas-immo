@@ -8,6 +8,7 @@ import { Btn, Callout, Input, Modal, Money, Radio, Select, useToast } from './ki
 export const CATEGORY_OPTIONS: Array<{ value: Expense['category']; label: string }> = [
   { value: 'REPAIR', label: 'Réparation, travaux' },
   { value: 'MAINTENANCE', label: 'Entretien' },
+  { value: 'EXTENSION', label: 'Construction ou agrandissement (non déductible)' },
   { value: 'TAX', label: 'Impôt, taxe foncière' },
   { value: 'COPRO', label: 'Copropriété' },
   { value: 'INSURANCE', label: 'Assurance' },

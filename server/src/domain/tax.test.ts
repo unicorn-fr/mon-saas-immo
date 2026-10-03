@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { splitPayment, taxSummary, type TaxProperty } from './tax.js'
+import { foncierDeficit, splitPayment, taxSummary, type TaxProperty } from './tax.js'
 
 const months = (n: number, rent: number, charges: number) => Array.from({ length: n }, () => ({ rentCents: rent, chargesCents: charges }))
 
@@ -42,4 +42,28 @@ test('au-delà de 15 000 € de loyers : régime réel obligatoire ; meublé : m
   assert.equal(lmnp.empty, null)
   assert.deepEqual(splitPayment(56000, 51000), { rentCents: 51000, chargesCents: 5000 })
   assert.deepEqual(splitPayment(30000, 51000), { rentCents: 30000, chargesCents: 0 })
+})
+
+test('régime réel : agrandissement non déductible, régularisation des provisions, déficit foncier', () => {
+  const p: TaxProperty = {
+    id: 'd',
+    name: 'Maison',
+    furnished: false,
+    payments: months(12, 50000, 0),
+    expenses: [
+      { category: 'EXTENSION', amountCents: 3_000_000, recoverableCents: 0 },
+      { category: 'REPAIR', amountCents: 2_000_000, recoverableCents: 0 },
+      { category: 'COPRO', amountCents: 120000, recoverableCents: 0 },
+    ],
+    extra: { loanInterestCents: 300000, coproRegularizationCents: 20000 },
+  }
+  const s = taxSummary(2025, [p])
+  const prop = s.properties[0]
+  assert.equal(prop.nonDeductibleCents, 3_000_000)
+  assert.equal(prop.lines.find((l) => l.line === '230')?.cents, -20000)
+  // 600 000 de loyers ; charges hors intérêts : 2 000 + 2 000 000 + 120 000 − 20 000 ; intérêts : 300 000
+  assert.deepEqual(s.empty?.deficit, { totalCents: 2000 + 2_000_000 + 100000 + 300000 - 600000, globalCents: 1_070_000, carriedCents: 2000 + 2_000_000 + 100000 + 300000 - 600000 - 1_070_000 })
+  // Intérêts supérieurs aux loyers : ils ne s'imputent pas sur le revenu global
+  assert.deepEqual(foncierDeficit(500000, 700000, 300000), { totalCents: 500000, globalCents: 300000, carriedCents: 200000 })
+  assert.equal(foncierDeficit(500000, 100000, 100000), null)
 })

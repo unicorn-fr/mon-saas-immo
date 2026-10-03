@@ -27,8 +27,8 @@ const router = Router()
 // Session exigée sur les adresses de ce routeur seulement : une adresse inconnue reçoit « Page introuvable ».
 router.use(['/documents', '/expenses', '/files', '/money', '/properties'], requireUser)
 
-const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
-export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }
+const CATEGORIES = ['REPAIR', 'MAINTENANCE', 'EXTENSION', 'TAX', 'COPRO', 'INSURANCE', 'OTHER'] as const
+export const CATEGORY_LABEL: Record<string, string> = { REPAIR: 'réparation', MAINTENANCE: 'entretien', EXTENSION: 'construction ou agrandissement', TAX: 'impôt', COPRO: 'copropriété', INSURANCE: 'assurance', OTHER: 'autre' }
 
 const expenseSchema = z.object({
   propertyId: z.uuid().nullable().optional(),
@@ -289,7 +289,7 @@ router.put('/properties/:id/tax/:year', async (req, res) => {
   const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
   if (!p) throw new HttpError(404, 'Logement introuvable.')
   const year = z.string().regex(/^\d{4}$/).parse(req.params.year)
-  const body = z.object({ loanInterestCents: z.number().int().min(0).max(100_000_000).nullable().optional(), adminFeesCents: z.number().int().min(0).max(100_000_000).nullable().optional() }).parse(req.body)
+  const body = z.object({ loanInterestCents: z.number().int().min(0).max(100_000_000).nullable().optional(), adminFeesCents: z.number().int().min(0).max(100_000_000).nullable().optional(), coproRegularizationCents: z.number().int().min(0).max(100_000_000).nullable().optional() }).parse(req.body)
   const file = readProperty(p)
   const next = propertyFileSchema.parse({ ...file, tax: { ...(file.tax ?? {}), [year]: { ...(file.tax?.[year] ?? {}), ...body } } })
   await prisma.property.update({ where: { id: p.id }, data: { data: next } })

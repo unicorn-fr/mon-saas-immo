@@ -33,3 +33,13 @@ test('nouveau bail : loyer du locataire précédent, dernier versement, dernièr
   assert.equal(v.terms.previous.lastRevisionDate, '2026-10-01')
   assert.match(v.terms.works.sinceLast, /Remplacement du chauffe-eau \(890 €/)
 })
+
+test('échéances fiscales : occupation des logements après un nouveau bail, CFE en meublé', async () => {
+  const { token } = await newAccount()
+  const { leaseId } = await completeLease(token)
+  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  const today = await api('/today', { token })
+  const labels = today.upcoming.map((u) => u.label).join(' | ')
+  assert.match(labels, /Gérer mes biens immobiliers/)
+  if (new Date().getUTCMonth() >= 9) assert.match(labels, /CFE de la location meublée/)
+})

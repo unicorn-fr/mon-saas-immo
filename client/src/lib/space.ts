@@ -46,7 +46,7 @@ export interface Expense {
   id: string
   vendor: string
   description: string | null
-  category: 'REPAIR' | 'MAINTENANCE' | 'TAX' | 'COPRO' | 'INSURANCE' | 'OTHER'
+  category: 'REPAIR' | 'MAINTENANCE' | 'EXTENSION' | 'TAX' | 'COPRO' | 'INSURANCE' | 'OTHER'
   categoryLabel: string
   amountCents: number
   recoverableCents: number

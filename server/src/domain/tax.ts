@@ -12,6 +12,8 @@ export const MICRO_FONCIER_CEILING_CENTS = 15_000_00
 export const MICRO_BIC_CEILING_CENTS = 77_700_00
 /** Ligne 222 de la 2044 : forfait de frais de gestion par local. */
 export const MANAGEMENT_FLAT_CENTS = 20_00
+/** Déficit foncier imputable sur le revenu global (hors intérêts d'emprunt), par an. */
+export const DEFICIT_GLOBAL_CEILING_CENTS = 10_700_00
 
 export interface TaxProperty {
   id: string
@@ -21,7 +23,7 @@ export interface TaxProperty {
   payments: { rentCents: number; chargesCents: number }[]
   expenses: { category: string; amountCents: number; recoverableCents: number }[]
   /** Saisis par le propriétaire pour l'année : intérêts d'emprunt, frais d'administration (honoraires…). */
-  extra?: { loanInterestCents?: number | null; adminFeesCents?: number | null } | null
+  extra?: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null } | null
 }
 
 export interface TaxLine {
@@ -38,6 +40,8 @@ export interface PropertyTax {
   chargesCents: number
   /** Dépenses classées « autre » : à vérifier, non reprises dans les lignes. */
   unclassifiedCents: number
+  /** Construction, reconstruction, agrandissement : non déductibles (à garder pour la plus-value à la vente). */
+  nonDeductibleCents: number
   lines: TaxLine[]
   resultCents: number
 }
@@ -53,6 +57,8 @@ export interface TaxSummary {
     realResultCents: number
     /** Régime le plus favorable d'après les sommes enregistrées. */
     better: 'MICRO' | 'REAL' | null
+    /** Régime réel en déficit : part imputable sur le revenu global (case 4BC) et part reportée sur les revenus fonciers (case 4BD). */
+    deficit: { totalCents: number; globalCents: number; carriedCents: number } | null
   } | null
   furnished: {
     receiptsCents: number
@@ -77,6 +83,7 @@ export function propertyTax(p: TaxProperty): PropertyTax {
         { line: '224', label: 'Travaux de réparation, d’entretien et d’amélioration', cents: owner(['REPAIR', 'MAINTENANCE']) },
         { line: '227', label: 'Taxe foncière (hors taxe d’ordures ménagères récupérable)', cents: owner(['TAX']) },
         { line: '229', label: 'Provisions pour charges de copropriété (part non récupérable)', cents: owner(['COPRO']) },
+        { line: '230', label: 'Régularisation des provisions de l’année précédente (à déduire)', cents: -(p.extra?.coproRegularizationCents ?? 0) },
         { line: '250', label: 'Intérêts d’emprunt', cents: p.extra?.loanInterestCents ?? 0 },
       ]
   const deductions = sum(lines.filter((l) => l.line !== '211'), (l) => l.cents)
@@ -87,6 +94,7 @@ export function propertyTax(p: TaxProperty): PropertyTax {
     rentCents: rent,
     chargesCents: charges,
     unclassifiedCents: sum(p.expenses.filter((e) => e.category === 'OTHER'), (e) => e.amountCents),
+    nonDeductibleCents: sum(p.expenses.filter((e) => e.category === 'EXTENSION'), (e) => e.amountCents),
     lines,
     resultCents: p.furnished ? rent + charges : rent - deductions,
   }
@@ -100,11 +108,19 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
   const real = sum(empty, (p) => p.resultCents)
   const microTaxable = Math.round(gross * 0.7)
   const receipts = sum(furnished, (p) => p.rentCents + p.chargesCents)
+  const interest = sum(empty, (p) => p.lines.find((l) => l.line === '250')?.cents ?? 0)
   return {
     year,
     properties,
     empty: empty.length
-      ? { grossRentCents: gross, microAllowed: gross <= MICRO_FONCIER_CEILING_CENTS, microTaxableCents: microTaxable, realResultCents: real, better: gross <= MICRO_FONCIER_CEILING_CENTS ? (real < microTaxable ? 'REAL' : 'MICRO') : 'REAL' }
+      ? {
+          grossRentCents: gross,
+          microAllowed: gross <= MICRO_FONCIER_CEILING_CENTS,
+          microTaxableCents: microTaxable,
+          realResultCents: real,
+          better: gross <= MICRO_FONCIER_CEILING_CENTS ? (real < microTaxable ? 'REAL' : 'MICRO') : 'REAL',
+          deficit: foncierDeficit(gross, interest, gross - real - interest),
+        }
       : null,
     furnished: furnished.length ? { receiptsCents: receipts, microAllowed: receipts <= MICRO_BIC_CEILING_CENTS, microTaxableCents: Math.round(receipts * 0.5) } : null,
   }
@@ -114,4 +130,21 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
 export function splitPayment(amountCents: number, rentCents: number): { rentCents: number; chargesCents: number } {
   const rent = Math.min(amountCents, rentCents)
   return { rentCents: rent, chargesCents: Math.max(0, amountCents - rent) }
+}
+
+/**
+ * Déficit foncier au régime réel (CGI, art. 156, I-3°) : la part due aux intérêts d'emprunt ne s'impute que sur les
+ * revenus fonciers des 10 années suivantes ; le reste s'impute sur le revenu global dans la limite de 10 700 € par an,
+ * l'excédent étant reporté. Plafond porté à 21 400 € pour certains travaux de rénovation énergétique (2023 à 2025) :
+ * non pris en compte ici, à vérifier sur impots.gouv.fr.
+ */
+export function foncierDeficit(grossCents: number, interestCents: number, otherChargesCents: number): { totalCents: number; globalCents: number; carriedCents: number } | null {
+  const total = interestCents + otherChargesCents - grossCents
+  if (total <= 0) return null
+  if (interestCents >= grossCents) {
+    const global = Math.min(otherChargesCents, DEFICIT_GLOBAL_CEILING_CENTS)
+    return { totalCents: total, globalCents: global, carriedCents: total - global }
+  }
+  const global = Math.min(total, DEFICIT_GLOBAL_CEILING_CENTS)
+  return { totalCents: total, globalCents: global, carriedCents: total - global }
 }

@@ -180,6 +180,23 @@ router.get('/today', async (req, res) => {
     upcoming.push({ date: short(r.dueDate), label, sort: r.dueDate.getTime() })
   }
   for (const i of await upcomingInterventions(user.id)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
+  // Échéances fiscales, déduites des loyers et des baux (dates indicatives : à vérifier chaque année sur impots.gouv.fr).
+  const y = now.getUTCFullYear()
+  const lastYearPaid = leases.some((l) => l.payments.some((p) => p.period.startsWith(String(y - 1))))
+  if (lastYearPaid && now.getUTCMonth() <= 5) {
+    const d = new Date(Date.UTC(y, 4, 31))
+    upcoming.push({ date: 'fin mai', label: `Déclaration des revenus ${y - 1} : vos loyers et dépenses sont prêts dans Argent`, sort: d.getTime() })
+  }
+  // Occupation des logements (« Gérer mes biens immobiliers ») : à mettre à jour avant le 1er juillet après un changement de locataire.
+  const july = new Date(Date.UTC(now.getUTCMonth() >= 6 ? y + 1 : y, 6, 1))
+  const yearBefore = new Date(Date.UTC(july.getUTCFullYear() - 1, 6, 1))
+  const changed = leases.some((l) => (l.status !== 'DRAFT' && l.startDate >= yearBefore && l.startDate < july) || (l.status === 'ENDED' && l.endDate >= yearBefore && l.endDate < july))
+  if (changed) upcoming.push({ date: short(july), label: 'Déclarer l’occupation de vos logements sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: july.getTime() - 1 })
+  // Location meublée : cotisation foncière des entreprises (CFE) le 15 décembre, sauf recettes de 5 000 € ou moins.
+  if (now.getUTCMonth() >= 9 && leases.some((l) => l.type === 'FURNISHED' && (l.status === 'ACTIVE' || l.status === 'IMPORTED'))) {
+    const cfe = new Date(Date.UTC(y, 11, 15))
+    upcoming.push({ date: short(cfe), label: 'CFE de la location meublée (exonérée si vos recettes ne dépassent pas 5 000 €)', sort: cfe.getTime() })
+  }
   upcoming.sort((a, b) => a.sort - b.sort)
 
   const expected = running.length

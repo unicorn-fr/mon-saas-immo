@@ -220,7 +220,7 @@ export const propertyFileSchema = z.object({
   /** Assurance du propriétaire (PNO) : numéro de contrat repris dans les déclarations de sinistre. */
   ownerInsurance: opt(z.object({ policyNumber: opt(text(60)), contactId: opt(z.string().uuid()) })),
   /** Par année de déclaration : sommes saisies une fois pour l'aide fiscale (intérêts d'emprunt, honoraires). */
-  tax: opt(z.record(z.string().regex(/^\d{4}$/), z.object({ loanInterestCents: opt(cents), adminFeesCents: opt(cents) }))),
+  tax: opt(z.record(z.string().regex(/^\d{4}$/), z.object({ loanInterestCents: opt(cents), adminFeesCents: opt(cents), coproRegularizationCents: opt(cents) }))),
   /** Annonce de mise en location : réglages gardés pour la prochaine fois. */
   ad: opt(
     z.object({
