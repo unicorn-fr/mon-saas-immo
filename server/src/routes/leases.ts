@@ -27,6 +27,8 @@ import {
   maxDepositFor,
   renewalLabel,
   rentControlLikely,
+  isTenseZone,
+  rentControlFor,
   rentRevisionAllowed,
   rentalForbidden,
   rentIssues,
@@ -277,7 +279,8 @@ router.post('/leases', async (req, res) => {
     paymentDay: rent.paymentDay ?? 5,
     paymentTerm: 'ADVANCE',
     paymentMethod: 'TRANSFER',
-    zone: { tense: file.market?.tense ?? (rentControlLikely(file.inseeCode) ? true : undefined), control: rentControlLikely(file.inseeCode) },
+    // Zone tendue et encadrement : d'après les listes officielles des communes, sauf si le propriétaire a indiqué autre chose.
+    zone: { tense: file.market?.tense ?? isTenseZone(file.inseeCode) ?? undefined, control: rentControlFor(file.inseeCode) === 'full' ? true : rentControlFor(file.inseeCode) === 'partial' ? undefined : false },
     previous: prev
       ? {
           rentedWithin18Months: true,

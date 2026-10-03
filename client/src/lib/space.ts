@@ -77,6 +77,8 @@ export interface PropertyDetails extends PropertySummary {
   diagnostics: DiagnosticRule[]
   energyWarning: string | null
   rentControlLikely: boolean
+  tenseOfficial?: boolean | null
+  rentControl?: 'full' | 'partial' | null
   leases: Array<{ id: string; status: LeaseStatus; kind: LeaseKind; tenantName: string; startDate: string; endDate: string; rentCents: number; chargesCents: number; depositCents: number; rent: RentStatus }>
   tenants: Array<{ id: string; name: string }>
   year: { year: number; incomeCents: number; expensesCents: number }

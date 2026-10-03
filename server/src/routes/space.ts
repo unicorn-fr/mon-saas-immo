@@ -8,7 +8,7 @@ import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
 import { landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
 import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantCompletion } from '../domain/completion.js'
-import { diagnosticsFor, energyRentalWarning, rentControlLikely } from '../domain/rules.js'
+import { diagnosticsFor, energyRentalWarning, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { iso, mergeFile } from './helpers.js'
 import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
@@ -148,8 +148,15 @@ router.get('/properties', async (req, res) => {
   res.json({ success: true, data: props.map((p) => propertySummary(p, names)) })
 })
 
+/** Zone tendue non renseignée : reprise de la liste officielle des communes (le propriétaire peut corriger). */
+function withOfficialZone(f: PropertyFile): PropertyFile {
+  const tense = isTenseZone(f.inseeCode)
+  if (tense === null || (f.market?.tense !== undefined && f.market?.tense !== null)) return f
+  return { ...f, market: { ...f.market, tense } }
+}
+
 router.post('/properties', async (req, res) => {
-  const file = propertyFileSchema.parse(req.body)
+  const file = withOfficialZone(propertyFileSchema.parse(req.body))
   if (!file.address) throw new HttpError(400, 'Indiquez l’adresse du logement.')
   const p = await prisma.property.create({ data: { userId: req.user!.id, ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
@@ -198,6 +205,9 @@ router.get('/properties/:id', async (req, res) => {
       journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [],
       energyWarning: energyRentalWarning(f.diagnostics?.dpe?.class),
       rentControlLikely: rentControlLikely(f.inseeCode),
+      /** D'après les listes officielles des communes : zone tendue (null si commune inconnue) et encadrement. */
+      tenseOfficial: isTenseZone(f.inseeCode),
+      rentControl: rentControlFor(f.inseeCode),
       leases: p.leases.map((l) => ({ id: l.id, status: l.status, kind: leaseKindOf(l), tenantName: leaseTenantLabel(l, names), startDate: iso(l.startDate), endDate: iso(l.endDate), rentCents: l.rentCents, chargesCents: l.chargesCents, depositCents: l.depositCents, rent: rentStatus(l, l.payments) })),
       tenants: tenants.map((t) => ({ id: t.id, name: tenantName(readTenant(t)) })),
       year: { year, incomeCents: income, expensesCents: spent },
@@ -212,7 +222,7 @@ router.get('/properties/:id', async (req, res) => {
 router.put('/properties/:id', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const patch = propertyFileSchema.partial().parse(req.body)
-  const file = propertyFileSchema.parse(mergeFile(readProperty(p), patch))
+  const file = withOfficialZone(propertyFileSchema.parse(mergeFile(readProperty(p), patch)))
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })

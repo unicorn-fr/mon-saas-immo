@@ -1,5 +1,7 @@
 import type { LandlordProfile, LeaseKind, LeaseTerms, PropertyFile } from './contract.js'
 import { addDays, addMonths, parseIsoDate, toIsoDate as toIso } from './lease.js'
+import { RENT_CONTROL_COMMUNES, RENT_CONTROL_END } from './data/encadrement.js'
+import { ZONES_TENDUES } from './data/zonesTendues.js'
 
 /**
  * Règles de la loi n° 89-462 du 6 juillet 1989 appliquées aux fiches Bailio.
@@ -213,21 +215,35 @@ export function diagnosticsFor(p: PropertyFile): DiagnosticRule[] {
   ]
 }
 
-/** Communes où l'encadrement des loyers s'applique (loi ELAN, art. 140). Liste indicative : le propriétaire confirme. */
-const RENT_CONTROL = new Set([
-  '75056', ...Array.from({ length: 20 }, (_, i) => String(75101 + i)), // Paris
-  '59350', '59298', '59355', // Lille, Hellemmes, Lomme
-  '93001', '93027', '93031', '93039', '93059', '93066', '93070', '93072', '93079', // Plaine Commune
-  '93006', '93008', '93010', '93045', '93048', '93053', '93055', '93061', '93063', // Est Ensemble
-  '69123', ...Array.from({ length: 9 }, (_, i) => String(69381 + i)), '69266', // Lyon, Villeurbanne
-  '34172', // Montpellier
-  '33063', // Bordeaux
-  '38185', // Grenoble (Grenoble-Alpes Métropole, une vingtaine de communes : à confirmer par le propriétaire)
-  '64102', '64122', '64024', // Bayonne, Biarritz, Anglet (Pays basque, 24 communes : à confirmer par le propriétaire)
-])
+/** Arrondissements de Paris, Lyon et Marseille : rattachés au code de la commune. */
+export function communeCode(inseeCode: string | null | undefined): string | null {
+  if (!inseeCode) return null
+  if (/^751(0[1-9]|1\d|20)$/.test(inseeCode)) return '75056'
+  if (/^6938[1-9]$/.test(inseeCode)) return '69123'
+  if (/^132(0[1-9]|1[0-6])$/.test(inseeCode)) return '13055'
+  return inseeCode
+}
+
+/**
+ * Zone tendue au sens de la loi du 6 juillet 1989 (préavis d'un mois, loyer plafonné à la relocation), d'après la
+ * liste officielle des communes (décret n° 2013-392 modifié). null : commune inconnue.
+ */
+export function isTenseZone(inseeCode: string | null | undefined): boolean | null {
+  const c = communeCode(inseeCode)
+  return c ? ZONES_TENDUES.has(c) : null
+}
+
+/** Encadrement des loyers (loi ELAN, art. 140) : toute la commune, une partie seulement, ou pas d'encadrement. */
+export function rentControlFor(inseeCode: string | null | undefined, onDate = new Date()): 'full' | 'partial' | null {
+  const c = communeCode(inseeCode)
+  if (!c) return null
+  // Après la fin de l'expérimentation, sauf prolongation votée : le propriétaire confirme lui-même.
+  if (onDate.toISOString().slice(0, 10) > RENT_CONTROL_END) return null
+  return RENT_CONTROL_COMMUNES[c] ?? null
+}
 
 export function rentControlLikely(inseeCode: string | null | undefined): boolean {
-  return Boolean(inseeCode && RENT_CONTROL.has(inseeCode))
+  return rentControlFor(inseeCode) !== null
 }
 
 /** Montant à payer pour le premier mois, au prorata des jours si l'entrée a lieu en cours de mois. */

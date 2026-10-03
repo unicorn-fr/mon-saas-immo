@@ -69,3 +69,14 @@ test('diagnostics : le fichier déposé est joint au PDF du bail ; un diagnostic
   await api(`/properties/${propertyId}`, { method: 'PUT', token, body: { diagnostics: { dpe: { class: 'C', ges: 'B', date: '2019-06-01', costMin: 610, costMax: 870, costYear: 2023 }, erp: { date: '2026-09-01' }, electricity: { installOver15: false }, gas: { hasGas: false } } } })
   await assert.rejects(api(`/leases/${leaseId}/sign`, { method: 'POST', token }), /ne sont plus valables : Performance énergétique/)
 })
+
+test('zone tendue : reprise de la liste officielle des communes à partir de l’adresse', async () => {
+  const { token } = await newAccount()
+  const p = await api('/properties', { method: 'POST', token, body: { ...PROPERTY, address: '5 quai de la Résistance, 34200 Sète', city: 'Sète', postalCode: '34200', inseeCode: '34301' } })
+  const v = await api(`/properties/${p.id}`, { token })
+  assert.equal(v.file.market.tense, true)
+  assert.equal(v.tenseOfficial, true)
+  assert.equal(v.rentControl, null)
+  const q = await api('/properties', { method: 'POST', token, body: { ...PROPERTY, address: '1 place du Capitole, 38000 Grenoble', city: 'Grenoble', postalCode: '38000', inseeCode: '38185' } })
+  assert.equal((await api(`/properties/${q.id}`, { token })).rentControl, 'partial')
+})

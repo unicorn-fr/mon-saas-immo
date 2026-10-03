@@ -183,3 +183,21 @@ test('validité des diagnostics : anciens DPE, état des risques de 6 mois, éle
   const p = { constructionPeriod: '1990_2005' as const, diagnostics: { dpe: { class: 'D' as const, date: '2019-06-01' }, erp: { date: '2026-01-10' } } }
   assert.deepEqual(expiredDiagnostics(p, new Date('2026-10-03')).map((d) => d.key), ['dpe', 'erp'])
 })
+
+test('zone tendue et encadrement d’après les listes officielles des communes', async () => {
+  const { isTenseZone, rentControlFor, communeCode } = await import('./rules.js')
+  assert.equal(communeCode('75111'), '75056')
+  assert.equal(communeCode('69383'), '69123')
+  assert.equal(communeCode('13208'), '13055')
+  assert.equal(isTenseZone('34172'), true) // Montpellier
+  assert.equal(isTenseZone('34301'), true) // Sète
+  assert.equal(isTenseZone('75111'), true) // Paris 11e
+  assert.equal(isTenseZone('01001'), false)
+  assert.equal(isTenseZone(null), null)
+  const before = new Date('2026-10-03')
+  assert.equal(rentControlFor('75111', before), 'full')
+  assert.equal(rentControlFor('64102', before), 'full') // Bayonne
+  assert.equal(rentControlFor('38185', before), 'partial') // Grenoble : certains quartiers seulement
+  assert.equal(rentControlFor('34301', before), null)
+  assert.equal(rentControlFor('75111', new Date('2026-12-01')), null, 'après la fin de l’expérimentation : à confirmer')
+})

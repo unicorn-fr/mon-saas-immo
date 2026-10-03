@@ -239,7 +239,8 @@ export default function FicheLogement() {
         <Computed
           rows={[
             ['Zone tendue', f.market?.tense === true ? 'Oui' : f.market?.tense === false ? 'Non' : 'À indiquer'],
-            ['Encadrement des loyers', view.rentControlLikely ? 'Commune concernée' : 'Non concerné'],
+            ['Liste officielle des zones tendues', view.tenseOfficial === true ? 'Commune en zone tendue' : view.tenseOfficial === false ? 'Commune hors zone tendue' : 'Adresse à choisir dans la liste pour vérifier'],
+            ['Encadrement des loyers', view.rentControl === 'full' ? 'Commune concernée' : view.rentControl === 'partial' ? 'Certains quartiers seulement : vérifiez sur le simulateur de la métropole' : 'Non concerné'],
             ['Loyer au changement de locataire', f.market?.tense ? 'Limité au dernier loyer (sauf exceptions)' : 'Libre'],
           ]}
         />
