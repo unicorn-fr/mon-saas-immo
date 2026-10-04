@@ -229,9 +229,47 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                       })
                       .catch(toast.error)
                   }
-                  label="Envoyer la quittance automatiquement"
-                  sub={l.facts?.eReceiptConsent || l.tenants.some((x) => x.email) ? 'Dès qu’un loyer est enregistré, ici ou depuis votre relevé bancaire, la quittance part par email au locataire.' : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'}
+                  label="Quittance automatique, 5 jours après l’échéance"
+                  sub={
+                    l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
+                      ? 'Chaque mois, 5 jours après la date de paiement, le loyer est noté reçu et la quittance part par email au locataire. Vous êtes prévenu 3 jours avant pour annuler si le loyer n’est pas arrivé.'
+                      : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
+                  }
                 />
+              ) : null}
+              {l.facts?.autoReceipt ? (
+                l.facts.autoReceipt.held ? (
+                  <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>
+                    Une quittance prouve que le loyer est payé : elle ne part pas tant que le loyer n’est pas reçu.{' '}
+                    <TextLink to={`/espace/baux/${l.id}/courriers?type=REMINDER`} style={{ fontSize: 14 }}>
+                      Envoyer une demande de paiement
+                    </TextLink>
+                    {' · '}
+                    <TextLink
+                      style={{ fontSize: 14 }}
+                      onClick={guard(async () => {
+                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: false } })
+                        reload()
+                      })}
+                    >
+                      Rétablir l’envoi
+                    </TextLink>
+                  </Callout>
+                ) : (
+                  <Callout tone="info" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi automatique le ${dateShort(l.facts.autoReceipt.sendOn)}`}>
+                    Le loyer n’est pas arrivé sur votre compte ?{' '}
+                    <TextLink
+                      style={{ fontSize: 14 }}
+                      onClick={guard(async () => {
+                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: true } })
+                        toast.show('Envoi annulé.')
+                        reload()
+                      })}
+                    >
+                      Annuler l’envoi
+                    </TextLink>
+                  </Callout>
+                )
               ) : null}
               {l.payments.length ? (
                 l.payments.map((p) => (

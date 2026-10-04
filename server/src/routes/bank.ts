@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
-import { leaseOwned, propertyName, readTenant, readTerms, tenantName } from '../services/contract.js'
+import { leaseOwned, propertyName, readTenant, tenantName } from '../services/contract.js'
 import { parseStatement } from '../domain/bankStatement.js'
 import { matchRents, type ExpectedRent } from '../domain/rentMatch.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
@@ -15,7 +15,7 @@ import { patchLeaseData, recordPayment } from './leases.js'
  * Le fichier est lu en mémoire sur notre serveur et n'est jamais enregistré : seuls les loyers validés le sont.
  */
 const router = Router()
-router.use(['/bank', '/leases/:id/receipt-auto'], requireUser)
+router.use(['/bank', '/leases/:id/receipt-auto', '/leases/:id/receipt-hold'], requireUser)
 
 const periodOf = (d: string) => d.slice(0, 7)
 const nextPeriod = (p: string) => {
@@ -42,7 +42,7 @@ router.post('/bank/statement', upload.single('file'), async (req, res) => {
   const tenantRows = await prisma.tenant.findMany({ where: { userId: user.id } })
   const expected: ExpectedRent[] = []
   for (const l of leases) {
-    const day = readTerms(l).paymentDay ?? 1
+    const day = l.paymentDay
     const paid = new Set(l.payments.map((p) => p.period))
     const tenants = l.tenantIds.map((id) => tenantRows.find((t) => t.id === id)).filter((t): t is NonNullable<typeof t> => Boolean(t)).map(readTenant)
     const names = tenants.flatMap((t) => [tenantName(t), t.guarantor ? `${t.guarantor.firstNames ?? ''} ${t.guarantor.lastName ?? ''}` : '']).filter((n) => n.trim())
@@ -95,6 +95,19 @@ router.put('/leases/:id/receipt-auto', async (req, res) => {
   const { auto } = z.object({ auto: z.boolean() }).parse(req.body)
   await patchLeaseData(lease.id, () => ({ receiptAuto: auto }))
   res.json({ success: true, data: { receiptAuto: auto } })
+})
+
+// Loyer pas arrivé : la quittance automatique de ce mois ne part pas (et peut être rétablie).
+router.post('/leases/:id/receipt-hold', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  const { period, hold } = z.object({ period: z.string().regex(/^\d{4}-\d{2}$/), hold: z.boolean() }).parse(req.body)
+  await patchLeaseData(lease.id, (f) => {
+    const held = { ...((f as { receiptHold?: Record<string, string> }).receiptHold ?? {}) }
+    if (hold) held[period] = new Date().toISOString()
+    else delete held[period]
+    return { receiptHold: held }
+  })
+  res.json({ success: true, data: { period, hold } })
 })
 
 export default router

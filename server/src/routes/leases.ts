@@ -35,6 +35,7 @@ import {
   expiredDiagnostics,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
+import { upcomingAutoReceipt } from '../domain/autoReceipt.js'
 import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderLeasePdf } from '../services/annexes.js'
@@ -177,7 +178,11 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: Boolean((lease.data as { receiptAuto?: boolean }).receiptAuto) },
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: Boolean((lease.data as { receiptAuto?: boolean }).receiptAuto),
+      autoReceipt:
+        (lease.data as { receiptAuto?: boolean }).receiptAuto && (lease.status === 'ACTIVE' || lease.status === 'IMPORTED')
+          ? upcomingAutoReceipt({ today: new Date().toISOString().slice(0, 10), paymentDay: lease.paymentDay, startDate: lease.startDate.toISOString().slice(0, 10), paid: new Set(payments.map((p) => p.period)), held: (lease.data as { receiptHold?: Record<string, string> }).receiptHold ?? {} })
+          : null },
     checklist,
     esignPending,
     reopen,

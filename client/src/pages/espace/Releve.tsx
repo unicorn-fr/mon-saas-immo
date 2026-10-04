@@ -164,7 +164,7 @@ export default function Releve() {
       ) : null}
 
       <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>
-        Pour que les quittances partent seules, activez « Envoyer la quittance automatiquement » sur la page de chaque bail (carte « Loyers et quittances »).{' '}
+        Avec la « Quittance automatique » activée sur la page du bail, un loyer enregistré ici fait partir sa quittance tout de suite.{' '}
         <TextLink to="/espace/argent" style={{ fontSize: 14 }}>
           Retour à l’argent
         </TextLink>

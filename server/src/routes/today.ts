@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
@@ -7,7 +8,7 @@ import { requireUser } from '../services/session.js'
 import { ensureReminders } from '../services/reminders.js'
 import { upgradeLegacyLeases } from '../services/upgrade.js'
 import { leaseKindOf, propertyName, readTenant, readTerms, tenantName } from '../services/contract.js'
-import { formatEuros } from '../domain/lease.js'
+import { formatEuros, monthYearFr } from '../domain/lease.js'
 import { revisedRent } from '../domain/letters.js'
 import { landlordNoticeMonthsFor, rentRevisionAllowed } from '../domain/rules.js'
 import { iso } from './helpers.js'
@@ -32,7 +33,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -82,6 +83,14 @@ router.get('/today', async (req, res) => {
     const st = rentStatus(l, l.payments, now)
     const who = leaseTenantLabel(l, names) || 'votre locataire'
     const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), l.paymentDay))
+    // Quittance automatique prévue : le propriétaire confirme que le loyer est arrivé, ou annule l'envoi.
+    const facts = (l.data ?? {}) as { receiptAuto?: boolean; receiptHold?: Record<string, string> }
+    const auto = facts.receiptAuto ? upcomingAutoReceipt({ today: now.toISOString().slice(0, 10), paymentDay: l.paymentDay, startDate: l.startDate.toISOString().slice(0, 10), paid: new Set(l.payments.map((p) => p.period)), held: facts.receiptHold ?? {} }) : null
+    if (auto && !auto.held && now.toISOString().slice(0, 10) >= warnDateOf(auto.period, l.paymentDay)) {
+      const [ay, am] = auto.period.split('-').map(Number)
+      tasks.push({ id: `auto-${l.id}-${auto.period}`, type: 'AUTO_RECEIPT', tag: 'Quittance automatique', tone: 'owner', place: propertyName(l.property), title: `La quittance de ${monthYearFr(ay, am)} part le ${short(new Date(`${auto.sendOn}T00:00:00Z`))} : le loyer de ${who} est-il arrivé ?`, text: 'Si oui, il n’y a rien à faire. Sinon, annulez l’envoi : une quittance prouve que le loyer est payé.', leaseId: l.id, period: auto.period })
+      if (auto.period === period) continue
+    }
     if (st.key === 'LATE') {
       tasks.push({ id: `late-${l.id}`, type: 'LATE_RENT', tag: 'Loyer en retard', tone: 'error', place: propertyName(l.property), title: `Le loyer de ${who} n’est pas arrivé (attendu le ${short(dueDate)})`, text: 'Une relance amiable, polie et courte, est rédigée. Vous pouvez la relire avant l’envoi.', leaseId: l.id, amountCents: l.rentCents + l.chargesCents, period })
     } else if (st.key === 'PARTIAL') {

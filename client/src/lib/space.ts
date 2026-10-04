@@ -209,12 +209,12 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
-  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean }
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null }
 }
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string

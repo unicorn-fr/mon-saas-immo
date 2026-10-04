@@ -144,6 +144,12 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
         { label: 'Le loyer est arrivé', variant: 'outline', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance est prête dans vos documents.') },
       ]
       break
+    case 'AUTO_RECEIPT':
+      actions = [
+        { label: 'Le loyer est arrivé', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance part à votre locataire.') },
+        { label: 'Pas arrivé : annuler l’envoi', variant: 'outline', onClick: () => run(() => api(`/leases/${t.leaseId}/receipt-hold`, { method: 'POST', body: { period: t.period, hold: true } }), 'Envoi annulé. Vous pouvez envoyer une relance depuis le bail.') },
+      ]
+      break
     case 'PARTIAL_RENT':
       actions = [
         { label: 'Le solde est arrivé', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Paiement complet enregistré. La quittance remplace le reçu.') },
