@@ -48,7 +48,7 @@ docs/     maquette et documents de conception
 
 **API (`server/.env`)** — voir `server/.env.example` :
 `DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails ; `FRONTEND_URL` accepté), `CORS_ORIGINS` (`CORS_ORIGIN` accepté),
-emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) ou Resend (`RESEND_API_KEY`), `EMAIL_FROM`,
+emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`), `EMAIL_FROM`,
 https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
 **Site** : `VITE_SITE_URL` (adresse publique, `https://bailio.fr` par défaut). L'API est toujours appelée sur `/api`, même adresse que le site : relayée vers `https://api.bailio.eu` par Vercel (`client/vercel.json`), par Caddy sur le VPS, par Vite en local.

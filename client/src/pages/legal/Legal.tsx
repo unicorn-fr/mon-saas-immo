@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '3 octobre 2026'
+const UPDATED = '4 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -306,8 +306,8 @@ export function Confidentialite() {
         rows={[
           ['Infomaniak Network SA', 'Serveur et base de données', 'Suisse (décision d’adéquation)'],
           ['Vercel Inc.', 'Sert les pages du site et relaie, chiffrés, les échanges avec notre serveur ; peut garder quelques jours des journaux techniques (adresse IP, page demandée) pour la sécurité de son réseau', 'États-Unis : certifié Data Privacy Framework UE–États-Unis (décision d’adéquation du 10 juillet 2023)'],
-          ['IONOS SE', 'Envoi des emails (liens de connexion, rappels, documents)', 'Allemagne'],
-          ['Resend, Inc.', 'Envoi des emails, en secours seulement', 'États-Unis : clauses contractuelles types de la Commission européenne'],
+          ['IONOS SE', 'Messagerie de bailio.fr : remet les emails envoyés par notre serveur (liens de connexion, rappels, documents)', 'Allemagne (Union européenne)'],
+          ['Resend, Inc.', 'Envoi des emails jusqu’au passage complet sur la messagerie Ionos, prévu en octobre 2026 ; cette ligne sera alors retirée', 'États-Unis : clauses contractuelles types de la Commission européenne'],
         ]}
       />
       <H2>Les données de vos locataires</H2>

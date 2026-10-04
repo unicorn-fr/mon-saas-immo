@@ -9,7 +9,15 @@ Pour l'instant, le site reste sur **bailio.fr (Vercel)**, et Vercel relaie `/api
 (`client/vercel.json`). Le navigateur des visiteurs ne contacte donc que bailio.fr, un domaine ancien et connu :
 les filtres réseau qui bloquent les domaines récemment créés (comme bailio.eu) ne gênent personne.
 
-Aucun service extérieur ne reçoit les documents des propriétaires. Seul Resend reçoit les emails à envoyer.
+Aucun service extérieur ne reçoit les documents des propriétaires. Les emails partent de ce serveur par la messagerie Ionos de bailio.fr (SMTP authentifié, port 587) : un VPS Lite ne peut pas les remettre lui-même (port 25 sortant fermé par Infomaniak).
+
+### Emails par la messagerie Ionos
+
+1. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et renseignez :
+   `SMTP_HOST=smtp.ionos.fr`, `SMTP_PORT=587`, `SMTP_USER=` l'adresse de la boîte Ionos (par exemple contact@bailio.fr),
+   `SMTP_PASS=` son mot de passe, `EMAIL_FROM=Bailio <la même adresse>`.
+2. `cd /opt/bailio/deploy/vps && sudo docker compose up -d api`
+3. Vérifiez https://api.bailio.eu/health : `"email":"smtp"`. Demandez un lien de connexion pour contrôler la réception.
 
 ## Mettre à jour
 
