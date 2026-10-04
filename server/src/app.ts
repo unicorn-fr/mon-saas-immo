@@ -19,6 +19,7 @@ import esignRoutes from './routes/esign.js'
 import leaseRoutes from './routes/leases.js'
 import todayRoutes from './routes/today.js'
 import moneyRoutes from './routes/money.js'
+import bankRoutes from './routes/bank.js'
 import inventoryRoutes from './routes/inventories.js'
 
 export function createApp() {
@@ -76,6 +77,7 @@ export function createApp() {
   app.use('/api', spaceRoutes)
   app.use('/api', leaseRoutes)
   app.use('/api', moneyRoutes)
+  app.use('/api', bankRoutes)
   app.use('/api', inventoryRoutes)
   app.use((_req, _res, next) => next(new HttpError(404, 'Page introuvable.')))
   app.use(errorHandler)

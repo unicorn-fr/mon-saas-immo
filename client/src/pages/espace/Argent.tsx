@@ -46,6 +46,9 @@ export default function Argent() {
         }
         actions={
           <>
+            <Btn variant="outline" to="/espace/argent/releve">
+              Relevé bancaire
+            </Btn>
             <Btn variant="outline" to="/espace/argent/bilan">
               Bilan
             </Btn>

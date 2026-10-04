@@ -256,6 +256,7 @@ export function Confidentialite() {
         <li>Vos logements : adresse, description, diagnostics et photos ;</li>
         <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
         <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
+        <li>Si vous déposez un relevé de compte pour retrouver vos loyers : il est lu sur notre serveur, le temps de vous proposer les loyers reconnus, puis oublié. Seuls les loyers que vous validez (montant et date) sont enregistrés ;</li>
         <li>
           Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et, s'il l'accepte, photo du signataire prise au moment de signer (facultative, réencodée sans données de localisation, datée par notre serveur). Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367) ;

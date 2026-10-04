@@ -8,7 +8,7 @@ import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
-import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, TextLink, btnStyle, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, TextLink, Toggle, btnStyle, useLoad, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
 import { KIND_LABEL } from '../../lib/contract'
 import { documentPath, downloadDoc, openDoc, printDoc } from '../../lib/docs'
@@ -218,6 +218,21 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           {l.status !== 'DRAFT' ? (
             <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
               <Line label="Ce mois-ci" value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
+              {l.status !== 'ENDED' ? (
+                <Toggle
+                  checked={Boolean(l.facts?.receiptAuto)}
+                  onChange={(v) =>
+                    void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
+                      .then(() => {
+                        toast.show(v ? 'Les quittances partiront automatiquement.' : 'Envoi automatique arrêté.')
+                        reload()
+                      })
+                      .catch(toast.error)
+                  }
+                  label="Envoyer la quittance automatiquement"
+                  sub={l.facts?.eReceiptConsent || l.tenants.some((x) => x.email) ? 'Dès qu’un loyer est enregistré, ici ou depuis votre relevé bancaire, la quittance part par email au locataire.' : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'}
+                />
+              ) : null}
               {l.payments.length ? (
                 l.payments.map((p) => (
                   <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>

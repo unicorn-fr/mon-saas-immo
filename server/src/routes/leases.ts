@@ -177,7 +177,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null },
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: Boolean((lease.data as { receiptAuto?: boolean }).receiptAuto) },
     checklist,
     esignPending,
     reopen,
@@ -546,46 +546,59 @@ function receiptInput(c: ContractInput, lease: Lease, period: string, kind: Rece
 router.post('/leases/:id/payments', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
-  if (lease.status === 'DRAFT') throw new HttpError(409, 'Le bail n’est pas encore signé.')
-  const now = new Date()
   const body = z
     .object({
-      period: z.string().regex(periodRe).default(`${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`),
+      period: z.string().regex(periodRe).optional(),
       amountCents: z.number().int().positive().max(10_000_000).optional(),
       receivedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     })
     .parse(req.body ?? {})
-  const periodAmounts = amountsForPeriod(lease, body.period)
+  res.json({ success: true, data: await recordPayment(user, lease, body) })
+})
+
+/**
+ * Loyer reçu : enregistré, rappel de quittance clos, quittance (ou reçu si partiel) faite et rangée, puis envoyée au
+ * locataire si le propriétaire l'a choisi (`receiptAuto`) et que l'envoi par email est possible. Sert à la saisie à la
+ * main comme au rapprochement du relevé bancaire.
+ */
+export async function recordPayment(user: User, lease: LeaseWithProperty, body: { period?: string; amountCents?: number; receivedAt?: string }) {
+  if (lease.status === 'DRAFT') throw new HttpError(409, 'Le bail n’est pas encore signé.')
+  const now = new Date()
+  const period = body.period ?? `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
+  const periodAmounts = amountsForPeriod(lease, period)
   const due = periodAmounts.rentCents + periodAmounts.chargesCents
   const amount = body.amountCents ?? due
   const receivedAt = body.receivedAt ? parseIsoDate(body.receivedAt) : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const payment = await prisma.payment.upsert({
-    where: { leaseId_period: { leaseId: lease.id, period: body.period } },
-    create: { userId: user.id, leaseId: lease.id, period: body.period, amountCents: amount, receivedAt },
+    where: { leaseId_period: { leaseId: lease.id, period } },
+    create: { userId: user.id, leaseId: lease.id, period, amountCents: amount, receivedAt },
     update: { amountCents: amount, receivedAt },
   })
-  const [y, m] = body.period.split('-').map(Number)
+  const [y, m] = period.split('-').map(Number)
   if (amount >= due) {
     await prisma.reminder.updateMany({
       where: { leaseId: lease.id, type: 'RENT_RECEIPT', dueDate: { gte: new Date(Date.UTC(y, m - 1, 1)), lt: new Date(Date.UTC(y, m, 1)) } },
       data: { status: 'DONE', doneAt: new Date() },
     })
   }
+  const base = { period: payment.period, amountCents: payment.amountCents, receivedAt: iso(payment.receivedAt), full: amount >= due }
   // Quittance (paiement complet) ou reçu (paiement partiel), rangé dans les documents.
   const c = await liveContract(user, lease)
   const kind = amount >= due ? 'RECEIPT' : 'PARTIAL'
   const missing = partiesMissing(c)
   if (missing.length) {
     // Le loyer est enregistré ; la quittance attend les mentions obligatoires (nom et adresse du bailleur…).
-    return res.json({ success: true, data: { period: payment.period, amountCents: payment.amountCents, receivedAt: iso(payment.receivedAt), full: amount >= due, documentId: null, missing: withLinks(missing, lease) } })
+    return { ...base, documentId: null, missing: withLinks(missing, lease), sentTo: null as string[] | null }
   }
-  const input = receiptInput(c, lease, body.period, kind, payment)
+  const input = receiptInput(c, lease, period, kind, payment)
   const pdf = await renderReceiptPdf(input)
   const names = c.tenants.map((t) => personName(t, false)).join(' et ')
-  await prisma.document.deleteMany({ where: { leaseId: lease.id, period: body.period, kind: { in: ['RECEIPT', 'PARTIAL_RECEIPT'] } } })
-  const doc = await saveGeneratedDocument({ userId: user.id, kind: kind === 'RECEIPT' ? 'RECEIPT' : 'PARTIAL_RECEIPT', title: `${kind === 'RECEIPT' ? 'Quittance' : 'Reçu'} de ${monthYearFr(y, m)}, ${names}`, pdf, snapshot: input, leaseId: lease.id, propertyId: lease.propertyId, period: body.period })
-  res.json({ success: true, data: { period: payment.period, amountCents: payment.amountCents, receivedAt: iso(payment.receivedAt), full: amount >= due, documentId: doc.id } })
-})
+  await prisma.document.deleteMany({ where: { leaseId: lease.id, period, kind: { in: ['RECEIPT', 'PARTIAL_RECEIPT'] } } })
+  const doc = await saveGeneratedDocument({ userId: user.id, kind: kind === 'RECEIPT' ? 'RECEIPT' : 'PARTIAL_RECEIPT', title: `${kind === 'RECEIPT' ? 'Quittance' : 'Reçu'} de ${monthYearFr(y, m)}, ${names}`, pdf, snapshot: input, leaseId: lease.id, propertyId: lease.propertyId, period })
+  let sentTo: string[] | null = null
+  if ((lease.data as { receiptAuto?: boolean }).receiptAuto) sentTo = await sendReceipt(user, lease, period).catch(() => null)
+  return { ...base, documentId: doc.id, sentTo }
+}
 
 router.delete('/leases/:id/payments/:period', async (req, res) => {
   const lease = await leaseOwned(req.user!.id, String(req.params.id))
@@ -633,6 +646,11 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   const period = z.string().regex(periodRe).parse(req.params.period)
+  res.json({ success: true, data: { sentTo: await sendReceipt(user, lease, period) } })
+})
+
+/** Quittance (ou reçu) d'un mois envoyée par email au locataire, dans le respect de son accord (art. 21). */
+export async function sendReceipt(user: User, lease: LeaseWithProperty, period: string): Promise<string[]> {
   const payment = await prisma.payment.findUnique({ where: { leaseId_period: { leaseId: lease.id, period } } })
   if (!payment) throw new HttpError(400, 'Enregistrez d’abord le loyer reçu pour ce mois.')
   const c = await liveContract(user, lease)
@@ -649,8 +667,9 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   const what = full ? 'quittance' : 'reçu'
   const mail = layout({ title: `Votre ${what} de ${monthYearFr(y, m)}.`, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe votre ${what} de loyer de ${monthYearFr(y, m)}.`, 'Bonne journée.'] })
   for (const email of to) await sendEmail({ to: email, subject: `Votre ${what} de loyer, ${monthYearFr(y, m)}`, ...mail, replyTo: user.email, attachments: [{ filename: `${what}-${period}.pdf`, content: pdf }] })
-  res.json({ success: true, data: { sentTo: to } })
-})
+  await patchLeaseData(lease.id, (f) => ({ receiptsSent: { ...((f as { receiptsSent?: Record<string, string> }).receiptsSent ?? {}), [period]: new Date().toISOString() } }))
+  return to
+}
 
 // ── Courriers ────────────────────────────────────────────────────────────────
 

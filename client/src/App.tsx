@@ -58,6 +58,7 @@ const Parcours = page('Parcours')
 const Annonce = page('Annonce')
 const Candidats = page('Candidats')
 const Declaration = page('Declaration')
+const Releve = page('Releve')
 const Bilan = page('Bilan')
 const Carnet = page('Carnet')
 const Corbeille = page('Corbeille')
@@ -204,6 +205,7 @@ function Pages() {
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />
               <Route path="/espace/logements/:id/candidats" element={<RequireAuth><Candidats /></RequireAuth>} />
               <Route path="/espace/argent/declaration" element={<RequireAuth><Declaration /></RequireAuth>} />
+              <Route path="/espace/argent/releve" element={<RequireAuth><Releve /></RequireAuth>} />
               <Route path="/espace/argent/bilan" element={<RequireAuth><Bilan /></RequireAuth>} />
               <Route path="/espace/carnet" element={<RequireAuth><Carnet /></RequireAuth>} />
               <Route path="/espace/corbeille" element={<RequireAuth><Corbeille /></RequireAuth>} />
