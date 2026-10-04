@@ -28,6 +28,9 @@ const smtp =
     : null
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
 
+/** Service d'envoi utilisé (affiché sur /health, sans aucun secret). */
+export const emailMode = (): 'smtp' | 'resend' | 'none' => (smtp ? 'smtp' : resend ? 'resend' : 'none')
+
 /** Envoi : SMTP (Ionos) s'il est configuré, sinon Resend, sinon affichage dans les logs. */
 export async function sendEmail(email: Email): Promise<void> {
   if (smtp) {

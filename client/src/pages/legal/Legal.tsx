@@ -13,6 +13,21 @@ const H2 = ({ children }: { children: ReactNode }) => (
 const Mail = () => <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
 const Updated = () => <p>Mise à jour le {UPDATED}.</p>
 
+/**
+ * Coordonnées complètes du médiateur (Code de la consommation, R616-1, et CECMC, fiche F01-1) : nom, site où déposer
+ * la demande en ligne et adresse postale, la saisie par courrier devant toujours rester possible (L614-3).
+ */
+const MediatorContact = () =>
+  MEDIATOR ? (
+    <>
+      {MEDIATOR.name}, en ligne sur{' '}
+      <a href={MEDIATOR.url} rel="noopener">
+        {MEDIATOR.url.replace(/^https?:\/\//, '')}
+      </a>{' '}
+      ou par courrier : {MEDIATOR.address}
+    </>
+  ) : null
+
 /** Tableau simple, lisible au lecteur d'écran (en-têtes de colonnes). */
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   const cell = { padding: '10px 12px', borderBottom: `1px solid ${BAI.divider}`, textAlign: 'left' as const, verticalAlign: 'top' as const }
@@ -73,6 +88,14 @@ export function MentionsLegales() {
         </p>
       )}
       <p>Directeur de la publication : Enzo Mercier.</p>
+      {MEDIATOR ? (
+        <>
+          <H2>Médiation de la consommation</H2>
+          <p>
+            En cas de litige non résolu par une réclamation écrite à <Mail />, vous pouvez saisir gratuitement le médiateur de la consommation : <MediatorContact />.
+          </p>
+        </>
+      ) : null}
       <H2>Hébergement</H2>
       <p>
         L'application et la base de données sont hébergées en Suisse par Infomaniak Network SA, rue Eugène-Marziano 25,
@@ -201,11 +224,8 @@ export function Conditions() {
         Pour toute réclamation, écrivez à <Mail /> : nous répondons sous deux jours ouvrés.{' '}
         {MEDIATOR ? (
           <>
-            Si le désaccord persiste, vous pouvez saisir gratuitement le médiateur de la consommation : {MEDIATOR.name}, {MEDIATOR.address},{' '}
-            <a href={MEDIATOR.url} rel="noopener">
-              {MEDIATOR.url.replace(/^https?:\/\//, '')}
-            </a>
-            , dans un délai d'un an après votre réclamation écrite.
+            Si le désaccord persiste, vous pouvez saisir gratuitement le médiateur de la consommation : <MediatorContact />, dans un délai d'un an
+            après votre réclamation écrite. Ce recours est libre : il n'est jamais obligatoire avant de saisir le juge.
           </>
         ) : (
           <>Le médiateur de la consommation auquel vous pourrez recourir gratuitement sera indiqué ici avant la mise en place de toute offre payante.</>
@@ -403,11 +423,7 @@ export function PrixRemboursement() {
         Écrivez à <Mail />.{' '}
         {MEDIATOR ? (
           <>
-            Si le désaccord persiste, vous pouvez saisir gratuitement le médiateur de la consommation : {MEDIATOR.name},{' '}
-            <a href={MEDIATOR.url} rel="noopener">
-              {MEDIATOR.url.replace(/^https?:\/\//, '')}
-            </a>
-            .
+            Si votre réclamation écrite n'a pas réglé le désaccord, vous pouvez saisir gratuitement le médiateur de la consommation : <MediatorContact />.
           </>
         ) : (
           <>Le médiateur de la consommation que vous pourrez saisir gratuitement sera indiqué ici avant tout paiement.</>
