@@ -214,8 +214,24 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
   const ref = useRef<HTMLElement>(null)
   const target = hash === `#${id}`
   // Arrivée depuis « Il manque… » : on amène l'étape à l'écran et on la signale.
+  // Le curseur se place dans le premier champ encore vide de l'étape : il n'y a plus qu'à taper.
   useEffect(() => {
-    if (target) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (!target) return
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const t = window.setTimeout(() => {
+      // Champ vide, ou groupe de boutons à choix dont aucun n'est sélectionné, dans l'ordre de la page.
+      const fields = ref.current?.querySelectorAll<HTMLElement>('input, select, textarea, button[aria-pressed]') ?? []
+      const empty = [...fields].find((f) => {
+        if ((f as HTMLInputElement).disabled || f.offsetParent === null) return false
+        if (f.tagName === 'BUTTON') return ![...(f.parentElement?.querySelectorAll('button[aria-pressed]') ?? [])].some((b) => b.getAttribute('aria-pressed') === 'true')
+        return !['hidden', 'checkbox', 'radio', 'file', 'button', 'submit'].includes((f as HTMLInputElement).type) && !(f as HTMLInputElement).value
+      })
+      if (empty) {
+        empty.focus({ preventScroll: true })
+        empty.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 450)
+    return () => window.clearTimeout(t)
   }, [target])
   return (
     <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.caramel : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>

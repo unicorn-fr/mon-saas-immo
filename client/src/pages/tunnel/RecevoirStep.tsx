@@ -95,11 +95,11 @@ export default function RecevoirStep() {
         <div className="only-md" style={{ marginBottom: 8 }}>
           <Logo size={26} />
         </div>
-        <h1 style={display('clamp(44px, 5vw, 60px)', { lineHeight: 1 })}>{imported ? 'Votre bail est lu.' : 'Votre bail est presque prêt.'}</h1>
+        <h1 style={display('clamp(44px, 5vw, 60px)', { lineHeight: 1 })}>{imported ? 'Votre bail est lu.' : 'Pour finir, renseignez votre email.'}</h1>
 
         {checkEmail ? (
           <Notice tone="success">
-            <strong>Regardez vos emails.</strong> Nous venons d’envoyer un lien à {checkEmail}. Cliquez dessus pour confirmer votre adresse : votre bail vous attend dans votre espace. Pensez à regarder dans les indésirables.
+            <strong>Regardez vos emails.</strong> Nous venons d’envoyer un lien à {checkEmail}. Cliquez dessus pour confirmer votre adresse : votre bail vous attend dans votre espace, avec ce qu’il reste à compléter. Pensez à regarder dans les indésirables.
           </Notice>
         ) : null}
         {checkEmail ? (
@@ -113,17 +113,19 @@ export default function RecevoirStep() {
           </>
         ) : (
           <>
-            <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>{imported ? 'Où voulez-vous le ranger ?' : 'Il reste quelques mentions obligatoires à compléter dans votre espace, puis à le faire signer. Votre adresse email ?'}</p>
+            <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>{imported
+                ? 'Où voulez-vous le ranger ?'
+                : 'Votre bail n’est pas encore valable : il est enregistré en brouillon. Avec votre email, vous ouvrez votre espace pour compléter les mentions qui manquent, puis le faire signer.'}</p>
             <form onSubmit={finish} className="stack" style={{ gap: 14 }}>
               <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
               <Button type="submit" full loading={loading}>
-                {imported ? 'Enregistrer mon bail' : 'Recevoir le lien'}
+                {imported ? 'Enregistrer mon bail' : 'Continuer mon bail'}
               </Button>
             </form>
             <div style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.6 }}>
               Gratuit, sans carte bancaire. Vous recevez un lien pour confirmer votre adresse : votre espace est créé à ce moment-là. Pas de mot de passe.
             </div>
-            <AccountNotice action={imported ? 'Enregistrer mon bail' : 'Recevoir le lien'} />
+            <AccountNotice action={imported ? 'Enregistrer mon bail' : 'Continuer mon bail'} />
           </>
         )}
         {error ? <Notice tone="warning">{error}</Notice> : null}

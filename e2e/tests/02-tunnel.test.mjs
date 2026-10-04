@@ -34,20 +34,28 @@ test('tunnel → email confirmé → bail en préparation avec la liste « Il ma
   const email = `tunnel+${Date.now()}@example.fr`
   await page.getByLabel('Votre email').fill(email)
   const before = logSize()
-  await page.getByRole('button', { name: 'Recevoir le lien' }).click()
+  await page.getByRole('button', { name: 'Continuer mon bail' }).click()
   await page.getByText('Regardez vos emails.').waitFor()
   // Aucun compte n'existe tant que le lien n'est pas ouvert.
   const [link] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
   await page.goto(link[1].replace(/^http:\/\/[^/]+/, BASE))
   await page.getByText('Votre bail est enregistré').waitFor()
   await shot(page, 'tunnel-bienvenue')
+  // Bail à compléter : on arrive sur le logement, avec le parcours de mise en location.
   await page.getByRole('button', { name: 'Compléter mon bail' }).click()
-  await page.waitForURL(/\/espace\/baux\//)
-  await page.getByText('Avant de signer, il manque').waitFor()
-  await shot(page, 'tunnel-bail-a-completer')
-  const leaseId = page.url().split('/espace/baux/')[1].split(/[?#]/)[0]
+  await page.waitForURL(/\/espace\/logements\//)
+  await page.getByText('Mise en location, étape par étape').waitFor()
+  await shot(page, 'tunnel-parcours-logement')
   const token = await page.evaluate(() => localStorage.getItem('bailio.session'))
-  const lease = await api(`/leases/${leaseId}`, { token })
+  const [first] = await api('/leases', { token })
+  const lease = await api(`/leases/${first.id}`, { token })
+  // « Compléter la fiche » place le curseur dans le premier champ vide.
+  const fill = page.getByRole('link', { name: 'Compléter la fiche' })
+  if (await fill.count()) {
+    await fill.first().click()
+    await page.waitForURL(/\/fiche#/)
+    await page.waitForFunction(() => ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName ?? '') && document.activeElement?.closest('section[id]') !== null, null, { timeout: 5000 })
+  }
   assert.equal(lease.status, 'DRAFT')
   assert.ok(lease.checklist.length > 0)
   const me = await api('/auth/me', { token })

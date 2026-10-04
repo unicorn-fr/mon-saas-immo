@@ -119,7 +119,8 @@ export default function Bienvenue() {
           </p>
           {draft ? (
             <div className="col-md" style={{ display: 'flex', gap: 12 }}>
-              <Button height={56} onClick={() => navigate(`/espace/baux/${lease.id}`)}>
+              {/* Bail à compléter : la page du logement montre le parcours de mise en location, étape par étape. */}
+              <Button height={56} onClick={() => navigate(missing && lease.property?.id ? `/espace/logements/${lease.property.id}` : `/espace/baux/${lease.id}`)}>
                 {missing ? 'Compléter mon bail' : 'Faire signer le bail'}
               </Button>
               <Button height={56} variant="outline" loading={busy === 'download'} onClick={() => void act('download')}>
