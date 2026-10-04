@@ -41,3 +41,23 @@ test('dossier sans bail : réduit 3 mois après sa dernière modification (réf�
   assert.equal(staleWithoutLease({ updatedAt: new Date('2026-01-01'), hasLease: true, purged: false }, now), false)
   assert.equal(staleWithoutLease({ updatedAt: new Date('2026-01-01'), hasLease: false, purged: true }, now), false)
 })
+
+test('justificatifs : gardés pendant le bail, prévenance 7 jours avant, effacés 30 jours après la fin', async () => {
+  const { docsAction, docsPurgeDate, clearTenantDocs } = await import('./retention.js')
+  const end = new Date('2026-09-01T00:00:00Z')
+  assert.equal(docsPurgeDate(end).toISOString().slice(0, 10), '2026-10-01')
+  const base = { lastEnd: end, stillTenant: false, hasFiles: true, warned: false, purged: false }
+  assert.equal(docsAction(base, new Date('2026-09-20T08:00:00Z')), null)
+  assert.equal(docsAction(base, new Date('2026-09-24T08:00:00Z')), 'WARN')
+  assert.equal(docsAction({ ...base, warned: true }, new Date('2026-09-24T08:00:00Z')), null)
+  assert.equal(docsAction({ ...base, warned: true }, new Date('2026-10-01T08:00:00Z')), 'PURGE')
+  assert.equal(docsAction(base, new Date('2026-10-01T08:00:00Z')), 'PURGE', 'même sans prévenance réussie, rien n’est gardé au-delà')
+  assert.equal(docsAction({ ...base, stillTenant: true }, new Date('2027-01-01')), null, 'bail renouvelé ou nouveau bail : on garde')
+  assert.equal(docsAction({ ...base, hasFiles: false }, new Date('2027-01-01')), null)
+  assert.equal(docsAction({ ...base, purged: true }, new Date('2027-01-01')), null)
+  const { file: f, fileIds } = clearTenantDocs(file, 'Effacé')
+  assert.deepEqual(fileIds, [F1, F2])
+  assert.equal(f.documents?.[0].fileId ?? null, null)
+  assert.equal(f.birthDate, '2004-05-12', 'les informations suivent la règle des 3 ans')
+  assert.equal(f.guarantor?.email, 'herve@example.fr')
+})

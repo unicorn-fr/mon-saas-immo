@@ -337,6 +337,9 @@ export const tenantFileSchema = z.object({
   review: opt(z.array(text(60)).max(60)),
   /** Données devenues inutiles effacées 3 ans après la fin du dernier bail (services/retention.ts). */
   purgedAt: opt(text(40)),
+  // Justificatifs effacés 30 jours après la fin du bail (domain/retention.ts) : prévenance puis effacement.
+  docsWarnedAt: opt(text(40)),
+  docsPurgedAt: opt(text(40)),
 })
 export type TenantFile = z.infer<typeof tenantFileSchema>
 

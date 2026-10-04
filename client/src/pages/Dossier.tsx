@@ -74,6 +74,7 @@ export default function Dossier() {
                 {v.landlord} prépare votre bail. Complétez ce qui manque : chaque information est enregistrée dès que vous cliquez sur « Enregistrer ». Aucun compte n’est nécessaire.
               </span>
             </div>
+            <HowTo hasGuarantor={Boolean(v.guarantor)} />
             {v.missing.length ? (
               <Callout tone="info">
                 Il manque : {v.missing.slice(0, 8).map((m) => m.label.toLowerCase()).join(', ')}
@@ -93,7 +94,7 @@ export default function Dossier() {
             <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>
               Ces pièces sont celles que la loi autorise à demander (décret n° 2015-1437). Vous pouvez masquer sur vos documents les informations inutiles à leur vérification. Elles ne sont visibles que de votre bailleur.
             </span>
-            <ThirdPartyNotice landlord={v.landlord} purpose="préparer votre bail et vérifier votre dossier" keep="Elles sont gardées pendant la location, puis trois ans ; les justificatifs sont ensuite effacés. Si aucun bail n’est préparé avec vous, les justificatifs et les informations autres que vos nom et email sont effacés trois mois après la dernière modification." />
+            <ThirdPartyNotice landlord={v.landlord} purpose="préparer votre bail et vérifier votre dossier" keep="Les justificatifs sont gardés pendant toute la location et effacés 30 jours après sa fin ; vos autres informations sont réduites à vos nom et email trois ans après. Si aucun bail n’est préparé avec vous, les justificatifs et les informations autres que vos nom et email sont effacés trois mois après la dernière modification." />
             <Btn onClick={() => void finish()} style={{ alignSelf: 'flex-start' }}>
               J’ai terminé
             </Btn>
@@ -110,6 +111,43 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 type Val = string | number | null | Array<Record<string, string | null>>
 const DOSSIER_FACILE = 'https://www.dossierfacile.logement.gouv.fr/'
+const FILIGRANE_FACILE = 'https://filigrane.beta.gouv.fr/'
+
+/** Mode d'emploi, étape par étape, pour un locataire qui découvre le lien. */
+function HowTo({ hasGuarantor }: { hasGuarantor: boolean }) {
+  const steps: Array<[string, ReactNode]> = [
+    [
+      'Préparez vos justificatifs',
+      <>
+        Le plus simple : créez gratuitement votre dossier sur{' '}
+        <a href={DOSSIER_FACILE} target="_blank" rel="noreferrer">
+          DossierFacile
+        </a>
+        , le service de l’État. Vos pièces y sont vérifiées une fois pour toutes ; collez ensuite le lien de partage de votre dossier plus bas. Sinon, prenez vos pièces en photo ou en PDF. Pour éviter qu’elles soient réutilisées, ajoutez-y un filigrane avec{' '}
+        <a href={FILIGRANE_FACILE} target="_blank" rel="noreferrer">
+          Filigrane Facile
+        </a>{' '}
+        (service de l’État, gratuit).
+      </>,
+    ],
+    ['Remplissez la rubrique « Vous »', 'Identité, coordonnées, situation et revenus. Cliquez sur « Enregistrer » : rien n’est perdu si vous revenez plus tard.'],
+    ['Déposez vos justificatifs', 'Une pièce par ligne, en photo ou en PDF. Vous pouvez masquer les informations inutiles (numéro de sécurité sociale, montants sans rapport…).'],
+    ...(hasGuarantor ? ([['Ajoutez votre garant', 'Ses coordonnées, son engagement et ses justificatifs, de la même façon.']] as Array<[string, ReactNode]>) : []),
+    ['Cliquez sur « J’ai terminé »', 'Votre futur bailleur est prévenu. Il vérifie votre dossier et vous écrit si une pièce est à corriger.'],
+  ]
+  return (
+    <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Comment faire</h2>}>
+      <ol style={{ margin: 0, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {steps.map(([title, text]) => (
+          <li key={title} style={{ fontSize: 15, lineHeight: 1.5, color: BAI.inkMid }}>
+            <strong style={{ color: BAI.ink }}>{title}.</strong> {text}
+          </li>
+        ))}
+      </ol>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Ce lien est personnel et valable 30 jours : ne le transférez pas. Vos informations ne sont visibles que de votre bailleur.</span>
+    </Card>
+  )
+}
 
 /** Enregistrement d'une partie du dossier : seules les valeurs remplies sont envoyées. */
 function useSave(code: string, who: 'tenant' | 'guarantor', onSaved: (v: View) => void) {
