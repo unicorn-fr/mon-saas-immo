@@ -6,6 +6,7 @@ import { requireUser } from '../services/session.js'
 import { leaseOwned, propertyName, readTenant, tenantName } from '../services/contract.js'
 import { parseStatement } from '../domain/bankStatement.js'
 import { matchRents, type ExpectedRent } from '../domain/rentMatch.js'
+import { receiptAutoOn } from '../domain/autoReceipt.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { upload } from './helpers.js'
 import { patchLeaseData, recordPayment } from './leases.js'
@@ -59,7 +60,7 @@ router.post('/bank/statement', upload.single('file'), async (req, res) => {
     }
   }
   const matches = matchRents(credits, expected)
-  const auto = Object.fromEntries(leases.map((l) => [l.id, Boolean((l.data as { receiptAuto?: boolean }).receiptAuto)]))
+  const auto = Object.fromEntries(leases.map((l) => [l.id, receiptAutoOn(l.data)]))
   res.json({ success: true, data: { credits: credits.length, from: dates[0], to: dates[dates.length - 1], matches: matches.map((m) => ({ ...m, receiptAuto: auto[m.leaseId] ?? false })) } })
 })
 

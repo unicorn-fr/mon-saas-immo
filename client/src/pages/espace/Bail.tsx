@@ -229,10 +229,10 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                       })
                       .catch(toast.error)
                   }
-                  label="Quittance automatique, 5 jours après l’échéance"
+                  label="Quittance automatique, 7 jours après l’échéance"
                   sub={
                     l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                      ? 'Chaque mois, 5 jours après la date de paiement, le loyer est noté reçu et la quittance part par email au locataire. Vous êtes prévenu 3 jours avant pour annuler si le loyer n’est pas arrivé.'
+                      ? 'Vous n’avez rien à faire : 7 jours après la date de paiement, le loyer est noté reçu et la quittance part par email au locataire. Vous êtes prévenu 3 jours avant : si le loyer n’est pas arrivé, dites-le et rien ne part.'
                       : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
                   }
                 />
@@ -257,7 +257,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                   </Callout>
                 ) : (
                   <Callout tone="info" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi automatique le ${dateShort(l.facts.autoReceipt.sendOn)}`}>
-                    Le loyer n’est pas arrivé sur votre compte ?{' '}
+                    Rien à faire si le loyer arrive.{' '}
                     <TextLink
                       style={{ fontSize: 14 }}
                       onClick={guard(async () => {
@@ -266,7 +266,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                         reload()
                       })}
                     >
-                      Annuler l’envoi
+                      Le loyer n’est pas arrivé
                     </TextLink>
                   </Callout>
                 )

@@ -146,8 +146,8 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
       break
     case 'AUTO_RECEIPT':
       actions = [
-        { label: 'Le loyer est arrivé', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance part à votre locataire.') },
-        { label: 'Pas arrivé : annuler l’envoi', variant: 'outline', onClick: () => run(() => api(`/leases/${t.leaseId}/receipt-hold`, { method: 'POST', body: { period: t.period, hold: true } }), 'Envoi annulé. Vous pouvez envoyer une relance depuis le bail.') },
+        { label: 'Le loyer n’est pas arrivé', onClick: () => run(() => api(`/leases/${t.leaseId}/receipt-hold`, { method: 'POST', body: { period: t.period, hold: true } }), 'La quittance ne partira pas. Vous pouvez envoyer une relance depuis le bail.') },
+        { label: 'Il est arrivé : envoyer maintenant', variant: 'ghost', onClick: () => run(() => api(`/leases/${t.leaseId}/payments`, { method: 'POST', body: { period: t.period } }), 'Loyer enregistré. La quittance part à votre locataire.') },
       ]
       break
     case 'PARTIAL_RENT':

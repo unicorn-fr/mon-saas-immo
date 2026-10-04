@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
+import { receiptAutoOn, upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
@@ -85,10 +85,10 @@ router.get('/today', async (req, res) => {
     const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), l.paymentDay))
     // Quittance automatique prévue : le propriétaire confirme que le loyer est arrivé, ou annule l'envoi.
     const facts = (l.data ?? {}) as { receiptAuto?: boolean; receiptHold?: Record<string, string> }
-    const auto = facts.receiptAuto ? upcomingAutoReceipt({ today: now.toISOString().slice(0, 10), paymentDay: l.paymentDay, startDate: l.startDate.toISOString().slice(0, 10), paid: new Set(l.payments.map((p) => p.period)), held: facts.receiptHold ?? {} }) : null
+    const auto = receiptAutoOn(l.data) ? upcomingAutoReceipt({ today: now.toISOString().slice(0, 10), paymentDay: l.paymentDay, startDate: l.startDate.toISOString().slice(0, 10), paid: new Set(l.payments.map((p) => p.period)), held: facts.receiptHold ?? {} }) : null
     if (auto && !auto.held && now.toISOString().slice(0, 10) >= warnDateOf(auto.period, l.paymentDay)) {
       const [ay, am] = auto.period.split('-').map(Number)
-      tasks.push({ id: `auto-${l.id}-${auto.period}`, type: 'AUTO_RECEIPT', tag: 'Quittance automatique', tone: 'owner', place: propertyName(l.property), title: `La quittance de ${monthYearFr(ay, am)} part le ${short(new Date(`${auto.sendOn}T00:00:00Z`))} : le loyer de ${who} est-il arrivé ?`, text: 'Si oui, il n’y a rien à faire. Sinon, annulez l’envoi : une quittance prouve que le loyer est payé.', leaseId: l.id, period: auto.period })
+      tasks.push({ id: `auto-${l.id}-${auto.period}`, type: 'AUTO_RECEIPT', tag: 'Quittance automatique', tone: 'owner', place: propertyName(l.property), title: `La quittance de ${monthYearFr(ay, am)} partira seule le ${short(new Date(`${auto.sendOn}T00:00:00Z`))}`, text: `Rien à faire si le loyer de ${who} est arrivé. S’il n’est pas arrivé, dites-le avant cette date : la quittance ne partira pas.`, leaseId: l.id, period: auto.period })
       if (auto.period === period) continue
     }
     if (st.key === 'LATE') {
