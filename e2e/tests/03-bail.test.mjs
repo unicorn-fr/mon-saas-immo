@@ -43,7 +43,8 @@ test('fiche du logement : nombre de détecteurs de fumée et clés', async () =>
   await page.getByLabel('Détecteurs de fumée installés').fill('2')
   await page.getByLabel('Clés et moyens d’accès remis').fill('3 clés, 1 badge')
   await page.getByRole('button', { name: 'Enregistrer' }).click()
-  await page.waitForTimeout(1200)
+  // Attendre la confirmation (et non un délai fixe) : sous charge, l'enregistrement peut prendre plus d'une seconde.
+  await page.getByText('Enregistré.', { exact: true }).waitFor()
   const saved = await api(`/properties/${p.id}`, { token: account.token })
   const file = saved.file ?? saved.data ?? saved
   assert.equal(file.smokeDetectors, 2)
