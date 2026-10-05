@@ -19,7 +19,7 @@ test('annonce : montants repris du bail, mentions obligatoires, saisie gardée',
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/logements/${propertyId}`)
-  await page.getByRole('link', { name: 'Rédiger l’annonce' }).click()
+  await page.getByRole('link', { name: /^Annonce et candidats/ }).click()
   await page.getByText('Mentions obligatoires', { exact: true }).waitFor()
   await page.getByLabel('Description').fill('Studio lumineux à deux pas de la plage.')
   await page.getByText('Enregistré automatiquement').waitFor()
