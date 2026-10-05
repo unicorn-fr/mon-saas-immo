@@ -32,7 +32,8 @@ const MediatorContact = () =>
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   const cell = { padding: '10px 12px', borderBottom: `1px solid ${BAI.divider}`, textAlign: 'left' as const, verticalAlign: 'top' as const }
   return (
-    <div style={{ overflowX: 'auto' }}>
+    // Défilement horizontal sur téléphone : la zone se parcourt aussi au clavier (RGAA 7.3, WCAG 2.1.1).
+    <div tabIndex={0} role="region" aria-label={`Tableau : ${head.join(', ')}`} style={{ overflowX: 'auto' }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 15, background: BAI.surface }}>
         <thead>
           <tr>
