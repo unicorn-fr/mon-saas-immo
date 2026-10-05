@@ -34,3 +34,13 @@ export const KIND_OPTIONS: Array<{ value: LandlordKind; label: string }> = [
 export const isCompany = (k: N<LandlordKind>) => k === 'SCI' || k === 'COMPANY'
 
 export const TAX_LABEL = { IR: 'Impôt sur le revenu', IS: 'Impôt sur les sociétés' } as const
+
+/** Ce que la structure change pour le bail (repris de server/src/domain/structure.ts, structureEffects). */
+export function effectsOf(kind: LandlordKind, sciFamily: boolean): string[] {
+  const legal = kind === 'COMPANY' || (kind === 'SCI' && !sciFamily)
+  const out = [legal ? 'Bail vide de 6 ans au moins (société).' : 'Bail vide de 3 ans au moins.', 'Bail meublé de 1 an.']
+  if (legal) out.push('Pas de congé pour reprendre le logement : seulement pour le vendre ou pour un motif légitime et sérieux.')
+  else if (kind === 'SCI') out.push('Congé pour reprise possible au profit d’un associé seulement.')
+  else out.push('Congé pour reprise possible pour vous ou un proche.')
+  return out
+}

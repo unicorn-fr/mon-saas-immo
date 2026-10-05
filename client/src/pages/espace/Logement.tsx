@@ -9,7 +9,7 @@ import { LoanCard } from '../../components/LoanCard'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { UploadModal } from '../../components/UploadModal'
-import { Btn, Callout, Card, Crumbs, Empty, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, Tabs, TextLink, useLoad, useToast, type Tone } from '../../components/kit'
+import { Btn, Callout, Card, Crumbs, Empty, Line, LoadError, Loader, Modal, PageHead, Pill, Tabs, TextLink, useLoad, useToast, type Tone } from '../../components/kit'
 import { api } from '../../lib/api'
 import { KIND_LABEL, type DiagnosticRule, type PropertyFile } from '../../lib/contract'
 import { documentPath, openDoc } from '../../lib/docs'
@@ -49,12 +49,9 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
         title={p.name}
         sub={facts}
         actions={
-          <>
-            <Btn variant="outline" onClick={() => setCreateOpen(true)}>
-              Créer un document
-            </Btn>
-            <Btn to={`/espace/argent/facture?logement=${p.id}`}>Ajouter une facture</Btn>
-          </>
+          <Btn variant="outline" onClick={() => setCreateOpen(true)}>
+            Créer un document
+          </Btn>
         }
       />
       {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
@@ -72,11 +69,35 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
 
 const currentLease = (p: PropertyView) => p.leases.find((l) => l.status === 'ACTIVE' || l.status === 'IMPORTED') ?? p.leases.find((l) => l.status === 'DRAFT') ?? null
 
+/** « Ce logement » : chaque sujet tient en une ligne (où on en est), un clic pour y aller. */
+function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
+  const required = p.diagnostics.filter((d) => d.required)
+  const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length
+  const rows: Array<{ label: string; value: string; to: string; tone?: 'caramel' }> = [
+    { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
+    { label: 'Diagnostics', value: expired ? `${expired} à refaire` : 'À jour', to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: expired ? 'caramel' : undefined },
+    { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
+    { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
+  ]
+  return (
+    <Card title="Ce logement" style={{ gap: 0 }}>
+      {rows.map((r) => (
+        <Link key={r.label} to={r.to} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '13px 0', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
+          <span style={{ fontWeight: 600 }}>{r.label}</span>
+          <span style={{ color: r.tone === 'caramel' ? BAI.caramelInk : BAI.owner, fontWeight: 600 }}>{r.value}</span>
+        </Link>
+      ))}
+      <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} compact />
+      <LoanCard propertyId={p.id} compact />
+      {p.energyWarning ? <Callout tone="warn">{p.energyWarning}</Callout> : null}
+    </Card>
+  )
+}
+
 function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
   const lease = currentLease(p)
   const [all, setAll] = useState(false)
   const events = all ? p.events : p.events.slice(0, 6)
-  const required = p.diagnostics.filter((d) => d.required)
   return (
     <div className="split-aside" style={{ gap: 28 }}>
       <div className="aside-wide">
@@ -84,9 +105,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
           {lease ? (
             <>
               <Line label="Locataire" value={lease.tenantName || 'À compléter'} />
-              <Line label="Loyer hors charges" value={eurosCents(lease.rentCents)} />
-              <Line label="Charges" value={eurosCents(lease.chargesCents)} />
-              {lease.kind !== 'MOBILITE' ? <Line label="Dépôt de garantie" value={eurosCents(lease.depositCents)} /> : null}
+              <Line label="Loyer par mois" value={`${eurosCents(lease.rentCents + lease.chargesCents)} charges comprises`} />
               <Line label="Bail" value={`Du ${dateNum(lease.startDate)} au ${dateNum(lease.endDate)}`} />
               <span style={{ fontSize: 13, color: BAI.inkSoft }}>{lease.status === 'DRAFT' ? 'Bail en préparation : il n’est pas encore signé.' : KIND_LABEL[lease.kind]}</span>
               <div>
@@ -106,35 +125,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
             </>
           )}
         </Card>
-        <Card title="Mettre en location">
-          <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{lease && lease.status !== 'DRAFT' ? 'Pour la prochaine location : l’annonce reprend la fiche du logement et le loyer actuel.' : 'Une annonce prête à copier, avec toutes les mentions obligatoires.'}</span>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Btn size="sm" variant={lease ? 'outline' : 'primary'} to={`/espace/logements/${p.id}/annonce`}>
-              Rédiger l’annonce
-            </Btn>
-            <Btn size="sm" variant="outline" to={`/espace/logements/${p.id}/candidats`}>
-              Candidats
-            </Btn>
-          </div>
-        </Card>
-        <Interventions propertyId={p.id} />
-        <Card title="Fiche du logement" action={<TextLink to={`/espace/logements/${p.id}/fiche`} style={{ fontSize: 14 }}>{p.completion.percent < 100 ? 'Compléter' : 'Modifier'}</TextLink>}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-            <span style={{ color: BAI.inkSoft }}>Complétée</span>
-            <span style={{ fontWeight: 700, color: BAI.owner }}>{p.completion.percent} %</span>
-          </div>
-          <Progress percent={p.completion.percent} />
-          {p.completion.percent < 100 ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>Reste : {p.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}.</span> : null}
-        </Card>
-        <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} />
-        <LoanCard propertyId={p.id} />
-        <Card title="Diagnostics">
-          {required.map((d) => {
-            const st = diagnosticStatus(d, p.file)
-            return <Line key={d.key} label={d.label} value={st.label} tone={st.tone === 'error' ? 'error' : undefined} />
-          })}
-          {p.energyWarning ? <Callout tone="warn">{p.energyWarning}</Callout> : null}
-        </Card>
+        <PropertyLinks p={p} reload={reload} />
         <Card dark title={`En ${p.year.year}, ce logement`} style={{ gap: 12 }}>
           <Line dark label="a rapporté" value={eurosCents(p.year.incomeCents)} />
           <Line dark label="a coûté" value={eurosCents(p.year.expensesCents)} />
@@ -272,6 +263,7 @@ function ExpensesTab({ p, reload }: { p: PropertyView; reload: () => void }) {
           Saisir une dépense
         </Btn>
       </div>
+      <Interventions propertyId={p.id} />
       <Card title={`Dépenses de ${p.name}`}>
         {p.expenses.length ? (
           <div className="rows" style={{ ['--line' as string]: BAI.dividerSoft }}>

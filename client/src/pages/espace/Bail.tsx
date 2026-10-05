@@ -45,6 +45,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   const [payOpen, setPayOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(new URLSearchParams(search).get('depart') === '1')
   const [signOpen, setSignOpen] = useState(false)
+  const [showAnnexes, setShowAnnexes] = useState(false)
   const status = STATUS[l.status === 'DRAFT' && l.ready ? 'READY' : l.status]
   const first = l.tenants[0]?.name.split(' ')[0] || 'votre locataire'
   const pdf = `/leases/${l.id}/lease.pdf`
@@ -155,43 +156,45 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           ) : null}
           <div id="signature">{l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} /> : null}</div>
 
-          <Card title="Que voulez-vous faire ?">
-            <div className="grid-2" style={{ gap: 12 }}>
-              <Btn size="lg" variant={l.status === 'DRAFT' ? 'outline' : 'primary'} onClick={guard(() => printDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
-                {l.status === 'DRAFT' ? 'Imprimer pour signer à la main' : 'Imprimer'}
-              </Btn>
-              <Btn size="lg" variant="outline" onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))} style={{ fontSize: 15, padding: '0 16px' }}>
-                Télécharger le PDF
-              </Btn>
-              <Btn size="lg" variant="outline" onClick={send} disabled={!l.tenants.some((x) => x.email)} title={l.tenants.some((x) => x.email) ? undefined : 'Ajoutez l’email du locataire dans sa fiche'} style={{ fontSize: 15, padding: '0 16px' }}>
-                L’envoyer à {first} par email
-              </Btn>
-              {editable ? (
-                <Btn size="lg" variant="outline" to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 15, padding: '0 16px' }}>
-                  Modifier une information
+          {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
+            <Card title="Que voulez-vous faire ?">
+              <div className="grid-2" style={{ gap: 12 }}>
+                <Btn size="lg" variant={l.status === 'DRAFT' ? 'outline' : 'primary'} onClick={guard(() => printDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
+                  {l.status === 'DRAFT' ? 'Imprimer pour signer à la main' : 'Imprimer'}
                 </Btn>
-              ) : (
-                <Btn size="lg" variant="outline" onClick={guard(() => openDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
-                  Ouvrir le bail
+                <Btn size="lg" variant="outline" onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))} style={{ fontSize: 15, padding: '0 16px' }}>
+                  Télécharger le PDF
                 </Btn>
-              )}
-            </div>
-            {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
-              <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier par vous et votre locataire ? Indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
-                <div>
-                  <Btn variant="dark" onClick={() => setSignOpen(true)} disabled={l.status === 'DRAFT' && !l.ready}>
-                    {l.status === 'DRAFT' ? 'Le bail est signé sur papier' : 'La nouvelle version est signée'}
+                <Btn size="lg" variant="outline" onClick={send} disabled={!l.tenants.some((x) => x.email)} title={l.tenants.some((x) => x.email) ? undefined : 'Ajoutez l’email du locataire dans sa fiche'} style={{ fontSize: 15, padding: '0 16px' }}>
+                  L’envoyer à {first} par email
+                </Btn>
+                {editable ? (
+                  <Btn size="lg" variant="outline" to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 15, padding: '0 16px' }}>
+                    Modifier une information
                   </Btn>
-                </div>
+                ) : (
+                  <Btn size="lg" variant="outline" onClick={guard(() => openDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
+                    Ouvrir le bail
+                  </Btn>
+                )}
               </div>
-            ) : l.signedAt ? (
-              <span style={{ fontSize: 14, color: BAI.inkSoft }}>Signé le {dateNum(l.signedAt)}.</span>
-            ) : null}
-          </Card>
+              {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
+                <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier par vous et votre locataire ? Indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
+                  <div>
+                    <Btn variant="dark" onClick={() => setSignOpen(true)} disabled={l.status === 'DRAFT' && !l.ready}>
+                      {l.status === 'DRAFT' ? 'Le bail est signé sur papier' : 'La nouvelle version est signée'}
+                    </Btn>
+                  </div>
+                </div>
+              ) : l.signedAt ? (
+                <span style={{ fontSize: 14, color: BAI.inkSoft }}>Signé le {dateNum(l.signedAt)}.</span>
+              ) : null}
+            </Card>
+          ) : null}
 
           <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12, paddingBottom: 8 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Pièces à joindre au bail</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>{annexDone} sur {l.annexes.length}</span></div>} style={{ gap: 0 }}>
-            {l.annexes.map((a) => {
+            {(showAnnexes ? l.annexes : l.annexes.filter((a) => !a.done)).map((a) => {
               const act = a.done && !a.key.startsWith('caution-') && !['notice', 'repairs', 'charges'].includes(a.key) ? null : annexAction(a.key)
               return (
                 <div key={a.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
@@ -213,6 +216,12 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                 </div>
               )
             })}
+            <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+              {annexDone === l.annexes.length && !showAnnexes ? <span style={{ fontSize: 15, color: BAI.green, fontWeight: 600, marginRight: 16 }}>Toutes les pièces sont prêtes.</span> : null}
+              <TextLink onClick={() => setShowAnnexes(!showAnnexes)} style={{ fontSize: 14 }}>
+                {showAnnexes ? 'Ne voir que ce qui manque' : `Voir les ${l.annexes.length} pièces`}
+              </TextLink>
+            </div>
           </Card>
 
           {l.status !== 'DRAFT' ? (
@@ -232,7 +241,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                   label="Quittance automatique, 7 jours après l’échéance"
                   sub={
                     l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                      ? 'Vous n’avez rien à faire : 7 jours après la date de paiement, le loyer est noté reçu et la quittance part par email au locataire. Vous êtes prévenu 3 jours avant : si le loyer n’est pas arrivé, dites-le et rien ne part.'
+                      ? 'Rien à faire : la quittance part seule par email. Si le loyer n’arrive pas, vous êtes prévenu avant et vous l’arrêtez en un clic.'
                       : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
                   }
                 />
@@ -313,6 +322,19 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                   Avis d’échéance de {periodLabel(nextPeriod())}
                 </TextLink>
               ) : null}
+            </Card>
+          ) : null}
+
+          {!(l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty)) ? (
+            <Card title="Le bail signé">
+              <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap' }}>
+                <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir</TextLink>
+                <TextLink onClick={guard(() => printDoc(pdf))}>Imprimer</TextLink>
+                <TextLink onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))}>Télécharger</TextLink>
+                {l.tenants.some((x) => x.email) ? <TextLink onClick={send}>L’envoyer à {first} par email</TextLink> : null}
+                {editable ? <TextLink to={`/espace/baux/${l.id}/contrat`}>Modifier une information</TextLink> : null}
+              </div>
+              {l.signedAt ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Signé le {dateNum(l.signedAt)}.</span> : null}
             </Card>
           ) : null}
 

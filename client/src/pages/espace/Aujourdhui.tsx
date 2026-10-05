@@ -66,7 +66,7 @@ function TodayContent() {
             {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
           </div>
           {data.tasks.length ? (
-            data.tasks.map((t) => <TaskCard key={t.id} task={t} onChange={reload} />)
+            data.tasks.map((t, i) => <TaskCard key={t.id} task={t} onChange={reload} first={i === 0} />)
           ) : (
             <Card>
               <span style={{ fontSize: 17, fontWeight: 600 }}>Rien à faire cette semaine.</span>
@@ -113,7 +113,7 @@ function MiniStat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
+function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => void; first?: boolean }) {
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -250,11 +250,15 @@ function TaskCard({ task: t, onChange }: { task: Task; onChange: () => void }) {
       <div style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 600, lineHeight: 1.35 }}>{t.title}</div>
       {t.text ? <div style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{t.text}</div> : null}
       {actions.length ? (
-        <div className="col-md" style={{ display: 'flex', gap: 10, paddingTop: 4, flexWrap: 'wrap' }}>
-          {actions.map((a) => (
-            <Btn key={a.label} variant={a.variant ?? 'primary'} onClick={a.onClick}>
+        // Une seule action en bouton ; les autres choix, plus discrets, à côté.
+        <div style={{ display: 'flex', gap: '10px 20px', paddingTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Btn variant={first ? 'primary' : 'outline'} onClick={actions[0].onClick}>
+            {actions[0].label}
+          </Btn>
+          {actions.slice(1).map((a) => (
+            <TextLink key={a.label} onClick={() => void a.onClick()} style={{ fontSize: 15 }}>
               {a.label}
-            </Btn>
+            </TextLink>
           ))}
         </div>
       ) : null}

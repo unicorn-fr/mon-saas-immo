@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -60,7 +60,7 @@ export default function Structures() {
         ))
       )}
       <Modal open={adding} onClose={() => setAdding(false)} title="Nouvelle structure">
-        <NewStructure onCreated={(id) => navigate(`/espace/structures/${id}`)} />
+        <NewStructure onCreated={(id) => navigate(`/espace/structures/${id}`)} onCancel={() => setAdding(false)} />
       </Modal>
     </AppShell>
   )
@@ -74,6 +74,7 @@ export function StructureFiche() {
   const { data, error, loading, reload } = useLoad(() => api<StructureView>(`/structures/${id}`), [id])
   const [f, setF] = useState<StructureFile | null>(null)
   const [busy, setBusy] = useState(false)
+  const [open, setOpen] = useState<string | null>(null)
   useEffect(() => {
     if (data) setF(data.file)
   }, [data])
@@ -93,8 +94,10 @@ export function StructureFiche() {
       await api<StructureView>(`/structures/${id}`, { method: 'PUT', body: f })
       toast.show('Structure enregistrée.')
       reload()
+      return true
     } catch (e) {
       toast.error(e)
+      return false
     } finally {
       setBusy(false)
     }
@@ -109,12 +112,14 @@ export function StructureFiche() {
     }
   }
 
+  const fold = { open, setOpen, save: () => save().then((ok) => ok && setOpen(null)), busy }
+
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Vos structures', to: '/espace/structures' }, { label: data.name }]} />
       <h1 style={display('clamp(34px, 5vw, 48px)')}>{data.name}</h1>
 
-      <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Qui détient les logements</h2>}>
+      <Section {...fold} k="kind" title="Qui détient les logements" summary={KIND_OPTIONS.find((o) => o.value === (f.kind ?? 'PERSON'))?.label + (f.kind === 'SCI' && f.sciFamily ? ', familiale' : '')}>
         <Chips legend="Le logement est détenu" value={f.kind ?? 'PERSON'} onChange={(v) => set({ kind: v })} options={KIND_OPTIONS} />
         {f.kind === 'SCI' ? <Toggle checked={Boolean(f.sciFamily)} onChange={(v) => set({ sciFamily: v })} label="SCI familiale" sub="Associés tous parents ou alliés jusqu’au 4e degré (frères, cousins, oncles…) : le bail vide dure 3 ans, comme pour un particulier." /> : null}
         {!company ? <Input label="Nom pour vous y retrouver (facultatif)" value={f.name} onChange={(v) => set({ name: v })} placeholder={f.kind === 'COUPLE' ? 'Avec Paul' : 'En mon nom'} /> : null}
@@ -126,10 +131,10 @@ export function StructureFiche() {
           </ul>
         </Callout>
         {data.properties.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Un bail déjà signé garde le bailleur indiqué à la signature. Les baux en préparation suivent ce choix.</span> : null}
-      </Card>
+      </Section>
 
       {f.kind === 'COUPLE' ? (
-        <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Les autres propriétaires</h2>}>
+        <Section {...fold} k="owners" title="Les autres propriétaires" summary={coOwners.length ? coOwners.map((o) => [o.firstNames, o.lastName].filter(Boolean).join(' ')).join(', ') : 'À compléter'} todo={!coOwners.length}>
           <span style={{ fontSize: 15, color: BAI.inkMid }}>Ils sont aussi bailleurs : leur nom figure dans le bail, à côté du vôtre.</span>
           {coOwners.map((o, i) => (
             <Fields key={i}>
@@ -141,11 +146,11 @@ export function StructureFiche() {
             <TextLink onClick={() => set({ coOwners: [...coOwners, {}] })}>Ajouter un propriétaire</TextLink>
             {coOwners.length ? <TextLink onClick={() => set({ coOwners: coOwners.slice(0, -1) })}>Retirer le dernier</TextLink> : null}
           </div>
-        </Card>
+        </Section>
       ) : null}
 
       {company ? (
-        <Card id="company" title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>La société</h2>}>
+        <Section {...fold} k="company" title="La société" summary={c.seat && c.representedBy ? `${c.seat} · ${c.representedBy}` : 'Siège et signataire à compléter'} todo={!c.seat || !c.representedBy}>
           <span style={{ fontSize: 15, color: BAI.inkMid }}>Le bail indique sa dénomination, son siège et qui signe pour elle (loi du 6 juillet 1989, art. 3).</span>
           <Fields>
             <Input label="Dénomination" value={c.name} onChange={(v) => set({ company: { ...c, name: v } })} />
@@ -159,10 +164,10 @@ export function StructureFiche() {
             <Input label="Représentée par" value={c.representedBy} onChange={(v) => set({ company: { ...c, representedBy: v } })} hint="La personne qui signe les baux, en général le gérant." />
             <Input label="En qualité de" value={c.representativeRole} onChange={(v) => set({ company: { ...c, representativeRole: v } })} placeholder="Gérant" />
           </Fields>
-        </Card>
+        </Section>
       ) : null}
 
-      <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Impôts</h2>}>
+      <Section {...fold} k="tax" title="Impôts et associés" summary={`${TAX_LABEL[f.taxRegime ?? data.taxRegime]}${associates.length ? `, ${associates.length} associé${associates.length > 1 ? 's' : ''}` : ''}`}>
         <Chips
           legend="Régime fiscal"
           value={f.taxRegime ?? data.taxRegime}
@@ -189,26 +194,50 @@ export function StructureFiche() {
             </div>
           </>
         ) : null}
-      </Card>
+      </Section>
 
-      <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Compte qui reçoit les loyers</h2>}>
+      <Section {...fold} k="payment" title="Compte qui reçoit les loyers" summary={f.payment?.iban ? 'Compte de la structure' : 'Celui de votre profil'}>
         <span style={{ fontSize: 15, color: BAI.inkMid }}>Facultatif : sans compte ici, Bailio reprend celui de votre profil. Une société a en général son propre compte.</span>
         <Fields>
           <Input label="Titulaire (facultatif)" value={f.payment?.holder} onChange={(v) => set({ payment: { ...f.payment, holder: v } })} />
           <Input label="IBAN (facultatif)" value={f.payment?.iban} onChange={(v) => set({ payment: { ...f.payment, iban: v.toUpperCase() } })} />
         </Fields>
-      </Card>
+      </Section>
 
-      <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
-        <Btn onClick={() => void save()} loading={busy} disabled={busy}>
-          Enregistrer
-        </Btn>
-        {!data.properties.length ? (
+      {!data.properties.length ? (
+        <div>
           <TextLink onClick={() => void remove()} style={{ color: BAI.error }}>
             Supprimer cette structure
           </TextLink>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </AppShell>
+  )
+}
+
+/** Une section de la fiche : ouverte une à la fois, avec son résumé en une ligne quand elle est fermée. */
+function Section({ k, title, summary, todo, children, open, setOpen, save, busy }: { k: string; title: string; summary: string; todo?: boolean; children: ReactNode; open: string | null; setOpen: (k: string | null) => void; save: () => Promise<unknown>; busy: boolean }) {
+  return (
+    <section id={k === 'company' ? 'company' : undefined} style={{ background: BAI.surface, border: `1px solid ${open === k ? BAI.owner : BAI.divider}`, borderRadius: 20, padding: '4px 24px' }}>
+      <h2 style={{ margin: 0 }}>
+        <button type="button" aria-expanded={open === k} onClick={() => setOpen(open === k ? null : k)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', background: 'none', border: 'none', padding: '18px 0', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', color: BAI.ink }}>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
+            {open !== k ? <span style={{ fontSize: 14, fontWeight: 400, color: todo ? BAI.caramelInk : BAI.inkMid }}>{summary}</span> : null}
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, flexShrink: 0 }}>{open === k ? 'Fermer' : 'Modifier'}</span>
+        </button>
+      </h2>
+      {open === k ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 22 }}>
+          {children}
+          <div>
+            <Btn onClick={() => void save()} loading={busy} disabled={busy}>
+              Enregistrer
+            </Btn>
+          </div>
+        </div>
+      ) : null}
+    </section>
   )
 }

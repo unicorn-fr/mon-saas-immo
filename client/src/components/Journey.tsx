@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BAI } from '../constants/bailio-tokens'
-import { Btn, TextLink, useToast } from './kit'
+import { Btn, Progress, TextLink, useToast } from './kit'
 import { Check } from './Icons'
 import { api } from '../lib/api'
 import type { RentalStep } from '../lib/space'
@@ -26,19 +26,19 @@ export function Journey({ propertyId, steps: initial }: { propertyId: string; st
       toast.error(e)
     }
   }
-  const visible = showDone ? steps : steps.filter((s) => !(s.state === 'DONE' || s.state === 'SKIPPED') || s === steps[0])
+  // Par défaut : seulement l'étape à faire maintenant (et la suivante en une ligne). La liste complète sur demande.
+  const next = current ? steps.slice(steps.indexOf(current) + 1).find((s) => s.state !== 'DONE' && s.state !== 'SKIPPED') : null
+  const visible = showDone ? steps : current ? [current] : steps.filter((s) => !(s.state === 'DONE' || s.state === 'SKIPPED')).slice(0, 1)
 
   return (
-    <section aria-label="Mise en location" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(18px, 3vw, 26px)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', paddingBottom: 8 }}>
+    <section aria-label="Mise en location" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(18px, 3vw, 26px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>Mise en location, étape par étape</h2>
-        <span style={{ fontSize: 14, color: BAI.inkSoft }}>
-          {done} sur {steps.length} ·{' '}
-          <TextLink onClick={() => setShowDone(!showDone)} style={{ fontSize: 14 }}>
-            {showDone ? 'Masquer ce qui est fait' : 'Tout afficher'}
-          </TextLink>
+        <span style={{ fontSize: 14, color: BAI.inkMid }}>
+          {done} étape{done > 1 ? 's' : ''} faite{done > 1 ? 's' : ''} sur {steps.length}
         </span>
       </div>
+      <Progress percent={Math.round((done / steps.length) * 100)} label="Mise en location" />
       {visible.map((s) => {
         const n = steps.indexOf(s) + 1
         const isDone = s.state === 'DONE' || s.state === 'SKIPPED'
@@ -77,6 +77,12 @@ export function Journey({ propertyId, steps: initial }: { propertyId: string; st
           </div>
         )
       })}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center', borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+        <span style={{ fontSize: 14, color: BAI.inkMid }}>{!showDone && next ? `Ensuite : ${next.title.charAt(0).toLowerCase()}${next.title.slice(1)}.` : ''}</span>
+        <TextLink onClick={() => setShowDone(!showDone)} style={{ fontSize: 14 }}>
+          {showDone ? 'Ne voir que l’étape en cours' : 'Voir toutes les étapes'}
+        </TextLink>
+      </div>
     </section>
   )
 }

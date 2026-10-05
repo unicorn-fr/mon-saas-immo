@@ -60,7 +60,7 @@ test('emprunt : tableau d’amortissement, trésorerie et ligne 250 de la décla
 
   // Page du logement : la carte reprend le crédit
   await page.goto(`${BASE}/espace/logements/${propertyId}`)
-  await page.getByText('Capital restant dû').waitFor()
+  await page.getByRole('link', { name: /^Emprunt.*par mois/ }).waitFor()
 
   await browser.close()
   assert.deepEqual(errors, [])

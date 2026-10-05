@@ -24,11 +24,23 @@ test('structures : SCI créée, logement rattaché, bail de 6 ans, pas de congé
 
   // Nouvelle SCI, complétée dans sa fiche
   await page.getByRole('button', { name: 'Ajouter une structure' }).click()
-  await page.getByRole('button', { name: 'Une SCI' }).click()
+  // Assistant : une question par écran
+  await page.getByRole('heading', { name: 'Qui détient le logement ?' }).waitFor()
+  await page.getByRole('button', { name: /^Une SCI/ }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'Les associés sont-ils tous de la même famille ?' }).waitFor()
+  await page.getByRole('button', { name: /^Non/ }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByText('Indiquez le nom de la société.').waitFor()
   await page.getByLabel('Nom de la société').fill('Les Tilleuls')
-  await page.getByRole('button', { name: 'Créer cette structure' }).click()
-  await page.getByRole('heading', { name: 'SCI Les Tilleuls', level: 1 }).waitFor()
+  await page.getByRole('button', { name: 'Continuer' }).click()
   await page.getByText('Bail vide de 6 ans au moins (société).').waitFor()
+  await page.getByRole('button', { name: 'Créer la structure' }).click()
+  await page.getByRole('heading', { name: 'SCI Les Tilleuls', level: 1 }).waitFor()
+  // Fiche : une section à la fois
+  await page.getByText('Siège et signataire à compléter').waitFor()
+  await page.getByRole('button', { name: /^La société/ }).click()
   await page.getByLabel('Siège social').fill('2 rue Haute, 34000 Montpellier')
   await page.getByLabel('Représentée par').fill('Claire Dubois')
   await page.getByLabel('En qualité de').fill('Gérante')
@@ -38,11 +50,11 @@ test('structures : SCI créée, logement rattaché, bail de 6 ans, pas de congé
 
   // Le logement rejoint la SCI depuis sa page
   await page.goto(`${BASE}/espace/logements/${propertyId}`)
-  await page.getByRole('button', { name: 'Changer' }).click()
+  await page.getByRole('button', { name: /^Propriétaire/ }).click()
+  await page.getByRole('dialog', { name: 'Changer de propriétaire' }).waitFor()
   await page.getByLabel('À qui appartient ce logement ?').selectOption({ label: 'SCI Les Tilleuls' })
   await page.getByRole('dialog').getByRole('button', { name: 'Enregistrer' }).click()
-  await page.getByText('SCI Les Tilleuls').first().waitFor()
-  await page.getByRole('link', { name: 'Voir la structure' }).waitFor()
+  await page.getByRole('button', { name: /^Propriétaire.*SCI Les Tilleuls/ }).waitFor()
 
   // Bail en préparation : 6 ans, fin recalculée, congé pour reprise refusé
   const draft = await api(`/leases/${leaseId}`, { token })
