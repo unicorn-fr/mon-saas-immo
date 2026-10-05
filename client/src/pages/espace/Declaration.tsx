@@ -3,7 +3,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Guide } from '../../components/Sources'
 import { display } from '../../components/ui'
-import { Callout, Card, Chips, Crumbs, Input, LoadError, Loader, Money, NumberField, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Callout, Card, Chips, Crumbs, Input, Line, LoadError, Loader, Money, NumberField, Pill, TextLink, useLoad, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
 import { eurosCents } from '../../lib/format'
 
@@ -34,6 +34,20 @@ interface TaxView {
   extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null; lmnpCarriedCents?: number | null }>
   /** Ligne 250 calculée depuis les emprunts du logement (reprise quand rien n'est saisi). */
   loanComputed?: Record<string, number>
+  /** SCI et sociétés : leur propre fiche (formulaires, dates, montants, parts des associés). */
+  structures?: StructureSheet[]
+}
+interface StructureSheet {
+  id: string
+  name: string
+  properties: string[]
+  sheet: null | {
+    kind: string
+    title: string
+    steps: Array<{ title: string; form?: string; deadline?: string; lines: Array<{ label: string; cents?: number; text?: string }>; note?: string }>
+    shares: Array<{ name: string; pct: number; resultCents: number }>
+    sources: Array<{ label: string; url: string }>
+  }
 }
 
 const thisYear = new Date().getFullYear()
@@ -79,6 +93,8 @@ export default function Declaration() {
         <Loader />
       ) : error || !data ? (
         <LoadError message={error ?? ''} retry={reload} />
+      ) : !data.properties.length && data.structures?.length ? (
+        <StructureSheets list={data.structures} year={year} />
       ) : !data.properties.length ? (
         <Card>
           <span style={{ fontSize: 17, fontWeight: 600 }}>Aucun loyer encaissé en {year}.</span>
@@ -192,6 +208,7 @@ export default function Declaration() {
           <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>
             Sommes encaissées ou payées entre le 1er janvier et le 31 décembre {year}. Bailio vous aide à préparer votre déclaration ; vous restez responsable des montants déclarés sur impots.gouv.fr. Votre situation est particulière (indivision, société, plusieurs régimes) ? Demandez conseil au centre des impôts.
           </span>
+          {data.structures?.length ? <StructureSheets list={data.structures} year={year} /> : null}
         </>
       )}
     </AppShell>
@@ -213,5 +230,58 @@ function Regime({ title, text, lines, better, disabled }: { title: string; text:
       ))}
       <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>{text}</span>
     </div>
+  )
+}
+
+/** SCI et sociétés : une fiche par structure, étape par étape, à vérifier avant de déclarer. */
+function StructureSheets({ list, year }: { list: StructureSheet[]; year: number }) {
+  return (
+    <>
+      <h2 style={{ margin: '12px 0 0', fontSize: 22, fontWeight: 700 }}>Vos sociétés</h2>
+      <Callout tone="warn" title="Aide à vérifier">
+        Bailio prépare les chiffres et vous indique les formulaires ; il ne dépose rien. Vérifiez chaque montant, et faites-vous accompagner par un expert-comptable pour une société à l’impôt sur les sociétés.
+      </Callout>
+      {list.map((st) =>
+        st.sheet ? (
+          <Card key={st.id} title={<h3 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>{st.name}</h3>}>
+            <span style={{ fontSize: 14, color: BAI.inkMid }}>
+              {st.sheet.title} · revenus {year} · {st.properties.join(', ')}
+            </span>
+            <ol style={{ margin: 0, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {st.sheet.steps.map((step) => (
+                <li key={step.title} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <strong style={{ fontSize: 16 }}>{step.title}</strong>
+                  {step.form ? <span style={{ fontSize: 15 }}>Formulaire : {step.form}.</span> : null}
+                  {step.deadline ? <span style={{ fontSize: 15, color: BAI.caramelInk, fontWeight: 600 }}>À déposer avant le {step.deadline}.</span> : null}
+                  {step.lines.map((l) => (
+                    <Line key={l.label} label={l.label} value={l.cents !== undefined ? eurosCents(l.cents) : l.text ?? ''} />
+                  ))}
+                  {step.note ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{step.note}</span> : null}
+                </li>
+              ))}
+            </ol>
+            {st.sheet.shares.length ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+                <strong style={{ fontSize: 15 }}>Part de chaque associé</strong>
+                {st.sheet.shares.map((a) => (
+                  <Line key={a.name} label={`${a.name} (${a.pct.toLocaleString('fr-FR')} %)`} value={a.resultCents ? eurosCents(a.resultCents) : '—'} />
+                ))}
+              </div>
+            ) : null}
+            <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.6 }}>
+              Sources :{' '}
+              {st.sheet.sources.map((src, i) => (
+                <span key={src.url}>
+                  {i ? ' · ' : ''}
+                  <a href={src.url} target="_blank" rel="noreferrer" style={{ color: BAI.owner }}>
+                    {src.label}
+                  </a>
+                </span>
+              ))}
+            </span>
+          </Card>
+        ) : null,
+      )}
+    </>
   )
 }

@@ -10,7 +10,9 @@ import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
 import { documentText, ocrAvailable } from '../services/import/ocr.js'
 import { matchProperty, parseInvoice } from '../services/import/invoice.js'
-import { contractFor, leaseKindOf, leaseOwned, propertyName, readProperty } from '../services/contract.js'
+import { contractFor, leaseKindOf, leaseOwned, propertyName, readProperty, readStructure } from '../services/contract.js'
+import { sheetKind, structureTaxSheet } from '../domain/structureTax.js'
+import { defaultTaxRegime, structureName } from '../domain/structure.js'
 import { renderLeasePdf } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
@@ -294,6 +296,33 @@ router.get('/money/tax', async (req, res) => {
     }
   }
   const unassigned = expenses.filter((e) => !e.propertyId).reduce((a, e) => a + e.amountCents, 0)
+  // Logements d'une SCI ou d'une société : leur propre fiche (2072, 2031, 2065) ; la déclaration personnelle ne garde
+  // que les logements détenus en nom propre ou à plusieurs.
+  const structures = await prisma.structure.findMany({ where: { userId } })
+  const fileOf = new Map(structures.map((st) => [st.id, readStructure(st)]))
+  const structureOf = (propertyId: string) => {
+    const sid = properties.find((p) => p.id === propertyId)?.structureId
+    return sid ? fileOf.get(sid) ?? null : null
+  }
+  const personal = (propertyId: string) => sheetKind(structureOf(propertyId) ?? {}) === 'PERSONAL'
+  const sheets = structures
+    .filter((st) => sheetKind(fileOf.get(st.id)!) !== 'PERSONAL' && properties.some((p) => p.structureId === st.id))
+    .map((st) => {
+      const file = fileOf.get(st.id)!
+      const own = input.filter((x) => properties.find((p) => p.id === x.id)?.structureId === st.id)
+      const summary = taxSummary(year, own)
+      const sum = (f: (p: (typeof summary.properties)[number]) => number) => summary.properties.reduce((a, p) => a + f(p), 0)
+      const totals = {
+        rentCents: sum((p) => p.rentCents),
+        chargesCents: sum((p) => p.chargesCents),
+        resultCents: sum((p) => p.resultCents),
+        interestCents: sum((p) => p.lines.find((l) => l.line === '250')?.cents ?? 0),
+        expensesCents: own.reduce((a, x) => a + x.expenses.reduce((b, e) => b + e.amountCents, 0), 0),
+        furnished: own.some((x) => x.furnished),
+      }
+      return { id: st.id, name: structureName(file), properties: properties.filter((p) => p.structureId === st.id).map(propertyName), sheet: structureTaxSheet({ kind: file.kind, taxRegime: file.taxRegime ?? defaultTaxRegime(file), companyForm: file.company?.form, associates: file.associates }, totals, year) }
+    })
+  input.splice(0, input.length, ...input.filter((x) => personal(x.id)))
   // Meublé : estimation au régime réel (amortissements) pour comparer avec le micro-BIC.
   const furnishedProps = properties.filter((p) => input.some((x) => x.id === p.id && x.furnished))
   const lmnp = furnishedProps.length
@@ -318,7 +347,7 @@ router.get('/money/tax', async (req, res) => {
         furnishedProps.reduce((a, p) => a + (readProperty(p).tax?.[String(year)]?.lmnpCarriedCents ?? 0), 0),
       )
     : null
-  res.json({ success: true, data: { ...taxSummary(year, input), lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])) } })
+  res.json({ success: true, data: { ...taxSummary(year, input), lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets } })
 })
 
 /** Ligne 250 : le montant saisi pour l'année, sinon celui calculé depuis les emprunts du logement. */
