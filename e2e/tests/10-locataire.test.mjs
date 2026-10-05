@@ -27,7 +27,7 @@ test('lien locataire : assurance, chaudière et accord enregistrés avec le bail
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/locataire/${link.code}`)
-  await page.getByRole('heading', { name: 'Vos documents de location' }).waitFor()
+  await page.getByRole('heading', { name: 'Votre location' }).waitFor()
   const year = new Date().getFullYear() + 1
   const insurance = page.locator('section').filter({ has: page.getByRole('heading', { name: 'Attestation d’assurance habitation' }) })
   await insurance.locator('input[type=file]').setInputFiles(pdf('assurance.pdf'))

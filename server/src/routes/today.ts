@@ -15,6 +15,7 @@ import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
 import { upcomingInterventions } from './contacts.js'
+import { readIssue } from '../domain/issues.js'
 import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
@@ -33,7 +34,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -44,6 +45,7 @@ export interface Task {
   reminderId?: string
   expenseId?: string
   inventoryId?: string
+  interventionId?: string
   amountCents?: number
   period?: string
   /** Étape de la mise en location (type STEP) : bouton vers la bonne page, et « je n'en ai pas besoin » si facultative. */
@@ -164,6 +166,26 @@ router.get('/today', async (req, res) => {
     }
   }
 
+  // Problèmes signalés par les locataires, pas encore organisés : les urgents en premier.
+  const issues = await prisma.intervention.findMany({ where: { userId: user.id, source: 'TENANT', status: 'TODO' }, include: { property: true }, orderBy: { createdAt: 'asc' } })
+  for (const i of issues.sort((a, b) => Number(readIssue(b.data)?.urgent ?? false) - Number(readIssue(a.data)?.urgent ?? false))) {
+    const d = readIssue(i.data)
+    const l = d ? leases.find((x) => x.id === d.leaseId) : undefined
+    const label = l ? leaseTenantLabel(l, names) : ''
+    const who = label ? label.charAt(0).toUpperCase() + label.slice(1) : 'Votre locataire'
+    const desc = (i.description ?? '').replace(/\s+/g, ' ').trim()
+    tasks.unshift({
+      id: `issue-${i.id}`,
+      type: 'ISSUE',
+      tag: d?.urgent ? 'Urgent, signalé par le locataire' : 'Signalé par le locataire',
+      tone: d?.urgent ? 'error' : 'caramel',
+      place: propertyName(i.property),
+      title: `${who} signale : ${i.title.charAt(0).toLowerCase()}${i.title.slice(1)}`,
+      text: desc ? `« ${desc.length > 180 ? `${desc.slice(0, 177)}…` : desc} »` : undefined,
+      propertyId: i.propertyId,
+      interventionId: i.id,
+    })
+  }
   for (const e of toVerify) {
     tasks.push({ id: `exp-${e.id}`, type: 'INVOICE', tag: 'Facture à vérifier', tone: 'green', place: e.property ? propertyName(e.property) : 'Sans logement', title: `${e.vendor}, ${formatEuros(e.amountCents)}${e.property ? `, rangée dans ${propertyName(e.property)}` : ''}`, expenseId: e.id })
   }

@@ -1,9 +1,13 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import type { User } from '@prisma/client'
 import { prisma } from '../db.js'
+import { env } from '../env.js'
+import { layout, sendEmail } from '../lib/email.js'
+import { ISSUE_LABEL, issueProgress, readIssue } from '../domain/issues.js'
 import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
-import { propertyName } from '../services/contract.js'
+import { liveContract, propertyName } from '../services/contract.js'
 import { iso } from './helpers.js'
 import { TRASH_DAYS, restoreFromTrash, toTrash } from '../services/trash.js'
 
@@ -71,6 +75,8 @@ const interventionSchema = z.object({
   costCents: z.number().int().min(0).max(100_000_000).optional().nullable(),
   /** Terminée avec un coût : enregistrer la dépense (catégorie). */
   expenseCategory: z.enum(['REPAIR', 'MAINTENANCE']).optional().nullable(),
+  /** Signalement du locataire : le prévenir par email de la date prévue ou de la fin. */
+  notifyTenant: z.boolean().optional(),
 })
 
 type InterventionRow = Awaited<ReturnType<typeof prisma.intervention.findFirstOrThrow>> & { contact: { id: string; name: string; trade: string | null; phone: string | null } | null }
@@ -84,6 +90,11 @@ const interventionView = (i: InterventionRow) => ({
   costCents: i.costCents,
   expenseId: i.expenseId,
   contact: i.contact ? { id: i.contact.id, name: i.contact.name, trade: i.contact.trade, phone: i.contact.phone } : null,
+  source: i.source,
+  issue: (() => {
+    const d = readIssue(i.data)
+    return d ? { category: d.category, label: ISSUE_LABEL[d.category], where: d.where, urgent: d.urgent, reportedAt: d.reportedAt, photoIds: d.photoIds, leaseId: d.leaseId } : null
+  })(),
 })
 
 router.get('/properties/:id/interventions', requireUser, async (req, res) => {
@@ -135,9 +146,33 @@ async function ownIntervention(userId: string, id: string) {
 
 router.put('/interventions/:id', async (req, res) => {
   const i = await ownIntervention(req.user!.id, String(req.params.id))
-  const row = await saveIntervention(req.user!.id, i.propertyId, interventionSchema.parse(req.body), i)
-  res.json({ success: true, data: interventionView(row) })
+  const body = interventionSchema.parse(req.body)
+  const row = await saveIntervention(req.user!.id, i.propertyId, body, i)
+  const notified = body.notifyTenant && (row.status !== i.status || iso(row.date ?? new Date(0)) !== iso(i.date ?? new Date(0))) ? await notifyTenantOfIssue(req.user!, row) : []
+  res.json({ success: true, data: { ...interventionView(row), notified } })
 })
+
+/** Signalement du locataire : il reçoit la date prévue, ou la fin de l'intervention (sans artisan ni coût). */
+async function notifyTenantOfIssue(user: User, row: InterventionRow): Promise<string[]> {
+  const issue = readIssue(row.data)
+  if (row.source !== 'TENANT' || !issue || row.status === 'TODO') return []
+  const lease = await prisma.lease.findFirst({ where: { id: issue.leaseId, userId: user.id }, include: { property: true } })
+  if (!lease || lease.status === 'ENDED') return []
+  const c = await liveContract(user, lease)
+  const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+  const progress = issueProgress(row.status, row.date ? iso(row.date) : null)
+  const mail = layout({
+    title: row.status === 'DONE' ? 'Le problème signalé est réglé' : 'Une intervention est prévue',
+    paragraphs: [
+      'Bonjour,',
+      `Vous avez signalé : ${row.title.charAt(0).toLowerCase()}${row.title.slice(1)}. ${progress}.`,
+      row.status === 'PLANNED' ? 'Si cette date ne vous convient pas, répondez à cet email.' : 'Si le problème revient, signalez-le de nouveau depuis votre lien.',
+    ],
+    ...(lease.tenantCode ? { cta: { label: 'Voir le suivi', url: `${env.CLIENT_URL}/locataire/${lease.tenantCode}` } } : {}),
+  })
+  for (const email of to) await sendEmail({ to: email, subject: `${progress} : ${row.title}`, ...mail, replyTo: user.email })
+  return to
+}
 
 router.delete('/interventions/:id', async (req, res) => {
   const i = await ownIntervention(req.user!.id, String(req.params.id))

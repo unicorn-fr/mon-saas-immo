@@ -501,6 +501,10 @@ model Intervention {
   date        DateTime? @db.Date
   costCents   Int?
   expenseId   String?
+  /// OWNER (saisie par le propriétaire) ou TENANT (signalée depuis le lien du locataire).
+  source      String    @default("OWNER")
+  /// Signalement du locataire : catégorie, lieu, urgence, bail, photos (domain/issues.ts).
+  data        Json      @default("{}")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 

@@ -13,10 +13,12 @@ import { liveContract, leaseOwned, propertyName, readProperty, readTenant, tenan
 import { landlordName } from '../pdf/labels.js'
 import { storeFile, upload } from './helpers.js'
 import { patchLeaseData } from './leases.js'
+import { ISSUE_ADVICE, ISSUE_CATEGORIES, issueChoices, ISSUE_LABEL, issueProgress, issueTitle, isUrgent, readIssue, type IssueData } from '../domain/issues.js'
 
 /**
  * Lien sans compte remis au locataire : il y dépose son attestation d'assurance et celle d'entretien de la chaudière,
- * et donne (ou retire) son accord pour recevoir les quittances par email (art. 21 de la loi du 6 juillet 1989).
+ * donne (ou retire) son accord pour recevoir les quittances par email (art. 21 de la loi du 6 juillet 1989)
+ * et signale un problème dans le logement (domain/issues.ts), dont il suit ensuite l'avancement.
  * Tout ce qu'il envoie est rangé avec le bail et repris partout : fiche du locataire, rappels, fiche du logement.
  */
 const router = Router()
@@ -76,7 +78,8 @@ router.post('/leases/:id/tenant-link/send', requireUser, async (req, res) => {
     paragraphs: [
       'Bonjour,',
       `${from} vous propose d’envoyer en ligne, sans créer de compte, votre attestation d’assurance habitation${needsBoiler(lease.property) ? ' et l’attestation d’entretien de la chaudière' : ''}.`,
-      'Vous pouvez aussi y choisir de recevoir vos quittances par email.',
+      'Vous pouvez aussi y choisir de recevoir vos quittances par email, et signaler un problème dans le logement.',
+      'Gardez ce lien : il reste valable pendant toute la location.',
     ],
     cta: { label: 'Envoyer mes documents', url: `${env.CLIENT_URL}/locataire/${lease.tenantCode}` },
   })
@@ -101,6 +104,7 @@ router.get('/locataire/:code', async (req, res) => {
   const lease = await leaseByCode(String(req.params.code))
   const c = await liveContract(lease.user, lease)
   const f = linkFacts(lease)
+  const issues = await prisma.intervention.findMany({ where: { propertyId: lease.propertyId, source: 'TENANT' }, orderBy: { createdAt: 'desc' }, take: 30 })
   res.json({
     success: true,
     data: {
@@ -112,12 +116,20 @@ router.get('/locataire/:code', async (req, res) => {
       boilerDone: f.boiler ? { date: f.boiler.date, at: f.boiler.at } : null,
       eReceipt: f.eReceiptConsent ? { email: f.eReceiptConsent.email, at: f.eReceiptConsent.at } : null,
       email: c.tenants.find((t) => t.email)?.email ?? '',
+      issueChoices: issueChoices(),
+      issues: issues
+        .filter((i) => readIssue(i.data)?.leaseId === lease.id)
+        .slice(0, 10)
+        .map((i) => ({ id: i.id, title: i.title, status: i.status, progress: issueProgress(i.status, i.date ? sameDay(i.date) : null), reportedAt: i.createdAt.toISOString() })),
     },
   })
 })
 
-/** Range le fichier envoyé par le locataire parmi les documents du bail. */
-async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefined, title: string, type: string) {
+/**
+ * Range le fichier envoyé par le locataire parmi les documents du bail. Les photos d'un problème restent avec le
+ * logement (pas dans la fiche du locataire, dont les justificatifs sont effacés après le bail).
+ */
+async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefined, title: string, type: string, extra: { tenant?: boolean; meta?: Record<string, string> } = {}) {
   if (!file) return null
   const stored = await storeFile(lease.userId, file)
   const blob = await prisma.fileBlob.findUniqueOrThrow({ where: { id: stored.id } })
@@ -127,7 +139,7 @@ async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefine
       leaseId: lease.id,
       propertyId: lease.propertyId,
       // Aussi visible dans la fiche du locataire.
-      tenantId: lease.tenantIds[0] ?? null,
+      tenantId: extra.tenant === false ? null : (lease.tenantIds[0] ?? null),
       kind: 'OTHER',
       origin: 'UPLOADED',
       title,
@@ -135,7 +147,7 @@ async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefine
       sha256: sha256(Buffer.from(blob.data)),
       sizeBytes: blob.sizeBytes,
       file: blob.data,
-      meta: { type, from: 'TENANT' },
+      meta: { type, from: 'TENANT', ...(extra.meta ?? {}) },
     },
   })
   await prisma.fileBlob.delete({ where: { id: stored.id } })
@@ -203,6 +215,59 @@ router.post('/locataire/:code/e-receipt', limitPerVisitor(60, 10), async (req, r
   }
   notifyOwner(lease, body.accept ? 'son accord pour recevoir les quittances par email' : 'le retrait de son accord pour les quittances par email')
   res.json({ success: true, data: { accepted: body.accept } })
+})
+
+// ── Signaler un problème ─────────────────────────────────────────────────────
+
+const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
+
+router.post('/locataire/:code/issues', limitPerVisitor(60, 10), upload.array('photos', 3), async (req, res) => {
+  const lease = await leaseByCode(String(req.params.code))
+  if (lease.status === 'DRAFT') throw new HttpError(404, 'Ce lien n’est plus actif. Demandez-en un nouveau à votre bailleur.')
+  const body = z
+    .object({
+      category: z.enum(ISSUE_CATEGORIES, 'Choisissez le type de problème.'),
+      where: z.string().trim().max(80).optional(),
+      description: z.string().trim().min(5, 'Décrivez le problème en quelques mots.').max(2000),
+      urgent: z.enum(['true', 'false']).optional(),
+    })
+    .parse(req.body)
+  const files = (req.files as Express.Multer.File[] | undefined) ?? []
+  if (files.some((f) => !PHOTO_TYPES.has(f.mimetype))) throw new HttpError(400, 'Envoyez des photos (JPEG, PNG ou HEIC).')
+  const urgent = isUrgent(body.category, body.urgent === 'true')
+  const title = issueTitle(body.category, body.where)
+  const reportedAt = new Date()
+  const intervention = await prisma.intervention.create({
+    data: {
+      userId: lease.userId,
+      propertyId: lease.propertyId,
+      title,
+      description: body.description,
+      status: 'TODO',
+      source: 'TENANT',
+      data: { category: body.category, where: body.where || null, urgent, leaseId: lease.id, reportedAt: reportedAt.toISOString(), photoIds: [] } satisfies IssueData,
+    },
+  })
+  const photoIds: string[] = []
+  for (const [n, f] of files.entries()) {
+    const id = await saveTenantFile(lease, f, `Photo ${n + 1} : ${title}, signalé le ${reportedAt.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}`, 'ISSUE', { tenant: false, meta: { interventionId: intervention.id } })
+    if (id) photoIds.push(id)
+  }
+  if (photoIds.length) await prisma.intervention.update({ where: { id: intervention.id }, data: { data: { ...(intervention.data as object), photoIds } } })
+
+  const tenants = (await tenantsOf(lease)).map((t) => tenantName(readTenant(t))).filter(Boolean)
+  const mail = layout({
+    title: urgent ? 'Urgent : votre locataire signale un problème' : 'Votre locataire signale un problème',
+    paragraphs: [
+      `${tenants.join(' et ') || 'Votre locataire'}, ${propertyName(lease.property)} : ${ISSUE_LABEL[body.category].toLowerCase()}${body.where ? ` (${body.where})` : ''}.`,
+      `« ${body.description} »`,
+      photoIds.length ? `${photoIds.length} photo${photoIds.length > 1 ? 's' : ''} jointe${photoIds.length > 1 ? 's' : ''}, à voir dans Bailio.` : '',
+      'Le signalement est déjà noté dans les interventions du logement. Indiquez-y la date prévue : votre locataire pourra la suivre.',
+    ].filter(Boolean),
+    cta: { label: 'Organiser l’intervention', url: `${env.CLIENT_URL}/espace/logements/${lease.propertyId}?onglet=expenses&intervention=${intervention.id}` },
+  })
+  sendEmail({ to: lease.user.email, subject: `${urgent ? 'Urgent : ' : ''}${title}, ${propertyName(lease.property)}`, ...mail }).catch(() => undefined)
+  res.status(201).json({ success: true, data: { id: intervention.id, advice: ISSUE_ADVICE[body.category] ?? null } })
 })
 
 export default router

@@ -24,6 +24,10 @@ export interface Intervention {
   costCents: number | null
   expenseId: string | null
   contact: { id: string; name: string; trade: string | null; phone: string | null } | null
+  source: 'OWNER' | 'TENANT'
+  /** Signalé par le locataire depuis son lien (server/src/domain/issues.ts). */
+  issue: { category: string; label: string; where: string | null; urgent: boolean; reportedAt: string; photoIds: string[]; leaseId: string } | null
+  notified?: string[]
 }
 
 export const CONTACT_KIND: Record<ContactKind, string> = {

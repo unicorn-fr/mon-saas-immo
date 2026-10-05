@@ -219,7 +219,7 @@ export interface LeaseView {
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -230,6 +230,7 @@ export interface Task {
   reminderId?: string
   expenseId?: string
   inventoryId?: string
+  interventionId?: string
   amountCents?: number
   period?: string
   step?: { key: string; label: string; to: string; optional: boolean }

@@ -4,7 +4,8 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Card, Check, Input, LoadError, Loader, Pill, useLoad, useToast } from '../components/kit'
+import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Pill, TextArea, useLoad, useToast } from '../components/kit'
+import { Wizard } from '../components/Wizard'
 import { display } from '../components/ui'
 import { api } from '../lib/api'
 import { dateNum } from '../lib/format'
@@ -18,15 +19,19 @@ interface LinkInfo {
   boilerDone: { date: string; at: string } | null
   eReceipt: { email: string; at: string } | null
   email: string
+  issueChoices: Array<{ value: string; label: string; advice: string | null; alwaysUrgent: boolean }>
+  issues: Array<{ id: string; title: string; status: 'TODO' | 'PLANNED' | 'DONE'; progress: string; reportedAt: string }>
 }
 
 /**
- * Lien remis au locataire par son bailleur, sans compte : attestation d'assurance, entretien de la chaudière,
- * accord pour recevoir les quittances par email. Tout est enregistré avec le bail du propriétaire.
+ * Lien remis au locataire par son bailleur, sans compte : problème à signaler (et son suivi), attestation d'assurance,
+ * entretien de la chaudière, accord pour recevoir les quittances par email. Tout est enregistré avec le bail du propriétaire.
  */
 export default function EspaceLocataire() {
   const { code = '' } = useParams()
   const { data, error, loading, reload } = useLoad(() => api<LinkInfo>(`/locataire/${encodeURIComponent(code)}`), [code])
+  // Pendant un signalement, rien d'autre à l'écran.
+  const [reporting, setReporting] = useState(false)
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink }}>
       <header style={{ padding: '20px clamp(16px, 4vw, 40px)', borderBottom: `1px solid ${BAI.divider}`, background: BAI.surface }}>
@@ -41,15 +46,20 @@ export default function EspaceLocataire() {
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontSize: 14, color: BAI.inkSoft }}>{data.property}</span>
-              <h1 style={display('clamp(32px, 5vw, 46px)')}>Vos documents de location</h1>
+              <h1 style={display('clamp(32px, 5vw, 46px)')}>Votre location</h1>
               <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
-                {data.landlord} vous demande ces documents. Envoyez-les ici, sans créer de compte : ils lui parviennent directement.
+                Signalez un problème ou envoyez vos documents à {data.landlord}, sans créer de compte : tout lui parvient directement.
               </span>
             </div>
-            <Insurance code={code} info={data} onDone={reload} />
-            {data.boiler ? <Boiler code={code} info={data} onDone={reload} /> : null}
-            <EReceipt code={code} info={data} onDone={reload} />
-            <ThirdPartyNotice landlord={data.landlord} purpose="la gestion de votre location (assurance, entretien, quittances)" keep="Elles sont gardées avec le bail, pendant la location puis trois ans." />
+            <Issues code={code} info={data} onDone={reload} open={reporting} setOpen={setReporting} />
+            {reporting ? null : (
+              <>
+                <Insurance code={code} info={data} onDone={reload} />
+                {data.boiler ? <Boiler code={code} info={data} onDone={reload} /> : null}
+                <EReceipt code={code} info={data} onDone={reload} />
+              </>
+            )}
+            <ThirdPartyNotice landlord={data.landlord} purpose="la gestion de votre location (problèmes signalés, assurance, entretien, quittances)" keep="Elles sont gardées avec le bail, pendant la location puis trois ans." />
           </>
         )}
       </main>
@@ -198,5 +208,136 @@ function EReceipt({ code, info, onDone }: { code: string; info: LinkInfo; onDone
         </>
       )}
     </Section>
+  )
+}
+
+/** Signaler un problème : une question par écran, puis le suivi de chaque signalement. */
+function Issues({ code, info, onDone, open, setOpen }: { code: string; info: LinkInfo; onDone: () => void; open: boolean; setOpen: (v: boolean) => void }) {
+  const toast = useToast()
+  const [category, setCategory] = useState<string | null>(null)
+  const [where, setWhere] = useState('')
+  const [description, setDescription] = useState('')
+  const [urgent, setUrgent] = useState(false)
+  const [photos, setPhotos] = useState<File[]>([])
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState<{ advice: string | null } | null>(null)
+  const choice = info.issueChoices.find((c) => c.value === category)
+
+  const reset = () => {
+    setOpen(false)
+    setCategory(null)
+    setWhere('')
+    setDescription('')
+    setUrgent(false)
+    setPhotos([])
+  }
+  const send = async () => {
+    if (!category) return
+    const form = new FormData()
+    form.append('category', category)
+    if (where.trim()) form.append('where', where.trim())
+    form.append('description', description.trim())
+    form.append('urgent', String(urgent))
+    for (const f of photos) form.append('photos', f)
+    setBusy(true)
+    try {
+      const r = await api<{ advice: string | null }>(`/locataire/${encodeURIComponent(code)}/issues`, { method: 'POST', form, timeout: 90_000 })
+      setSent({ advice: r.advice })
+      reset()
+      onDone()
+    } catch (e) {
+      toast.error(e)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Un problème dans le logement ?</h2>}>
+      {open ? (
+        <Wizard
+          onCancel={reset}
+          busy={busy}
+          finishLabel="Envoyer le signalement"
+          onFinish={() => void send()}
+          steps={[
+            {
+              key: 'what',
+              title: 'Quel est le problème ?',
+              content: <Chips options={info.issueChoices.map((c) => ({ value: c.value, label: c.label }))} value={category} onChange={setCategory} />,
+              validate: () => (category ? null : 'Choisissez le type de problème.'),
+            },
+            {
+              key: 'describe',
+              title: 'Décrivez-le en quelques mots',
+              content: (
+                <>
+                  {choice?.advice ? <Callout tone="warn" title="À faire tout de suite">{choice.advice}</Callout> : null}
+                  <Input label="Où ? (facultatif)" value={where} onChange={setWhere} placeholder="Salle de bain, cuisine…" maxLength={80} />
+                  <TextArea label="Ce qui se passe" value={description} onChange={setDescription} placeholder="Depuis quand, ce que vous avez constaté…" maxLength={2000} rows={4} />
+                  {choice?.alwaysUrgent ? null : <Check checked={urgent} onChange={setUrgent} label="C’est urgent" sub="Le logement est inutilisable, ou le problème s’aggrave vite." />}
+                </>
+              ),
+              validate: () => (description.trim().length >= 5 ? null : 'Décrivez le problème en quelques mots.'),
+            },
+            {
+              key: 'photos',
+              title: 'Ajoutez des photos',
+              note: 'Une photo aide votre bailleur à envoyer le bon artisan. Trois au maximum.',
+              optional: true,
+              content: <Photos files={photos} onChange={setPhotos} />,
+            },
+          ]}
+        />
+      ) : (
+        <>
+          {sent ? (
+            <Callout tone={sent.advice ? 'warn' : 'ok'} title="Signalement envoyé à votre bailleur">
+              {sent.advice ?? 'Vous suivrez ici la date de l’intervention.'}
+            </Callout>
+          ) : (
+            <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>Une fuite, une panne, une serrure qui ferme mal : prévenez votre bailleur ici, avec une photo si vous le pouvez.</span>
+          )}
+          <Btn variant={sent ? 'outline' : 'primary'} onClick={() => { setSent(null); setOpen(true) }} style={{ alignSelf: 'flex-start' }}>
+            {sent ? 'Signaler un autre problème' : 'Signaler un problème'}
+          </Btn>
+        </>
+      )}
+      {info.issues.length && !open ? (
+        <ul aria-label="Vos signalements" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {info.issues.map((i) => (
+            <li key={i.id} style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 15, fontWeight: 600 }}>{i.title}</span>
+                <span style={{ fontSize: 13, color: BAI.inkSoft }}>Signalé le {dateNum(i.reportedAt)}</span>
+              </span>
+              <Pill tone={i.status === 'DONE' ? 'green' : i.status === 'PLANNED' ? 'owner' : 'caramel'}>{i.progress}</Pill>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </Card>
+  )
+}
+
+function Photos({ files, onChange }: { files: File[]; onChange: (f: File[]) => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {files.map((f, n) => (
+        <div key={`${f.name}-${n}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15 }}>
+          <span>{f.name}</span>
+          <Btn variant="ghost" onClick={() => onChange(files.filter((_, k) => k !== n))}>
+            Retirer
+          </Btn>
+        </div>
+      ))}
+      {files.length < 3 ? (
+        <label style={{ border: `1.5px dashed ${BAI.dashed}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer', background: BAI.bg }}>
+          <span style={{ fontSize: 16, fontWeight: 600 }}>{files.length ? 'Ajouter une autre photo' : 'Prendre ou choisir une photo'}</span>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>JPEG, PNG ou HEIC, 15 Mo au maximum.</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/heic" onChange={(e) => { const f = e.target.files?.[0]; if (f) onChange([...files, f]); e.target.value = '' }} className="sr-only" />
+        </label>
+      ) : null}
+    </div>
   )
 }
