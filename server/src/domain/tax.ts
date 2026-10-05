@@ -3,8 +3,8 @@
  * enregistrées dans Bailio (sommes encaissées ou payées pendant l'année civile).
  * - Location vide (revenus fonciers) : micro-foncier (recettes du foyer ≤ 15 000 €, abattement de 30 %,
  *   case 4BE de la déclaration 2042) ou régime réel (déclaration 2044, lignes 211 à 250).
- * - Location meublée (loueur en meublé non professionnel) : micro-BIC (abattement de 50 %, case 5ND de la
- *   déclaration 2042-C-PRO), le régime réel relevant d'une comptabilité (expert-comptable).
+ * - Location meublée (loueur en meublé non professionnel) : micro-BIC (abattement de 50 %, case 5NI, 5OI ou 5PI de la
+ *   déclaration 2042-C-PRO, brochure pratique IR 2026), le régime réel (cases 5NA, 5NY) relevant d'une comptabilité (expert-comptable).
  * C'est une aide : le propriétaire vérifie et reste seul responsable de sa déclaration.
  */
 

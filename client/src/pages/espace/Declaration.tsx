@@ -145,7 +145,7 @@ export default function Declaration() {
                 title="Micro-BIC"
                 disabled={!data.furnished.microAllowed}
                 lines={[
-                  ['Case 5ND de la déclaration 2042-C-PRO', eurosCents(data.furnished.receiptsCents)],
+                  ['Case 5NI de la déclaration 2042-C-PRO (5OI pour le second déclarant)', eurosCents(data.furnished.receiptsCents)],
                   ['Imposé après l’abattement de 50 %', eurosCents(data.furnished.microTaxableCents)],
                 ]}
                 better={data.lmnp ? data.lmnp.better === 'MICRO' : true}
@@ -163,7 +163,7 @@ export default function Declaration() {
                     ...(data.lmnp.amortCarriedCents ? ([['Amortissements reportés aux années suivantes', eurosCents(data.lmnp.amortCarriedCents)]] as Array<[string, string]>) : []),
                     ...(data.lmnp.deficitCents ? ([['Déficit reportable 10 ans (location meublée)', eurosCents(data.lmnp.deficitCents)]] as Array<[string, string]>) : []),
                   ]}
-                  text="Amortissement simplifié : logement hors terrain sur 30 ans, mobilier sur 7 ans, travaux d’amélioration sur 15 ans. Il ne peut pas créer de déficit : le reste est reporté. Pour opter pour le réel, la liasse 2031 se fait avec un expert-comptable ou un logiciel agréé ; depuis 2025, les amortissements déduits sont repris dans la plus-value à la vente."
+                  text="Amortissement simplifié : logement hors terrain sur 30 ans, mobilier sur 7 ans, travaux d’amélioration sur 15 ans. Il ne peut pas créer de déficit : le reste est reporté. Pour opter pour le réel, la liasse 2031 se fait avec un expert-comptable ou un logiciel agréé, et son résultat se reporte case 5NA (bénéfice) ou 5NY (déficit) de la 2042-C-PRO ; depuis 2025, les amortissements déduits sont repris dans la plus-value à la vente."
                 />
               ) : null}
               {data.lmnp?.missingPurchase ? <Callout tone="tip">Indiquez le prix d’achat de chaque logement meublé : sans lui, l’amortissement du logement n’est pas compté.</Callout> : null}
