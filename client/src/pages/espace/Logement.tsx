@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
 import { OwnerCard } from '../../components/StructurePicker'
+import { LoanCard } from '../../components/LoanCard'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { UploadModal } from '../../components/UploadModal'
@@ -126,6 +127,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
           {p.completion.percent < 100 ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>Reste : {p.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}.</span> : null}
         </Card>
         <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} />
+        <LoanCard propertyId={p.id} />
         <Card title="Diagnostics">
           {required.map((d) => {
             const st = diagnosticStatus(d, p.file)

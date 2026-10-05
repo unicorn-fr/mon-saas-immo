@@ -32,6 +32,8 @@ interface TaxView {
   lmnpSettings?: Record<string, { name: string; purchase: { priceCents?: number | null; date?: string | null } | null; landSharePercent: number | null; furnitureCents: number | null }>
   unassignedExpensesCents: number
   extras: Record<string, { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null; lmnpCarriedCents?: number | null }>
+  /** Ligne 250 calculée depuis les emprunts du logement (reprise quand rien n'est saisi). */
+  loanComputed?: Record<string, number>
 }
 
 const thisYear = new Date().getFullYear()
@@ -125,7 +127,12 @@ export default function Declaration() {
                   <span>{eurosCents(Math.abs(p.resultCents))}</span>
                 </div>
                 <div className="grid-2" style={{ gap: 12 }}>
-                  <Money label="Intérêts d’emprunt payés (ligne 250)" cents={data.extras[p.id]?.loanInterestCents ?? null} onChange={(c) => saveExtra(p.id, { loanInterestCents: c })} hint="Sur le tableau d’amortissement de votre banque, pour cette année. Enregistré avec le logement." />
+                  <Money
+                    label="Intérêts, assurance et frais d’emprunt (ligne 250)"
+                    cents={data.extras[p.id]?.loanInterestCents ?? null}
+                    onChange={(c) => saveExtra(p.id, { loanInterestCents: c })}
+                    hint={data.loanComputed?.[p.id] ? `Calculé depuis l’emprunt du logement : ${eurosCents(data.loanComputed[p.id])}, repris si vous laissez vide. Le tableau de votre banque fait foi.` : 'Sur le tableau d’amortissement de votre banque, pour cette année. Ou renseignez l’emprunt du logement : Bailio le calcule.'}
+                  />
                   <Money label="Honoraires et frais de gestion (ligne 221)" cents={data.extras[p.id]?.adminFeesCents ?? null} onChange={(c) => saveExtra(p.id, { adminFeesCents: c })} hint="Agence, frais de procédure, comptable…" />
                   <Money label="Régularisation des provisions de copropriété de l’an dernier (ligne 230)" cents={data.extras[p.id]?.coproRegularizationCents ?? null} onChange={(c) => saveExtra(p.id, { coproRegularizationCents: c })} hint="Part non déductible des provisions déduites l’an dernier, indiquée sur le décompte annuel du syndic. 0 si vous n’êtes pas en copropriété." />
                 </div>

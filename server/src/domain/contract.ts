@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { loanSchema } from './loan.js'
 
 /**
  * Fiches Bailio : chaque donnée est saisie une seule fois (profil du bailleur, fiche du logement,
@@ -217,6 +218,8 @@ export const propertyFileSchema = z.object({
   keys: opt(text(200)),
   /** Location meublée au régime réel : part du terrain dans le prix d'achat et valeur du mobilier (amortissements). */
   lmnp: opt(z.object({ landSharePercent: opt(z.number().min(0).max(90)), furnitureCents: opt(cents) })),
+  /** Emprunts du logement (domain/loan.ts) : tableau d'amortissement, ligne 250 de la 2044, trésorerie. */
+  loans: opt(z.array(loanSchema).max(5)),
   /** Achat du logement : sert au rendement brut du bilan. */
   purchase: opt(z.object({ priceCents: opt(z.number().int().min(0).max(1_000_000_000)), date: opt(isoDate) })),
   /** Assurance du propriétaire (PNO) : numéro de contrat repris dans les déclarations de sinistre. */

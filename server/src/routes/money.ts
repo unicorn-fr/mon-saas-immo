@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { lmnpEstimate } from '../domain/lmnp.js'
+import { loanSchedule, loanSignedAt, loanYear, loansAt, loansDeductible, monthlyCashflow, monthlyPaymentCents } from '../domain/loan.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { BINDER_UPLOADS } from '../domain/binder.js'
 import { z } from 'zod'
@@ -15,7 +16,7 @@ import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf, type LetterRender } from '../pdf/letter.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
-import { propertyFileSchema, type ContractInput, type Guarantor } from '../domain/contract.js'
+import { propertyFileSchema, type ContractInput, type Guarantor, type PropertyFile } from '../domain/contract.js'
 import { splitPayment, taxSummary, type TaxProperty } from '../domain/tax.js'
 import { propertyReport } from '../domain/report.js'
 import { toTrash } from '../services/trash.js'
@@ -288,7 +289,7 @@ router.get('/money/tax', async (req, res) => {
         furnished,
         payments: mine.filter((x) => (leaseKindOf(x.lease) !== 'VIDE') === furnished).map((x) => splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents)),
         expenses: kinds.size > 1 && furnished ? [] : expenses.filter((e) => e.propertyId === p.id),
-        extra: file.tax?.[String(year)] ?? null,
+        extra: withLoans(file, year),
       })
     }
   }
@@ -302,7 +303,7 @@ router.get('/money/tax', async (req, res) => {
           const file = readProperty(p)
           const pays = input.find((x) => x.id === p.id && x.furnished)!.payments
           const exp = expenses.filter((e) => e.propertyId === p.id)
-          const extra = file.tax?.[String(year)]
+          const extra = withLoans(file, year)
           return {
             receiptsCents: pays.reduce((a, x) => a + x.rentCents + x.chargesCents, 0),
             chargesCents: exp.filter((e) => ['REPAIR', 'MAINTENANCE', 'TAX', 'COPRO', 'INSURANCE'].includes(e.category)).reduce((a, e) => a + e.amountCents, 0),
@@ -317,7 +318,58 @@ router.get('/money/tax', async (req, res) => {
         furnishedProps.reduce((a, p) => a + (readProperty(p).tax?.[String(year)]?.lmnpCarriedCents ?? 0), 0),
       )
     : null
-  res.json({ success: true, data: { ...taxSummary(year, input), lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])) } })
+  res.json({ success: true, data: { ...taxSummary(year, input), lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])) } })
+})
+
+/** Ligne 250 : le montant saisi pour l'année, sinon celui calculé depuis les emprunts du logement. */
+function withLoans(file: PropertyFile, year: number) {
+  const extra = file.tax?.[String(year)] ?? null
+  if (extra?.loanInterestCents !== null && extra?.loanInterestCents !== undefined) return extra
+  const computed = loansDeductible(file.loans ?? [], year)
+  return computed ? { ...(extra ?? {}), loanInterestCents: computed } : extra
+}
+
+// Emprunts du logement : tableau d'amortissement par année, mensualité du mois, trésorerie mensuelle.
+router.get('/properties/:id/loans', async (req, res) => {
+  const userId = req.user!.id
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId }, include: { leases: { where: { status: { in: ['ACTIVE', 'IMPORTED'] } }, orderBy: { startDate: 'desc' }, take: 1 } } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const file = readProperty(p)
+  const loans = file.loans ?? []
+  const today = new Date().toISOString().slice(0, 10)
+  const year = Number(today.slice(0, 4))
+  const views = loans.map((l, index) => {
+    const rows = loanSchedule(l)
+    const years = [...new Set(rows.map((r) => Number(r.date.slice(0, 4))))]
+    const signedYear = Number(loanSignedAt(l).slice(0, 4))
+    if (!years.includes(signedYear)) years.unshift(signedYear)
+    return {
+      index,
+      loan: l,
+      monthlyCents: monthlyPaymentCents(l.principalCents, l.ratePercent, l.months),
+      endDate: rows.length ? rows[rows.length - 1].date : l.firstPaymentDate,
+      totalInterestCents: rows.reduce((a, r) => a + r.interestCents, 0),
+      totalInsuranceCents: rows.reduce((a, r) => a + r.insuranceCents, 0),
+      years: years.map((y) => loanYear(l, y, rows)),
+      rows,
+    }
+  })
+  // Loyer du mois : bail en cours, sinon loyer prévu dans la fiche du logement.
+  const lease = p.leases[0]
+  const amounts = lease ? amountsForPeriod(lease, today.slice(0, 7)) : { rentCents: file.rent?.rentCents ?? 0, chargesCents: file.rent?.chargesCents ?? 0 }
+  const since = new Date(Date.UTC(year - 1, new Date().getUTCMonth(), new Date().getUTCDate()))
+  const spent = await prisma.expense.aggregate({ where: { userId, propertyId: p.id, status: 'OK', date: { gte: since } }, _sum: { amountCents: true } })
+  const now = loansAt(loans, today)
+  const averageExpensesCents = Math.round((spent._sum.amountCents ?? 0) / 12)
+  res.json({
+    success: true,
+    data: {
+      loans: views,
+      now,
+      thisYear: { year, deductibleCents: loansDeductible(loans, year) },
+      cashflow: { rented: Boolean(lease), ...amounts, loanPaymentCents: now.paymentCents, loanInsuranceCents: now.insuranceCents, averageExpensesCents, netCents: monthlyCashflow({ ...amounts, loanPaymentCents: now.paymentCents, loanInsuranceCents: now.insuranceCents, averageExpensesCents }) },
+    },
+  })
 })
 
 // Intérêts d'emprunt et honoraires de l'année, saisis une fois et gardés avec le logement.
