@@ -48,7 +48,7 @@ test('espace du propriétaire : aucune violation WCAG 2.1 AA', async () => {
     '/espace/locataires', '/espace/locataires/nouveau', `/espace/locataires/${tenantId}`, `/espace/locataires/${tenantId}/fiche`, `/espace/locataires/${tenantId}/caution`,
     `/espace/baux/nouveau?logement=${propertyId}`, `/espace/baux/${leaseId}`, `/espace/baux/${leaseId}/contrat`, `/espace/baux/${leaseId}/courriers`, `/espace/baux/${leaseId}/etat-des-lieux`, `/espace/baux/${leaseId}/parcours/DEPARTURE`,
     '/espace/documents', '/espace/argent', '/espace/argent/bilan', '/espace/argent/declaration', '/espace/argent/facture', '/espace/argent/releve',
-    '/espace/situations', '/espace/compte', '/espace/compte/profil', '/espace/carnet', '/espace/corbeille', '/espace/structures',
+    '/espace/situations', '/espace/compte', '/espace/compte/profil', '/espace/carnet', '/espace/corbeille', '/espace/structures', '/espace/compte/acces',
   ]
   for (const path of pages) problems.push(...(await audit(page, path)))
   // Liens publics remis au locataire et aux candidats (sans compte).

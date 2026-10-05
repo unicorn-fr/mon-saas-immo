@@ -62,7 +62,7 @@ function siteUrl(): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'robots.txt',
-        source: ['User-agent: *', 'Allow: /', ...['/espace', '/commencer/', '/connexion', '/inscription', '/reprendre', '/bienvenue', '/signer/', '/dossier/', '/locataire/', '/edl/', '/candidature/'].map((p) => `Disallow: ${p}`), `Sitemap: ${SITE_URL}/sitemap.xml`, ''].join('\n'),
+        source: ['User-agent: *', 'Allow: /', ...['/espace', '/commencer/', '/connexion', '/inscription', '/reprendre', '/bienvenue', '/signer/', '/dossier/', '/locataire/', '/edl/', '/candidature/', '/invitation/'].map((p) => `Disallow: ${p}`), `Sitemap: ${SITE_URL}/sitemap.xml`, ''].join('\n'),
       })
       this.emitFile({ type: 'asset', fileName: 'llms.txt', source: LLMS_TXT })
       this.emitFile({

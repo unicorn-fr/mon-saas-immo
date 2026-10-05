@@ -1,5 +1,5 @@
 import type { Structure, User } from '@prisma/client'
-import { prisma } from '../db.js'
+import { accessScope, prisma } from '../db.js'
 import { structureFromProfile } from '../domain/structure.js'
 import { HttpError } from '../lib/http.js'
 import { readProfile } from './contract.js'
@@ -9,6 +9,8 @@ import { readProfile } from './contract.js'
  * (créés avant les structures, par le formulaire du début ou par l'import) rejoignent la plus ancienne.
  */
 export async function ensureStructures(user: Pick<User, 'id' | 'profile'>): Promise<Structure[]> {
+  // Espace partagé : l'invité voit les structures de ses logements, il n'en crée pas.
+  if (accessScope.getStore()) return prisma.structure.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'asc' } })
   return prisma.$transaction(async (tx) => {
     // Un seul passage à la fois par compte : deux pages ouvertes ensemble ne créent pas deux premières structures.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id}))`

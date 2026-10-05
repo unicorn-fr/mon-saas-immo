@@ -82,6 +82,30 @@ model User {
   interventions Intervention[]
   trashItems    TrashItem[]
   structures    Structure[]
+  accessGiven   Access[]  @relation("AccessOwner")
+  accessHeld    Access[]  @relation("AccessMember")
+}
+
+/// Accès partagé : le propriétaire invite une personne (associé, comptable, intervenant) sur certains logements.
+/// L'invité se connecte avec son propre compte ; toutes ses requêtes sont limitées à ces logements (domain/access.ts).
+model Access {
+  id              String    @id @default(uuid())
+  ownerId         String
+  owner           User      @relation("AccessOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  email           String
+  memberId        String?
+  member          User?     @relation("AccessMember", fields: [memberId], references: [id], onDelete: Cascade)
+  /// ASSOCIATE (tout sauf supprimer), ACCOUNTANT (lecture seule), CONTRACTOR (un logement, le strict nécessaire)
+  role            String
+  propertyIds     String[]  @default([])
+  inviteTokenHash String?   @unique
+  inviteExpiresAt DateTime?
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([ownerId])
+  @@index([memberId])
 }
 
 /// Structure qui détient des logements : en nom propre, à deux (couple, indivision), SCI, autre société.
@@ -135,6 +159,8 @@ model LoginToken {
   tokenHash String    @unique
   email     String
   draftId   String?
+  /// Invitation acceptée au clic sur ce lien (accès partagé)
+  accessId  String?
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())

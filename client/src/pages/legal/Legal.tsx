@@ -296,7 +296,9 @@ export function Confidentialite() {
       </p>
       <H2>Qui y a accès</H2>
       <p>
-        Vous seul, et les personnes à qui vous envoyez un document ou un lien. Les baux et les factures que vous importez sont lus sur
+        Vous seul, les personnes à qui vous envoyez un document ou un lien, et celles que vous invitez dans « Accès partagés » : elles ne
+        voient que les logements que vous choisissez, selon le rôle donné (associé, comptable, intervenant), et vous retirez l'accès quand
+        vous voulez. Nous gardons leur adresse email et la date d'acceptation, le temps de l'accès. Les baux et les factures que vous importez sont lus sur
         notre serveur : ils ne sont transmis à aucun service d'intelligence artificielle ni à aucun autre tiers. Seule l'adresse du
         logement que vous tapez est envoyée, depuis notre serveur, au service public de recherche d'adresses de l'IGN (Géoplateforme,
         à partir de la Base Adresse Nationale), pour la compléter. Si vous utilisez un assistant d'IA pour rédiger votre annonce, c'est
@@ -370,6 +372,7 @@ export function Cookies() {
           ['bailio.session', 'Vous garder connecté à votre espace (jeton de session aléatoire)', 'Jusqu’à la déconnexion, ou 30 jours sans visite'],
           ['bailio.draft', 'Retrouver le bail commencé sans compte, si vous fermez la page', '30 jours, ou jusqu’à la création de votre espace'],
           ['bailio.boot, bailio.recover', 'Recharger une seule fois la page si elle s’est mal chargée', 'Le temps de l’onglet ouvert'],
+          ['bailio.space', 'Retenir l’espace partagé que vous avez ouvert (invitation d’un propriétaire)', 'Jusqu’au retour à votre espace ou à la déconnexion'],
           ['Service de mise à jour du site', 'Vider l’ancienne version du site après une mise à jour', 'Aucune donnée personnelle'],
         ]}
       />

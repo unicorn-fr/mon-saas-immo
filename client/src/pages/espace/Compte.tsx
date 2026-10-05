@@ -92,6 +92,9 @@ export default function Compte() {
               <Toggle border={false} checked={weekly} onChange={(v) => prefs({ notifyWeekly: v })} label="Récapitulatif du lundi" sub="Ce qui arrive dans la semaine : loyers, révisions, attestations." />
               <Toggle checked={urgent} onChange={(v) => prefs({ notifyUrgent: v })} label="Alertes urgentes" sub="Loyer en retard, échéance dans les trois jours." />
             </Card>
+            <Card title="Accès partagés" action={<TextLink to="/espace/compte/acces" style={{ fontSize: 14 }}>Gérer</TextLink>}>
+              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Invitez un associé, votre comptable ou un artisan sur certains logements, ou ouvrez un espace partagé avec vous.</span>
+            </Card>
             <Card title="Vos données">
               <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Vos données sont hébergées en Suisse, chez Infomaniak, et ne sont jamais revendues.</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>

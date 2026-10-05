@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { User } from '@prisma/client'
-import { prisma } from '../db.js'
+import { accessScope, prisma } from '../db.js'
+import { isSelfPath, routeDenied, type AccessRole, type Scope } from '../domain/access.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { HttpError } from '../lib/http.js'
 import { clientIp } from '../lib/rateLimit.js'
@@ -15,6 +16,9 @@ declare module 'express-serve-static-core' {
   interface Request {
     user?: User
     sessionId?: string
+    /** Espace partagé : la personne réellement connectée (req.user est alors le propriétaire). */
+    actor?: User
+    access?: { id: string; role: AccessRole; propertyIds: string[] }
   }
 }
 
@@ -66,13 +70,40 @@ export async function optionalUser(req: Request, _res: Response, next: NextFunct
   next()
 }
 
-export async function requireUser(req: Request, _res: Response, next: NextFunction) {
+export async function requireUser(req: Request, res: Response, next: NextFunction) {
   // Plusieurs routeurs partagent le préfixe /api : la session n'est lue qu'une fois par requête.
   if (req.user) return next()
   const user = await loadUser(req)
   if (!user) return next(new HttpError(401, 'Votre session a expiré. Reconnectez-vous.'))
-  req.user = user
-  next()
+  const space = String(req.headers['x-bailio-space'] ?? '').trim()
+  // Chemin complet sous /api (dans un sous-routeur, req.path est raccourci).
+  const path = req.originalUrl.split('?')[0].replace(/^\/api(?=\/|$)/, '') || '/'
+  if (!space || isSelfPath(path)) {
+    req.user = user
+    return next()
+  }
+  // Espace partagé : la personne travaille dans l'espace du propriétaire, limitée aux logements partagés.
+  const access = await prisma.access.findFirst({ where: { id: space, memberId: user.id, acceptedAt: { not: null }, revokedAt: null }, include: { owner: true } })
+  if (!access) return next(new HttpError(403, 'Cet accès partagé n’existe plus. Revenez à votre espace.'))
+  const role = access.role as AccessRole
+  const refused = routeDenied(role, req.method, path)
+  if (refused) return next(new HttpError(403, refused))
+  const properties = await prisma.property.findMany({ where: { userId: access.ownerId, id: { in: access.propertyIds } }, select: { id: true, structureId: true } })
+  const propertyIds = properties.map((p) => p.id)
+  const leases = await prisma.lease.findMany({ where: { userId: access.ownerId, propertyId: { in: propertyIds } }, select: { id: true, tenantIds: true } })
+  const scope: Scope = {
+    ownerId: access.ownerId,
+    role,
+    propertyIds,
+    leaseIds: leases.map((l) => l.id),
+    tenantIds: [...new Set(leases.flatMap((l) => l.tenantIds))],
+    structureIds: [...new Set(properties.map((p) => p.structureId).filter((x): x is string => Boolean(x)))],
+  }
+  req.user = access.owner
+  req.actor = user
+  req.access = { id: access.id, role, propertyIds }
+  res.setHeader('Cache-Control', 'no-store')
+  accessScope.run(scope, () => next())
 }
 
 export function sessionToken(req: Request): string | null {

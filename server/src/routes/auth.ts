@@ -10,6 +10,7 @@ import { allowEmailTo, limitPerVisitor } from '../lib/rateLimit.js'
 import { createSession, deleteSession, optionalUser, requireUser, sessionToken } from '../services/session.js'
 import { createLeaseFromDraft, draftToLeaseInput } from '../services/leases.js'
 import { draftFromRequest } from './drafts.js'
+import { acceptAccess, invitationEmailFor, ownerLabel } from './access.js'
 
 const router = Router()
 const limiter = limitPerVisitor(15, 20)
@@ -30,13 +31,19 @@ export function publicUser(u: User) {
   }
 }
 
-async function sendMagicLink(email: string, draftId: string | null, isNew = false): Promise<void> {
+async function sendMagicLink(email: string, draftId: string | null, isNew = false, accessId: string | null = null): Promise<void> {
   const token = newToken()
   await prisma.loginToken.create({
-    data: { tokenHash: hashToken(token), email, draftId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000) },
+    data: { tokenHash: hashToken(token), email, draftId, accessId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000) },
   })
   const url = `${env.CLIENT_URL}/connexion/lien?jeton=${encodeURIComponent(token)}`
-  const mail = draftId
+  const mail = accessId
+    ? layout({
+        title: 'Accédez à l’espace partagé avec vous.',
+        paragraphs: [`Cliquez sur le bouton : votre invitation est acceptée et l’espace s’ouvre. Pas de mot de passe à retenir. Ce lien est valable ${LINK_MINUTES} minutes.`, "Si vous n'avez rien demandé, ignorez cet email."],
+        cta: { label: 'Ouvrir l’espace partagé', url },
+      })
+    : draftId
     ? layout({
         title: 'Confirmez votre adresse pour retrouver votre bail.',
         paragraphs: [
@@ -97,6 +104,15 @@ router.post('/magic-link', limiter, async (req, res) => {
   res.json({ success: true, data: { sent: true } })
 })
 
+// Invitation à un espace partagé, pas encore connecté : le lien part à l'adresse invitée (et seulement à elle).
+router.post('/invitation-link', limiter, async (req, res) => {
+  const { token } = z.object({ token: z.string().min(10).max(200) }).parse(req.body)
+  const { accessId, email } = await invitationEmailFor(token)
+  const existing = await prisma.user.findUnique({ where: { email } })
+  await sendMagicLink(email, null, !existing, accessId)
+  res.json({ success: true, data: { sent: true, email } })
+})
+
 router.post('/magic-link/verify', limiter, async (req, res) => {
   const { token } = z.object({ token: z.string().min(10).max(200) }).parse(req.body)
   const row = await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } })
@@ -111,9 +127,18 @@ router.post('/magic-link/verify', limiter, async (req, res) => {
     create: { email: row.email, emailVerifiedAt: new Date(), followUpSince: new Date() },
   })
   const leaseId = row.draftId ? (await createLeaseFromDraft(user, row.draftId)).lease.id : null
+  // Lien envoyé depuis une invitation : elle est acceptée, l'espace partagé s'ouvre.
+  let space: { id: string; role: string; ownerName: string } | null = null
+  if (row.accessId) {
+    const a = await prisma.access.findUnique({ where: { id: row.accessId }, include: { owner: true } })
+    if (a && !a.revokedAt && !a.acceptedAt && a.inviteExpiresAt && a.inviteExpiresAt > new Date() && a.email.toLowerCase() === row.email.toLowerCase()) {
+      await acceptAccess(a.id, user.id)
+      space = { id: a.id, role: a.role, ownerName: ownerLabel(a.owner) }
+    }
+  }
   const sessionTokenValue = await createSession(user.id, req)
   const fresh = await prisma.user.findUniqueOrThrow({ where: { id: user.id } })
-  res.json({ success: true, data: { sessionToken: sessionTokenValue, user: publicUser(fresh), leaseId } })
+  res.json({ success: true, data: { sessionToken: sessionTokenValue, user: publicUser(fresh), leaseId, space } })
 })
 
 router.get('/me', requireUser, (req, res) => {

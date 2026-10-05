@@ -1,10 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { initialsOf } from '../lib/contract'
 import type { TodayView } from '../lib/space'
+import { ROLE_LABEL, ROLE_RIGHTS, getSpace, switchSpace } from '../lib/shared'
 import { Euro, Home, Page, People, Plus, Sun, Signpost, Book } from './Icons'
 import { Modal } from './kit'
 
@@ -51,6 +52,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const openAdd = useCallback(() => setAddOpen(true), [])
   const value = useMemo(() => ({ taskCount, setTaskCount, openAdd }), [taskCount, openAdd])
+  const space = getSpace()
+  // Un intervenant n'a que sa fiche d'intervention.
+  if (space?.role === 'CONTRACTOR') return <Navigate to="/espace/partage" replace />
 
   return (
     <SpaceContext.Provider value={value}>
@@ -58,6 +62,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Sidebar taskCount={taskCount} onAdd={openAdd} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <MobileHeader />
+          {space ? (
+            <div role="status" style={{ background: BAI.night, color: BAI.surface, padding: '10px clamp(16px, 3vw, 32px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 14 }}>
+              <span>
+                Espace de <strong>{space.ownerName}</strong> · {ROLE_LABEL[space.role]}. {ROLE_RIGHTS[space.role]}
+              </span>
+              <button type="button" onClick={() => switchSpace(null)} style={{ background: 'none', border: `1px solid ${BAI.nightLine}`, borderRadius: 10, color: BAI.surface, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, padding: '6px 12px', cursor: 'pointer' }}>
+                Revenir à mon espace
+              </button>
+            </div>
+          ) : null}
           <main className="shell-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 28, width: '100%', maxWidth: 1240, margin: '0 auto' }}>
             {children}
           </main>

@@ -15,6 +15,7 @@ import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
 import geoRoutes from './routes/geo.js'
 import structureRoutes from './routes/structures.js'
+import accessRoutes from './routes/access.js'
 import spaceRoutes from './routes/space.js'
 import esignRoutes from './routes/esign.js'
 import leaseRoutes from './routes/leases.js'
@@ -32,7 +33,7 @@ export function createApp() {
     cors({
       origin: (origin, cb) => cb(null, !origin || allowedOrigins.has(origin) || (env.NODE_ENV !== 'production' && origin.startsWith('http://localhost'))),
       exposedHeaders: ['Content-Disposition'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token', 'X-Bailio-Space'],
     }),
   )
   // Signatures dessinées (images) et états des lieux : quelques centaines de Ko.
@@ -75,6 +76,7 @@ export function createApp() {
   app.use('/api', esignRoutes)
   app.use('/api', accountRoutes)
   app.use('/api', todayRoutes)
+  app.use('/api', accessRoutes)
   app.use('/api', structureRoutes)
   app.use('/api', spaceRoutes)
   app.use('/api', leaseRoutes)

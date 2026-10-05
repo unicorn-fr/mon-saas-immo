@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { setSpace } from './shared'
 import { api } from './api'
 import { SESSION_KEY, storage } from './storage'
 import type { User } from './types'
@@ -27,12 +28,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback((token: string, u: User) => {
     storage.set(SESSION_KEY, token)
+    setSpace(null)
     setUser(u)
   }, [])
 
   const signOut = useCallback(async () => {
     await api('/auth/logout', { method: 'POST' }).catch(() => undefined)
     storage.set(SESSION_KEY, null)
+    setSpace(null)
     setUser(null)
   }, [])
 

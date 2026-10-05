@@ -1,4 +1,5 @@
 import { DRAFT_KEY, SESSION_KEY, storage } from './storage'
+import { getSpace } from './shared'
 
 // L'API est toujours appelée sur la même adresse que le site (/api) : relayée par Vercel (vercel.json),
 // par Caddy sur le serveur, ou par Vite en local. Le navigateur ne contacte donc jamais un autre domaine,
@@ -26,6 +27,9 @@ function headers(opts: RequestOptions): Headers {
   const h = new Headers()
   const session = storage.get(SESSION_KEY)
   if (session) h.set('Authorization', `Bearer ${session}`)
+  // Espace partagé ouvert : le serveur limite tout aux logements partagés (et ignore l'en-tête pour le compte lui-même).
+  const space = getSpace()
+  if (space) h.set('X-Bailio-Space', space.id)
   if (opts.draft) {
     const draft = storage.get(DRAFT_KEY)
     if (draft) h.set('X-Draft-Token', draft)

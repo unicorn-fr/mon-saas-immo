@@ -6,6 +6,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { Callout, Input } from '../components/kit'
 import { MailLinks } from '../components/MailLinks'
 import { Button, Spinner, display } from '../components/ui'
+import { switchSpace, type SharedSpace } from '../lib/shared'
 import { api, ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import type { User } from '../lib/types'
@@ -14,11 +15,12 @@ interface Session {
   sessionToken: string
   user: User
   leaseId: string | null
+  space?: SharedSpace | null
 }
 
 
 /** Écran partagé de la connexion et de l'inscription (maquettes « Connexion » et « Inscription directe »). */
-function AuthLayout({ children }: { children: ReactNode }) {
+export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }} className="col-md">
       <div className="auth-side" style={{ width: 'min(600px, 42vw)', background: BAI.night, boxSizing: 'border-box', padding: 'clamp(28px, 4vw, 48px) clamp(24px, 5vw, 72px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}>
@@ -141,6 +143,8 @@ export function ConnexionLien() {
     api<Session>('/auth/magic-link/verify', { method: 'POST', body: { token } })
       .then((s) => {
         signIn(s.sessionToken, s.user)
+        // Lien venu d'une invitation : l'espace partagé s'ouvre tout de suite.
+        if (s.space) return switchSpace(s.space)
         const next = safePath(params.get('suite'))
         navigate(s.leaseId ? `/bienvenue/${s.leaseId}` : next ?? '/espace', { replace: true, state: { justCreated: Boolean(s.leaseId) } })
       })
