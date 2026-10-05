@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
@@ -45,28 +45,14 @@ export default function Argent() {
           </span>
         }
         actions={
-          <>
-            <Btn variant="outline" to="/espace/argent/releve">
-              Relevé bancaire
-            </Btn>
-            <Btn variant="outline" to="/espace/argent/bilan">
-              Bilan
-            </Btn>
-            <Btn variant="outline" to="/espace/argent/declaration">
-              Déclaration de revenus
-            </Btn>
-            <Btn variant="outline" onClick={exportYear}>
-              Exporter l’année
-            </Btn>
-            <Btn
-              onClick={() => {
-                setEdit(null)
-                setOpen(true)
-              }}
-            >
-              Ajouter une dépense
-            </Btn>
-          </>
+          <Btn
+            onClick={() => {
+              setEdit(null)
+              setOpen(true)
+            }}
+          >
+            Ajouter une dépense
+          </Btn>
         }
       />
       {loading && !data ? (
@@ -80,6 +66,22 @@ export default function Argent() {
             <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
             <Total label="Reste" value={eurosCents(data.netCents)} dark />
           </div>
+          <nav aria-label="Outils" className="grid-4" style={{ gap: 12 }}>
+            {[
+              { to: '/espace/argent/releve', title: 'Relevé bancaire', text: 'Retrouver les loyers reçus' },
+              { to: '/espace/argent/declaration', title: 'Déclaration', text: 'Les montants à déclarer' },
+              { to: '/espace/argent/bilan', title: 'Bilan', text: 'Résultat par logement' },
+            ].map((t) => (
+              <Link key={t.to} to={t.to} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: BAI.owner }}>{t.title}</span>
+                <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.text}</span>
+              </Link>
+            ))}
+            <button type="button" onClick={() => void exportYear()} style={{ textAlign: 'left', fontFamily: 'inherit', cursor: 'pointer', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: BAI.owner }}>Exporter l’année</span>
+              <span style={{ fontSize: 13, color: BAI.inkMid }}>Tableau pour votre comptable</span>
+            </button>
+          </nav>
           <div className="split-aside" style={{ gap: 24 }}>
             <Card title="Loyers encaissés par mois" style={{ flex: '1 1 0', gap: 18 }}>
               <Chart data={data} />

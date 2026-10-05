@@ -57,16 +57,15 @@ export default function FicheLogement() {
         </Fields>
         <Fields>
           <Input label="Nom pour le reconnaître" value={f.label} onChange={(v) => set({ label: v })} placeholder="Studio rue Foch" />
-          <Input label="Identifiant fiscal du logement" value={f.fiscalId} onChange={(v) => set({ fiscalId: v })} hint="Mention obligatoire du bail depuis 2024. Sur impots.gouv.fr (« Gérer mes biens immobiliers ») ou sur l’avis de taxe foncière." />
-          <Chips legend="Autorisation préalable de mise en location (« permis de louer ») exigée par la commune ?" value={f.rentalPermit?.required ?? null} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, required: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} />
-          {f.rentalPermit?.required ? (
-            <Fields>
-              <Input label="Numéro de l’autorisation" value={f.rentalPermit.reference} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, reference: v } })} />
-              <Input label="Date de l’autorisation" type="date" value={f.rentalPermit.date} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, date: v || null } })} />
-            </Fields>
-          ) : null}
+          <Input label="Identifiant fiscal du logement" value={f.fiscalId} onChange={(v) => set({ fiscalId: v })} hint="Obligatoire dans le bail. Sur impots.gouv.fr (« Gérer mes biens immobiliers ») ou sur l’avis de taxe foncière." />
         </Fields>
-        <Callout tone="info">Certaines communes imposent un permis de louer (autorisation ou déclaration de mise en location). Renseignez-vous auprès de votre mairie avant la signature.</Callout>
+        <Chips legend="Votre commune exige-t-elle un « permis de louer » ?" value={f.rentalPermit?.required ?? null} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, required: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint="Certaines communes imposent une autorisation avant de louer. En cas de doute, demandez à votre mairie." />
+        {f.rentalPermit?.required ? (
+          <Fields>
+            <Input label="Numéro de l’autorisation" value={f.rentalPermit.reference} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, reference: v } })} />
+            <Input label="Date de l’autorisation" type="date" value={f.rentalPermit.date} onChange={(v) => set({ rentalPermit: { ...f.rentalPermit, date: v || null } })} />
+          </Fields>
+        ) : null}
       </FicheSection>
 
       <FicheSection id="type" guides={['meuble']} n={++n} title="Type et régime" intro="Ces mentions sont obligatoires dans le bail." reference="Contrat type, rubriques II.A et II.B" done={done('type')}>

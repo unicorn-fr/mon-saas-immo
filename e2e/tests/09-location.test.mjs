@@ -121,7 +121,7 @@ test('déclaration de revenus : loyers encaissés repris, intérêts d’emprunt
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/argent`)
-  await page.getByRole('link', { name: 'Déclaration de revenus' }).click()
+  await page.getByRole('link', { name: /^Déclaration/ }).click()
   await page.getByRole('button', { name: String(year) }).click()
   await page.getByText('Case 4BE de la déclaration 2042').waitFor()
   await shot(page, 'declaration')
@@ -145,7 +145,7 @@ test('bilan : résultat par logement, prix d’achat gardé et rendement brut', 
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/argent`)
-  await page.getByRole('link', { name: 'Bilan', exact: true }).click()
+  await page.getByRole('link', { name: /^Bilan/ }).click()
   await page.getByText('Rendement brut : 5,1 % par an.').waitFor()
   await shot(page, 'bilan')
   await ctx.close()

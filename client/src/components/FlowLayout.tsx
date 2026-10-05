@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import type { Completion } from '../lib/contract'
@@ -213,10 +213,13 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
   const { hash } = useLocation()
   const ref = useRef<HTMLElement>(null)
   const target = hash === `#${id}`
+  // Une étape déjà remplie est repliée en une ligne : la fiche ne montre que ce qui reste à faire.
+  const [open, setOpen] = useState(!done || target)
   // Arrivée depuis « Il manque… » : on amène l'étape à l'écran et on la signale.
   // Le curseur se place dans le premier champ encore vide de l'étape : il n'y a plus qu'à taper.
   useEffect(() => {
     if (!target) return
+    setOpen(true)
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     const t = window.setTimeout(() => {
       // Champ vide, ou groupe de boutons à choix dont aucun n'est sélectionné, dans l'ordre de la page.
@@ -233,6 +236,21 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
     }, 450)
     return () => window.clearTimeout(t)
   }, [target])
+  if (!open)
+    return (
+      <section ref={ref} id={id} style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 20, scrollMarginTop: 100 }}>
+        <h2 style={{ margin: 0 }}>
+          <button type="button" aria-expanded={false} onClick={() => setOpen(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', background: 'none', border: 'none', padding: 'clamp(14px, 2.4vw, 18px) clamp(18px, 3vw, 28px)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', color: BAI.ink }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 11, flexShrink: 0, background: BAI.green, color: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>✓</span>
+              <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: BAI.green }}>Rempli</span>
+            </span>
+            <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, flexShrink: 0 }}>Modifier</span>
+          </button>
+        </h2>
+      </section>
+    )
   return (
     <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.caramel : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
