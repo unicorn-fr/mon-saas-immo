@@ -25,11 +25,9 @@ function summarize(steps: Step[]): Completion {
 }
 
 export function landlordCompletion(p: LandlordProfile): Completion {
-  const company = p.kind === 'SCI' || p.kind === 'COMPANY'
+  // Qui détient les logements (personne, SCI, société) se renseigne dans les structures, pas ici.
   return summarize([
-    { key: 'kind', label: 'Qui loue', done: filled(p.kind), applicable: true },
-    { key: 'identity', label: 'Identité', done: company ? filled(p.company?.representedBy) || filled(p.lastName, p.firstNames) : filled(p.civility, p.lastName, p.firstNames), applicable: true },
-    { key: 'company', label: 'Société', done: filled(p.company?.name, p.company?.seat), applicable: company },
+    { key: 'identity', label: 'Identité', done: filled(p.civility, p.lastName, p.firstNames), applicable: true },
     { key: 'address', label: 'Adresse', done: filled(p.address), applicable: true },
     { key: 'contact', label: 'Contact', done: filled(p.email) || filled(p.phone), applicable: true },
     { key: 'agent', label: 'Mandataire', done: p.agent?.enabled === false || filled(p.agent?.name), applicable: true },

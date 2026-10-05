@@ -55,7 +55,14 @@ function List({ items }: { items: PropertySummary[] }) {
       <PageHead
         title="Vos logements"
         sub={items.length ? `${plural(items.length, 'logement')} · ${rented} loué${rented > 1 ? 's' : ''}, ${items.length - rented} disponible${items.length - rented > 1 ? 's' : ''}` : 'Ajoutez votre premier logement.'}
-        actions={<Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>}
+        actions={
+          <>
+            <Btn variant="outline" to="/espace/structures">
+              Vos structures
+            </Btn>
+            <Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>
+          </>
+        }
       />
       {items.length ? (
         <>

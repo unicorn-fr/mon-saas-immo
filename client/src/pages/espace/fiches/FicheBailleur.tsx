@@ -2,10 +2,11 @@ import { useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { SignaturePad } from '../../../components/media'
-import { Callout, Chips, Input, LoadError, Loader, Toggle } from '../../../components/kit'
+import { Callout, Chips, Input, LoadError, Loader, TextLink, useLoad } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { useAuth } from '../../../lib/auth'
 import type { LandlordProfile } from '../../../lib/contract'
+import type { StructureView } from '../../../lib/structures'
 import { useFiche } from '../../../lib/fiche'
 import type { ProfileView } from '../../../lib/space'
 
@@ -22,33 +23,21 @@ export default function FicheBailleur() {
       return { completion: v.completion }
     },
   )
+  const { data: structures } = useLoad(() => api<StructureView[]>('/structures'))
   if (loadError) return <div style={{ padding: 24 }}><LoadError message={loadError} retry={reload} /></div>
   if (!p || !completion) return <Loader />
-  const company = p.kind === 'SCI' || p.kind === 'COMPANY'
   const done = (k: string) => completion.steps.find((s) => s.key === k)?.done
-  const c = p.company ?? {}
   const agent = p.agent ?? {}
   let n = 0
 
   return (
     <FicheLayout backTo={back} title="Profil du bailleur" subtitle="Rempli une seule fois, repris dans tous vos documents" completion={completion} save={save} onSave={saveNow}>
-      <FicheSection id="kind" guides={['bail']} n={++n} title="Qui loue ?" intro="Le bail doit désigner précisément le propriétaire." reference="loi n° 89-462 du 6 juillet 1989, art. 3 et 10" done={done('kind')}>
-        <Chips
-          legend="Le bailleur est"
-          value={p.kind ?? null}
-          onChange={(v) => set({ kind: v })}
-          options={[
-            { value: 'PERSON', label: 'Une personne' },
-            { value: 'COUPLE', label: 'Un couple ou une indivision' },
-            { value: 'SCI', label: 'Une SCI' },
-            { value: 'COMPANY', label: 'Une autre société' },
-          ]}
-        />
-        {p.kind === 'SCI' ? <Toggle checked={Boolean(p.sciFamily)} onChange={(v) => set({ sciFamily: v })} label="SCI familiale" sub="Associés parents entre eux jusqu’au 4e degré : le bail vide dure alors 3 ans, comme pour un particulier." /> : null}
-        <Callout tone="tip">Si c’est une société (SCI non familiale comprise), le bail vide dure 6 ans au lieu de 3. Bailio adapte la durée automatiquement.</Callout>
-      </FicheSection>
+      <Callout tone="tip" title="Qui détient vos logements">
+        En votre nom, à plusieurs, par une SCI ou une société : chaque logement est rattaché à une structure, qui désigne le bailleur dans le bail.{' '}
+        <TextLink to="/espace/structures">{structures ? `Vos structures (${structures.length})` : 'Vos structures'}</TextLink>
+      </Callout>
 
-      <FicheSection id="identity" n={++n} title={company ? 'Qui signe pour la société' : 'Votre identité'} intro="Repris dans le bail, les quittances et les courriers." done={done('identity')}>
+      <FicheSection id="identity" n={++n} title="Votre identité" intro="Vous, ou la personne qui signe pour la société. Repris dans le bail, les quittances et les courriers." done={done('identity')}>
         <Chips legend="Civilité" value={p.civility ?? null} onChange={(v) => set({ civility: v })} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
         <Fields>
           <Input label="Nom" value={p.lastName} onChange={(v) => set({ lastName: v })} />
@@ -62,25 +51,7 @@ export default function FicheBailleur() {
           <Input label="Date de naissance" type="date" value={p.birthDate} onChange={(v) => set({ birthDate: v || null })} />
           <Input label="Lieu de naissance" value={p.birthPlace} onChange={(v) => set({ birthPlace: v })} />
         </Fields>
-        {p.kind === 'COUPLE' ? <CoOwners p={p} set={set} /> : null}
       </FicheSection>
-
-      {company ? (
-        <FicheSection id="company" n={++n} title="La société" intro="Le bail doit indiquer la dénomination et le siège de la société, et qui signe pour elle." reference="loi n° 89-462 du 6 juillet 1989, art. 3" done={done('company')}>
-          <Fields>
-            <Input label="Dénomination" value={c.name} onChange={(v) => set({ company: { ...c, name: v } })} />
-            <Input label="Forme" value={c.form} onChange={(v) => set({ company: { ...c, form: v } })} placeholder="SCI, SARL…" />
-          </Fields>
-          <Fields>
-            <Input label="Numéro SIREN" value={c.siren} inputMode="numeric" maxLength={9} onChange={(v) => set({ company: { ...c, siren: v.replace(/\D/g, '') } })} />
-            <Input label="Siège social" value={c.seat} onChange={(v) => set({ company: { ...c, seat: v } })} />
-          </Fields>
-          <Fields>
-            <Input label="Représentée par" value={c.representedBy} onChange={(v) => set({ company: { ...c, representedBy: v } })} />
-            <Input label="En qualité de" value={c.representativeRole} onChange={(v) => set({ company: { ...c, representativeRole: v } })} placeholder="Gérant" />
-          </Fields>
-        </FicheSection>
-      ) : null}
 
       <FicheSection id="address" n={++n} title="Votre adresse" reference="loi n° 89-462 du 6 juillet 1989, art. 3" done={done('address')}>
         <Input label="Adresse" value={p.address} onChange={(v) => set({ address: v })} placeholder="8 rue de l’Aiguillerie" />
@@ -135,26 +106,5 @@ export default function FicheBailleur() {
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>Apposée sur vos quittances. Jamais sur un bail sans votre accord : pour un bail, vous signez à chaque fois.</span>
       </FicheSection>
     </FicheLayout>
-  )
-}
-
-function CoOwners({ p, set }: { p: LandlordProfile; set: (patch: Partial<LandlordProfile>) => void }) {
-  const list = p.coOwners?.length ? p.coOwners : [{}]
-  const upd = (i: number, patch: Record<string, string>) => set({ coOwners: list.map((c, j) => (j === i ? { ...c, ...patch } : c)) })
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <span style={{ fontSize: 14, fontWeight: 600 }}>Les autres bailleurs</span>
-      {list.map((c, i) => (
-        <Fields key={i}>
-          <Input label="Prénoms" value={c.firstNames} onChange={(v) => upd(i, { firstNames: v })} />
-          <Input label="Nom" value={c.lastName} onChange={(v) => upd(i, { lastName: v })} />
-        </Fields>
-      ))}
-      {list.length < 6 ? (
-        <button type="button" onClick={() => set({ coOwners: [...list, {}] })} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
-          + Un autre bailleur
-        </button>
-      ) : null}
-    </div>
   )
 }

@@ -38,7 +38,7 @@ export function partiesMissing(c: ContractInput): Missing[] {
   const l = c.landlord
   const company = l.kind === 'SCI' || l.kind === 'COMPANY'
   if (company ? !has(l.company?.name) : !has(l.lastName) || !has(l.firstNames)) out.push({ key: 'landlord.name', label: company ? 'Le nom de la société bailleresse' : 'Vos nom et prénom', where: 'LANDLORD', section: company ? 'company' : 'identity' })
-  if (company ? !has(l.company?.seat) && !has(l.address) : !has(l.address)) out.push({ key: 'landlord.address', label: company ? 'L’adresse du siège de la société' : 'Votre adresse', where: 'LANDLORD', section: 'address' })
+  if (company ? !has(l.company?.seat) && !has(l.address) : !has(l.address)) out.push({ key: 'landlord.address', label: company ? 'L’adresse du siège de la société' : 'Votre adresse', where: 'LANDLORD', section: company ? 'company' : 'address' })
   if (!c.tenants.length) out.push({ key: 'tenant', label: 'Au moins un locataire', where: 'TERMS', section: 'parties' })
   c.tenants.forEach((t, i) => {
     if (!has(t.lastName) || !has(t.firstNames)) out.push({ key: `tenant.${i}.name`, label: `Les nom et prénom du locataire${c.tenants.length > 1 ? ` ${i + 1}` : ''}`, where: 'TENANT', section: 'identity', tenant: i })

@@ -14,6 +14,7 @@ import tenantFormRoutes from './routes/tenantForm.js'
 import authRoutes from './routes/auth.js'
 import accountRoutes from './routes/account.js'
 import geoRoutes from './routes/geo.js'
+import structureRoutes from './routes/structures.js'
 import spaceRoutes from './routes/space.js'
 import esignRoutes from './routes/esign.js'
 import leaseRoutes from './routes/leases.js'
@@ -74,6 +75,7 @@ export function createApp() {
   app.use('/api', esignRoutes)
   app.use('/api', accountRoutes)
   app.use('/api', todayRoutes)
+  app.use('/api', structureRoutes)
   app.use('/api', spaceRoutes)
   app.use('/api', leaseRoutes)
   app.use('/api', moneyRoutes)

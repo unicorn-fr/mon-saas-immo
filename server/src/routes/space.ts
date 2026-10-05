@@ -18,6 +18,7 @@ import { rentPatch } from '../services/rent.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
+import { ensureStructures } from '../services/structures.js'
 import { publicUser } from './auth.js'
 
 /**
@@ -111,6 +112,7 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
     name: propertyName(p),
     address: p.address,
     city: p.city,
+    structureId: p.structureId,
     kindLabel: PROPERTY_KIND(f),
     surface: f.surface ?? null,
     rooms: f.rooms ?? null,
@@ -158,7 +160,12 @@ function withOfficialZone(f: PropertyFile): PropertyFile {
 router.post('/properties', async (req, res) => {
   const file = withOfficialZone(propertyFileSchema.parse(req.body))
   if (!file.address) throw new HttpError(400, 'Indiquez l’adresse du logement.')
-  const p = await prisma.property.create({ data: { userId: req.user!.id, ...propertyColumns(file), data: file } })
+  // Structure qui détient le logement : celle choisie, sinon la première du compte.
+  const { structureId } = z.object({ structureId: z.string().uuid().optional().nullable() }).parse({ structureId: (req.body as { structureId?: unknown })?.structureId })
+  const structures = await ensureStructures(req.user!)
+  const structure = structureId ? structures.find((s) => s.id === structureId) : structures[0]
+  if (!structure) throw new HttpError(404, 'Structure introuvable.')
+  const p = await prisma.property.create({ data: { userId: req.user!.id, structureId: structure.id, ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
   res.status(201).json({ success: true, data: { id: p.id } })
 })

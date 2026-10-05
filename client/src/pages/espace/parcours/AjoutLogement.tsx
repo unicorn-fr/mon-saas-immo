@@ -5,6 +5,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { AddressField } from '../../../components/AddressField'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
+import { StructurePicker } from '../../../components/StructurePicker'
 import { AuthImage, uploadPhotos } from '../../../components/media'
 import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, Money, NumberField, Pill, TextArea, errorMessage, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
@@ -48,6 +49,9 @@ export default function AjoutLogement() {
   const [loading, setLoading] = useState(Boolean(id))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Structure qui détient le logement : demandée à la création seulement (elle se change ensuite depuis la page du logement).
+  // null : la première du compte ; '' : une nouvelle structure est en cours de création.
+  const [structureId, setStructureId] = useState<string | null>(null)
   const set = (patch: Partial<PropertyFile>) => setF((x) => ({ ...x, ...patch }))
   const steps = stepsFor(f)
   const asked = params.get('etape') as StepId | null
@@ -77,7 +81,7 @@ export default function AjoutLogement() {
 
   const save = async (patch: Partial<PropertyFile>) => {
     if (!id) {
-      const r = await api<{ id: string }>('/properties', { method: 'POST', body: { ...f, ...patch } })
+      const r = await api<{ id: string }>('/properties', { method: 'POST', body: { ...f, ...patch, structureId: structureId || null } })
       return r.id
     }
     const r = await api<{ diagnostics: DiagnosticRule[] }>(`/properties/${id}`, { method: 'PUT', body: patch })
@@ -86,7 +90,7 @@ export default function AjoutLogement() {
   }
 
   const next = async () => {
-    const check = validate(current, f)
+    const check = validate(current, f) ?? (current === 'address' && !id && structureId === '' ? 'Indiquez à qui appartient le logement, ou terminez la création de la structure.' : null)
     if (check) return setError(check)
     setBusy(true)
     try {
@@ -124,6 +128,7 @@ export default function AjoutLogement() {
     >
       {error ? <Callout tone="warn">{error}</Callout> : null}
       {current === 'address' ? <StepAddress f={f} set={set} /> : null}
+      {current === 'address' && !id ? <StructurePicker value={structureId} onChange={setStructureId} /> : null}
       {current === 'type' ? <StepType f={f} set={set} /> : null}
       {current === 'copro' ? <StepCopro f={f} set={set} /> : null}
       {current === 'size' ? <StepSize f={f} set={set} /> : null}

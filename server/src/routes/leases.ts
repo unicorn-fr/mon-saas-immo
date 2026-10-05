@@ -10,8 +10,9 @@ import { layout, sendEmail } from '../lib/email.js'
 import { irlOneYearLater, latestIrl, quarterLabel } from '../lib/irl.js'
 import { requireUser } from '../services/session.js'
 import { ensureReminders } from '../services/reminders.js'
-import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
-import { leaseTermsSchema, type ContractInput, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
+import { contractFor, landlordOf, liveContract, leaseKindOf, leaseOwned, propertyName, readProperty, readTenant, readTerms, tenantName } from '../services/contract.js'
+import { resumptionAllowed } from '../domain/structure.js'
+import { leaseTermsSchema, type ContractInput, type LandlordProfile, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
 import { essential, leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
 import { formatDateFr, formatEuros, monthYearFr, parseIsoDate } from '../domain/lease.js'
@@ -59,9 +60,9 @@ type LeaseWithProperty = Lease & { property: Property }
 const TYPE_OF: Record<LeaseKind, 'UNFURNISHED' | 'FURNISHED'> = { VIDE: 'UNFURNISHED', MEUBLE: 'FURNISHED', ETUDIANT: 'FURNISHED', MOBILITE: 'FURNISHED' }
 
 /** Colonnes du bail (dates, montants) recalculées à partir des conditions et des règles. */
-function leaseColumns(terms: LeaseTerms, user: User) {
+export function leaseColumns(terms: LeaseTerms, landlord: LandlordProfile) {
   const kind = terms.kind ?? 'VIDE'
-  const months = leaseDurationMonths(kind, readProfile(user), terms)
+  const months = leaseDurationMonths(kind, landlord, terms)
   const startIso = terms.startDate ?? new Date().toISOString().slice(0, 10)
   const rent = terms.rentCents ?? 0
   return {
@@ -99,7 +100,10 @@ function computed(c: ContractInput) {
     firstPayment: t.startDate && t.rentCents !== undefined && t.rentCents !== null ? firstPayment(t.startDate, t.rentCents, t.chargesCents ?? 0) : null,
     clauseWarnings: (t.clauses?.custom ?? []).map((cl) => ({ clause: cl, reasons: forbiddenClauseReasons(cl) })).filter((x) => x.reasons.length),
     diagnostics: diagnosticsFor(c.property),
-    reducedAllowed: c.landlord.kind !== 'COMPANY' && !(c.landlord.kind === 'SCI' && !c.landlord.sciFamily),
+    reducedAllowed: resumptionAllowed(c.landlord),
+    /** Congé pour reprise : interdit à une société, sauf SCI familiale (pour un associé). */
+    resumptionAllowed: resumptionAllowed(c.landlord),
+    landlordKind: c.landlord.kind ?? 'PERSON',
   }
 }
 
@@ -108,8 +112,10 @@ function withLinks(missing: Missing[], lease: LeaseWithProperty) {
   return missing.map((m) => {
     const tenantId = m.tenant !== undefined ? lease.tenantIds[m.tenant] ?? lease.tenantIds[0] : lease.tenantIds[0]
     const coTenant = m.tenant !== undefined && m.tenant >= lease.tenantIds.length
+    // Société, nature du bailleur : dans la fiche de la structure qui détient le logement.
+    const structure = lease.property.structureId && (m.section === 'company' || m.section === 'kind')
     const to = {
-      LANDLORD: `/espace/compte/profil#${m.section}`,
+      LANDLORD: structure ? `/espace/structures/${lease.property.structureId}#company` : `/espace/compte/profil#${m.section}`,
       PROPERTY: `/espace/logements/${lease.propertyId}/fiche#${m.section}`,
       TENANT: tenantId ? `/espace/locataires/${tenantId}/fiche#${coTenant ? 'colocation' : m.section}` : `/espace/baux/${lease.id}/contrat#parties`,
       GUARANTOR: tenantId ? `/espace/locataires/${tenantId}/caution#${m.section}` : `/espace/baux/${lease.id}/contrat#parties`,
@@ -253,7 +259,7 @@ router.post('/leases', async (req, res) => {
   // Logement interdit à la location (DPE) : pas de nouveau bail.
   const forbidden = rentalForbidden(file.diagnostics?.dpe?.class)
   if (forbidden) throw new HttpError(409, forbidden)
-  const profile = readProfile(user)
+  const profile = await landlordOf(user, property)
   const first = readTenant(tenants[0])
   const colocation = tenants.length > 1 || first.living === 'COLOCATION'
   const kind: LeaseKind = body.terms?.kind ?? (file.furnished ? 'MEUBLE' : 'VIDE')
@@ -301,7 +307,7 @@ router.post('/leases', async (req, res) => {
   }
   const terms = leaseTermsSchema.parse(mergeFile({ ...defaults, ...(startDate ? { startDate } : {}) } as Record<string, unknown>, (body.terms ?? {}) as Record<string, unknown>))
   const lease = await prisma.lease.create({
-    data: { userId: user.id, propertyId: property.id, status: 'DRAFT', tenantIds: body.tenantIds, data: { terms }, ...leaseColumns(terms, user) },
+    data: { userId: user.id, propertyId: property.id, status: 'DRAFT', tenantIds: body.tenantIds, data: { terms }, ...leaseColumns(terms, profile) },
   })
   // Le locataire est rattaché au logement.
   await prisma.tenant.updateMany({ where: { id: { in: body.tenantIds }, propertyId: null }, data: { propertyId: property.id } })
@@ -356,7 +362,7 @@ router.put('/leases/:id/terms', async (req, res) => {
     data: {
       data: { ...data, terms, ...(lease.status === 'ACTIVE' ? { dirty: true } : {}), ...(history ? { rentHistory: history } : {}) } as unknown as Prisma.InputJsonObject,
       ...(tenantIds ? { tenantIds } : {}),
-      ...(lease.status === 'DRAFT' ? leaseColumns(terms, user) : { rentCents: terms.rentCents ?? lease.rentCents, chargesCents: terms.chargesCents ?? lease.chargesCents, paymentDay: terms.paymentDay ?? lease.paymentDay }),
+      ...(lease.status === 'DRAFT' ? leaseColumns(terms, await landlordOf(user, lease.property)) : { rentCents: terms.rentCents ?? lease.rentCents, chargesCents: terms.chargesCents ?? lease.chargesCents, paymentDay: terms.paymentDay ?? lease.paymentDay }),
     },
   })
   const fresh = await leaseOwned(user.id, lease.id)
@@ -447,7 +453,7 @@ export async function activateLease(user: User, lease: LeaseWithProperty, c: Con
   const data = lease.data as Record<string, unknown>
   const updated = await prisma.lease.update({
     where: { id: lease.id },
-    data: { status: 'ACTIVE', signedAt: lease.signedAt ?? new Date(), data: { ...data, terms: data.terms, snapshot, dirty: false } as unknown as Prisma.InputJsonObject, ...leaseColumns(readTerms(lease), user) },
+    data: { status: 'ACTIVE', signedAt: lease.signedAt ?? new Date(), data: { ...data, terms: data.terms, snapshot, dirty: false } as unknown as Prisma.InputJsonObject, ...leaseColumns(readTerms(lease), await landlordOf(user, lease.property)) },
   })
   await ensureReminders(updated)
 }
@@ -885,6 +891,7 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
   const kind = leaseKindOf(lease)
   if (letter.type === 'NOTICE_TO_LEAVE' && !landlordNoticeMonthsFor(kind)) throw new HttpError(400, 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'SALE' && kind === 'VIDE' && !letter.priceCents) throw new HttpError(400, 'Indiquez le prix de vente : sans lui, le congé pour vendre est nul.')
+  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && !resumptionAllowed(c.landlord)) throw new HttpError(400, 'Une société ne peut pas donner congé pour reprendre le logement (seule une SCI familiale le peut, pour un associé). Le congé reste possible pour vendre ou pour un motif légitime et sérieux.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && (!letter.beneficiary?.name || !letter.beneficiary.address || !letter.beneficiary.link)) throw new HttpError(400, 'Indiquez le nom, l’adresse et le lien de parenté du bénéficiaire de la reprise : ces mentions sont obligatoires.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason !== 'SALE' && !letter.justification?.trim()) throw new HttpError(400, letter.reason === 'RESUMPTION' ? 'Expliquez en une phrase pourquoi la reprise est réelle et sérieuse : cette mention est obligatoire.' : 'Indiquez le motif légitime et sérieux du congé.')
   if (letter.type === 'GUARANTOR_CALL' && !c.guarantors.length) throw new HttpError(400, 'Aucun garant n’est enregistré pour ce bail : ajoutez-le dans la fiche du locataire.')

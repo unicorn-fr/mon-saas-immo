@@ -81,6 +81,22 @@ model User {
   contacts      Contact[]
   interventions Intervention[]
   trashItems    TrashItem[]
+  structures    Structure[]
+}
+
+/// Structure qui détient des logements : en nom propre, à deux (couple, indivision), SCI, autre société.
+/// Elle désigne le bailleur dans le bail (durée, congé pour reprise) et regroupe ses logements pour la déclaration.
+model Structure {
+  id         String     @id @default(uuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Fiche de la structure (domain/structure.ts, structureSchema)
+  data       Json       @default("{}")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
+  properties Property[]
+
+  @@index([userId])
 }
 
 model Session {
@@ -161,6 +177,9 @@ model Property {
   dpeClass   String?
   dpeNumber  String?
   label      String? // nom court : « Studio rue Foch »
+  // Structure propriétaire du logement (bailleur du bail) ; null : profil du bailleur
+  structureId String?
+  structure   Structure? @relation(fields: [structureId], references: [id], onDelete: SetNull)
   // Lien public de candidature (/candidature/:code), null si désactivé
   applyCode  String?  @unique
   // Fiche complète du logement (domain/contract.ts, propertyFileSchema)
@@ -176,6 +195,7 @@ model Property {
   interventions Intervention[]
 
   @@index([userId])
+  @@index([structureId])
 }
 
 /// Candidature reçue par le lien public d'un logement. Effacée quand le candidat devient locataire,

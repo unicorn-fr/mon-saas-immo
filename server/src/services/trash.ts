@@ -8,7 +8,7 @@ import { HttpError } from '../lib/http.js'
  * (ou la restauration est refusée quand le lien est indispensable).
  */
 
-export type TrashKind = 'EXPENSE' | 'DOCUMENT' | 'TENANT' | 'INTERVENTION' | 'CONTACT' | 'LEASE'
+export type TrashKind = 'EXPENSE' | 'DOCUMENT' | 'TENANT' | 'INTERVENTION' | 'CONTACT' | 'LEASE' | 'STRUCTURE'
 export const TRASH_DAYS = 30
 
 /** Les fichiers (octets) sont gardés en base64 dans la copie. */
@@ -55,7 +55,7 @@ export async function restoreFromTrash(userId: string, id: string): Promise<{ ki
     for (const t of row.tenantIds) if (await exists('tenant', t, userId)) kept.push(t)
     row.tenantIds = kept
   }
-  const model = { EXPENSE: prisma.expense, DOCUMENT: prisma.document, TENANT: prisma.tenant, INTERVENTION: prisma.intervention, CONTACT: prisma.contact, LEASE: prisma.lease }[kind] as unknown as { create: (a: unknown) => Promise<{ id: string }> }
+  const model = { EXPENSE: prisma.expense, DOCUMENT: prisma.document, TENANT: prisma.tenant, INTERVENTION: prisma.intervention, CONTACT: prisma.contact, LEASE: prisma.lease, STRUCTURE: prisma.structure }[kind] as unknown as { create: (a: unknown) => Promise<{ id: string }> }
   const created = await model.create({ data: row })
   await prisma.trashItem.delete({ where: { id: item.id } })
   return { kind, id: created.id }

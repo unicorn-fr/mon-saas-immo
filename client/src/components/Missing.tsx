@@ -42,7 +42,7 @@ function Group({ items, title, text, tone }: { items: MissingItem[]; title: stri
           <li key={m.key} style={{ fontSize: 14, lineHeight: 1.45 }}>
             <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <span>
-                {m.label} <span style={{ color: BAI.inkSoft }}>· {WHERE[m.where]}</span>
+                {m.label} <span style={{ color: BAI.inkSoft }}>· {m.where === 'LANDLORD' && m.to.includes('/espace/structures/') ? 'Fiche de la structure' : WHERE[m.where]}</span>
               </span>
               <TextLink to={m.to} style={{ fontSize: 13 }}>
                 Compléter

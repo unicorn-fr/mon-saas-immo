@@ -5,7 +5,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Fields } from '../../components/FlowLayout'
 import { SignaturePad } from '../../components/media'
-import { Btn, Card, ChipButton, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, TextLink, Toggle, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, TextLink, Toggle, useLoad, useToast } from '../../components/kit'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { dateNum } from '../../lib/format'
@@ -63,17 +63,12 @@ export default function Compte() {
                 <Input label="Code postal" value={p.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
                 <Input label="Ville" value={p.city} onChange={(v) => set({ city: v })} />
               </Fields>
-              <fieldset style={{ margin: 0, padding: 0, border: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <legend style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Vous louez</legend>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <ChipButton pressed={p.kind !== 'SCI' && p.kind !== 'COMPANY'} onClick={() => set({ kind: p.kind === 'COUPLE' ? 'COUPLE' : 'PERSON' })}>
-                    En mon nom
-                  </ChipButton>
-                  <ChipButton pressed={p.kind === 'SCI'} onClick={() => set({ kind: 'SCI' })}>
-                    Via une SCI
-                  </ChipButton>
-                </div>
-              </fieldset>
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
+                Vos logements sont détenus en votre nom, à plusieurs, par une SCI ou une société ?{' '}
+                <TextLink to="/espace/structures" style={{ fontSize: 15 }}>
+                  Vos structures
+                </TextLink>
+              </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                   <span style={{ color: BAI.inkSoft }}>Profil complété</span>

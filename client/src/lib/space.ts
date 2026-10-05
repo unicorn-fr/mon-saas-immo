@@ -1,4 +1,4 @@
-import type { Completion, DiagnosticRule, Guarantor, LandlordProfile, LeaseKind, LeaseTerms, PropertyFile, TenantFile } from './contract'
+import type { Completion, DiagnosticRule, Guarantor, LandlordKind, LandlordProfile, LeaseKind, LeaseTerms, PropertyFile, TenantFile } from './contract'
 import type { User } from './types'
 
 /** Réponses de l'API de l'espace propriétaire (server/src/routes). */
@@ -23,6 +23,8 @@ export interface PropertySummary {
   name: string
   address: string
   city: string | null
+  /** Structure qui détient le logement (bailleur de ses baux). */
+  structureId: string | null
   kindLabel: string
   surface: number | null
   rooms: number | null
@@ -176,6 +178,9 @@ export interface LeaseComputed {
   clauseWarnings: Array<{ clause: string; reasons: string[] }>
   diagnostics: DiagnosticRule[]
   reducedAllowed: boolean
+  /** Congé pour reprise : interdit à une société, sauf SCI familiale. */
+  resumptionAllowed?: boolean
+  landlordKind?: LandlordKind
 }
 
 export interface LeaseView {

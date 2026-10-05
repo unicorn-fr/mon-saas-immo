@@ -707,6 +707,9 @@ function NoticeFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
   const b = (letter.beneficiary as { name: string; link: string; address: string } | null) ?? { name: '', link: '', address: '' }
   const end = str(letter.leaseEnd)
   const months = lease.computed.noticeMonths
+  // Une société (sauf SCI familiale, pour un associé) ne peut pas reprendre le logement.
+  const resumption = lease.computed.resumptionAllowed !== false
+  const sci = lease.computed.landlordKind === 'SCI'
   const deadline = end ? new Date(Date.UTC(Number(end.slice(0, 4)), Number(end.slice(5, 7)) - 1 - months, Number(end.slice(8, 10)))) : null
   return (
     <>
@@ -716,11 +719,13 @@ function NoticeFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
         value={reason}
         onChange={(v) => set({ reason: v })}
         options={[
-          { value: 'SALE', label: 'Vente du logement' },
-          { value: 'RESUMPTION', label: 'Reprise pour y habiter' },
-          { value: 'LEGITIMATE', label: 'Motif légitime et sérieux' },
+          { value: 'SALE' as const, label: 'Vente du logement' },
+          ...(resumption || reason === 'RESUMPTION' ? [{ value: 'RESUMPTION' as const, label: 'Reprise pour y habiter' }] : []),
+          { value: 'LEGITIMATE' as const, label: 'Motif légitime et sérieux' },
         ]}
       />
+      {!resumption ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Le logement appartient à une société : elle ne peut pas donner congé pour reprendre le logement (loi du 6 juillet 1989, art. 13 et 15).</span> : null}
+      {sci && reason === 'RESUMPTION' ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>SCI familiale : la reprise n’est possible qu’au profit d’un associé.</span> : null}
       <Input label="Fin du bail" type="date" value={end} onChange={(v) => set({ leaseEnd: v })} />
       {reason === 'SALE' ? (
         <>
@@ -736,7 +741,7 @@ function NoticeFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
               label="Lien avec vous"
               value={b.link}
               onChange={(v) => set({ beneficiary: { ...b, link: v } })}
-              options={['Moi-même', 'Conjoint', 'Partenaire de PACS', 'Concubin notoire', 'Ascendant', 'Descendant', 'Ascendant du conjoint', 'Descendant du conjoint'].map((x) => ({ value: x, label: x }))}
+              options={(sci ? ['Associé de la SCI'] : ['Moi-même', 'Conjoint', 'Partenaire de PACS', 'Concubin notoire', 'Ascendant', 'Descendant', 'Ascendant du conjoint', 'Descendant du conjoint']).map((x) => ({ value: x, label: x }))}
             />
           </Fields>
           <Input label="Adresse du bénéficiaire" value={b.address} onChange={(v) => set({ beneficiary: { ...b, address: v } })} />

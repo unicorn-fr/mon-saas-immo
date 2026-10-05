@@ -51,7 +51,7 @@
 ## Règles juridiques (loi n° 89-462 du 6 juillet 1989)
 
 Elles sont codées dans `server/src/domain/lease.ts` (et reprises pour l'affichage dans `client/src/lib/lease.ts`) :
-- durée : 3 ans en vide (bailleur personne physique), 1 an en meublé ;
+- durée : 3 ans en vide (personne physique ou SCI familiale), 6 ans pour une autre personne morale, 1 an en meublé (`leaseDurationMonths`, `domain/rules.ts`) ; congé pour reprise refusé à une personne morale, SCI familiale au profit d'un associé seulement (`resumptionAllowed`, `domain/structure.ts`) ;
 - dépôt de garantie maximum : 1 mois de loyer hors charges en vide, 2 mois en meublé ;
 - congé du bailleur : 6 mois avant l'échéance en vide, 3 mois en meublé ;
 - logement interdit à la location selon le DPE (`rentalForbidden`, `domain/rules.ts`) : G depuis le 1er janvier 2025, F au 1er janvier 2028, E au 1er janvier 2034 ; création et signature du bail refusées, étape « Créer le bail » bloquée avec le motif ;
@@ -99,6 +99,10 @@ Chaque information saisie est enregistrée et réutilisée :
 ## Parcours guidés « Que se passe-t-il ? »
 
 `server/src/domain/journeys.ts` (testé dans `journeys.test.ts`) : départ du locataire, impayé, vente ou reprise, problème dans le logement. L'état de chaque étape est déduit des courriers enregistrés, des états des lieux et des faits du bail ; seules les démarches faites hors de Bailio (commandement de payer) se cochent à la main. Pages : `/espace/situations` et `/espace/baux/:id/parcours/:kind`. Les tâches d'« Aujourd'hui » (départ, solde de tout compte, chaudière) sont déduites de la même façon.
+
+## Structures qui détiennent les logements
+
+Fiches juridiques et fiscales vérifiées : `docs/fiscalite/structures.md` (« Vérifié » ou « À vérifier » ligne par ligne, sources). Table `Structure` (`domain/structure.ts`, testé dans `lease.test.ts` ; `routes/structures.ts`, pages `/espace/structures` et `/espace/structures/:id`) : en mon nom, à plusieurs (couple, indivision), SCI (familiale ou non), autre société ; régime fiscal (IR, IS), associés et parts, SIREN, compte qui reçoit les loyers. Chaque logement a sa structure (`Property.structureId`), choisie à sa création (`StructurePicker`, « Créer une nouvelle structure » sur place) et modifiable depuis sa page (`OwnerCard`). La première est créée à partir du profil (`ensureStructures`) et reçoit les logements sans structure. Le bailleur d'un bail = profil (identité, coordonnées, signature) + structure (nature, société, co-propriétaires, IBAN) : `landlordOf` (`services/contract.ts`). Un bail signé garde le bailleur de sa signature ; les baux en préparation suivent la structure (durée recalculée). Le profil du bailleur ne porte plus la nature du bailleur.
 
 ## Parcours dans l'ordre : logement, locataire, bail
 

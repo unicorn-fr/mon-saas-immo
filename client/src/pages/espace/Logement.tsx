@@ -4,6 +4,7 @@ import { Journey } from '../../components/Journey'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
+import { OwnerCard } from '../../components/StructurePicker'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { UploadModal } from '../../components/UploadModal'
@@ -57,7 +58,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
       />
       {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
       <Tabs label="Sections du logement" tabs={TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
-      {tab === 'overview' ? <Overview p={p} /> : null}
+      {tab === 'overview' ? <Overview p={p} reload={reload} /> : null}
       {tab === 'binder' ? <Binder propertyId={p.id} /> : null}
       {tab === 'lease' ? <LeaseTab p={p} /> : null}
       {tab === 'expenses' ? <ExpensesTab p={p} reload={reload} /> : null}
@@ -70,7 +71,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
 
 const currentLease = (p: PropertyView) => p.leases.find((l) => l.status === 'ACTIVE' || l.status === 'IMPORTED') ?? p.leases.find((l) => l.status === 'DRAFT') ?? null
 
-function Overview({ p }: { p: PropertyView }) {
+function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
   const lease = currentLease(p)
   const [all, setAll] = useState(false)
   const events = all ? p.events : p.events.slice(0, 6)
@@ -124,6 +125,7 @@ function Overview({ p }: { p: PropertyView }) {
           <Progress percent={p.completion.percent} />
           {p.completion.percent < 100 ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>Reste : {p.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}.</span> : null}
         </Card>
+        <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} />
         <Card title="Diagnostics">
           {required.map((d) => {
             const st = diagnosticStatus(d, p.file)

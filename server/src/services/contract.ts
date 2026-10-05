@@ -1,4 +1,4 @@
-import type { Lease, Property, Tenant, User } from '@prisma/client'
+import type { Lease, Property, Structure, Tenant, User } from '@prisma/client'
 import { prisma } from '../db.js'
 import {
   dpeClass,
@@ -16,13 +16,14 @@ import {
   type TenantFile,
 } from '../domain/contract.js'
 import type { LeaseInput } from '../domain/lease.js'
+import { landlordFor, structureSchema, type StructureFile } from '../domain/structure.js'
 import { HttpError } from '../lib/http.js'
 
 /**
  * Lecture sûre des fiches enregistrées en JSON : une donnée invalide (ancienne version, saisie abîmée)
  * est ignorée plutôt que de bloquer tout le document.
  */
-function safe<T>(schema: { safeParse: (v: unknown) => { success: boolean; data?: T } }, value: unknown): T {
+export function safe<T>(schema: { safeParse: (v: unknown) => { success: boolean; data?: T } }, value: unknown): T {
   const r = schema.safeParse(value ?? {})
   if (r.success) return r.data as T
   // Dernier recours : on garde les champs un à un.
@@ -37,6 +38,15 @@ function safe<T>(schema: { safeParse: (v: unknown) => { success: boolean; data?:
 }
 
 export const readProfile = (u: Pick<User, 'profile'>): LandlordProfile => safe(landlordProfileSchema, u.profile)
+export const readStructure = (s: Pick<Structure, 'data'>): StructureFile => safe(structureSchema, s.data)
+
+/** Bailleur d'un logement : profil de la personne (identité, coordonnées, signature) et structure qui détient le logement. */
+export async function landlordOf(user: Pick<User, 'id' | 'profile'>, property: Pick<Property, 'structureId'>): Promise<LandlordProfile> {
+  const profile = readProfile(user)
+  if (!property.structureId) return profile
+  const s = await prisma.structure.findFirst({ where: { id: property.structureId, userId: user.id } })
+  return landlordFor(profile, s ? readStructure(s) : null)
+}
 export const readTerms = (l: Pick<Lease, 'data'>): LeaseTerms => safe(leaseTermsSchema, (l.data as { terms?: unknown } | null)?.terms)
 export const readTenant = (t: Pick<Tenant, 'data'>): TenantFile => safe(tenantFileSchema, t.data)
 export const readGuarantor = (g: unknown): Guarantor => safe(guarantorSchema, g)
@@ -148,7 +158,7 @@ export async function contractFor(user: User, lease: LeaseWithProperty): Promise
   // Colocataires saisis dans la fiche du locataire principal, sans fiche à eux
   const coTenants = files.flatMap((f) => f.coTenants ?? []).map((c) => ({ civility: c.civility, firstNames: c.firstNames, lastName: c.lastName, email: c.email }))
   return {
-    landlord: readProfile(user),
+    landlord: await landlordOf(user, lease.property),
     property: readProperty(lease.property),
     tenants: [...files, ...coTenants],
     guarantors: files.filter((f) => f.guarantee === 'CAUTION' && f.guarantor).map((f) => f.guarantor!),
@@ -168,7 +178,7 @@ export async function liveContract(user: User, lease: LeaseWithProperty): Promis
   const rows = lease.tenantIds.length ? await prisma.tenant.findMany({ where: { id: { in: lease.tenantIds }, userId: user.id } }) : []
   const files = lease.tenantIds.map((id) => rows.find((t) => t.id === id)).filter((t): t is Tenant => Boolean(t)).map(readTenant)
   const filled = <T extends object>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== '')) as Partial<T>
-  const profile = readProfile(user)
+  const profile = await landlordOf(user, lease.property)
   const liveGuarantors = files.filter((f) => f.guarantee === 'CAUTION' && f.guarantor).map((f) => f.guarantor!)
   return {
     ...c,

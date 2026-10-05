@@ -85,7 +85,7 @@ async function useCode(userId: string, purpose: z.infer<typeof purposeSchema>, c
 router.post('/account/export', async (req, res) => {
   const userId = req.user!.id
   await useCode(userId, 'EXPORT', (req.body as { code?: unknown } | undefined)?.code)
-  const [user, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates, contacts, interventions] = await Promise.all([
+  const [user, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates, contacts, interventions, structures] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: userId } }),
     prisma.property.findMany({ where: { userId } }),
     prisma.tenant.findMany({ where: { userId } }),
@@ -99,9 +99,10 @@ router.post('/account/export', async (req, res) => {
     prisma.candidate.findMany({ where: { userId } }),
     prisma.contact.findMany({ where: { userId } }),
     prisma.intervention.findMany({ where: { userId } }),
+    prisma.structure.findMany({ where: { userId } }),
   ])
   res.setHeader('Content-Disposition', 'attachment; filename="bailio-export.json"')
-  res.json({ exportedAt: new Date().toISOString(), user: { ...publicUser(user), profile: user.profile }, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates, contacts, interventions })
+  res.json({ exportedAt: new Date().toISOString(), user: { ...publicUser(user), profile: user.profile }, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates, contacts, interventions, structures })
 })
 
 // Suppression définitive du compte et de toutes ses données (RGPD, art. 17).
