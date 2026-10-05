@@ -36,3 +36,11 @@ export interface LoansView {
   thisYear: { year: number; deductibleCents: number }
   cashflow: { rented: boolean; rentCents: number; chargesCents: number; loanPaymentCents: number; loanInsuranceCents: number; averageExpensesCents: number; netCents: number }
 }
+
+/** Mensualité hors assurance (même calcul que le serveur, server/src/domain/loan.ts), pour l'aperçu avant enregistrement. */
+export function monthlyPaymentCents(principalCents: number, ratePercent: number, months: number): number {
+  const r = ratePercent / 100 / 12
+  if (!months) return 0
+  if (r === 0) return Math.round(principalCents / months)
+  return Math.round((principalCents * r) / (1 - Math.pow(1 + r, -months)))
+}
