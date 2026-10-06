@@ -18,11 +18,12 @@ test('révision à date d’effet future : l’ancien loyer reste dû jusque-là
 })
 
 test('nouveau bail : loyer du locataire précédent, dernier versement, dernière révision et travaux repris', async () => {
+  // Révision datée du début du bail (completeLease : 6 octobre 2026), jamais avant : le résultat ne dépend pas du jour.
   const { token } = await newAccount()
   const { leaseId, propertyId, tenantId } = await completeLease(token)
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
   await api(`/leases/${leaseId}/payments`, { method: 'POST', token, body: { period: '2026-10', receivedAt: '2026-10-04' } })
-  await api(`/leases/${leaseId}/letters`, { method: 'POST', token, body: { type: 'REVISION', oldRentCents: 51000, irlRef: { quarter: '2025-Q2', value: 145.0 }, irlNew: { quarter: '2026-Q2', value: 147.9 }, effectiveDate: '2026-10-01' } })
+  await api(`/leases/${leaseId}/letters`, { method: 'POST', token, body: { type: 'REVISION', oldRentCents: 51000, irlRef: { quarter: '2025-Q2', value: 145.0 }, irlNew: { quarter: '2026-Q2', value: 147.9 }, effectiveDate: '2026-10-06' } })
   await api(`/leases/${leaseId}/end`, { method: 'POST', token, body: { keysDate: iso(new Date()) } })
   await api(`/properties/${propertyId}/interventions`, { method: 'POST', token, body: { title: 'Remplacement du chauffe-eau', status: 'DONE', date: iso(new Date(Date.now() + 86_400_000)), costCents: 89000 } })
   const l2 = await api('/leases', { method: 'POST', token, body: { propertyId, tenantIds: [tenantId], terms: { kind: 'MEUBLE', startDate: iso(new Date(Date.now() + 30 * 86_400_000)) } } })
@@ -30,7 +31,7 @@ test('nouveau bail : loyer du locataire précédent, dernier versement, dernièr
   assert.equal(v.terms.previous.rentedWithin18Months, true)
   assert.equal(v.terms.previous.lastRentCents, 52020)
   assert.equal(v.terms.previous.lastPaymentDate, '2026-10-04')
-  assert.equal(v.terms.previous.lastRevisionDate, '2026-10-01')
+  assert.equal(v.terms.previous.lastRevisionDate, '2026-10-06')
   assert.match(v.terms.works.sinceLast, /Remplacement du chauffe-eau \(890 €/)
 })
 
