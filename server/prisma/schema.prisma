@@ -358,9 +358,12 @@ model Expense {
   status           String    @default("OK") // TO_VERIFY (lue automatiquement) ou OK
   date             DateTime  @db.Date
   documentId       String?
+  /// Dépense de l'immeuble répartie entre plusieurs logements : même identifiant pour toutes les parts (domain/split.ts).
+  splitId          String?
   createdAt        DateTime  @default(now())
 
   @@index([userId, date])
+  @@index([splitId])
 }
 
 // État des lieux d'entrée ou de sortie (décret n° 2016-382).

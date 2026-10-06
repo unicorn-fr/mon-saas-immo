@@ -66,11 +66,12 @@ export default function Argent() {
             <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
             <Total label="Reste" value={eurosCents(data.netCents)} dark />
           </div>
-          <nav aria-label="Outils" className="grid-4" style={{ gap: 12 }}>
+          <nav aria-label="Outils" className="grid-4" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {[
               { to: '/espace/argent/releve', title: 'Relevé bancaire', text: 'Retrouver les loyers reçus' },
               { to: '/espace/argent/declaration', title: 'Déclaration', text: 'Les montants à déclarer' },
               { to: '/espace/argent/bilan', title: 'Bilan', text: 'Résultat par logement' },
+              { to: '/espace/argent/repartir', title: 'Répartir', text: 'Une dépense de l’immeuble' },
             ].map((t) => (
               <Link key={t.to} to={t.to} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 16, fontWeight: 700, color: BAI.owner }}>{t.title}</span>

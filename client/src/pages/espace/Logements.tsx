@@ -81,6 +81,9 @@ function List({ items }: { items: PropertySummary[] }) {
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                   <h2 style={{ ...display('clamp(22px, 3vw, 26px)'), margin: 0 }}>{g.label}</h2>
                   <span style={{ fontSize: 14, color: BAI.inkSoft }}>Même immeuble · {plural(g.items.length, 'logement')}</span>
+                  <Link to={`/espace/argent/repartir?logements=${g.items.map((p) => p.id).join(',')}`} style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
+                    Répartir une dépense de l’immeuble
+                  </Link>
                 </div>
                 <div className="cards-3">
                   {g.items.map((p) => (

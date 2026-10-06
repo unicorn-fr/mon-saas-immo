@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto'
 import { Router } from 'express'
+import { SPLIT_KEY_LABEL, splitExpense } from '../domain/split.js'
 import { lmnpEstimate } from '../domain/lmnp.js'
 import { loanSchedule, loanSignedAt, loanYear, loansAt, loansDeductible, monthlyCashflow, monthlyPaymentCents } from '../domain/loan.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
@@ -87,6 +89,61 @@ router.post('/expenses', async (req, res) => {
   await checkProperty(req.user!.id, body.propertyId)
   const e = await prisma.expense.create({ data: { userId: req.user!.id, ...body, propertyId: body.propertyId ?? null, date: parseIsoDate(body.date), status: 'OK' }, include: { property: true } })
   res.status(201).json({ success: true, data: expenseView(e) })
+})
+
+// Dépense de l'immeuble répartie entre ses logements (domain/split.ts) : aperçu, puis une dépense par logement.
+const splitSchema = expenseSchema.omit({ propertyId: true, chargeTo: true }).extend({
+  key: z.enum(['SURFACE', 'TANTIEMES', 'EQUAL']),
+  units: z.array(z.object({ propertyId: z.uuid(), tantiemes: z.number().positive().max(1_000_000).optional().nullable() })).min(2, 'Choisissez au moins deux logements.').max(100),
+})
+
+async function splitPlan(userId: string, body: z.infer<typeof splitSchema>) {
+  const props = await prisma.property.findMany({ where: { userId, id: { in: body.units.map((u) => u.propertyId) } } })
+  if (props.length !== new Set(body.units.map((u) => u.propertyId)).size) throw new HttpError(404, 'Logement introuvable.')
+  try {
+    return splitExpense({
+      amountCents: body.amountCents,
+      recoverableCents: body.recoverableCents,
+      key: body.key,
+      units: body.units.map((u) => {
+        const p = props.find((x) => x.id === u.propertyId)!
+        return { propertyId: p.id, name: propertyName(p), surface: readProperty(p).surface ?? null, tantiemes: u.tantiemes ?? null }
+      }),
+    })
+  } catch (e) {
+    throw new HttpError(400, e instanceof Error ? e.message : 'Répartition impossible.')
+  }
+}
+
+router.post('/expenses/split/preview', async (req, res) => {
+  res.json({ success: true, data: { shares: await splitPlan(req.user!.id, splitSchema.parse(req.body)) } })
+})
+
+router.post('/expenses/split', async (req, res) => {
+  const userId = req.user!.id
+  const body = splitSchema.parse(req.body)
+  const shares = await splitPlan(userId, body)
+  const splitId = randomUUID()
+  const label = SPLIT_KEY_LABEL[body.key].toLowerCase()
+  await prisma.$transaction(
+    shares.map((sh) =>
+      prisma.expense.create({
+        data: {
+          userId,
+          propertyId: sh.propertyId,
+          vendor: body.vendor,
+          description: `${body.description ? `${body.description} · ` : ''}part de l’immeuble (${label} : ${sh.basis})`.slice(0, 300),
+          category: body.category,
+          amountCents: sh.amountCents,
+          recoverableCents: sh.recoverableCents,
+          date: parseIsoDate(body.date),
+          status: 'OK',
+          splitId,
+        },
+      }),
+    ),
+  )
+  res.status(201).json({ success: true, data: { splitId, shares } })
 })
 
 router.put('/expenses/:id', async (req, res) => {

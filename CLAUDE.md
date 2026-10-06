@@ -168,6 +168,7 @@ Déclaration de sinistre à l'assureur et réclamation à un artisan (`THIRD_PAR
 - Carnet (`routes/contacts.ts`, `/espace/carnet`) : un contact saisi une fois sert dans toutes les interventions. Une intervention terminée avec un coût crée (ou met à jour) sa dépense ; une intervention prévue apparaît dans « Aujourd'hui ».
 - Corbeille (`services/trash.ts`, `/espace/corbeille`) : toute suppression (dépense, document, locataire, bail en préparation, contact, intervention) passe par `toTrash` ; restauration à l'identique pendant 30 jours, puis effacement par la tâche quotidienne. Nouvelle suppression : passer par `toTrash`.
 - Immeubles : sur « Logements », les logements à la même adresse (et même ville) sont regroupés.
+- Dépense de l'immeuble répartie entre ses logements (`domain/split.ts`, testé dans `split.test.ts` ; `POST /expenses/split/preview` et `/expenses/split`, colonne `Expense.splitId` ; page `/espace/argent/repartir`, lien « Répartir une dépense de l'immeuble » sur chaque immeuble de « Logements » et dans Argent) : assistant en trois écrans (la dépense et sa part récupérable, les logements et la clé, la vérification) ; clé surface habitable (fiche du logement), tantièmes (saisis) ou parts égales ; arrondi au plus fort reste (la somme des parts vaut toujours le total) ; une dépense par logement, la part récupérable passe dans la régularisation des charges de chaque locataire. Test : `e2e/tests/31-repartition.test.mjs`.
 
 ## Base de données
 
