@@ -24,6 +24,7 @@ import moneyRoutes from './routes/money.js'
 import bankRoutes from './routes/bank.js'
 import inventoryRoutes from './routes/inventories.js'
 import portfolioRoutes from './routes/portfolio.js'
+import bulkRoutes from './routes/bulk.js'
 
 export function createApp() {
   const app = express()
@@ -85,6 +86,7 @@ export function createApp() {
   app.use('/api', bankRoutes)
   app.use('/api', inventoryRoutes)
   app.use('/api', portfolioRoutes)
+  app.use('/api', bulkRoutes)
   app.use((_req, _res, next) => next(new HttpError(404, 'Page introuvable.')))
   app.use(errorHandler)
   return app

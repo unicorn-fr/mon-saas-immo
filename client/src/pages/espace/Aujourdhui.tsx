@@ -65,6 +65,12 @@ function TodayContent() {
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>À faire cette semaine</h2>
             {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
           </div>
+          {/* Plusieurs envois du même genre (relances, assurances, révisions) : ils se font en une fois. */}
+          {(['LATE_RENT', 'INSURANCE', 'REVISION'] as const).some((k) => data.tasks.filter((t) => t.type === k).length >= 2) ? (
+            <Link to="/espace/actions" style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>
+              Plusieurs envois du même genre : les faire en une fois
+            </Link>
+          ) : null}
           {data.tasks.length ? (
             data.tasks.map((t, i) => <TaskCard key={t.id} task={t} onChange={reload} first={i === 0} />)
           ) : (
