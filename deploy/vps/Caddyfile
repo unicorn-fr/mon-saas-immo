@@ -54,7 +54,10 @@
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
 
-# L'API seule : appelée par le site bailio.fr (relais Vercel de /api).
+# L'API seule, joignable en direct (plus de relais Vercel).
+# IMPORTANT : Caddy est ici le point d'entrée direct des visiteurs. On prend l'IP TCP réelle du client
+# ({remote_host}) et JAMAIS un en-tête X-Forwarded-For envoyé par le client (falsifiable → contournement
+# des limites de débit). Le site et /api (même origine) passent déjà par le bloc {$SITE_DOMAIN} ci-dessus.
 {$API_DOMAIN} {
 	import securite
 	encode zstd gzip
@@ -62,7 +65,6 @@
 		max_size 160MB
 	}
 	reverse_proxy api:5000 {
-		# Requêtes relayées par Vercel (site bailio.fr) : Vercel place l'IP du visiteur dans X-Forwarded-For.
-		header_up X-Original-Forwarded-For {http.request.header.X-Forwarded-For}
+		header_up X-Original-Forwarded-For {remote_host}
 	}
 }
