@@ -19,6 +19,18 @@ export const inventoryItemSchema = z.object({
   photoIds: opt(z.array(z.string().uuid()).max(20)),
 })
 
+export const complementSchema = z.object({
+  id: z.string().uuid(),
+  at: z.string(),
+  heating: z.boolean(),
+  text: text(3000),
+  photoIds: z.array(z.string().uuid()).max(5),
+  status: z.enum(['PENDING', 'ACCEPTED', 'REFUSED']),
+  decidedAt: opt(z.string()),
+  reason: opt(text(1000)),
+})
+export type Complement = z.infer<typeof complementSchema>
+
 export const inventoryDataSchema = z.object({
   date: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
   time: opt(z.string().regex(/^\d{2}:\d{2}$/)),
@@ -32,11 +44,13 @@ export const inventoryDataSchema = z.object({
   ),
   heating: opt(z.object({ state: opt(z.enum(STATES)), note: opt(text(300)), lastMaintenance: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)) })),
   keys: opt(z.array(z.object({ type: text(80), count: z.number().int().min(0).max(99), destination: opt(text(120)) })).max(20)),
-  rooms: opt(z.array(z.object({ name: text(80), done: opt(z.boolean()), items: z.array(inventoryItemSchema).max(40), note: opt(text(600)) })).max(40)),
+  rooms: opt(z.array(z.object({ name: text(80), done: opt(z.boolean()), items: z.array(inventoryItemSchema).max(40), note: opt(text(600)), photoIds: opt(z.array(z.string().uuid()).max(10)) })).max(40)),
   furniture: opt(z.array(z.object({ item: text(120), count: z.number().int().min(1).max(999), state: opt(z.enum(STATES)), note: opt(text(300)) })).max(200)),
   vetusteGrid: opt(z.boolean()),
   notes: opt(text(2000)),
   signatures: opt(z.object({ landlord: opt(z.string().max(400_000)), tenant: opt(z.string().max(400_000)), signedAt: opt(z.string()) })),
+  /** Demandes du locataire pour compléter l'état des lieux d'entrée signé (article 3-2), ajoutées depuis son lien. */
+  complements: opt(z.array(complementSchema).max(10)),
 })
 export type InventoryData = z.infer<typeof inventoryDataSchema>
 
@@ -99,4 +113,28 @@ export function inventoryProgress(d: InventoryData): { meters: boolean; rooms: n
     keys: (d.keys ?? []).length > 0,
     signed: Boolean(d.signatures?.landlord && d.signatures?.tenant),
   }
+}
+
+/**
+ * Compléter l'état des lieux d'entrée (loi du 6 juillet 1989, art. 3-2) : le locataire peut le demander dans les
+ * 10 jours qui suivent son établissement, et pendant le premier mois de la période de chauffe pour les éléments de
+ * chauffage. La loi ne fixe pas de date pour cette période : la demande sur le chauffage reste possible pendant la
+ * première année, le locataire indiquant que c'est son premier mois de chauffe. En cas de refus du bailleur, le
+ * locataire peut saisir la commission départementale de conciliation.
+ */
+export const COMPLEMENT_DAYS = 10
+
+const addDays = (isoDay: string, days: number) => new Date(Date.parse(`${isoDay}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10)
+
+export function complementWindow(signedOn: string, today: string): { general: boolean; generalUntil: string; heating: boolean; heatingUntil: string } {
+  const generalUntil = addDays(signedOn, COMPLEMENT_DAYS)
+  const d = new Date(`${signedOn}T00:00:00Z`)
+  const heatingUntil = new Date(Date.UTC(d.getUTCFullYear() + 1, d.getUTCMonth(), d.getUTCDate())).toISOString().slice(0, 10)
+  return { general: today <= generalUntil, generalUntil, heating: today <= heatingUntil, heatingUntil }
+}
+
+/** Une demande générale après 10 jours est refusée ; sur le chauffage, elle reste possible la première année. */
+export function complementAllowed(signedOn: string, today: string, heating: boolean): boolean {
+  const w = complementWindow(signedOn, today)
+  return heating ? w.heating : w.general
 }

@@ -65,6 +65,13 @@ export async function filesAsDataUrls(userId: string, ids: string[]): Promise<Re
   return Object.fromEntries(rows.map((r) => [r.id, `data:${r.mimeType};base64,${Buffer.from(r.data).toString('base64')}`]))
 }
 
+/** Date d'ajout de chaque photo (horloge du serveur), pour la preuve dans les PDF. */
+export async function fileDates(userId: string, ids: string[]): Promise<Record<string, string>> {
+  if (!ids.length) return {}
+  const rows = await prisma.fileBlob.findMany({ where: { userId, id: { in: ids } }, select: { id: true, createdAt: true } })
+  return Object.fromEntries(rows.map((r) => [r.id, r.createdAt.toISOString()]))
+}
+
 /** Enregistre un document généré (version conservée, jamais écrasée). */
 export async function saveGeneratedDocument(input: {
   userId: string

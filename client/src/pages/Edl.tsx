@@ -314,7 +314,7 @@ function Flow({ inv }: { inv: InventoryView }) {
             title="C’est signé."
             action={
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Btn size="lg" full onClick={() => openDoc(`/inventories/${inv.id}/pdf`).catch(toast.error)}>
+                <Btn size="lg" full variant={(data.complements ?? []).some((c) => c.status === 'PENDING') ? 'outline' : 'primary'} onClick={() => openDoc(`/inventories/${inv.id}/pdf`).catch(toast.error)}>
                   Ouvrir le PDF
                 </Btn>
                 <Btn size="lg" full variant="outline" onClick={() => navigate(`/espace/baux/${inv.lease.id}`)}>
@@ -323,8 +323,9 @@ function Flow({ inv }: { inv: InventoryView }) {
               </div>
             }
           >
-            <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>L’état des lieux {exit ? 'de sortie' : 'd’entrée'} de {inv.property.name} est enregistré dans vos documents, avec les photos. Il ne peut plus être modifié.</span>
+            <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>L’état des lieux {exit ? 'de sortie' : 'd’entrée'} de {inv.property.name} est enregistré dans vos documents, avec les photos.{exit ? ' Il ne peut plus être modifié.' : ' Votre locataire peut demander à le compléter dans les 10 jours : vous déciderez.'}</span>
             {exit ? <Callout tone="tip">Prochaine étape : restituer le dépôt de garantie, dans un mois si tout est conforme, deux mois sinon.</Callout> : null}
+            {!exit ? <Complements invId={inv.id} items={data.complements ?? []} onDecided={(c) => setData((d) => ({ ...d, complements: (d.complements ?? []).map((x) => (x.id === c.id ? c : x)) }))} /> : null}
           </Page>
         ) : null}
       </main>
@@ -392,6 +393,22 @@ function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: {
       }
     >
       {previous ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Les états indiqués sont ceux relevés à l’entrée : corrigez ce qui a changé.</span> : null}
+      <Box gap={10}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>Vue d’ensemble</span>
+            <span style={{ fontSize: 13, color: BAI.inkSoft }}>Une ou deux photos de toute la pièce, depuis la porte.</span>
+          </span>
+          <PhotoButton label={`Photo d’ensemble : ${room.name}`} count={room.photoIds?.length ?? 0} onPhotos={(ids) => onChange({ ...room, photoIds: [...(room.photoIds ?? []), ...ids].slice(0, 10) })} />
+        </div>
+        {room.photoIds?.length ? (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {room.photoIds.map((p) => (
+              <AuthImage key={p} id={p} alt={`Vue d’ensemble : ${room.name}`} size={64} onRemove={() => onChange({ ...room, photoIds: (room.photoIds ?? []).filter((x) => x !== p) })} />
+            ))}
+          </div>
+        ) : null}
+      </Box>
       {room.items.map((it, i) => (
         <Box key={`${it.label}-${i}`} gap={10}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -430,5 +447,85 @@ function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: {
         Retirer cette pièce
       </button>
     </Page>
+  )
+}
+
+type Complement = NonNullable<InventoryData['complements']>[number]
+
+/**
+ * Demandes du locataire pour compléter l'état des lieux d'entrée (article 3-2) : une à la fois, accepter (ajoutée au
+ * PDF, envoyé aux deux parties) ou refuser avec un motif (le locataire peut saisir la commission de conciliation).
+ */
+function Complements({ invId, items, onDecided }: { invId: string; items: Complement[]; onDecided: (c: Complement) => void }) {
+  const toast = useToast()
+  const [refusing, setRefusing] = useState(false)
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const pending = items.find((c) => c.status === 'PENDING')
+  const decided = items.filter((c) => c.status !== 'PENDING')
+  const decide = async (accept: boolean) => {
+    if (!pending) return
+    if (!accept && !reason.trim()) return toast.show('Indiquez en une phrase pourquoi vous refusez.', 'error')
+    setBusy(true)
+    try {
+      const r = await api<{ status: Complement['status'] }>(`/inventories/${invId}/complements/${pending.id}`, { method: 'POST', body: accept ? { accept } : { accept, reason: reason.trim() }, timeout: 90_000 })
+      onDecided({ ...pending, status: r.status, decidedAt: new Date().toISOString(), reason: accept ? null : reason.trim() })
+      toast.show(accept ? 'Ajouté à l’état des lieux. Le nouveau PDF est envoyé à votre locataire et à vous.' : 'Refus envoyé à votre locataire, avec votre motif.')
+      setRefusing(false)
+      setReason('')
+    } catch (e) {
+      toast.error(e)
+    } finally {
+      setBusy(false)
+    }
+  }
+  if (!items.length) return null
+  return (
+    <>
+      {pending ? (
+        <Box gap={12}>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Demande de votre locataire</span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>
+            {pending.heating ? 'Compléter le chauffage' : 'Compléter l’état des lieux'}, le {dateFr(pending.at.slice(0, 10))}
+          </span>
+          <span style={{ fontSize: 15, lineHeight: 1.5 }}>« {pending.text} »</span>
+          {pending.photoIds.length ? (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {pending.photoIds.map((p, n) => (
+                <AuthImage key={p} id={p} alt={`Photo ${n + 1} envoyée par le locataire`} size={88} />
+              ))}
+            </div>
+          ) : null}
+          <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>La loi permet au locataire de demander à compléter l’état des lieux d’entrée dans les 10 jours, et pour le chauffage pendant le premier mois de chauffe. Si vous refusez, il peut saisir la commission départementale de conciliation.</span>
+          {refusing ? (
+            <>
+              <TextArea label="Pourquoi refusez-vous ?" value={reason} onChange={setReason} rows={2} hint="Votre locataire recevra ce motif." />
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Btn variant="outline" onClick={() => void decide(false)} loading={busy}>
+                  Envoyer le refus
+                </Btn>
+                <button type="button" style={linkBtn} onClick={() => setRefusing(false)}>
+                  Annuler
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Btn onClick={() => void decide(true)} loading={busy}>
+                Ajouter à l’état des lieux
+              </Btn>
+              <button type="button" style={linkBtn} onClick={() => setRefusing(true)}>
+                Refuser
+              </button>
+            </div>
+          )}
+        </Box>
+      ) : null}
+      {decided.map((c) => (
+        <span key={c.id} style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.45 }}>
+          Demande du {dateFr(c.at.slice(0, 10))} : {c.status === 'ACCEPTED' ? 'ajoutée à l’état des lieux' : `refusée (${c.reason ?? ''})`}.
+        </span>
+      ))}
+    </>
   )
 }

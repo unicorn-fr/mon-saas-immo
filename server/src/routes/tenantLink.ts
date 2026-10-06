@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { Router } from 'express'
 import { z } from 'zod'
 import type { Lease, Property, User } from '@prisma/client'
@@ -13,6 +14,7 @@ import { liveContract, leaseOwned, propertyName, readProperty, readTenant, tenan
 import { landlordName } from '../pdf/labels.js'
 import { storeFile, upload } from './helpers.js'
 import { patchLeaseData } from './leases.js'
+import { complementAllowed, complementWindow, inventoryDataSchema } from '../domain/inventory.js'
 import { ISSUE_ADVICE, ISSUE_CATEGORIES, issueChoices, ISSUE_LABEL, issueProgress, issueTitle, isUrgent, readIssue, type IssueData } from '../domain/issues.js'
 
 /**
@@ -105,6 +107,7 @@ router.get('/locataire/:code', async (req, res) => {
   const c = await liveContract(lease.user, lease)
   const f = linkFacts(lease)
   const issues = await prisma.intervention.findMany({ where: { propertyId: lease.propertyId, source: 'TENANT' }, orderBy: { createdAt: 'desc' }, take: 30 })
+  const entry = await signedEntry(lease.id)
   res.json({
     success: true,
     data: {
@@ -116,6 +119,7 @@ router.get('/locataire/:code', async (req, res) => {
       boilerDone: f.boiler ? { date: f.boiler.date, at: f.boiler.at } : null,
       eReceipt: f.eReceiptConsent ? { email: f.eReceiptConsent.email, at: f.eReceiptConsent.at } : null,
       email: c.tenants.find((t) => t.email)?.email ?? '',
+      inventory: entry ? inventoryView(entry) : null,
       issueChoices: issueChoices(),
       issues: issues
         .filter((i) => readIssue(i.data)?.leaseId === lease.id)
@@ -215,6 +219,55 @@ router.post('/locataire/:code/e-receipt', limitPerVisitor(60, 10), async (req, r
   }
   notifyOwner(lease, body.accept ? 'son accord pour recevoir les quittances par email' : 'le retrait de son accord pour les quittances par email')
   res.json({ success: true, data: { accepted: body.accept } })
+})
+
+// ── Compléter l'état des lieux d'entrée (article 3-2) ─────────────────────────
+
+const signedEntry = (leaseId: string) => prisma.inventory.findFirst({ where: { leaseId, kind: 'ENTRY', status: 'SIGNED' }, orderBy: { createdAt: 'desc' } })
+
+function inventoryView(inv: { id: string; date: Date | null; data: unknown }) {
+  const d = inventoryDataSchema.parse(inv.data)
+  const signedOn = sameDay(inv.date ?? new Date())
+  const w = complementWindow(signedOn, sameDay(new Date()))
+  return {
+    signedOn,
+    generalUntil: w.generalUntil,
+    canComplete: w.general,
+    canHeating: w.heating,
+    complements: (d.complements ?? []).map((c) => ({ id: c.id, at: c.at, heating: c.heating, text: c.text, status: c.status, reason: c.status === 'REFUSED' ? (c.reason ?? null) : null })),
+  }
+}
+
+router.post('/locataire/:code/inventory-complement', limitPerVisitor(60, 10), upload.array('photos', 5), async (req, res) => {
+  const lease = await leaseByCode(String(req.params.code))
+  const inv = await signedEntry(lease.id)
+  if (!inv) throw new HttpError(404, 'L’état des lieux d’entrée n’est pas encore signé.')
+  const body = z.object({ text: z.string().trim().min(5, 'Décrivez ce qui manque en quelques mots.').max(3000), heating: z.enum(['true', 'false']).optional() }).parse(req.body)
+  const heating = body.heating === 'true'
+  if (!complementAllowed(sameDay(inv.date ?? new Date()), sameDay(new Date()), heating))
+    throw new HttpError(400, heating ? 'Le délai pour compléter l’état des lieux sur le chauffage est passé.' : `Le délai de 10 jours pour compléter l’état des lieux est passé. Pour le chauffage, choisissez « Le chauffage » pendant le premier mois où vous chauffez le logement.`)
+  const files = (req.files as Express.Multer.File[] | undefined) ?? []
+  if (files.some((f) => !PHOTO_TYPES.has(f.mimetype))) throw new HttpError(400, 'Envoyez des photos (JPEG, PNG ou HEIC).')
+  const d = inventoryDataSchema.parse(inv.data)
+  if ((d.complements ?? []).length >= 10) throw new HttpError(400, 'Vous avez déjà envoyé 10 demandes. Écrivez directement à votre bailleur.')
+  // Photos gardées comme celles de l'état des lieux (annexe du PDF si la demande est acceptée).
+  const photoIds: string[] = []
+  for (const f of files) photoIds.push((await storeFile(lease.userId, f)).id)
+  const complement = { id: randomUUID(), at: new Date().toISOString(), heating, text: body.text, photoIds, status: 'PENDING' as const }
+  // Relu juste avant l'écriture : aucune autre demande n'est effacée.
+  const fresh = inventoryDataSchema.parse((await prisma.inventory.findUniqueOrThrow({ where: { id: inv.id } })).data)
+  await prisma.inventory.update({ where: { id: inv.id }, data: { data: { ...fresh, complements: [...(fresh.complements ?? []), complement] } } })
+  const mail = layout({
+    title: 'Votre locataire demande à compléter l’état des lieux',
+    paragraphs: [
+      `${propertyName(lease.property)}${heating ? ', chauffage' : ''} : « ${body.text} »`,
+      photoIds.length ? `${photoIds.length} photo${photoIds.length > 1 ? 's' : ''} jointe${photoIds.length > 1 ? 's' : ''}, à voir dans Bailio.` : '',
+      'La loi lui permet de le demander dans les 10 jours (et pendant le premier mois de chauffe pour le chauffage). Acceptez pour l’ajouter à l’état des lieux, ou refusez en indiquant pourquoi.',
+    ].filter(Boolean),
+    cta: { label: 'Répondre à la demande', url: `${env.CLIENT_URL}/edl/${inv.id}` },
+  })
+  sendEmail({ to: lease.user.email, subject: `État des lieux : demande de complément, ${propertyName(lease.property)}`, ...mail }).catch(() => undefined)
+  res.status(201).json({ success: true, data: { id: complement.id } })
 })
 
 // ── Signaler un problème ─────────────────────────────────────────────────────

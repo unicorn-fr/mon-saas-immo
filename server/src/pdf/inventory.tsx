@@ -14,6 +14,16 @@ export interface InventoryInput {
   furnished: boolean
   /** Photos (data URL) indexées par identifiant de fichier. */
   photos: Record<string, string>
+  /** Date d'ajout de chaque photo sur le serveur (ISO), imprimée sous la photo. */
+  photoDates?: Record<string, string>
+}
+
+/** « 6 oct. 2026 à 14 h 32 », heure de Paris. */
+const stamp = (isoDate: string) => {
+  const d = new Date(isoDate)
+  const day = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Paris' })
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).replace(':', ' h ')
+  return `${day} à ${time}`
 }
 
 export function InventoryDocument(i: InventoryInput) {
@@ -36,8 +46,13 @@ export function InventoryDocument(i: InventoryInput) {
   const roomTables = (d.rooms ?? []).map((r) => ({
     name: r.name,
     note: r.note,
+    overview: (r.photoIds ?? []).map((pid) => ref(pid, `${r.name} : vue d’ensemble`)).filter(Boolean).join(', '),
     rows: r.items.map((it) => [it.label, it.state ?? 'Non vérifié', it.note ?? '', (it.photoIds ?? []).map((pid) => ref(pid, `${r.name} : ${it.label}`)).filter(Boolean).join(', ')]),
   }))
+
+  const accepted = (d.complements ?? [])
+    .filter((c) => c.status === 'ACCEPTED')
+    .map((c) => ({ ...c, refs: c.photoIds.map((pid) => ref(pid, `Complément du ${dateLong(c.at.slice(0, 10))}`)).filter(Boolean).join(', ') }))
 
   return (
     <Document title={`État des lieux ${exit ? 'de sortie' : 'd’entrée'}`} author={landlordName(i.landlord)} creator="Bailio" language="fr-FR">
@@ -73,6 +88,7 @@ export function InventoryDocument(i: InventoryInput) {
           <View key={r.name}>
             <Section>{r.name}</Section>
             <Table columns={['Élément', 'État', 'Observations', 'Photos']} widths={[26, 12, 44, 18]} rows={r.rows} />
+            {r.overview ? <P small>{`Vue d’ensemble de la pièce : ${r.overview}.`}</P> : null}
             {r.note ? <P small>{r.note}</P> : null}
           </View>
         ))}
@@ -95,6 +111,19 @@ export function InventoryDocument(i: InventoryInput) {
         ) : null}
         <P small>L’usure normale et la vétusté ne sont pas à la charge du locataire. Si les parties ont convenu d’une grille de vétusté, elle est jointe au bail.</P>
 
+        {accepted.length ? (
+          <>
+            <Section>Compléments demandés par le locataire</Section>
+            <P small>Ajoutés à la demande du locataire (article 3-2 de la loi du 6 juillet 1989) et acceptés par le bailleur. Ils font partie de l’état des lieux d’entrée.</P>
+            {accepted.map((c) => (
+              <View key={c.id} wrap={false} style={{ marginBottom: 6 }}>
+                <Row label={`${c.heating ? 'Chauffage, demande' : 'Demande'} du ${dateLong(c.at.slice(0, 10))}`}>{`Acceptée le ${c.decidedAt ? dateLong(c.decidedAt.slice(0, 10)) : BLANK}${c.refs ? ` · ${c.refs}` : ''}`}</Row>
+                <P>{c.text}</P>
+              </View>
+            ))}
+          </>
+        ) : null}
+
         <View wrap={false}>
           <P small>
             {exit
@@ -116,7 +145,7 @@ export function InventoryDocument(i: InventoryInput) {
               {photoOrder.map((p, n) => (
                 <View key={p.id} style={{ width: '48%', marginBottom: 8 }} wrap={false}>
                   <Image src={i.photos[p.id]} style={{ width: '100%', height: 170, objectFit: 'cover' }} />
-                  <Text style={{ fontSize: 7.8, color: MUTED, marginTop: 3 }}>{`Photo ${n + 1} · ${p.caption}`}</Text>
+                  <Text style={{ fontSize: 7.8, color: MUTED, marginTop: 3 }}>{`Photo ${n + 1} · ${p.caption}${i.photoDates?.[p.id] ? ` · ajoutée le ${stamp(i.photoDates[p.id])}` : ''}`}</Text>
                 </View>
               ))}
             </View>

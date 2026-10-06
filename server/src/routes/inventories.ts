@@ -11,7 +11,7 @@ import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readT
 import { initialInventory, inventoryDataSchema, inventoryProgress, type InventoryData } from '../domain/inventory.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
-import { filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.js'
+import { fileDates, filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.js'
 
 /**
  * États des lieux : préparés à partir de la fiche du logement (pièces, compteurs, clés),
@@ -45,8 +45,19 @@ async function inventoryInput(user: User, inv: Inventory): Promise<Omit<Inventor
   const lease = await leaseOwned(user.id, inv.leaseId)
   const c = await liveContract(user, lease)
   const data = inventoryDataSchema.parse(inv.data)
-  const photoIds = [...(data.meters ?? []).map((m) => m.photoId), ...(data.rooms ?? []).flatMap((r) => r.items.flatMap((i) => i.photoIds ?? []))].filter((x): x is string => Boolean(x))
+  const photoIds = [
+    ...(data.meters ?? []).map((m) => m.photoId),
+    ...(data.rooms ?? []).flatMap((r) => [...(r.photoIds ?? []), ...r.items.flatMap((i) => i.photoIds ?? [])]),
+    ...(data.complements ?? []).filter((c) => c.status === 'ACCEPTED').flatMap((c) => c.photoIds),
+  ].filter((x): x is string => Boolean(x))
   return { kind: inv.kind as 'ENTRY' | 'EXIT', data, landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: leaseKindOf(lease) !== 'VIDE', photoIds }
+}
+
+/** PDF de l'état des lieux, photos en annexe avec leur date d'ajout. */
+async function inventoryPdf(user: User, inv: Inventory) {
+  const input = await inventoryInput(user, inv)
+  const pdf = await renderInventoryPdf({ ...input, photos: await filesAsDataUrls(user.id, input.photoIds), photoDates: await fileDates(user.id, input.photoIds) })
+  return { input, pdf }
 }
 
 router.get('/inventories/:id', async (req, res) => {
@@ -89,8 +100,7 @@ router.post('/inventories/:id/sign', async (req, res) => {
   const today = new Date().toISOString().slice(0, 10)
   const signed = { ...data, date: data.date ?? today, signatures: { ...data.signatures, signedAt: new Date().toISOString() } }
   await prisma.inventory.update({ where: { id: inv.id }, data: { status: 'SIGNED', data: signed, date: new Date(`${signed.date}T00:00:00Z`) } })
-  const input = await inventoryInput(user, { ...inv, data: signed })
-  const pdf = await renderInventoryPdf({ ...input, photos: await filesAsDataUrls(user.id, input.photoIds) })
+  const { input, pdf } = await inventoryPdf(user, { ...inv, data: signed })
   const lease = await leaseOwned(user.id, inv.leaseId)
   const names = input.tenants.map((t) => personName(t, false)).join(' et ')
   await saveGeneratedDocument({ userId: user.id, kind: 'INVENTORY', title: `État des lieux ${inv.kind === 'EXIT' ? 'de sortie' : 'd’entrée'}, ${names}`, pdf, snapshot: input, leaseId: lease.id, propertyId: lease.propertyId })
@@ -118,9 +128,43 @@ router.post('/inventories/:id/sign', async (req, res) => {
 router.get('/inventories/:id/pdf', async (req, res) => {
   const user = req.user!
   const inv = await ownInventory(user.id, String(req.params.id))
-  const input = await inventoryInput(user, inv)
-  const pdf = await renderInventoryPdf({ ...input, photos: await filesAsDataUrls(user.id, input.photoIds) })
+  const { pdf } = await inventoryPdf(user, inv)
   sendPdf(res, pdf, `etat-des-lieux-${inv.kind === 'EXIT' ? 'sortie' : 'entree'}.pdf`, req.query.download === '1')
+})
+
+/**
+ * Demande du locataire pour compléter l'état des lieux d'entrée (article 3-2) : acceptée, elle est ajoutée au document
+ * (nouvelle version du PDF, envoyée aux deux parties) ; refusée, le locataire est prévenu avec le motif et son recours.
+ */
+router.post('/inventories/:id/complements/:cid', async (req, res) => {
+  const user = req.user!
+  const inv = await ownInventory(user.id, String(req.params.id))
+  const body = z.object({ accept: z.boolean(), reason: z.string().trim().max(1000).optional() }).parse(req.body)
+  const data = inventoryDataSchema.parse(inv.data)
+  const c = (data.complements ?? []).find((x) => x.id === String(req.params.cid))
+  if (!c) throw new HttpError(404, 'Demande introuvable.')
+  if (c.status !== 'PENDING') throw new HttpError(409, 'Cette demande a déjà reçu une réponse.')
+  if (!body.accept && !body.reason) throw new HttpError(400, 'Indiquez en une phrase pourquoi vous refusez : votre locataire le recevra.')
+  const decided = { ...c, status: body.accept ? ('ACCEPTED' as const) : ('REFUSED' as const), decidedAt: new Date().toISOString(), reason: body.reason ?? null }
+  const next = { ...data, complements: (data.complements ?? []).map((x) => (x.id === c.id ? decided : x)) }
+  const updated = await prisma.inventory.update({ where: { id: inv.id }, data: { data: next } })
+  const lease = await leaseOwned(user.id, inv.leaseId)
+  const tenantsTo = (await liveContract(user, lease)).tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+  const day = c.at.slice(0, 10).split('-').reverse().join('/')
+  if (body.accept) {
+    const { input, pdf } = await inventoryPdf(user, updated)
+    const names = input.tenants.map((t) => personName(t, false)).join(' et ')
+    await saveGeneratedDocument({ userId: user.id, kind: 'INVENTORY', title: `État des lieux d’entrée complété, ${names}`, pdf, snapshot: input, leaseId: lease.id, propertyId: lease.propertyId })
+    const mail = layout({ title: 'L’état des lieux d’entrée est complété.', paragraphs: ['Bonjour,', `La demande du ${day} a été acceptée : elle est ajoutée à l’état des lieux d’entrée, joint à cet email.`, 'Conservez cette version : elle remplace la précédente.'] })
+    for (const to of [...new Set([...tenantsTo, user.email])]) await sendEmail({ to, subject: 'État des lieux d’entrée complété', ...mail, replyTo: user.email, attachments: [{ filename: 'etat-des-lieux-entree.pdf', content: pdf }] }).catch((e) => console.error('Envoi de l’état des lieux impossible', e))
+  } else {
+    const mail = layout({
+      title: 'Votre demande sur l’état des lieux',
+      paragraphs: ['Bonjour,', `Votre bailleur n’a pas ajouté votre demande du ${day} à l’état des lieux d’entrée. Son motif : « ${body.reason} »`, 'Si vous n’êtes pas d’accord, vous pouvez saisir gratuitement la commission départementale de conciliation de votre département (article 3-2 de la loi du 6 juillet 1989).'],
+    })
+    for (const to of tenantsTo) await sendEmail({ to, subject: 'Votre demande sur l’état des lieux', ...mail, replyTo: user.email }).catch((e) => console.error('Envoi impossible', e))
+  }
+  res.json({ success: true, data: { status: decided.status, notified: tenantsTo } })
 })
 
 /**

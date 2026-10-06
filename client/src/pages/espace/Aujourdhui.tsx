@@ -221,6 +221,9 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
         actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
       }
       break
+    case 'INVENTORY_COMPLEMENT':
+      actions = [{ label: 'Répondre à la demande', onClick: () => navigate(`/edl/${t.inventoryId}`) }]
+      break
     case 'ISSUE':
       actions = [{ label: 'Organiser l’intervention', onClick: () => navigate(`/espace/logements/${t.propertyId}?onglet=expenses&intervention=${t.interventionId}`) }]
       break

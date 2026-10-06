@@ -16,6 +16,7 @@ import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
 import { upcomingInterventions } from './contacts.js'
 import { readIssue } from '../domain/issues.js'
+import { inventoryDataSchema } from '../domain/inventory.js'
 import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
@@ -34,7 +35,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -166,6 +167,25 @@ router.get('/today', async (req, res) => {
     }
   }
 
+  // Demandes du locataire pour compléter l'état des lieux d'entrée (article 3-2) : à accepter ou refuser.
+  for (const inv of inventories) {
+    if (inv.kind !== 'ENTRY' || inv.status !== 'SIGNED') continue
+    const pending = (inventoryDataSchema.parse(inv.data).complements ?? []).filter((c) => c.status === 'PENDING')
+    const l = leases.find((x) => x.id === inv.leaseId)
+    if (!pending.length || !l) continue
+    const label = leaseTenantLabel(l, names) || 'votre locataire'
+    tasks.unshift({
+      id: `complement-${inv.id}`,
+      type: 'INVENTORY_COMPLEMENT',
+      tag: 'État des lieux',
+      tone: 'caramel',
+      place: propertyName(l.property),
+      title: `${label.charAt(0).toUpperCase()}${label.slice(1)} demande à compléter l’état des lieux d’entrée`,
+      text: `« ${pending[0].text.replace(/\s+/g, ' ').slice(0, 160)}${pending[0].text.length > 160 ? '…' : ''} » Acceptez pour l’ajouter, ou refusez en indiquant pourquoi.`,
+      leaseId: l.id,
+      inventoryId: inv.id,
+    })
+  }
   // Problèmes signalés par les locataires, pas encore organisés : les urgents en premier.
   const issues = await prisma.intervention.findMany({ where: { userId: user.id, source: 'TENANT', status: 'TODO' }, include: { property: true }, orderBy: { createdAt: 'asc' } })
   for (const i of issues.sort((a, b) => Number(readIssue(b.data)?.urgent ?? false) - Number(readIssue(a.data)?.urgent ?? false))) {

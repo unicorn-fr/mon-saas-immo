@@ -219,7 +219,7 @@ export interface LeaseView {
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT'
   tag: string
   tone: 'error' | 'owner' | 'caramel' | 'green'
   place: string
@@ -351,11 +351,13 @@ export interface InventoryData {
   meters?: Array<{ key: string; label: string; number?: string | null; index?: string | null; photoId?: string | null; notApplicable?: boolean | null }> | null
   heating?: { state?: ItemState | null; note?: string | null; lastMaintenance?: string | null } | null
   keys?: Array<{ type: string; count: number; destination?: string | null }> | null
-  rooms?: Array<{ name: string; done?: boolean | null; items: Array<{ label: string; state?: ItemState | null; note?: string | null; photoIds?: string[] | null }>; note?: string | null }> | null
+  rooms?: Array<{ name: string; done?: boolean | null; items: Array<{ label: string; state?: ItemState | null; note?: string | null; photoIds?: string[] | null }>; note?: string | null; photoIds?: string[] | null }> | null
   furniture?: Array<{ item: string; count: number; state?: ItemState | null; note?: string | null }> | null
   vetusteGrid?: boolean | null
   notes?: string | null
   signatures?: { landlord?: string | null; tenant?: string | null; signedAt?: string | null } | null
+  /** Demandes du locataire pour compléter l'état des lieux d'entrée (article 3-2), depuis son lien. */
+  complements?: Array<{ id: string; at: string; heating: boolean; text: string; photoIds: string[]; status: 'PENDING' | 'ACCEPTED' | 'REFUSED'; decidedAt?: string | null; reason?: string | null }> | null
 }
 
 export interface InventoryView {

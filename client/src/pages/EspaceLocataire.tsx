@@ -19,6 +19,13 @@ interface LinkInfo {
   boilerDone: { date: string; at: string } | null
   eReceipt: { email: string; at: string } | null
   email: string
+  inventory: {
+    signedOn: string
+    generalUntil: string
+    canComplete: boolean
+    canHeating: boolean
+    complements: Array<{ id: string; at: string; heating: boolean; text: string; status: 'PENDING' | 'ACCEPTED' | 'REFUSED'; reason: string | null }>
+  } | null
   issueChoices: Array<{ value: string; label: string; advice: string | null; alwaysUrgent: boolean }>
   issues: Array<{ id: string; title: string; status: 'TODO' | 'PLANNED' | 'DONE'; progress: string; reportedAt: string }>
 }
@@ -30,8 +37,8 @@ interface LinkInfo {
 export default function EspaceLocataire() {
   const { code = '' } = useParams()
   const { data, error, loading, reload } = useLoad(() => api<LinkInfo>(`/locataire/${encodeURIComponent(code)}`), [code])
-  // Pendant un signalement, rien d'autre à l'écran.
-  const [reporting, setReporting] = useState(false)
+  // Pendant un signalement ou une demande, rien d'autre à l'écran.
+  const [focus, setFocus] = useState<null | 'issue' | 'inventory'>(null)
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink }}>
       <header style={{ padding: '20px clamp(16px, 4vw, 40px)', borderBottom: `1px solid ${BAI.divider}`, background: BAI.surface }}>
@@ -51,8 +58,9 @@ export default function EspaceLocataire() {
                 Signalez un problème ou envoyez vos documents à {data.landlord}, sans créer de compte : tout lui parvient directement.
               </span>
             </div>
-            <Issues code={code} info={data} onDone={reload} open={reporting} setOpen={setReporting} />
-            {reporting ? null : (
+            {focus !== 'inventory' ? <Issues code={code} info={data} onDone={reload} open={focus === 'issue'} setOpen={(v) => setFocus(v ? 'issue' : null)} /> : null}
+            {focus !== 'issue' ? <InventoryComplement code={code} info={data} onDone={reload} open={focus === 'inventory'} setOpen={(v) => setFocus(v ? 'inventory' : null)} /> : null}
+            {focus ? null : (
               <>
                 <Insurance code={code} info={data} onDone={reload} />
                 {data.boiler ? <Boiler code={code} info={data} onDone={reload} /> : null}
@@ -285,7 +293,7 @@ function Issues({ code, info, onDone, open, setOpen }: { code: string; info: Lin
               title: 'Ajoutez des photos',
               note: 'Une photo aide votre bailleur à envoyer le bon artisan. Trois au maximum.',
               optional: true,
-              content: <Photos files={photos} onChange={setPhotos} />,
+              content: <Photos files={photos} onChange={setPhotos} max={3} />,
             },
           ]}
         />
@@ -320,7 +328,7 @@ function Issues({ code, info, onDone, open, setOpen }: { code: string; info: Lin
   )
 }
 
-function Photos({ files, onChange }: { files: File[]; onChange: (f: File[]) => void }) {
+function Photos({ files, onChange, max }: { files: File[]; onChange: (f: File[]) => void; max: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {files.map((f, n) => (
@@ -331,7 +339,7 @@ function Photos({ files, onChange }: { files: File[]; onChange: (f: File[]) => v
           </Btn>
         </div>
       ))}
-      {files.length < 3 ? (
+      {files.length < max ? (
         <label style={{ border: `1.5px dashed ${BAI.dashed}`, borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer', background: BAI.bg }}>
           <span style={{ fontSize: 16, fontWeight: 600 }}>{files.length ? 'Ajouter une autre photo' : 'Prendre ou choisir une photo'}</span>
           <span style={{ fontSize: 13, color: BAI.inkSoft }}>JPEG, PNG ou HEIC, 15 Mo au maximum.</span>
@@ -339,5 +347,122 @@ function Photos({ files, onChange }: { files: File[]; onChange: (f: File[]) => v
         </label>
       ) : null}
     </div>
+  )
+}
+
+/**
+ * Compléter l'état des lieux d'entrée (article 3-2 de la loi du 6 juillet 1989) : dans les 10 jours, ou pour le
+ * chauffage pendant le premier mois de chauffe. Le bailleur accepte (nouveau PDF) ou refuse en donnant son motif.
+ */
+function InventoryComplement({ code, info, onDone, open, setOpen }: { code: string; info: LinkInfo; onDone: () => void; open: boolean; setOpen: (v: boolean) => void }) {
+  const toast = useToast()
+  const inv = info.inventory
+  const [heating, setHeating] = useState<boolean | null>(null)
+  const [text, setText] = useState('')
+  const [photos, setPhotos] = useState<File[]>([])
+  const [busy, setBusy] = useState(false)
+  const [sent, setSent] = useState(false)
+  if (!inv || (!inv.canComplete && !inv.canHeating && !inv.complements.length)) return null
+  const choices = [
+    ...(inv.canComplete ? [{ value: false, label: 'Un oubli ou une erreur' }] : []),
+    ...(inv.canHeating ? [{ value: true, label: 'Le chauffage' }] : []),
+  ]
+  const reset = () => {
+    setOpen(false)
+    setHeating(null)
+    setText('')
+    setPhotos([])
+  }
+  const send = async () => {
+    const form = new FormData()
+    form.append('text', text.trim())
+    form.append('heating', String(Boolean(heating)))
+    for (const f of photos) form.append('photos', f)
+    setBusy(true)
+    try {
+      await api(`/locataire/${encodeURIComponent(code)}/inventory-complement`, { method: 'POST', form, timeout: 90_000 })
+      setSent(true)
+      reset()
+      onDone()
+    } catch (e) {
+      toast.error(e)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const status = { PENDING: 'En attente de réponse', ACCEPTED: 'Ajouté à l’état des lieux', REFUSED: 'Refusé' } as const
+  return (
+    <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>État des lieux d’entrée</h2>}>
+      {open ? (
+        <Wizard
+          onCancel={reset}
+          busy={busy}
+          finishLabel="Envoyer ma demande"
+          onFinish={() => void send()}
+          steps={[
+            {
+              key: 'what',
+              title: 'Que faut-il compléter ?',
+              content: (
+                <>
+                  <Chips options={choices} value={heating} onChange={setHeating} />
+                  {inv.canHeating ? <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>Le chauffage se complète pendant le premier mois où vous chauffez le logement.</span> : null}
+                </>
+              ),
+              validate: () => (heating === null ? 'Choisissez ce qu’il faut compléter.' : null),
+            },
+            {
+              key: 'describe',
+              title: 'Décrivez ce qui manque',
+              content: <TextArea label="Ce qui n’est pas dans l’état des lieux" value={text} onChange={setText} placeholder="Pièce, élément, ce que vous avez constaté…" maxLength={3000} rows={4} />,
+              validate: () => (text.trim().length >= 5 ? null : 'Décrivez ce qui manque en quelques mots.'),
+            },
+            {
+              key: 'photos',
+              title: 'Ajoutez des photos',
+              note: 'Elles montrent l’état au moment de votre arrivée. Cinq au maximum.',
+              optional: true,
+              content: <Photos files={photos} onChange={setPhotos} max={5} />,
+            },
+          ]}
+        />
+      ) : (
+        <>
+          {sent ? (
+            <Callout tone="ok" title="Demande envoyée à votre bailleur">S’il l’accepte, vous recevrez l’état des lieux complété par email.</Callout>
+          ) : (
+            <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>
+              {inv.canComplete
+                ? `Un défaut oublié le jour de l’entrée ? Vous pouvez demander à le faire ajouter jusqu’au ${dateNum(inv.generalUntil)}.`
+                : inv.canHeating
+                  ? 'Pendant le premier mois où vous chauffez le logement, vous pouvez demander à compléter l’état des lieux pour le chauffage.'
+                  : 'Le délai pour compléter l’état des lieux d’entrée est passé.'}
+            </span>
+          )}
+          {inv.canComplete || inv.canHeating ? (
+            <Btn variant="outline" onClick={() => { setSent(false); setOpen(true) }} style={{ alignSelf: 'flex-start' }}>
+              Compléter l’état des lieux
+            </Btn>
+          ) : null}
+        </>
+      )}
+      {inv.complements.length && !open ? (
+        <ul aria-label="Vos demandes" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {inv.complements.map((c) => (
+            <li key={c.id} style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <span style={{ fontSize: 15, fontWeight: 600 }}>{c.heating ? 'Chauffage' : 'Demande'} du {dateNum(c.at)}</span>
+                <Pill tone={c.status === 'ACCEPTED' ? 'green' : c.status === 'REFUSED' ? 'error' : 'caramel'}>{status[c.status]}</Pill>
+              </span>
+              {c.status === 'REFUSED' ? (
+                <span style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.45 }}>
+                  Motif : {c.reason}. Si vous n’êtes pas d’accord, vous pouvez saisir gratuitement la commission départementale de conciliation.
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </Card>
   )
 }
