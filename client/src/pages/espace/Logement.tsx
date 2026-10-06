@@ -78,6 +78,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
     { label: 'Diagnostics', value: expired ? `${expired} à refaire` : 'À jour', to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: expired ? 'caramel' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
+    { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
   ]
   return (
     <Card title="Ce logement" style={{ gap: 0 }}>

@@ -9,7 +9,8 @@ import { requireUser } from '../services/session.js'
 import { landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
 import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantCompletion } from '../domain/completion.js'
 import { diagnosticsFor, energyRentalWarning, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
-import { propertyColumns, propertyName, readProfile, readProperty, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
+import { propertyColumns, propertyName, readProfile, readProperty, readStructure, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
+import { aidsFor } from '../domain/aids.js'
 import { iso, mergeFile } from './helpers.js'
 import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
@@ -233,6 +234,33 @@ router.put('/properties/:id', async (req, res) => {
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
   res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
+})
+
+// Aides et dispositifs du logement (domain/aids.ts) : d'après la fiche, la structure, le bail en cours ou en préparation
+// et la fiche du premier locataire. Bailio oriente, l'organisme décide.
+router.get('/properties/:id/aids', async (req, res) => {
+  const userId = req.user!.id
+  const p = await ownProperty(userId, String(req.params.id))
+  const file = readProperty(p)
+  const lease = p.leases.find((l) => l.status === 'DRAFT') ?? p.leases.find((l) => l.status === 'ACTIVE' || l.status === 'IMPORTED') ?? null
+  const structure = p.structureId ? await prisma.structure.findFirst({ where: { id: p.structureId, userId } }) : null
+  const kind = structure ? readStructure(structure).kind : null
+  const tenant = lease?.tenantIds[0] ? await prisma.tenant.findFirst({ where: { id: lease.tenantIds[0], userId } }) : null
+  const t = tenant ? readTenant(tenant) : null
+  const aids = aidsFor({
+    today: iso(new Date())!,
+    dpe: file.diagnostics?.dpe?.class ?? null,
+    furnished: lease ? leaseKindOf(lease) !== 'VIDE' : Boolean(file.furnished),
+    department: (file.postalCode ?? '').slice(0, 2) || null,
+    constructionPeriod: file.constructionPeriod ?? null,
+    company: kind === 'SCI' || kind === 'COMPANY',
+    rentCents: lease?.rentCents ?? file.rent?.rentCents ?? null,
+    chargesCents: lease?.chargesCents ?? file.rent?.chargesCents ?? null,
+    leaseDraft: lease?.status === 'DRAFT',
+    leaseActive: lease?.status === 'ACTIVE' || lease?.status === 'IMPORTED',
+    tenant: t ? { birthDate: t.birthDate, situation: t.situation, monthlyIncomeCents: t.monthlyIncomeCents, guarantee: t.guarantee } : null,
+  })
+  res.json({ success: true, data: { propertyName: propertyName(p), aids } })
 })
 
 // Dossier du logement : tout ce qu'il faut avoir et garder, avec ce qui manque (domain/binder.ts).

@@ -191,7 +191,7 @@ export function locAvantagesAid(i: AidInput): Aid {
     summary: 'Réduction d’impôt de 15 % à 65 % des loyers encaissés, selon le niveau du loyer, si vous louez moins cher que le marché à un ménage modeste, pendant 6 ans.',
     reasons,
     steps: [
-      'Comparez sur le simulateur de l’Anah le loyer plafonné de votre commune et la réduction d’impôt.',
+      'Comparez sur le simulateur de France Rénov’ le loyer plafonné de votre commune et la réduction d’impôt.',
       'Signez une convention avec l’Anah avant ou pendant le bail, pour 6 ans.',
       'Louez vide, en résidence principale, à un locataire sous les plafonds de ressources, hors de votre famille.',
       'Déclarez la réduction chaque année avec vos revenus.',

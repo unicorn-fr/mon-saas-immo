@@ -44,9 +44,9 @@ test('espace du propriétaire : aucune violation WCAG 2.1 AA', async () => {
   const problems = []
   const pages = [
     '/espace', '/espace/logements', '/espace/logements/nouveau', `/espace/logements/${propertyId}`, `/espace/logements/${propertyId}/fiche`,
-    `/espace/logements/${propertyId}/annonce`, `/espace/logements/${propertyId}/emprunt`, `/espace/logements/${propertyId}/candidats`,
+    `/espace/logements/${propertyId}/annonce`, `/espace/logements/${propertyId}/emprunt`, `/espace/logements/${propertyId}/aides`, `/espace/logements/${propertyId}/candidats`,
     '/espace/locataires', '/espace/locataires/nouveau', `/espace/locataires/${tenantId}`, `/espace/locataires/${tenantId}/fiche`, `/espace/locataires/${tenantId}/caution`,
-    `/espace/baux/nouveau?logement=${propertyId}`, `/espace/baux/${leaseId}`, `/espace/baux/${leaseId}/contrat`, `/espace/baux/${leaseId}/courriers`, `/espace/baux/${leaseId}/etat-des-lieux`, `/espace/baux/${leaseId}/parcours/DEPARTURE`,
+    `/espace/baux/nouveau?logement=${propertyId}`, `/espace/baux/${leaseId}`, `/espace/baux/${leaseId}/contrat`, `/espace/baux/${leaseId}/courriers`, `/espace/baux/${leaseId}/etat-des-lieux`, `/espace/baux/${leaseId}/parcours/DEPARTURE`, `/espace/baux/${leaseId}/degradations`,
     '/espace/documents', '/espace/argent', '/espace/argent/bilan', '/espace/argent/declaration', '/espace/argent/facture', '/espace/argent/releve',
     '/espace/situations', '/espace/compte', '/espace/compte/profil', '/espace/carnet', '/espace/corbeille', '/espace/structures', '/espace/compte/acces',
   ]
