@@ -45,7 +45,7 @@ import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
 import { annexesLabel, landlordAddress, landlordName, parkingLabel, personName, propertyAddress } from '../pdf/labels.js'
-import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendPdf } from './helpers.js'
+import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendFile, sendPdf } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { damageReviewFor } from '../services/damage.js'
 import { damageDeductions, lineMissing } from '../domain/damage.js'
@@ -418,8 +418,10 @@ router.get('/leases/:id/lease.pdf', async (req, res) => {
   if (lease.status === 'IMPORTED') {
     const doc = await prisma.document.findFirst({ where: { leaseId: lease.id, kind: 'LEASE_IMPORTED' }, orderBy: { createdAt: 'desc' } })
     if (!doc?.file) throw new HttpError(404, 'Document introuvable.')
-    res.setHeader('Content-Type', doc.mimeType)
-    return res.send(Buffer.from(doc.file))
+    // Passe par les helpers (Content-Disposition, nosniff, no-store) au lieu d'un res.send brut avec un type venant de la base.
+    const bytes = Buffer.from(doc.file)
+    if (doc.mimeType === 'application/pdf') return sendPdf(res, bytes, 'bail-importe.pdf', download)
+    return sendFile(res, bytes, doc.mimeType, `bail-importe.${doc.mimeType.split('/')[1] ?? 'bin'}`, download)
   }
   // Bail signé électroniquement : le fichier signé (signatures et certificat), à l'identique.
   if (lease.status === 'ACTIVE' && !(lease.data as { dirty?: boolean }).dirty) {

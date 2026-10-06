@@ -21,6 +21,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
       details: err.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
     })
   }
+  // Erreurs du parseur de corps (JSON invalide → 400, corps trop volumineux → 413) : statut correct, pas un 500 ni un log serveur.
+  const status = (err as { status?: number; statusCode?: number } | null)?.status ?? (err as { statusCode?: number } | null)?.statusCode
+  if (typeof status === 'number' && status >= 400 && status < 500) {
+    return res.status(status).json({ success: false, message: status === 413 ? 'Contenu trop volumineux.' : 'Requête invalide.' })
+  }
   console.error(err)
   return res.status(500).json({ success: false, message: 'Une erreur est survenue. Réessayez dans un instant.' })
 }
