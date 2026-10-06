@@ -117,3 +117,47 @@ export function tenantFromCandidate(c: CandidateData & { documents?: CandidateDo
     guarantor: c.guarantee === 'CAUTION' && c.guarantor ? { firstNames: c.guarantor.firstNames, lastName: c.guarantor.lastName, email: c.guarantor.email || null, documents: docs('GUARANTOR') } : null,
   }
 }
+
+/**
+ * Aide au tri des candidatures, jamais une décision automatique. Uniquement des critères objectifs liés à la
+ * solvabilité et au dossier, comme le recommande le Défenseur des droits (« Louer sans discriminer ») :
+ * - ressources : toutes comptent (salaires, pensions, allocations, aides au logement), quel que soit le contrat ;
+ * - garantie (caution, Visale, assurance) ; dossier (pièces demandées déposées, ou DossierFacile) ; date d'entrée.
+ * Jamais l'âge, la situation de famille, le nombre d'occupants, la situation professionnelle ni aucun critère de
+ * l'article 225-1 du code pénal (refus de louer discriminatoire : loi du 6 juillet 1989, art. 1er).
+ */
+export type Mark = 'GOOD' | 'MEDIUM' | 'WEAK'
+
+export interface CandidateReview {
+  level: 'SOLID' | 'CORRECT' | 'INCOMPLETE'
+  label: string
+  points: number
+  criteria: Array<{ key: 'RESOURCES' | 'GUARANTEE' | 'FILE' | 'DATE'; mark: Mark; text: string }>
+}
+
+const LEVEL_LABEL: Record<CandidateReview['level'], string> = { SOLID: 'Dossier solide', CORRECT: 'Dossier correct', INCOMPLETE: 'Dossier à compléter' }
+
+export function reviewCandidate(
+  c: Pick<CandidateData, 'monthlyIncomeCents' | 'guarantee' | 'moveInDate' | 'dossierFacileUrl'> & { documents?: Array<{ category: string; who: string }> },
+  offer: { rentWithChargesCents: number | null; requestedDocs: string[]; availableFrom: string | null },
+): CandidateReview {
+  const criteria: CandidateReview['criteria'] = []
+  const share = offer.rentWithChargesCents ? rentShare(offer.rentWithChargesCents, c.monthlyIncomeCents) : null
+  if (share === null) criteria.push({ key: 'RESOURCES', mark: 'MEDIUM', text: offer.rentWithChargesCents ? 'Ressources non indiquées.' : 'Indiquez le loyer du logement pour comparer aux ressources.' })
+  else criteria.push({ key: 'RESOURCES', mark: share <= 33 ? 'GOOD' : share <= 40 ? 'MEDIUM' : 'WEAK', text: `Le loyer charges comprises représente ${share} % de ses ressources${share > 40 ? ' : regardez la garantie' : ''}.` })
+  criteria.push(c.guarantee === 'NONE' ? { key: 'GUARANTEE', mark: 'MEDIUM', text: 'Pas de garant.' } : { key: 'GUARANTEE', mark: 'GOOD', text: GUARANTEE_LABEL[c.guarantee] + '.' })
+  const given = new Set((c.documents ?? []).filter((d) => d.who === 'TENANT').map((d) => d.category))
+  const missing = offer.requestedDocs.filter((k) => !given.has(k))
+  if (c.dossierFacileUrl) criteria.push({ key: 'FILE', mark: 'GOOD', text: 'Dossier DossierFacile partagé (pièces vérifiées par l’État).' })
+  else if (!offer.requestedDocs.length || !missing.length) criteria.push({ key: 'FILE', mark: 'GOOD', text: 'Toutes les pièces demandées sont déposées.' })
+  else criteria.push({ key: 'FILE', mark: missing.length < offer.requestedDocs.length ? 'MEDIUM' : 'WEAK', text: `${missing.length} pièce${missing.length > 1 ? 's' : ''} demandée${missing.length > 1 ? 's' : ''} manquante${missing.length > 1 ? 's' : ''}.` })
+  if (c.moveInDate && offer.availableFrom) {
+    const gap = Math.round((Date.parse(`${c.moveInDate}T00:00:00Z`) - Date.parse(`${offer.availableFrom}T00:00:00Z`)) / 86_400_000)
+    criteria.push(Math.abs(gap) <= 15 ? { key: 'DATE', mark: 'GOOD', text: 'Date d’entrée souhaitée proche de la disponibilité.' } : { key: 'DATE', mark: 'MEDIUM', text: `Souhaite entrer ${gap > 0 ? `${gap} jours après` : `${-gap} jours avant`} la disponibilité.` })
+  }
+  const value: Record<Mark, number> = { GOOD: 2, MEDIUM: 1, WEAK: 0 }
+  const points = criteria.reduce((a, x) => a + value[x.mark], 0)
+  const max = criteria.length * 2
+  const level: CandidateReview['level'] = criteria.some((x) => x.mark === 'WEAK') ? 'INCOMPLETE' : points >= max - 1 ? 'SOLID' : 'CORRECT'
+  return { level, label: LEVEL_LABEL[level], points: Math.round((points / max) * 100), criteria }
+}

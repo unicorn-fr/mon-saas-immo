@@ -11,7 +11,7 @@ import { requireUser } from '../services/session.js'
 import { propertyName, readProfile, readProperty } from '../services/contract.js'
 import { buildAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
-import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, rentShare, tenantFromCandidate, type CandidateData, type CandidateDoc } from '../domain/candidates.js'
+import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, rentShare, reviewCandidate, tenantFromCandidate, type CandidateData, type CandidateDoc } from '../domain/candidates.js'
 import { TENANT_DOCUMENTS, tenantFileSchema } from '../domain/contract.js'
 import { storeFile, upload } from './helpers.js'
 
@@ -134,6 +134,8 @@ router.get('/properties/:id/candidates', requireUser, async (req, res) => {
           dossierFacileUrl: d.dossierFacileUrl || null,
           message: d.message ?? null,
           rentShare: offer.rentWithChargesCents ? rentShare(offer.rentWithChargesCents, d.monthlyIncomeCents) : null,
+          // Aide au tri sur des critères objectifs seulement (domain/candidates.ts, reviewCandidate).
+          review: reviewCandidate(d as CandidateData & { documents?: CandidateDoc[] }, { rentWithChargesCents: offer.rentWithChargesCents, requestedDocs: offer.requestedDocs.map((x) => x.key), availableFrom: adSettings(p, p.leases).availableFrom ?? null }),
           documents: ((d as CandidateData & { documents?: CandidateDoc[] }).documents ?? []).map((x) => ({ category: x.category, who: x.who, fileId: x.fileId, label: `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}` })),
         }
       }),

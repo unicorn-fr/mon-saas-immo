@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '5 octobre 2026'
+const UPDATED = '6 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -263,7 +263,7 @@ export function Confidentialite() {
           Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et, s'il l'accepte, photo du signataire prise au moment de signer (facultative, réencodée sans données de localisation, datée par notre serveur). Elle figure
           dans le certificat joint au bail signé et sert à prouver la signature en cas de désaccord (Code civil, article 1367) ;
         </li>
-        <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie, lien DossierFacile et, si le propriétaire les demande, les justificatifs que la loi autorise (décret n° 2015-1437). Elles ne sont visibles que du propriétaire ;</li>
+        <li>Les candidatures reçues par le lien de candidature d'un logement : identité, coordonnées, situation, revenus, garantie, lien DossierFacile et, si le propriétaire les demande, les justificatifs que la loi autorise (décret n° 2015-1437). Elles ne sont visibles que du propriétaire. Pour l'aider à les trier, Bailio les classe sur les seules ressources (comparées au loyer), garantie, pièces déposées et date d'entrée souhaitée, sans aucun autre critère ; ce classement n'est qu'une aide, la décision appartient au propriétaire ;</li>
         <li>Ce que le locataire complète lui-même par le lien « Votre dossier de location » envoyé par son futur bailleur : identité, naissance, coordonnées, situation et revenus, ceux de son garant, et les justificatifs que la loi autorise à demander (décret n° 2015-1437). Ils rejoignent sa fiche et ne sont visibles que du propriétaire. Le lien expire après 30 jours ;</li>
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date, les problèmes qu'il signale dans le logement (type, lieu, description, photos) et ses demandes pour compléter l'état des lieux d'entrée (description, photos, réponse du propriétaire). Ces éléments sont rangés avec le bail ou le logement et ne sont visibles que du propriétaire et des personnes à qui il en donne l'accès ; un problème signalé est conservé avec l'historique des interventions du logement ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>

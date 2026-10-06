@@ -26,6 +26,8 @@ interface CandidateRow {
   dossierFacileUrl: string | null
   message: string | null
   rentShare: number | null
+  /** Aide au tri : ressources, garantie, dossier, date d'entrée (server/src/domain/candidates.ts). */
+  review: { level: 'SOLID' | 'CORRECT' | 'INCOMPLETE'; label: string; points: number; criteria: Array<{ key: string; mark: 'GOOD' | 'MEDIUM' | 'WEAK'; text: string }> }
   documents: Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string; label: string }>
 }
 interface CandidatesView {
@@ -109,11 +111,16 @@ export default function Candidats() {
           <div className="split-aside" style={{ gap: 24 }}>
             <div className="grow">
               {link ? <ReplyMessage link={link} title={data.offer.title} docs={requested} landlord={firstName} /> : null}
+              {data.candidates.length > 1 ? (
+                <Callout tone="info" title="Les dossiers les plus complets d’abord">
+                  Bailio les classe seulement sur les ressources, la garantie, les pièces déposées et la date d’entrée. C’est une aide : vous décidez. Refuser un candidat pour son âge, sa famille, son origine, sa santé ou un autre critère interdit est puni par la loi.
+                </Callout>
+              ) : null}
               {data.candidates.length ? (
                 [...data.candidates]
-                  .sort((a, b) => ORDER[a.status] - ORDER[b.status])
-                  .map((c) => (
-                    <Card key={c.id} style={{ opacity: c.status === 'REJECTED' ? 0.6 : 1 }}>
+                  .sort((a, b) => ORDER[a.status] - ORDER[b.status] || b.review.points - a.review.points)
+                  .map((c, i) => (
+                    <Card key={c.id} style={c.status === 'REJECTED' ? { background: BAI.bg } : undefined}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 18, fontWeight: 700 }}>{c.name}</span>
                         {c.status === 'SHORTLIST' ? <Pill tone="green">Retenu</Pill> : c.status === 'REJECTED' ? <Pill tone="muted">Écarté</Pill> : <Pill tone="owner">Reçue le {dateNum(c.receivedAt)}</Pill>}
@@ -125,11 +132,18 @@ export default function Candidats() {
                         {c.guarantorName ? ` : ${c.guarantorName}` : ''}
                         {c.moveInDate ? ` · entrée souhaitée le ${dateNum(c.moveInDate)}` : ''}
                       </span>
-                      {c.rentShare !== null ? (
-                        <span style={{ fontSize: 14, color: c.rentShare > 33 ? BAI.caramelInk : BAI.inkSoft }}>
-                          Le loyer représente {c.rentShare} % de ses revenus{c.rentShare > 33 ? ' : au-delà d’un tiers, une garantie est d’autant plus utile.' : '.'}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <span style={{ alignSelf: 'flex-start' }}>
+                          <Pill tone={c.review.level === 'SOLID' ? 'green' : c.review.level === 'CORRECT' ? 'owner' : 'caramel'}>{c.review.label}</Pill>
                         </span>
-                      ) : null}
+                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid }}>
+                          {c.review.criteria.map((x) => (
+                            <li key={x.key} style={{ color: x.mark === 'WEAK' ? BAI.caramelInk : undefined }}>
+                              {x.text}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                       {c.message ? <span style={{ fontSize: 14, color: BAI.inkMid, fontStyle: 'italic', lineHeight: 1.5 }}>« {c.message} »</span> : null}
                       <span style={{ fontSize: 14, color: BAI.inkSoft }}>
                         {c.email}
@@ -154,7 +168,7 @@ export default function Candidats() {
                         )}
                       </div>
                       <div className="col-md" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Btn size="sm" onClick={() => void choose(c)}>
+                        <Btn size="sm" variant={i === 0 ? 'primary' : 'outline'} onClick={() => void choose(c)}>
                           Choisir ce candidat
                         </Btn>
                         {c.status !== 'SHORTLIST' ? (

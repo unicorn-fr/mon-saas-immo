@@ -177,7 +177,7 @@ export default function Candidature() {
               {/* Champ invisible : les robots le remplissent, pas les personnes. */}
               <input tabIndex={-1} autoComplete="off" aria-hidden value={f.website} onChange={(e) => set({ website: e.target.value })} style={{ position: 'absolute', left: -9999, width: 1, height: 1 }} />
               <Check checked={f.consent} onChange={(v) => set({ consent: v })} label="J’ai compris que ces informations sont transmises au propriétaire pour étudier ma candidature." />
-              <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
+              <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement (Bailio l’aide à trier les dossiers sur vos ressources, votre garantie, vos pièces et votre date d’entrée ; il décide lui-même)" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
             </Card>
             <Callout tone="tip">Le propriétaire ne peut pas vous demander de photo, de relevés bancaires, de carte Vitale ni de chèque de réservation. La loi interdit aussi toute discrimination.</Callout>
             <div>
