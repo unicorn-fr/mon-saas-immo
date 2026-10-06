@@ -77,10 +77,11 @@ export function propertyBinder(i: BinderInput): BinderSection[] {
     return { key, label, why, keep, state: docId ? 'OK' : 'MISSING', docId, upload: key, ...extra }
   }
   const sections: BinderSection[] = []
+  const parking = f.nature === 'PARKING'
 
   sections.push({
     key: 'PROPERTY',
-    title: 'Le logement',
+    title: parking ? 'L’emplacement' : 'Le logement',
     items: [
       item('deed', 'Titre de propriété (acte notarié)', 'Prouve que vous êtes propriétaire ; utile en cas de vente, de sinistre ou de litige.', 'Tant que vous êtes propriétaire'),
       item('propertyTax', 'Dernier avis de taxe foncière', 'Sert à la déclaration des revenus et à récupérer la taxe d’enlèvement des ordures ménagères sur le locataire.', 'Jusqu’à la fin de l’année suivante'),
@@ -92,7 +93,8 @@ export function propertyBinder(i: BinderInput): BinderSection[] {
     ],
   })
 
-  sections.push({
+  // Garage, box ou place loué seul : aucun diagnostic exigé.
+  if (!parking) sections.push({
     key: 'DIAGNOSTICS',
     title: 'Diagnostics à remettre au locataire',
     items: diagnosticsFor(f)
@@ -136,12 +138,12 @@ export function propertyBinder(i: BinderInput): BinderSection[] {
     const to = `/espace/baux/${l.id}`
     leaseItems.push(
       { key: 'lease', label: 'Bail signé et son certificat de signature', why: 'Le contrat lui-même : à produire en cas de litige.', keep: 'Durée de la location et 3 ans', state: l.signed ? 'OK' : 'LATER', docId: leaseDoc, to },
-      { key: 'notice', label: 'Notice d’information (arrêté du 29 mai 2015)', why: 'Obligatoire, jointe automatiquement à la fin du bail.', keep: 'Avec le bail', state: 'AUTO', to },
+      ...(parking ? [] : [{ key: 'notice', label: 'Notice d’information (arrêté du 29 mai 2015)', why: 'Obligatoire, jointe automatiquement à la fin du bail.', keep: 'Avec le bail', state: 'AUTO' as BinderState, to }]),
       ...(l.guarantors ? [{ key: 'guarantee', label: 'Acte de cautionnement', why: 'Sans lui, le garant ne peut pas être appelé à payer.', keep: 'Durée de l’engagement et 3 ans', state: (l.signed ? 'OK' : 'LATER') as BinderState, to }] : []),
-      { key: 'inventory', label: 'État des lieux d’entrée', why: 'Sans état des lieux, le logement est présumé remis en bon état : aucune retenue possible sur le dépôt.', keep: 'Durée de la location et 3 ans', state: l.entryInventorySigned ? 'OK' : l.signed ? 'MISSING' : 'LATER', to: `${to}/etat-des-lieux` },
+      { key: 'inventory', label: 'État des lieux d’entrée', why: parking ? 'Il permet de comparer l’état de l’emplacement au départ du locataire.' : 'Sans état des lieux, le logement est présumé remis en bon état : aucune retenue possible sur le dépôt.', keep: 'Durée de la location et 3 ans', state: l.entryInventorySigned ? 'OK' : l.signed ? 'MISSING' : 'LATER', to: `${to}/etat-des-lieux` },
       ...(l.furnished ? [{ key: 'furniture', label: 'Inventaire du mobilier', why: 'Obligatoire en meublé, fait avec l’état des lieux.', keep: 'Durée de la location et 3 ans', state: (l.entryInventorySigned || f.furniture?.inventory?.length ? 'OK' : l.signed ? 'MISSING' : 'LATER') as BinderState, to: `${p}/fiche#furniture` }] : []),
-      ...(l.depositCents ? [{ key: 'deposit', label: 'Reçu du dépôt de garantie', why: 'Prouve le montant reçu, à restituer dans le mois (ou deux mois) après le départ.', keep: 'Durée de la location et 3 ans', state: (l.depositReceived ? 'OK' : l.signed ? 'MISSING' : 'LATER') as BinderState, to: `${to}/courriers?type=DEPOSIT_RECEIPT` }] : []),
-      { key: 'insurance', label: 'Attestation d’assurance habitation du locataire', why: 'Obligatoire chaque année ; sans elle, la clause résolutoire peut jouer.', keep: 'Un an, puis la suivante', state: l.insurance ? 'OK' : l.signed ? 'MISSING' : 'LATER', to: `${to}#locataire` },
+      ...(l.depositCents ? [{ key: 'deposit', label: 'Reçu du dépôt de garantie', why: parking ? 'Prouve le montant reçu, à restituer dans le mois qui suit le départ.' : 'Prouve le montant reçu, à restituer dans le mois (ou deux mois) après le départ.', keep: 'Durée de la location et 3 ans', state: (l.depositReceived ? 'OK' : l.signed ? 'MISSING' : 'LATER') as BinderState, to: `${to}/courriers?type=DEPOSIT_RECEIPT` }] : []),
+      { key: 'insurance', label: parking ? 'Attestation d’assurance du locataire' : 'Attestation d’assurance habitation du locataire', why: parking ? 'Demandée par le contrat chaque année.' : 'Obligatoire chaque année ; sans elle, la clause résolutoire peut jouer.', keep: 'Un an, puis la suivante', state: l.insurance ? 'OK' : l.signed ? 'MISSING' : 'LATER', to: `${to}#locataire` },
       { key: 'receipts', label: 'Quittances et loyers reçus', why: 'Faites par Bailio à chaque loyer enregistré.', keep: 'Durée de la location et 3 ans', state: l.receipts ? 'OK' : 'LATER', to: `${to}#paiements` },
       ...(l.individualBoiler ? [{ key: 'boiler', label: 'Attestation d’entretien de la chaudière', why: 'Entretien annuel obligatoire, à la charge du locataire : demandez-lui l’attestation.', keep: '2 ans', state: (l.boilerDate || up('boiler') ? 'OK' : l.signed ? 'MISSING' : 'LATER') as BinderState, docId: up('boiler'), upload: 'boiler' as const, to: `${to}#locataire` }] : []),
     )

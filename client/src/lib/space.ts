@@ -30,6 +30,8 @@ export interface PropertySummary {
   rooms: number | null
   floor: string | null
   furnished: boolean | null
+  /** Logement ou garage, box, place loué seul. */
+  nature?: 'HOUSING' | 'PARKING'
   dpeClass: string | null
   completion: number
   status: 'RENTED' | 'AVAILABLE'

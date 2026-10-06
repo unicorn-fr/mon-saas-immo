@@ -46,6 +46,7 @@ export async function rentalJourneys(user: User, propertyIds?: string[]): Promis
       p.id,
       rentalSteps({
         propertyId: p.id,
+        parking: file.nature === 'PARKING',
         propertyMissing: [
           ...propertyLeaseMissing(file, lease?.type === 'FURNISHED' || file.furnished ? 'MEUBLE' : 'VIDE'),
           // Avant un nouveau bail : les diagnostics qui ne seront plus valables à la signature sont à refaire.

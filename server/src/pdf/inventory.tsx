@@ -15,6 +15,8 @@ export interface InventoryInput {
   tenants: PartyName[]
   propertyAddress: string
   furnished: boolean
+  /** Garage, box ou place loué seul (hors loi de 1989). */
+  parking?: boolean
   /** Photos (data URL) indexées par identifiant de fichier. */
   photos: Record<string, string>
   /** Date d'ajout de chaque photo sur le serveur (ISO), imprimée sous la photo. */
@@ -77,7 +79,7 @@ export function InventoryDocument(i: InventoryInput) {
       <Page size="A4" style={s.page}>
         <Title intro={`Établi contradictoirement le ${when}`}>{exit ? 'État des lieux de sortie' : 'État des lieux d’entrée'}</Title>
 
-        <Section>Le logement et les parties</Section>
+        <Section>{i.parking ? 'L’emplacement et les parties' : 'Le logement et les parties'}</Section>
         <Row label="Adresse">{i.propertyAddress || BLANK}</Row>
         <Row label="Bailleur">{`${landlordName(i.landlord) || BLANK}, ${landlordAddress(i.landlord) || BLANK}`}</Row>
         <Row label={i.tenants.length > 1 ? 'Locataires' : 'Locataire'}>{tenants}</Row>
@@ -177,7 +179,9 @@ export function InventoryDocument(i: InventoryInput) {
           <P small>
             {exit
               ? 'Chaque partie reçoit un exemplaire. Les différences avec l’état des lieux d’entrée, hors usure normale et vétusté, peuvent justifier des retenues sur le dépôt de garantie.'
-              : 'Le locataire dispose de 10 jours pour demander à compléter l’état des lieux d’entrée (article 3-2 de la loi du 6 juillet 1989). Chaque partie reçoit un exemplaire.'}
+              : i.parking
+                ? 'Chaque partie reçoit un exemplaire.'
+                : 'Le locataire dispose de 10 jours pour demander à compléter l’état des lieux d’entrée (article 3-2 de la loi du 6 juillet 1989). Chaque partie reçoit un exemplaire.'}
           </P>
           <SignatureBoxes
             boxes={[

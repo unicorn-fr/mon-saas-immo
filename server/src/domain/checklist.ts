@@ -51,6 +51,11 @@ export function partiesMissing(c: ContractInput): Missing[] {
 export function propertyLeaseMissing(p: ContractInput['property'], kind: NonNullable<ContractInput['terms']['kind']>): Missing[] {
   const out: Missing[] = []
   const push = (key: string, label: string, where: Where, section: string) => out.push({ key, label, where, section })
+  // Garage, box ou place loué seul (Code civil) : il suffit de désigner l'emplacement.
+  if (kind === 'PARKING' || p.nature === 'PARKING') {
+    if (!has(p.parking?.type)) push('property.parkingType', 'Garage, box ou place de stationnement', 'PROPERTY', 'parking')
+    return withLevel(out)
+  }
   if (!has(p.habitat) || !has(p.legalRegime)) push('property.type', 'Maison ou appartement, copropriété ou non', 'PROPERTY', 'type')
   if (!has(p.constructionPeriod)) push('property.period', 'La période de construction', 'PROPERTY', 'size')
   if (!has(p.surface)) push('property.surface', 'La surface habitable', 'PROPERTY', 'size')
@@ -94,11 +99,12 @@ export function leaseMissing(c: ContractInput): Missing[] {
   if (t.reduced?.enabled && !has(t.reduced.reason)) push('terms.reduced', 'L’événement qui justifie une durée réduite', 'TERMS', 'dates')
   if (!has(t.rentCents)) push('terms.rent', 'Le montant du loyer', 'TERMS', 'rent')
   if (!has(t.paymentDay)) push('terms.paymentDay', 'Le jour de paiement du loyer', 'TERMS', 'rent')
-  if (t.zone?.tense === undefined || t.zone?.tense === null) push('terms.zone', 'Si la commune est en zone tendue', 'TERMS', 'zone')
+  const housing = kind !== 'PARKING'
+  if (housing && (t.zone?.tense === undefined || t.zone?.tense === null)) push('terms.zone', 'Si la commune est en zone tendue', 'TERMS', 'zone')
   if (t.zone?.control && (!has(t.zone.refRentCentsM2) || !has(t.zone.refRentMaxCentsM2))) push('terms.control', 'Les loyers de référence (encadrement)', 'TERMS', 'zone')
   if (t.zone?.complementCents && !has(t.zone.complementJustification)) push('terms.complement', 'La justification du complément de loyer', 'TERMS', 'zone')
   const prev = t.previous
-  if (!(prev?.rentedWithin18Months === false || (has(prev?.lastRentCents) && has(prev?.lastPaymentDate)))) push('terms.previous', 'Le loyer du locataire précédent (ou « pas loué depuis 18 mois »)', 'TERMS', 'previous')
+  if (housing && !(prev?.rentedWithin18Months === false || (has(prev?.lastRentCents) && has(prev?.lastPaymentDate)))) push('terms.previous', 'Le loyer du locataire précédent (ou « pas loué depuis 18 mois »)', 'TERMS', 'previous')
   if (kind !== 'MOBILITE' && t.revision?.enabled !== false && !has(t.revision?.irlQuarter)) push('terms.irl', 'Le trimestre de référence de l’IRL', 'TERMS', 'revision')
   if (!has(t.chargesMode) || t.chargesCents === undefined || t.chargesCents === null) push('terms.charges', 'Le montant et le mode des charges', 'TERMS', 'charges')
   if (kind !== 'MOBILITE' && (t.depositCents === undefined || t.depositCents === null)) push('terms.deposit', 'Le dépôt de garantie', 'TERMS', 'deposit')

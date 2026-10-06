@@ -34,16 +34,17 @@ import {
   rentalForbidden,
   rentIssues,
   expiredDiagnostics,
+  isFurnished,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { receiptAutoOn, upcomingAutoReceipt } from '../domain/autoReceipt.js'
 import { toTrash } from '../services/trash.js'
-import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
+import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterAllowed, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderLeasePdf } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
-import { annexesLabel, landlordAddress, landlordName, personName, propertyAddress } from '../pdf/labels.js'
+import { annexesLabel, landlordAddress, landlordName, parkingLabel, personName, propertyAddress } from '../pdf/labels.js'
 import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendPdf } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { damageReviewFor } from '../services/damage.js'
@@ -59,7 +60,7 @@ router.use(['/leases'], requireUser)
 
 type LeaseWithProperty = Lease & { property: Property }
 
-const TYPE_OF: Record<LeaseKind, 'UNFURNISHED' | 'FURNISHED'> = { VIDE: 'UNFURNISHED', MEUBLE: 'FURNISHED', ETUDIANT: 'FURNISHED', MOBILITE: 'FURNISHED' }
+const TYPE_OF: Record<LeaseKind, 'UNFURNISHED' | 'FURNISHED'> = { VIDE: 'UNFURNISHED', MEUBLE: 'FURNISHED', ETUDIANT: 'FURNISHED', MOBILITE: 'FURNISHED', PARKING: 'UNFURNISHED' }
 
 /** Colonnes du bail (dates, montants) recalculées à partir des conditions et des règles. */
 export function leaseColumns(terms: LeaseTerms, landlord: LandlordProfile) {
@@ -74,7 +75,7 @@ export function leaseColumns(terms: LeaseTerms, landlord: LandlordProfile) {
     endDate: contractEndDate(startIso, months),
     rentCents: rent,
     chargesCents: terms.chargesCents ?? 0,
-    depositCents: kind === 'MOBILITE' ? 0 : terms.depositCents ?? maxDepositFor(kind, rent),
+    depositCents: kind === 'MOBILITE' ? 0 : terms.depositCents ?? (kind === 'PARKING' ? rent : maxDepositFor(kind, rent)),
     paymentDay: terms.paymentDay ?? 5,
   }
 }
@@ -90,14 +91,14 @@ function computed(c: ContractInput) {
     kind,
     durationMonths: months,
     endDate: end ? iso(end) : null,
-    renewal: renewalLabel(kind, c.landlord),
-    noticeMonths: landlordNoticeMonthsFor(kind),
+    renewal: renewalLabel(kind, c.landlord, t),
+    noticeMonths: landlordNoticeMonthsFor(kind, t),
     maxDepositCents: t.rentCents ? maxDepositFor(kind, t.rentCents) : null,
     chargesModes: allowedChargesModes(kind, Boolean(t.colocation) || c.tenants.length > 1),
-    revisionAllowed: kind !== 'MOBILITE' && rentRevisionAllowed(dpe),
-    energyWarning: energyRentalWarning(dpe),
-    /** Plafonds du loyer non respectés : la signature est refusée tant qu'ils restent. */
-    rentIssues: rentIssues({ rentCents: t.rentCents, surface: c.property.surface, dpe, zone: t.zone, previous: t.previous }),
+    revisionAllowed: kind === 'PARKING' || (kind !== 'MOBILITE' && rentRevisionAllowed(dpe)),
+    energyWarning: kind === 'PARKING' ? null : energyRentalWarning(dpe),
+    /** Plafonds du loyer non respectés : la signature est refusée tant qu'ils restent. Aucun pour un garage loué seul. */
+    rentIssues: kind === 'PARKING' ? [] : rentIssues({ rentCents: t.rentCents, surface: c.property.surface, dpe, zone: t.zone, previous: t.previous }),
     rentControlLikely: rentControlLikely(c.property.inseeCode),
     firstPayment: t.startDate && t.rentCents !== undefined && t.rentCents !== null ? firstPayment(t.startDate, t.rentCents, t.chargesCents ?? 0) : null,
     clauseWarnings: (t.clauses?.custom ?? []).map((cl) => ({ clause: cl, reasons: forbiddenClauseReasons(cl) })).filter((x) => x.reasons.length),
@@ -175,9 +176,9 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     ...(c.property.legalRegime === 'COPRO' ? [{ key: 'copro', label: 'Extraits du règlement de copropriété', status: c.property.copro?.extractsProvided ? 'Joint' : 'À ajouter', done: Boolean(c.property.copro?.extractsProvided) }] : []),
     { key: 'repairs', label: 'Liste des réparations locatives (facultative)', status: 'Prête à joindre', done: true },
     { key: 'charges', label: 'Liste des charges récupérables (facultative)', status: 'Prête à joindre', done: true },
-    ...(leaseKindOf(lease) !== 'VIDE' ? [{ key: 'furniture', label: 'Inventaire du mobilier', status: c.property.furniture?.inventory?.length ? 'Joint' : 'Avec l’état des lieux', done: Boolean(c.property.furniture?.inventory?.length) }] : []),
+    ...(isFurnished(leaseKindOf(lease)) ? [{ key: 'furniture', label: 'Inventaire du mobilier', status: c.property.furniture?.inventory?.length ? 'Joint' : 'Avec l’état des lieux', done: Boolean(c.property.furniture?.inventory?.length) }] : []),
   ]
-  const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && c.property.surface), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
+  const completion = termsCompletion(terms, { hasLandlord: Boolean(c.landlord.lastName || c.landlord.company?.name), hasProperty: Boolean(c.property.address && (c.property.surface || c.property.nature === 'PARKING')), hasTenant: c.tenants.length > 0, tense: Boolean(terms.zone?.tense) })
   const checklist = lease.status === 'DRAFT' ? withLinks(leaseMissing(c), lease) : []
   const esignPending = Boolean(await prisma.signatureRequest.findFirst({ where: { leaseId: lease.id, status: 'PENDING' }, select: { id: true } }))
   const reopen = await reopenInfo(lease, c, payments.length, inventories.some((i) => i.status === 'SIGNED'))
@@ -259,12 +260,16 @@ router.post('/leases', async (req, res) => {
 
   const file = readProperty(property)
   // Logement interdit à la location (DPE) : pas de nouveau bail.
-  const forbidden = rentalForbidden(file.diagnostics?.dpe?.class)
+  const parking = file.nature === 'PARKING'
+  const forbidden = parking ? null : rentalForbidden(file.diagnostics?.dpe?.class)
   if (forbidden) throw new HttpError(409, forbidden)
+  if (!parking && body.terms?.kind === 'PARKING') throw new HttpError(400, 'Ce bien est un logement : choisissez un bail vide ou meublé.')
+  if (parking && body.terms?.kind && body.terms.kind !== 'PARKING') throw new HttpError(400, 'Un garage loué seul a son propre contrat : ce n’est pas un bail d’habitation.')
   const profile = await landlordOf(user, property)
   const first = readTenant(tenants[0])
   const colocation = tenants.length > 1 || first.living === 'COLOCATION'
-  const kind: LeaseKind = body.terms?.kind ?? (file.furnished ? 'MEUBLE' : 'VIDE')
+  // Garage, box ou place loué seul : toujours un contrat de droit commun (Code civil).
+  const kind: LeaseKind = parking ? 'PARKING' : (body.terms?.kind ?? (file.furnished ? 'MEUBLE' : 'VIDE'))
   const irl = await latestIrl()
   const dpe = file.diagnostics?.dpe?.class
   // Locataire précédent : dernier bail de ce logement terminé depuis moins de 18 mois.
@@ -288,13 +293,14 @@ router.post('/leases', async (req, res) => {
     chargesMode: rent.chargesMode && modes.includes(rent.chargesMode) ? rent.chargesMode : kind === 'MOBILITE' ? 'FORFAIT' : 'PROVISION',
     rentCents,
     chargesCents: rent.chargesCents ?? undefined,
-    depositCents: kind === 'MOBILITE' ? 0 : rent.depositCents != null && rentCents ? Math.min(rent.depositCents, maxDepositFor(kind, rentCents)) : (rent.depositCents ?? undefined),
+    depositCents: kind === 'MOBILITE' ? 0 : parking ? (rent.depositCents ?? rentCents) : rent.depositCents != null && rentCents ? Math.min(rent.depositCents, maxDepositFor(kind, rentCents)) : (rent.depositCents ?? undefined),
     paymentDay: rent.paymentDay ?? 5,
     paymentTerm: 'ADVANCE',
     paymentMethod: 'TRANSFER',
     // Zone tendue et encadrement : d'après les listes officielles des communes, sauf si le propriétaire a indiqué autre chose.
-    zone: { tense: file.market?.tense ?? isTenseZone(file.inseeCode) ?? undefined, control: rentControlFor(file.inseeCode) === 'full' ? true : rentControlFor(file.inseeCode) === 'partial' ? undefined : false },
-    previous: prev
+    ...(parking ? { durationMonths: 12, noticeMonths: 1 } : {}),
+    zone: parking ? undefined : { tense: file.market?.tense ?? isTenseZone(file.inseeCode) ?? undefined, control: rentControlFor(file.inseeCode) === 'full' ? true : rentControlFor(file.inseeCode) === 'partial' ? undefined : false },
+    previous: prev && !parking
       ? {
           rentedWithin18Months: true,
           lastRentCents: amountsAt(historyOf(prev), prevEnd ?? prev.endDate.toISOString().slice(0, 10)).rentCents,
@@ -302,8 +308,8 @@ router.post('/leases', async (req, res) => {
           lastPaymentDate: lastPayment ? lastPayment.receivedAt.toISOString().slice(0, 10) : undefined,
         }
       : undefined,
-    works: worksText ? { sinceLast: worksText.slice(0, 600) } : undefined,
-    revision: { enabled: kind !== 'MOBILITE' && rentRevisionAllowed(dpe), date: startDate ? startDate.slice(5) : undefined, irlQuarter: irl?.quarter, irlValue: irl?.value },
+    works: worksText && !parking ? { sinceLast: worksText.slice(0, 600) } : undefined,
+    revision: { enabled: parking || (kind !== 'MOBILITE' && rentRevisionAllowed(dpe)), date: startDate ? startDate.slice(5) : undefined, irlQuarter: irl?.quarter, irlValue: irl?.value },
     clauses: { resolutoire: true, solidarite: colocation },
     signature: { place: profile.city ?? undefined, mode: 'PAPER' },
   }
@@ -341,11 +347,12 @@ router.put('/leases/:id/terms', async (req, res) => {
   const { tenantIds, ...patch } = body
   const terms = leaseTermsSchema.parse(mergeFile(readTerms(lease) as Record<string, unknown>, patch as Record<string, unknown>))
   const kind = terms.kind ?? 'VIDE'
+  if ((kind === 'PARKING') !== (readProperty(lease.property).nature === 'PARKING')) throw new HttpError(400, kind === 'PARKING' ? 'Ce bien est un logement : choisissez un bail vide ou meublé.' : 'Un garage loué seul a son propre contrat : le type de bail ne peut pas changer.')
   if (terms.chargesMode && !allowedChargesModes(kind, Boolean(terms.colocation)).includes(terms.chargesMode)) {
     throw new HttpError(400, kind === 'MOBILITE' ? 'En bail mobilité, les charges sont forcément forfaitaires.' : 'En location vide, le forfait de charges n’est permis qu’en colocation.')
   }
   if (terms.depositCents && terms.rentCents && terms.depositCents > maxDepositFor(kind, terms.rentCents)) {
-    throw new HttpError(400, kind === 'MOBILITE' ? 'Aucun dépôt de garantie en bail mobilité.' : `Le dépôt de garantie ne peut pas dépasser ${kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.`)
+    throw new HttpError(400, kind === 'PARKING' ? 'Bailio limite le dépôt de garantie d’un garage à deux mois de loyer.' : kind === 'MOBILITE' ? 'Aucun dépôt de garantie en bail mobilité.' : `Le dépôt de garantie ne peut pas dépasser ${kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.`)
   }
   if (tenantIds) {
     const count = await prisma.tenant.count({ where: { userId: user.id, id: { in: tenantIds } } })
@@ -442,7 +449,7 @@ export async function activateLease(user: User, lease: LeaseWithProperty, c: Con
   const view = await leaseView(user, lease)
   const pdf = signed?.leasePdf ?? (await renderLeasePdf(c, lease.propertyId))
   const { version: _v, ...snapshot } = c
-  await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
+  await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `${view.kind === 'PARKING' ? 'Contrat de location du garage' : `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}`}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
   // Actes de caution : un document par garant.
   for (const g of view.guarantors) {
     const tenant = await prisma.tenant.findFirst({ where: { id: g.tenantId, userId: user.id } })
@@ -543,7 +550,8 @@ function receiptInput(c: ContractInput, lease: Lease, period: string, kind: Rece
     kind,
     landlord: c.landlord,
     tenants: c.tenants,
-    propertyAddress: propertyAddress(c.property),
+    propertyAddress: c.terms.kind === 'PARKING' ? premisesLabel(c.property) : propertyAddress(c.property),
+    parking: c.terms.kind === 'PARKING',
     year: y,
     month: m,
     ...amountsForPeriod(lease, period),
@@ -791,8 +799,10 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
     let end = lease.endDate
     while (end < new Date()) end = contractEndDate(iso(new Date(end.getTime() + 86_400_000))!, lease.durationMonths)
     data = { type, reason: 'SALE', leaseEnd: iso(end) }
-    const notice = landlordNoticeMonthsFor(leaseKindOf(lease))
+    const notice = landlordNoticeMonthsFor(leaseKindOf(lease), terms)
     if (!notice) note = 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.'
+    else if (leaseKindOf(lease) === 'PARKING')
+      note = `À envoyer au plus tard le ${formatDateFr(new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - notice, end.getUTCDate())))} (${notice} mois avant la fin, préavis du contrat), par lettre recommandée avec avis de réception ou remise en main propre contre récépissé. Aucun motif n’est nécessaire pour un garage loué seul.`
     else
       note = `À envoyer au plus tard le ${formatDateFr(new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - notice, end.getUTCDate())))} (${notice} mois avant la fin), à chaque locataire, par lettre recommandée avec avis de réception, commissaire de justice ou remise en main propre contre signature. ${
         leaseKindOf(lease) === 'VIDE'
@@ -815,7 +825,9 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
     const tense = Boolean(terms.zone?.tense)
     data = { type, receivedDate: iso(new Date()), reduced: leaseKindOf(lease) === 'VIDE' && tense, reducedReason: tense ? 'logement situé en zone tendue' : null }
     note =
-      leaseKindOf(lease) === 'VIDE'
+      leaseKindOf(lease) === 'PARKING'
+        ? `Garage loué seul : le préavis est celui du contrat (${landlordNoticeMonthsFor('PARKING', terms)} mois).`
+        : leaseKindOf(lease) === 'VIDE'
         ? `Logement vide : préavis de trois mois, réduit à un mois si le logement est en zone tendue${tense ? ' (c’est le cas ici)' : ''} ou si le locataire justifie d’un premier emploi, d’une mutation, d’une perte d’emploi, d’un nouvel emploi après une perte d’emploi, de son état de santé, du RSA ou de l’AAH, ou d’un logement social attribué.`
         : 'Location meublée : le préavis du locataire est toujours d’un mois.'
   } else if (type === 'DEPOSIT_RETURN') {
@@ -876,6 +888,7 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
 
 /** Désignation des locaux loués, comme au bail : type, surface, pièces, annexes. */
 function premisesLabel(p: ContractInput['property']): string {
+  if (p.nature === 'PARKING') return `${parkingLabel(p)}, ${propertyAddress(p)}`
   const type = p.habitat === 'INDIVIDUAL' ? 'maison individuelle' : 'logement dans un immeuble collectif'
   const parts = [`${type} situé${p.habitat === 'INDIVIDUAL' ? 'e' : ''} ${propertyAddress(p)}`, p.surface ? `d’une surface habitable de ${p.surface} m²` : '', p.rooms ? `comprenant ${p.rooms} pièce${p.rooms > 1 ? 's' : ''} principale${p.rooms > 1 ? 's' : ''}` : '']
   const annexes = annexesLabel(p)
@@ -887,11 +900,13 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
   const kind = leaseKindOf(lease)
-  if (letter.type === 'NOTICE_TO_LEAVE' && !landlordNoticeMonthsFor(kind)) throw new HttpError(400, 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.')
+  if (!letterAllowed(letter.type, kind)) throw new HttpError(400, 'Ce courrier concerne la location d’un logement, pas celle d’un garage.')
+  const housing = kind !== 'PARKING'
+  if (letter.type === 'NOTICE_TO_LEAVE' && !landlordNoticeMonthsFor(kind, c.terms)) throw new HttpError(400, 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'SALE' && kind === 'VIDE' && !letter.priceCents) throw new HttpError(400, 'Indiquez le prix de vente : sans lui, le congé pour vendre est nul.')
-  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && !resumptionAllowed(c.landlord)) throw new HttpError(400, 'Une société ne peut pas donner congé pour reprendre le logement (seule une SCI familiale le peut, pour un associé). Le congé reste possible pour vendre ou pour un motif légitime et sérieux.')
-  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && (!letter.beneficiary?.name || !letter.beneficiary.address || !letter.beneficiary.link)) throw new HttpError(400, 'Indiquez le nom, l’adresse et le lien de parenté du bénéficiaire de la reprise : ces mentions sont obligatoires.')
-  if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason !== 'SALE' && !letter.justification?.trim()) throw new HttpError(400, letter.reason === 'RESUMPTION' ? 'Expliquez en une phrase pourquoi la reprise est réelle et sérieuse : cette mention est obligatoire.' : 'Indiquez le motif légitime et sérieux du congé.')
+  if (housing && letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && !resumptionAllowed(c.landlord)) throw new HttpError(400, 'Une société ne peut pas donner congé pour reprendre le logement (seule une SCI familiale le peut, pour un associé). Le congé reste possible pour vendre ou pour un motif légitime et sérieux.')
+  if (housing && letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'RESUMPTION' && (!letter.beneficiary?.name || !letter.beneficiary.address || !letter.beneficiary.link)) throw new HttpError(400, 'Indiquez le nom, l’adresse et le lien de parenté du bénéficiaire de la reprise : ces mentions sont obligatoires.')
+  if (housing && letter.type === 'NOTICE_TO_LEAVE' && letter.reason !== 'SALE' && !letter.justification?.trim()) throw new HttpError(400, letter.reason === 'RESUMPTION' ? 'Expliquez en une phrase pourquoi la reprise est réelle et sérieuse : cette mention est obligatoire.' : 'Indiquez le motif légitime et sérieux du congé.')
   if (letter.type === 'GUARANTOR_CALL' && !c.guarantors.length) throw new HttpError(400, 'Aucun garant n’est enregistré pour ce bail : ajoutez-le dans la fiche du locataire.')
   const g = c.guarantors[0]
   const content = letterContent(letter, {
@@ -900,6 +915,7 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
     guarantorName: g ? personName(g) : null,
     guarantor: g ? { name: personName(g), solidaire: g.engagement !== 'SIMPLE' } : null,
     kind,
+    noticeMonths: landlordNoticeMonthsFor(kind, c.terms),
     premises: premisesLabel(c.property),
     landlordName: landlordName(c.landlord),
     landlordAddress: landlordAddress(c.landlord),
@@ -916,7 +932,7 @@ async function rememberLetter(lease: Lease, letter: LetterInput) {
     const { [letter.type]: _done, ...drafts } = f.letterDrafts ?? {}
     const patch: Record<string, unknown> = { letterDrafts: drafts }
     if (letter.type === 'TENANT_NOTICE') {
-      const months = tenantNoticeMonths(leaseKindOf(lease), letter.reduced)
+      const months = tenantNoticeMonths(leaseKindOf(lease), letter.reduced, readTerms(lease).noticeMonths)
       patch.tenantNotice = { receivedDate: letter.receivedDate, reduced: letter.reduced, reducedReason: letter.reducedReason ?? null, endDate: iso(tenantNoticeEnd(letter.receivedDate, months)) }
     }
     if (letter.type === 'NOTICE_TO_LEAVE') patch.landlordNotice = { reason: letter.reason, leaseEnd: letter.leaseEnd, date: today }
@@ -1019,7 +1035,7 @@ router.get('/leases/:id/journeys/:kind', async (req, res) => {
     leaseKind: leaseKindOf(lease),
     status: lease.status as JourneyInput['status'],
     leaseEnd: iso(nextLeaseEnd(lease))!,
-    noticeMonths: landlordNoticeMonthsFor(leaseKindOf(lease)),
+    noticeMonths: landlordNoticeMonthsFor(leaseKindOf(lease), readTerms(lease)),
     unpaid: u.map((x) => ({ ...x, label: monthLabel(x.period) })),
     letters: docs.flatMap((d) => ((d.meta as { type?: string } | null)?.type ? [{ type: (d.meta as { type: string }).type, date: iso(d.createdAt)! }] : [])),
     inventories: inventories.map((i) => ({ kind: i.kind as 'ENTRY' | 'EXIT', status: i.status as 'DRAFT' | 'SIGNED', date: i.date ? iso(i.date) : null })),

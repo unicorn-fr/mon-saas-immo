@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { CHARGES_BLOCKS, REPAIRS_BLOCKS } from '../pdf/annexes-text.js'
-import { letterContent, letterSchema, type LetterInput } from './letters.js'
+import { letterAllowed, letterContent, letterSchema, tenantNoticeMonths, type LetterInput } from './letters.js'
 
 const ctx = { tenantName: 'Monsieur Thomas Leroy', propertyAddress: '12 chemin des Vignes, Pézenas', kind: 'VIDE' as const, landlordName: 'Madame Claire Dubois', landlordAddress: '8 rue Foch, Montpellier', leaseStart: '2025-10-01', guarantor: { name: 'Monsieur Benoît Leroy', solidaire: true } }
 const text = (l: LetterInput, c = ctx) => letterContent(letterSchema.parse(l), c).paragraphs.join(' ')
@@ -81,4 +81,29 @@ test('régularisation des charges au prorata de l’occupation, majoration du d�
   const charges = letterContent({ type: 'CHARGES', year: 2025, lines: [{ label: 'Eau froide', amountCents: 36500 }], provisionsCents: 10000, occupiedFrom: '2025-07-01', occupiedTo: null }, ctx as never)
   assert.ok(charges.paragraphs.some((p) => /184 jours sur 365/.test(p)))
   assert.equal(charges.computed?.[0].cents, Math.round(36500 * 184 / 365) - 10000)
+})
+
+test('garage loué seul : courriers du contrat, sans la loi de 1989', () => {
+  const g = { ...ctx, kind: 'PARKING' as const, noticeMonths: 2, premises: 'Box fermé n° 12, 3 rue Foch' }
+  const conge = text({ type: 'NOTICE_TO_LEAVE', reason: 'SALE', leaseEnd: '2027-09-30' }, g)
+  assert.match(conge, /ne le reconduis pas/)
+  assert.match(conge, /préavis de 2 mois/)
+  assert.doesNotMatch(conge, /89-462|offre de vente/)
+  const notice = letterContent(letterSchema.parse({ type: 'NOTICE_TO_LEAVE', reason: 'SALE', leaseEnd: '2027-09-30' }), g)
+  assert.equal(notice.appendNotice, undefined)
+  assert.equal(tenantNoticeMonths('PARKING', false, 2), 2)
+  assert.equal(tenantNoticeMonths('PARKING', false), 1)
+  assert.match(text({ type: 'TENANT_NOTICE', receivedDate: '2026-10-05', reduced: false }, g), /prend fin le 5 décembre 2026/)
+  // Dépôt : un mois après la remise des clés, sans majoration de l'article 22.
+  const back = letterContent(letterSchema.parse({ type: 'DEPOSIT_RETURN', depositCents: 10000, keysDate: '2026-09-30', conform: false, deductions: [], writtenOn: '2027-03-01', monthlyRentCents: 10000 }), g)
+  assert.deepEqual(back.computed?.[0], { label: 'À restituer', cents: 10000 })
+  assert.match(back.paragraphs.join(' '), /30 octobre 2026/)
+  assert.doesNotMatch(back.paragraphs.join(' '), /article 22|89-462/)
+  assert.match(text({ type: 'DAMAGE_REPAIR', items: [{ label: 'Porte enfoncée' }], delayDays: 15 }, g), /article 1732 du Code civil/)
+  assert.doesNotMatch(text({ type: 'FORMAL_NOTICE', amountCents: 10000, periods: ['septembre 2026'] }, g), /FSL|ADIL/)
+  assert.equal(letterAllowed('BOILER', 'PARKING'), false)
+  assert.equal(letterAllowed('SMOKE_DETECTOR', 'PARKING'), false)
+  assert.equal(letterAllowed('CHARGES', 'PARKING'), true)
+  assert.equal(letterAllowed('REVISION', 'PARKING'), true)
+  assert.equal(letterAllowed('BOILER', 'VIDE'), true)
 })

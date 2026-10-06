@@ -133,7 +133,7 @@ router.get('/today', async (req, res) => {
       if (inv?.status === 'SIGNED') continue
       tasks.push({ id: r.id, type: 'INVENTORY', tag: 'État des lieux', tone: 'owner', place, title: `État des lieux d’entrée avec ${who} le ${short(r.dueDate)}`, text: 'Les pièces, les compteurs et les clés sont déjà prêts : il suffit de le faire sur votre téléphone.', leaseId: l.id, reminderId: r.id, inventoryId: inv?.id })
     } else if (r.type === 'LEASE_END' && r.dueDate <= in30) {
-      const notice = landlordNoticeMonthsFor(leaseKindOf(l))
+      const notice = landlordNoticeMonthsFor(leaseKindOf(l), readTerms(l))
       tasks.push({ id: r.id, type: 'LEASE_END', tag: 'Fin du bail', tone: 'caramel', place, title: `Le bail de ${who} arrive à échéance le ${short(l.endDate)}`, text: notice ? `Pour donner congé, il faut l’envoyer au moins ${notice} mois avant. Sans rien faire, le bail est reconduit.` : 'Le bail prendra fin à cette date.', leaseId: l.id, reminderId: r.id })
     } else if (r.type === 'CHARGES_REGULARIZATION' && r.dueDate <= in30) {
       tasks.push({ id: r.id, type: 'CHARGES', tag: 'Charges', tone: 'owner', place, title: 'Régularisation annuelle des charges', text: 'Comparez les provisions versées aux charges réelles de l’année : Bailio prépare le décompte.', leaseId: l.id, reminderId: r.id })
@@ -161,7 +161,7 @@ router.get('/today', async (req, res) => {
       // Un mois si la sortie est conforme à l'entrée, deux mois sinon (art. 22) ; dégradations encore à décider.
       const review = await damageReviewFor(l)
       const conform = !review || !review.hasEntry || review.lines.length === 0
-      const limit = depositDeadline(keys, conform)
+      const limit = depositDeadline(keys, conform || leaseKindOf(l) === 'PARKING')
       const damages = review ? review.lines.filter((x) => lineMissing(x)).length : 0
       tasks.push({
         id: `settle-${l.id}`,

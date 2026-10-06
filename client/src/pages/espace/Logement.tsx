@@ -55,7 +55,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
         }
       />
       {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
-      <Tabs label="Sections du logement" tabs={TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
+      <Tabs label="Sections du logement" tabs={p.nature === 'PARKING' ? TABS.filter((t) => t.value !== 'diagnostics').map((t) => (t.value === 'binder' ? { ...t, label: 'Dossier du garage' } : t.value === 'lease' ? { ...t, label: 'Contrat et locataire' } : t)) : TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
       {tab === 'overview' ? <Overview p={p} reload={reload} /> : null}
       {tab === 'binder' ? <Binder propertyId={p.id} /> : null}
       {tab === 'lease' ? <LeaseTab p={p} /> : null}
@@ -73,7 +73,12 @@ const currentLease = (p: PropertyView) => p.leases.find((l) => l.status === 'ACT
 function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
   const required = p.diagnostics.filter((d) => d.required)
   const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length
-  const rows: Array<{ label: string; value: string; to: string; tone?: 'caramel' }> = [
+  const parking = p.nature === 'PARKING'
+  const rows: Array<{ label: string; value: string; to: string; tone?: 'caramel' }> = parking ? [
+    { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
+    { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
+    { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
+  ] : [
     { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
     { label: 'Diagnostics', value: expired ? `${expired} à refaire` : 'À jour', to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: expired ? 'caramel' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
@@ -81,7 +86,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
     { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
   ]
   return (
-    <Card title="Ce logement" style={{ gap: 0 }}>
+    <Card title={parking ? 'Ce garage' : 'Ce logement'} style={{ gap: 0 }}>
       {rows.map((r) => (
         <Link key={r.label} to={r.to} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '13px 0', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
           <span style={{ fontWeight: 600 }}>{r.label}</span>
@@ -127,13 +132,13 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
           )}
         </Card>
         <PropertyLinks p={p} reload={reload} />
-        <Card dark title={`En ${p.year.year}, ce logement`} style={{ gap: 12 }}>
+        <Card dark title={`En ${p.year.year}, ce ${p.nature === 'PARKING' ? 'garage' : 'logement'}`} style={{ gap: 12 }}>
           <Line dark label="a rapporté" value={eurosCents(p.year.incomeCents)} />
           <Line dark label="a coûté" value={eurosCents(p.year.expensesCents)} />
           <Line dark border label="reste" value={<span style={{ color: BAI.caramel, fontWeight: 700 }}>{eurosCents(p.year.incomeCents - p.year.expensesCents)}</span>} />
         </Card>
       </div>
-      <Card pad={28} style={{ flex: '1 1 0', gap: 4 }} title={<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, width: '100%', flexWrap: 'wrap', paddingBottom: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Chronologie</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout ce qui s’est passé dans ce logement</span></div>}>
+      <Card pad={28} style={{ flex: '1 1 0', gap: 4 }} title={<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, width: '100%', flexWrap: 'wrap', paddingBottom: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Chronologie</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout ce qui s’est passé dans ce {p.nature === 'PARKING' ? 'garage' : 'logement'}</span></div>}>
         {events.length ? (
           events.map((e, i) => (
             <div key={i} style={{ display: 'flex', gap: 18, padding: '14px 0', borderTop: `1px solid ${BAI.timeline}` }}>
@@ -146,7 +151,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
             </div>
           ))
         ) : (
-          <span style={{ fontSize: 15, color: BAI.inkMid, padding: '14px 0', borderTop: `1px solid ${BAI.timeline}` }}>Les loyers, les travaux et les documents de ce logement apparaîtront ici.</span>
+          <span style={{ fontSize: 15, color: BAI.inkMid, padding: '14px 0', borderTop: `1px solid ${BAI.timeline}` }}>Les loyers, les travaux et les documents de ce {p.nature === 'PARKING' ? 'garage' : 'logement'} apparaîtront ici.</span>
         )}
         {p.events.length > 6 ? (
           <div style={{ paddingTop: 10 }}>

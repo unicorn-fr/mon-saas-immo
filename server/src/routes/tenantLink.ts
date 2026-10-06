@@ -119,7 +119,9 @@ router.get('/locataire/:code', async (req, res) => {
       boilerDone: f.boiler ? { date: f.boiler.date, at: f.boiler.at } : null,
       eReceipt: f.eReceiptConsent ? { email: f.eReceiptConsent.email, at: f.eReceiptConsent.at } : null,
       email: c.tenants.find((t) => t.email)?.email ?? '',
-      inventory: entry ? inventoryView(entry) : null,
+      // Garage loué seul : le complément d'état des lieux (art. 3-2 de la loi de 1989) ne s'applique pas.
+      inventory: entry && readProperty(lease.property).nature !== 'PARKING' ? inventoryView(entry) : null,
+      parking: readProperty(lease.property).nature === 'PARKING',
       issueChoices: issueChoices(),
       issues: issues
         .filter((i) => readIssue(i.data)?.leaseId === lease.id)
@@ -242,6 +244,7 @@ router.post('/locataire/:code/inventory-complement', limitPerVisitor(60, 10), up
   const lease = await leaseByCode(String(req.params.code))
   const inv = await signedEntry(lease.id)
   if (!inv) throw new HttpError(404, 'L’état des lieux d’entrée n’est pas encore signé.')
+  if (readProperty(lease.property).nature === 'PARKING') throw new HttpError(400, 'Pour un garage, parlez-en directement à votre bailleur.')
   const body = z.object({ text: z.string().trim().min(5, 'Décrivez ce qui manque en quelques mots.').max(3000), heating: z.enum(['true', 'false']).optional() }).parse(req.body)
   const heating = body.heating === 'true'
   if (!complementAllowed(sameDay(inv.date ?? new Date()), sameDay(new Date()), heating))

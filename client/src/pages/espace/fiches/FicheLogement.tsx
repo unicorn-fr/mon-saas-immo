@@ -7,7 +7,7 @@ import { AuthImage, uploadPhotos } from '../../../components/media'
 import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
-import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
+import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, PARKING_TYPES, isParking, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
 import { useFiche } from '../../../lib/fiche'
 import { dateNum } from '../../../lib/format'
 import type { PropertyView } from '../../../lib/space'
@@ -42,6 +42,52 @@ export default function FicheLogement() {
   const d = f.diagnostics ?? {}
   const collective = f.habitat === 'COLLECTIVE'
   let n = 0
+
+  // Garage, box ou place loué seul : seulement ce que le contrat demande.
+  if (isParking(f)) {
+    const k = f.parking ?? {}
+    const sk = (patch: NonNullable<PropertyFile['parking']>) => set({ parking: { ...k, ...patch } })
+    return (
+      <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du garage" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
+        <FicheSection id="address" n={++n} title="Adresse" done={done('address')}>
+          <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
+          <Fields>
+            <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
+            <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
+          </Fields>
+          <Input label="Nom pour le reconnaître" value={f.label} onChange={(v) => set({ label: v })} placeholder="Box rue Foch" />
+        </FicheSection>
+        <FicheSection id="parking" n={++n} title="L’emplacement" intro="Repris dans le contrat et l’annonce." done={done('parking')}>
+          <Chips legend="Type d’emplacement" value={k.type ?? null} onChange={(v) => sk({ type: v })} options={(Object.keys(PARKING_TYPES) as Array<keyof typeof PARKING_TYPES>).map((v) => ({ value: v, label: PARKING_TYPES[v] }))} />
+          {k.type === 'PLACE' ? <Chips legend="La place est" value={k.covered ?? null} onChange={(v) => sk({ covered: v })} options={[{ value: true, label: 'Couverte' }, { value: false, label: 'En extérieur' }]} /> : null}
+          <Fields>
+            <Input label="Numéro (facultatif)" value={k.number} onChange={(v) => sk({ number: v })} />
+            <Input label="Niveau (facultatif)" value={k.level} onChange={(v) => sk({ level: v })} />
+          </Fields>
+          <Fields>
+            <NumberField label="Surface en m² (facultatif)" step="decimal" value={f.surface ?? null} onChange={(v) => set({ surface: v })} />
+            <Input label="Numéro de lot de copropriété (facultatif)" value={f.lotNumber} onChange={(v) => set({ lotNumber: v })} />
+          </Fields>
+          <Input label="Accès (facultatif)" value={k.access} onChange={(v) => sk({ access: v })} placeholder="Portail à badge, accès 24 h sur 24" />
+          <Input label="Clés, badges ou télécommandes remis (facultatif)" value={f.keys} onChange={(v) => set({ keys: v })} placeholder="1 télécommande et 1 clé" />
+        </FicheSection>
+        <FicheSection id="rent" n={++n} title="Loyer" intro="Saisi une seule fois : il est repris dans l’annonce et dans le contrat.">
+          <Fields>
+            <Money label="Loyer hors charges, par mois" cents={f.rent?.rentCents ?? null} onChange={(c) => set({ rent: { ...f.rent, rentCents: c } })} />
+            <Money label="Charges, par mois" cents={f.rent?.chargesCents ?? null} onChange={(c) => set({ rent: { ...f.rent, chargesCents: c } })} />
+          </Fields>
+          <Chips legend="Les charges sont" value={f.rent?.chargesMode === 'FORFAIT' ? 'FORFAIT' : 'PROVISION'} onChange={(v) => set({ rent: { ...f.rent, chargesMode: v } })} options={[{ value: 'PROVISION', label: 'Une provision, régularisée chaque année' }, { value: 'FORFAIT', label: 'Un forfait' }]} />
+          <Fields>
+            <Money label="Dépôt de garantie" cents={f.rent?.depositCents ?? null} onChange={(c) => set({ rent: { ...f.rent, depositCents: c } })} hint="Libre : un mois de loyer est l’usage, deux au plus." />
+            <NumberField label="Jour de paiement du loyer" value={f.rent?.paymentDay ?? 5} onChange={(v) => set({ rent: { ...f.rent, paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null } })} />
+          </Fields>
+        </FicheSection>
+        <FicheSection id="photos" n={++n} title="Photos" done={done('photos')}>
+          <Photos f={f} set={set} onError={toast.error} />
+        </FicheSection>
+      </FicheLayout>
+    )
+  }
 
   return (
     <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du logement" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>

@@ -53,7 +53,12 @@ function Launch({ l }: { l: LeaseView }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kind, l.id])
 
-  const ready = [
+  const ready = l.kind === 'PARKING' ? [
+    `Les noms du bailleur et ${l.tenants.length > 1 ? 'des locataires' : 'du locataire'}`,
+    'L’emplacement, sa porte ou son accès',
+    'Les clés, badges et télécommandes remis',
+    ...(kind === 'EXIT' && entry?.status === 'SIGNED' ? ['Les états relevés à l’entrée, pour comparer'] : []),
+  ] : [
     `Les noms du bailleur et ${l.tenants.length > 1 ? 'des locataires' : 'du locataire'}`,
     rooms ? `${rooms} pièce${rooms > 1 ? 's' : ''}, reprises de la fiche du logement` : 'Les pièces habituelles (à ajuster sur place)',
     'Les compteurs selon le chauffage et l’eau chaude',

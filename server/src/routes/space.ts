@@ -6,9 +6,9 @@ import type { Lease, Payment, Property, Tenant } from '@prisma/client'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
-import { landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
+import { PARKING_TYPES, landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
 import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantCompletion } from '../domain/completion.js'
-import { diagnosticsFor, energyRentalWarning, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
+import { diagnosticsFor, energyRentalWarning, isFurnished, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readStructure, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { aidsFor } from '../domain/aids.js'
 import { iso, mergeFile } from './helpers.js'
@@ -73,6 +73,7 @@ export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'pa
 }
 
 const PROPERTY_KIND = (f: PropertyFile) => {
+  if (f.nature === 'PARKING') return f.parking?.type ? PARKING_TYPES[f.parking.type] : 'Garage ou place'
   const type = f.habitat === 'INDIVIDUAL' ? 'Maison' : (f.rooms ?? 0) <= 1 ? 'Studio' : 'Appartement'
   const t = f.rooms && type !== 'Studio' ? ` T${f.rooms}` : ''
   return `${type}${t}${f.furnished === true ? ' meublé' : f.furnished === false ? ' vide' : ''}`
@@ -119,6 +120,7 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
     rooms: f.rooms ?? null,
     floor: f.floorDoor ?? null,
     furnished: f.furnished ?? null,
+    nature: f.nature ?? 'HOUSING',
     dpeClass: f.diagnostics?.dpe?.class ?? null,
     completion: propertyCompletion(f).percent,
     status: rented ? 'RENTED' : 'AVAILABLE',
@@ -196,7 +198,7 @@ router.get('/properties/:id', async (req, res) => {
   const events = [
     ...p.leases.flatMap((l) => l.payments.map((x) => ({ date: iso(x.receivedAt)!, kind: 'Loyer', title: `Loyer de ${x.period} reçu`, detail: `${(x.amountCents / 100).toFixed(2).replace('.', ',')} €` }))),
     ...expenses.map((e) => ({ date: iso(e.date)!, kind: e.category === 'TAX' ? 'Impôt' : e.category === 'REPAIR' ? 'Travaux' : 'Dépense', title: e.description || e.vendor, detail: `${e.vendor} · ${(e.amountCents / 100).toFixed(2).replace('.', ',')} €${e.status === 'TO_VERIFY' ? ' à vérifier' : ''}` })),
-    ...p.leases.filter((l) => l.status !== 'DRAFT').map((l) => ({ date: iso(l.startDate)!, kind: 'Bail', title: `Entrée de ${leaseTenantLabel(l, names) || 'votre locataire'}`, detail: `Bail ${leaseKindOf(l) === 'VIDE' ? 'vide' : 'meublé'}` })),
+    ...p.leases.filter((l) => l.status !== 'DRAFT').map((l) => ({ date: iso(l.startDate)!, kind: 'Bail', title: `Entrée de ${leaseTenantLabel(l, names) || 'votre locataire'}`, detail: leaseKindOf(l) === 'PARKING' ? 'Location du garage' : `Bail ${leaseKindOf(l) === 'VIDE' ? 'vide' : 'meublé'}` })),
   ]
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 30)
@@ -209,9 +211,9 @@ router.get('/properties/:id', async (req, res) => {
       completion: propertyCompletion(f),
       diagnostics: diagnosticsFor(f),
       /** Ce qui manque au logement pour faire un bail (contrat type, diagnostics, mobilier). */
-      leaseMissing: propertyLeaseMissing(f, f.furnished ? 'MEUBLE' : 'VIDE'),
+      leaseMissing: propertyLeaseMissing(f, f.nature === 'PARKING' ? 'PARKING' : f.furnished ? 'MEUBLE' : 'VIDE'),
       journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [],
-      energyWarning: energyRentalWarning(f.diagnostics?.dpe?.class),
+      energyWarning: f.nature === 'PARKING' ? null : energyRentalWarning(f.diagnostics?.dpe?.class),
       rentControlLikely: rentControlLikely(f.inseeCode),
       /** D'après les listes officielles des communes : zone tendue (null si commune inconnue) et encadrement. */
       tenseOfficial: isTenseZone(f.inseeCode),
@@ -247,10 +249,11 @@ router.get('/properties/:id/aids', async (req, res) => {
   const kind = structure ? readStructure(structure).kind : null
   const tenant = lease?.tenantIds[0] ? await prisma.tenant.findFirst({ where: { id: lease.tenantIds[0], userId } }) : null
   const t = tenant ? readTenant(tenant) : null
-  const aids = aidsFor({
+  // Garage, box ou place loué seul : ces aides concernent la location d'un logement.
+  const aids = file.nature === 'PARKING' ? [] : aidsFor({
     today: iso(new Date())!,
     dpe: file.diagnostics?.dpe?.class ?? null,
-    furnished: lease ? leaseKindOf(lease) !== 'VIDE' : Boolean(file.furnished),
+    furnished: lease ? isFurnished(leaseKindOf(lease)) : Boolean(file.furnished),
     department: (file.postalCode ?? '').slice(0, 2) || null,
     constructionPeriod: file.constructionPeriod ?? null,
     company: kind === 'SCI' || kind === 'COMPANY',
@@ -320,7 +323,7 @@ router.get('/properties/:id/ad', async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))
   const settings = adSettings(p, p.leases)
   const file = readProperty(p)
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: Boolean(file.ad) } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, parking: file.nature === 'PARKING', saved: Boolean(file.ad) } })
 })
 
 router.put('/properties/:id/ad', async (req, res) => {
@@ -330,7 +333,7 @@ router.put('/properties/:id/ad', async (req, res) => {
   const current = readProperty(p)
   const file = propertyFileSchema.parse({ ...current, ad: settings, rent: { ...(current.rent ?? {}), ...rentPatch(settings) } })
   await prisma.property.update({ where: { id: p.id }, data: { data: file } })
-  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, saved: true } })
+  res.json({ success: true, data: { settings, ad: buildAd(file, settings, { agent: Boolean(readProfile(req.user!).agent?.enabled) }), prompt: adPrompt(file, settings), habitat: file.habitat ?? null, parking: file.nature === 'PARKING', saved: true } })
 })
 
 /** Texte rédigé par une IA (ou ailleurs) et collé par le propriétaire : titre et description enregistrés. */

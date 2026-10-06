@@ -1,4 +1,4 @@
-import { ANNEXES, COMMON_AREAS, EQUIPMENTS, type PropertyFile } from './contract.js'
+import { ANNEXES, COMMON_AREAS, EQUIPMENTS, PARKING_TYPES, type PropertyFile } from './contract.js'
 import { formatDateFr, formatEuros, parseIsoDate } from './lease.js'
 import { energyRentalWarning, maxDepositFor } from './rules.js'
 
@@ -41,7 +41,36 @@ export interface Ad {
 const e = (cents: number) => formatEuros(cents)
 const plural = (n: number, w: string) => `${n} ${w}${n > 1 ? 's' : ''}`
 
+/**
+ * Garage, box ou place loué seul : ni DPE ni surface habitable (ce n'est pas un logement). L'annonce indique le loyer
+ * charges comprises par mois, les charges et le dépôt, pour être claire.
+ */
+function buildParkingAd(p: PropertyFile, s: AdSettings, opts: { agent?: boolean }): Ad {
+  const k = p.parking
+  const type = k?.type ? PARKING_TYPES[k.type] : 'Place de stationnement'
+  const rent = s.rentCents ?? null
+  const charges = s.chargesCents ?? 0
+  const title = s.title?.trim() || [type, p.city ? `à ${p.city}` : ''].filter(Boolean).join(' ')
+  const lines: string[] = []
+  if (s.description?.trim()) lines.push(s.description.trim(), '')
+  lines.push(`${type}${k?.covered === true ? ' couvert' : k?.covered === false ? ' en extérieur' : ''}${k?.level ? `, niveau ${k.level}` : ''}${p.surface ? `, environ ${String(p.surface).replace('.', ',')} m²` : ''}${p.city ? `, ${p.city}${p.postalCode ? ` (${p.postalCode})` : ''}` : ''}.`)
+  if (k?.access) lines.push(`Accès : ${k.access}.`)
+  if (s.availableFrom) lines.push(`Disponible à partir du ${formatDateFr(parseIsoDate(s.availableFrom))}.`)
+  lines.push('')
+  if (rent !== null) lines.push(`Loyer : ${e(rent + charges)} par mois charges comprises${charges ? `, dont ${e(charges)} de charges` : ''}.`)
+  if (s.depositCents !== null && s.depositCents !== undefined) lines.push(s.depositCents ? `Dépôt de garantie : ${e(s.depositCents)}.` : 'Pas de dépôt de garantie.')
+  if (!opts.agent) lines.push('Location entre particuliers : pas de frais d’agence.')
+  const checks: AdCheck[] = [
+    { label: 'Loyer charges comprises, par mois', ok: rent !== null && rent > 0, hint: 'Indiquez le loyer hors charges.' },
+    { label: 'Montant des charges', ok: s.chargesCents !== null && s.chargesCents !== undefined, hint: 'Indiquez les charges (0 si aucune).' },
+    { label: 'Dépôt de garantie', ok: s.depositCents !== null && s.depositCents !== undefined, hint: 'Indiquez le dépôt de garantie (0 si aucun).' },
+    { label: 'Ville', ok: Boolean(p.city), hint: 'À compléter dans la fiche du garage.' },
+  ]
+  return { title, text: lines.join('\n').replace(/\n{3,}/g, '\n\n').trim(), checks, warnings: [] }
+}
+
 export function buildAd(p: PropertyFile, s: AdSettings, opts: { agent?: boolean } = {}): Ad {
+  if (p.nature === 'PARKING') return buildParkingAd(p, s, opts)
   const furnished = Boolean(p.furnished)
   const kind = p.habitat === 'INDIVIDUAL' ? 'Maison' : 'Appartement'
   const rent = s.rentCents ?? null
@@ -111,7 +140,9 @@ const PERIOD: Record<string, string> = { BEFORE_1949: 'avant 1949', '1949_1974':
 export function adPrompt(p: PropertyFile, s: AdSettings): string {
   const furnished = Boolean(p.furnished)
   const facts: string[] = []
-  facts.push(`${p.habitat === 'INDIVIDUAL' ? 'Maison' : 'Appartement'} ${furnished ? 'meublé' : 'non meublé (location vide)'}`)
+  if (p.nature === 'PARKING')
+    facts.push(`${p.parking?.type ? PARKING_TYPES[p.parking.type] : 'Place de stationnement'} loué seul${p.parking?.level ? `, niveau ${p.parking.level}` : ''}${p.parking?.access ? `, accès : ${p.parking.access}` : ''}`)
+  else facts.push(`${p.habitat === 'INDIVIDUAL' ? 'Maison' : 'Appartement'} ${furnished ? 'meublé' : 'non meublé (location vide)'}`)
   if (p.city) facts.push(`Ville : ${p.city}${p.postalCode ? ` (${p.postalCode})` : ''}`)
   if (p.surface) facts.push(`Surface habitable : ${String(p.surface).replace('.', ',')} m²`)
   if (p.rooms) facts.push(`Pièces principales : ${p.rooms}`)
@@ -134,9 +165,9 @@ export function adPrompt(p: PropertyFile, s: AdSettings): string {
   if (s.highlights?.trim()) facts.push(`Points forts indiqués par le propriétaire : ${s.highlights.trim()}`)
 
   return [
-    'Rédigez en français une annonce de location pour un logement loué par un particulier.',
+    `Rédigez en français une annonce de location pour ${p.nature === 'PARKING' ? 'un garage ou une place de stationnement' : 'un logement'} loué par un particulier.`,
     '',
-    'Informations sur le logement :',
+    `Informations sur ${p.nature === 'PARKING' ? 'l’emplacement' : 'le logement'} :`,
     ...facts.map((f) => `- ${f}`),
     '',
     'Consignes :',

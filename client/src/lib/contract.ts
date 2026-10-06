@@ -8,7 +8,8 @@ type N<T> = T | null | undefined
 export type Civility = 'MADAME' | 'MONSIEUR'
 export type LandlordKind = 'PERSON' | 'COUPLE' | 'SCI' | 'COMPANY'
 export type Dpe = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
-export type LeaseKind = 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE'
+/** PARKING : garage, box ou place loué seul (Code civil, pas la loi de 1989). */
+export type LeaseKind = 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING'
 
 export interface LandlordProfile {
   kind?: N<LandlordKind>
@@ -106,6 +107,10 @@ interface Diag {
   note?: N<string>
 }
 
+export type ParkingType = 'GARAGE' | 'BOX' | 'PLACE'
+export const PARKING_TYPES: Record<ParkingType, string> = { GARAGE: 'Garage', BOX: 'Box fermé', PLACE: 'Place de stationnement' }
+export const isParking = (f: Pick<PropertyFile, 'nature'> | null | undefined) => f?.nature === 'PARKING'
+
 export interface PropertyFile {
   label?: N<string>
   address?: N<string>
@@ -118,6 +123,9 @@ export interface PropertyFile {
   lotNumber?: N<string>
   fiscalId?: N<string>
   habitat?: N<'COLLECTIVE' | 'INDIVIDUAL'>
+  /** Logement (par défaut) ou emplacement de stationnement loué seul. */
+  nature?: N<'HOUSING' | 'PARKING'>
+  parking?: N<{ type?: N<ParkingType>; number?: N<string>; level?: N<string>; covered?: N<boolean>; access?: N<string> }>
   legalRegime?: N<'MONO' | 'COPRO'>
   furnished?: N<boolean>
   destination?: N<'HABITATION' | 'MIXTE'>
@@ -219,6 +227,8 @@ export interface LeaseTerms {
   durationMonths?: N<number>
   reduced?: N<{ enabled?: N<boolean>; reason?: N<string> }>
   mobilityReason?: N<keyof typeof MOBILITY_REASONS>
+  /** Garage loué seul : préavis du contrat, en mois. */
+  noticeMonths?: N<number>
   rentCents?: N<number>
   chargesCents?: N<number>
   chargesMode?: N<'PROVISION' | 'PERIODIC' | 'FORFAIT'>
@@ -261,6 +271,7 @@ export const KIND_LABEL: Record<LeaseKind, string> = {
   MEUBLE: 'Location meublée',
   ETUDIANT: 'Bail étudiant',
   MOBILITE: 'Bail mobilité',
+  PARKING: 'Location d’un garage',
 }
 
 export const CONSTRUCTION_LABEL = {

@@ -62,3 +62,18 @@ test('clause résolutoire pour impayés et dépôt non versé toujours présente
   assert.match(t, /VIII\. CLAUSE RÉSOLUTOIRE Le présent contrat sera résilié de plein droit : – six semaines après un commandement de payer/)
   assert.doesNotMatch(t, /à défaut de souscription d’une assurance des risques locatifs/)
 })
+
+test('garage loué seul : contrat de droit commun (Code civil), sans contrat type ni notice', { skip: !hasPoppler && 'pdftotext absent', timeout: 60_000 }, async () => {
+  const c = {
+    ...SAMPLE_CONTRACT,
+    property: { address: '3 rue Foch', postalCode: '34000', city: 'Montpellier', nature: 'PARKING' as const, parking: { type: 'BOX' as const, number: '12', level: '-1' }, keys: '1 télécommande' },
+    terms: { ...SAMPLE_CONTRACT.terms, kind: 'PARKING' as const, durationMonths: 12, noticeMonths: 2, rentCents: 9000, chargesCents: 1000, chargesMode: 'FORFAIT' as const, depositCents: 9000 },
+  }
+  const t = await text(c)
+  assert.match(t, /CONTRAT DE LOCATION D’UN EMPLACEMENT DE STATIONNEMENT/)
+  assert.match(t, /Box fermé n° 12, niveau -1/)
+  assert.match(t, /préavis de 2 mois/)
+  assert.match(t, /TVA non applicable, article 293 B du code général des impôts/)
+  assert.match(t, /article 1732/)
+  assert.doesNotMatch(t, /2015-587|Notice d’information|Dépenses énergétiques|89-462 du 6 juillet 1989 tendant/)
+})

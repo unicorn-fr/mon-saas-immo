@@ -26,6 +26,8 @@ export interface PortfolioItem {
   dpe: string | null
   expiredDiagnostics: number
   purchasePriceCents: number | null
+  /** Garage, box ou place loué seul : préavis du contrat. */
+  parkingNoticeMonths?: number | null
 }
 
 export type AlertKind = 'UNPAID' | 'FORBIDDEN' | 'VACANT' | 'DIAGNOSTICS' | 'DPE_SOON' | 'LEASE_END'
@@ -76,7 +78,7 @@ export function alertsFor(p: PortfolioItem, today: string): PortfolioAlert[] {
   if (!p.rented && p.vacantSince) out.push({ kind: 'VACANT', propertyId: p.id, level: 2, title: `Libre depuis le ${frDate(p.vacantSince)}`, text: 'Pas de bail en cours : annonce et candidats sont prêts dans Bailio.' })
   if (p.expiredDiagnostics > 0) out.push({ kind: 'DIAGNOSTICS', propertyId: p.id, level: 2, title: `${p.expiredDiagnostics} diagnostic${p.expiredDiagnostics > 1 ? 's' : ''} à refaire`, text: 'Un diagnostic expiré bloque la signature du prochain bail.' })
   if (ban && ban > today && ban <= addMonths(today, 48)) out.push({ kind: 'DPE_SOON', propertyId: p.id, level: 3, title: `Classé ${p.dpe} : interdit à la location le ${YEAR_LABEL[ban]}`, text: 'Les travaux prennent du temps : MaPrimeRénov’ et l’éco-prêt peuvent les financer en partie.' })
-  if (p.rented && p.leaseEnd && p.leaseEnd >= today && p.leaseEnd <= addMonths(today, 7)) out.push({ kind: 'LEASE_END', propertyId: p.id, level: p.leaseEnd <= addMonths(today, 6) ? 2 : 3, title: `Bail à échéance le ${frDate(p.leaseEnd)}`, text: 'Sans rien faire, il est reconduit. Pour donner congé, il faut s’y prendre à l’avance (6 mois en vide, 3 mois en meublé).' })
+  if (p.rented && p.leaseEnd && p.leaseEnd >= today && p.leaseEnd <= addMonths(today, 7)) out.push({ kind: 'LEASE_END', propertyId: p.id, level: p.leaseEnd <= addMonths(today, 6) ? 2 : 3, title: `Bail à échéance le ${frDate(p.leaseEnd)}`, text: p.parkingNoticeMonths != null ? `Sans rien faire, il est reconduit. Pour y mettre fin, le congé doit arriver ${p.parkingNoticeMonths} mois avant (préavis du contrat).` : 'Sans rien faire, il est reconduit. Pour donner congé, il faut s’y prendre à l’avance (6 mois en vide, 3 mois en meublé).' })
   return out
 }
 

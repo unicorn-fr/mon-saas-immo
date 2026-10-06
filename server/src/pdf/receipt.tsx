@@ -25,6 +25,8 @@ export interface ReceiptInput {
   /** Lieu d'émission (ville du bailleur). */
   place?: string | null
   iban?: string | null
+  /** Garage, box ou place loué seul : hors loi de 1989 (pas d'article 21), location en franchise de TVA. */
+  parking?: boolean
 }
 
 const euros2 = (cents: number) =>
@@ -53,6 +55,8 @@ export function ReceiptDocument(r: ReceiptInput) {
   const place = r.place || r.landlord.city || ''
   const issued = r.kind === 'NOTICE' ? new Date() : r.paidOn ?? new Date()
   const soussigne = r.landlord.civility === 'MADAME' ? 'Je soussignée' : 'Je soussigné'
+  const thing = r.parking ? 'de l’emplacement' : 'du logement'
+  const law = r.parking ? '; TVA non applicable, article 293 B du code général des impôts.' : '(article 21 de la loi n° 89-462 du 6 juillet 1989).'
 
   return (
     <Document title={`${title}, ${period}`} author={landlord} creator="Bailio" language="fr-FR">
@@ -72,7 +76,7 @@ export function ReceiptDocument(r: ReceiptInput) {
         <Text style={{ textAlign: 'center', color: MUTED, fontSize: 11, marginTop: 8, marginBottom: 26 }}>{period.replace(/^./, (c) => c.toUpperCase())}</Text>
 
         <View style={s.row}>
-          <Text style={s.label}>Adresse du logement loué</Text>
+          <Text style={s.label}>{r.parking ? 'Emplacement loué' : 'Adresse du logement loué'}</Text>
           <Text style={s.value}>{r.propertyAddress}</Text>
         </View>
         <View style={s.row}>
@@ -102,12 +106,12 @@ export function ReceiptDocument(r: ReceiptInput) {
 
         {r.kind === 'RECEIPT' ? (
           <Text style={[s.p, { fontSize: 10.5, marginTop: 24 }]}>
-            {soussigne} {landlord}, propriétaire du logement désigné ci-dessus, déclare avoir reçu de {tenants} la somme de {eurosInWords(total)} ({euros2(total)}) au titre du
+            {soussigne} {landlord}, propriétaire {thing} désigné ci-dessus, déclare avoir reçu de {tenants} la somme de {eurosInWords(total)} ({euros2(total)}) au titre du
             loyer et des charges pour la période {periodText}, et lui en donne quittance, sous réserve de tous mes droits.
           </Text>
         ) : r.kind === 'PARTIAL' ? (
           <Text style={[s.p, { fontSize: 10.5, marginTop: 24 }]}>
-            {soussigne} {landlord}, propriétaire du logement désigné ci-dessus, déclare avoir reçu de {tenants} la somme de {eurosInWords(paid)} ({euros2(paid)}) en paiement
+            {soussigne} {landlord}, propriétaire {thing} désigné ci-dessus, déclare avoir reçu de {tenants} la somme de {eurosInWords(paid)} ({euros2(paid)}) en paiement
             partiel du loyer et des charges de la période {periodText}. Ce reçu ne vaut pas quittance : il reste {euros2(Math.max(0, total - paid))} à payer.
           </Text>
         ) : (
@@ -135,10 +139,10 @@ export function ReceiptDocument(r: ReceiptInput) {
         <View style={{ position: 'absolute', left: 54, right: 54, bottom: 34, borderTopWidth: 0.8, borderTopColor: RULE, paddingTop: 8 }} fixed>
           <Text style={{ fontSize: 7.8, color: MUTED, lineHeight: 1.4 }}>
             {r.kind === 'RECEIPT'
-              ? 'Cette quittance annule tous les reçus qui auraient pu être établis précédemment en cas de paiement partiel du montant ci-dessus. Délivrée gratuitement (article 21 de la loi n° 89-462 du 6 juillet 1989). Document établi avec Bailio.'
+              ? `Cette quittance annule tous les reçus qui auraient pu être établis précédemment en cas de paiement partiel du montant ci-dessus. Délivrée gratuitement ${law} Document établi avec Bailio.`
               : r.kind === 'PARTIAL'
-                ? 'Un paiement partiel donne lieu à un reçu ; la quittance est délivrée lorsque la totalité du loyer et des charges est payée (article 21 de la loi n° 89-462 du 6 juillet 1989). Document établi avec Bailio.'
-                : 'Avis d’échéance délivré gratuitement (article 21 de la loi n° 89-462 du 6 juillet 1989). Document établi avec Bailio.'}
+                ? `Un paiement partiel donne lieu à un reçu ; la quittance est délivrée lorsque la totalité du loyer et des charges est payée ${law} Document établi avec Bailio.`
+                : `Avis d’échéance délivré gratuitement ${law} Document établi avec Bailio.`}
           </Text>
         </View>
       </Page>

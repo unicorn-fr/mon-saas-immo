@@ -21,6 +21,8 @@ export interface RentalStep {
 
 export interface RentalFacts {
   propertyId: string
+  /** Garage, box ou place loué seul. */
+  parking?: boolean
   /** Ce qui manque à la fiche du logement pour le bail, avec son niveau. */
   propertyMissing: Array<{ label: string; level?: 'ESSENTIAL' | 'RECOMMENDED'; section?: string }>
   skipped: string[]
@@ -70,7 +72,7 @@ export function rentalSteps(f: RentalFacts): RentalStep[] {
 
   steps.push({
     key: 'PROPERTY',
-    title: 'Compléter la fiche du logement',
+    title: f.parking ? 'Compléter la fiche du garage' : 'Compléter la fiche du logement',
     state: f.propertyMissing.length ? 'TODO' : 'DONE',
     text: essentials.length
       ? `Il manque : ${list(essentials.map((m) => m.label))}. Sans ces informations, le bail ne peut pas être fait.`
@@ -147,7 +149,7 @@ export function rentalSteps(f: RentalFacts): RentalStep[] {
     steps.push({ key, title, text, state: done ? 'DONE' : !signed ? 'LOCKED' : waiting ? 'WAITING' : 'TODO', action: signed && !done ? action : undefined })
   const started = Boolean(l && l.startDate <= f.today)
   if (l) {
-    after('INVENTORY', 'Faire l’état des lieux d’entrée', l.entryInventory === 'SIGNED', l.entryInventory === 'SIGNED' ? 'État des lieux signé.' : `Le jour de la remise des clés${started ? '' : `, le ${dateFr(l.startDate)}`}, pièce par pièce sur votre téléphone, avec photos et signatures.`, { label: l.entryInventory === 'DRAFT' ? 'Reprendre l’état des lieux' : 'Préparer l’état des lieux', to: `/espace/baux/${l.id}/etat-des-lieux` })
+    after('INVENTORY', 'Faire l’état des lieux d’entrée', l.entryInventory === 'SIGNED', l.entryInventory === 'SIGNED' ? 'État des lieux signé.' : `Le jour de la remise des clés${started ? '' : `, le ${dateFr(l.startDate)}`}, ${f.parking ? 'sur votre téléphone' : 'pièce par pièce sur votre téléphone'}, avec photos et signatures.`, { label: l.entryInventory === 'DRAFT' ? 'Reprendre l’état des lieux' : 'Préparer l’état des lieux', to: `/espace/baux/${l.id}/etat-des-lieux` })
     if (l.depositCents > 0) after('DEPOSIT', 'Encaisser le dépôt de garantie', l.depositReceived, l.depositReceived ? 'Dépôt reçu, le reçu est enregistré.' : 'À la signature : Bailio prépare le reçu à remettre au locataire.', { label: 'Préparer le reçu', to: `/espace/baux/${l.id}/courriers?type=DEPOSIT_RECEIPT` })
     after('INSURANCE', 'Recevoir l’attestation d’assurance', l.insurance, l.insurance ? 'Attestation reçue : Bailio la redemandera avant sa date de fin.' : 'Obligatoire pour le locataire dès l’entrée. Il l’envoie depuis son lien, sans compte.', { label: 'Demander l’attestation', to: `/espace/baux/${l.id}#locataire` })
     after('RENT', 'Premier loyer et quittance', l.paid, l.paid ? 'Loyer reçu, quittance prête.' : started ? 'Indiquez le loyer reçu : la quittance est faite et peut être envoyée.' : `À partir du ${dateFr(l.startDate)}.`, { label: 'Indiquer le loyer reçu', to: `/espace/baux/${l.id}#paiements` }, !started)

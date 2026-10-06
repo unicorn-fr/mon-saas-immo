@@ -115,3 +115,9 @@ test('structure : parts des associés', () => {
   assert.deepEqual(sharesTotal({ associates: [{ name: 'A', sharePct: 60 }] }), { total: 60, complete: false })
   assert.deepEqual(sharesTotal({}), { total: 0, complete: false })
 })
+
+test('garage loué seul : durée du contrat, quelle que soit la structure (Code civil)', () => {
+  assert.equal(leaseDurationMonths('PARKING', { kind: 'PERSON' }), 12)
+  assert.equal(leaseDurationMonths('PARKING', { kind: 'COMPANY' }), 12)
+  assert.equal(leaseDurationMonths('PARKING', { kind: 'SCI', sciFamily: false }, { durationMonths: 36 }), 36)
+})

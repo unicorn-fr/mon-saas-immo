@@ -1,4 +1,4 @@
-import { ANNEXES, COMMON_AREAS, EQUIPMENTS, type ContractInput, type Guarantor, type LandlordProfile, type LeaseKind, type PartyName, type PropertyFile } from '../domain/contract.js'
+import { ANNEXES, COMMON_AREAS, EQUIPMENTS, PARKING_TYPES, type ContractInput, type Guarantor, type LandlordProfile, type LeaseKind, type PartyName, type PropertyFile } from '../domain/contract.js'
 import { formatDateFr, formatEuros, parseIsoDate } from '../domain/lease.js'
 import { isLegalPerson } from '../domain/rules.js'
 
@@ -47,6 +47,12 @@ export function propertyAddress(p: PropertyFile): string {
   return [p.address, extra].filter(Boolean).join(', ')
 }
 
+/** « Box fermé n° 12, niveau -1 » : l'emplacement loué seul, sans l'adresse. */
+export function parkingLabel(p: PropertyFile): string {
+  const k = p.parking
+  return [k?.type ? PARKING_TYPES[k.type] : 'Emplacement de stationnement', k?.number ? `n° ${k.number}` : '', k?.level ? `niveau ${k.level}` : ''].filter(Boolean).join(', ').replace(/, n°/, ' n°')
+}
+
 export const CONSTRUCTION: Record<string, string> = {
   BEFORE_1949: 'Avant 1949',
   '1949_1974': 'De 1949 à 1974',
@@ -69,7 +75,7 @@ export const annexesLabel = (p: PropertyFile) => {
 export const commonAreasLabel = (p: PropertyFile) => listOf(COMMON_AREAS, p.commonAreas).join(', ')
 
 export function kindTitle(kind: LeaseKind, colocation: boolean): string {
-  const base = { VIDE: 'Logement vide', MEUBLE: 'Logement meublé', ETUDIANT: 'Logement meublé, bail étudiant de neuf mois', MOBILITE: 'Bail mobilité, logement meublé' }[kind]
+  const base = { VIDE: 'Logement vide', MEUBLE: 'Logement meublé', ETUDIANT: 'Logement meublé, bail étudiant de neuf mois', MOBILITE: 'Bail mobilité, logement meublé', PARKING: 'Garage ou place de stationnement' }[kind]
   return colocation ? `${base}, colocation` : base
 }
 

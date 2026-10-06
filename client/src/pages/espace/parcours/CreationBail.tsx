@@ -4,7 +4,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
 import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, Select, TextArea, TextLink, Toggle, errorMessage, useToast } from '../../../components/kit'
 import { api } from '../../../lib/api'
-import { KIND_LABEL, MOBILITY_REASONS, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
+import { KIND_LABEL, MOBILITY_REASONS, PARKING_TYPES, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
 import { openDoc, printDoc } from '../../../lib/docs'
 import { dateFr, euros } from '../../../lib/format'
 import type { LeaseBlocker, LeaseView, ProfileView, PropertySummary, PropertyView, TenantSummary } from '../../../lib/space'
@@ -32,6 +32,8 @@ export default function CreationBail() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const setT = (patch: Partial<LeaseTerms>) => setTerms((t) => ({ ...t, ...patch }))
+  // Garage, box ou place loué seul : contrat de droit commun, sans les étapes propres au logement.
+  const parking = lease ? lease.kind === 'PARKING' : properties?.find((p) => p.id === propertyId)?.nature === 'PARKING'
   // L'ordre est imposé : logement complet, puis locataire, puis le bail.
   const [propertyBlockers, setPropertyBlockers] = useState<LeaseBlocker[] | null>(null)
   const [tenantBlockers, setTenantBlockers] = useState<Record<string, TenantBlocker[]>>({})
@@ -114,7 +116,7 @@ export default function CreationBail() {
           if (tenantIds.some((t) => tenantBlockers[t]?.some((b) => b.level === 'ESSENTIAL'))) throw new Error('Complétez d’abord ce qui est primordial pour le locataire et son garant.')
           if (!id) {
             const p = properties?.find((x) => x.id === propertyId)
-            const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.furnished ? 'MEUBLE' : 'VIDE' } } })
+            const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.nature === 'PARKING' ? 'PARKING' : p?.furnished ? 'MEUBLE' : 'VIDE' } } })
             goto(3, created.id)
           } else {
             await putTerms({ tenantIds })
@@ -129,16 +131,17 @@ export default function CreationBail() {
         case 4:
           if (!terms.startDate) throw new Error('Indiquez la date d’entrée.')
           if (terms.kind === 'MOBILITE' && (!terms.durationMonths || !terms.mobilityReason)) throw new Error('Indiquez la durée et le motif du bail mobilité.')
-          await putTerms({ startDate: terms.startDate, durationMonths: terms.durationMonths, mobilityReason: terms.mobilityReason, revision: { ...terms.revision, date: terms.revision?.date ?? terms.startDate.slice(5) } })
+          await putTerms({ startDate: terms.startDate, durationMonths: terms.durationMonths, mobilityReason: terms.mobilityReason, ...(parking ? { noticeMonths: terms.noticeMonths ?? 1 } : {}), revision: { ...terms.revision, date: terms.revision?.date ?? terms.startDate.slice(5) } })
           goto(5)
           return
         case 5:
           if (!terms.rentCents) throw new Error('Indiquez le loyer hors charges.')
-          if (terms.zone?.tense === null || terms.zone?.tense === undefined) throw new Error('Indiquez si la commune est en zone tendue.')
+          if (!parking && (terms.zone?.tense === null || terms.zone?.tense === undefined)) throw new Error('Indiquez si la commune est en zone tendue.')
           if (terms.zone?.control && (!terms.zone.refRentCentsM2 || !terms.zone.refRentMaxCentsM2)) throw new Error('Encadrement des loyers : indiquez le loyer de référence et le loyer de référence majoré.')
           if (terms.zone?.complementCents && !terms.zone.complementJustification?.trim()) throw new Error('Justifiez le complément de loyer par les caractéristiques du logement.')
-          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, paymentTerm: terms.paymentTerm ?? 'ADVANCE', paymentMethod: terms.paymentMethod ?? 'TRANSFER', paymentPlace: terms.paymentPlace, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? maxDeposit(terms.kind ?? 'VIDE', terms.rentCents), zone: terms.zone })
-          goto(6)
+          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, paymentTerm: terms.paymentTerm ?? 'ADVANCE', paymentMethod: terms.paymentMethod ?? 'TRANSFER', paymentPlace: terms.paymentPlace, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? (parking ? terms.rentCents : maxDeposit(terms.kind ?? 'VIDE', terms.rentCents)), ...(parking ? {} : { zone: terms.zone }) })
+          // Garage loué seul : ni locataire précédent ni travaux à déclarer (loi de 1989).
+          goto(parking ? 7 : 6)
           return
         case 6:
           if (terms.previous?.rentedWithin18Months === undefined || terms.previous?.rentedWithin18Months === null) throw new Error('Indiquez s’il y avait un locataire avant.')
@@ -165,15 +168,16 @@ export default function CreationBail() {
   const tenantName = lease?.tenants[0]?.name.split(' ')[0] ?? tenants.find((t) => t.id === tenantIds[0])?.name.split(' ')[0] ?? 'votre locataire'
   const property = properties.find((p) => p.id === propertyId)
   const c = lease?.computed
+  const shown = parking && step > 6 ? step - 1 : step
 
   return (
     <StepFlow
       title="Créer un bail"
       closeTo={id ? `/espace/baux/${id}` : '/espace'}
       label={LABELS[step - 1]}
-      step={step}
-      total={8}
-      onBack={step > 1 ? () => goto(step - 1) : undefined}
+      step={shown}
+      total={parking ? 7 : 8}
+      onBack={step > 1 ? () => goto(parking && step === 7 ? 5 : step - 1) : undefined}
       onNext={next}
       busy={busy}
       nextLabel={step === 8 ? 'Terminer' : 'Continuer'}
@@ -241,7 +245,7 @@ export default function CreationBail() {
           <Known
             items={[
               lease.contract.landlord.lastName || lease.contract.landlord.company?.name ? `Vous : ${fullName(lease.contract.landlord) || lease.contract.landlord.company?.name}${lease.contract.landlord.address ? `, ${lease.contract.landlord.address}` : ''}` : null,
-              `Le logement : ${[lease.contract.property.surface ? `${lease.contract.property.surface} m²` : null, lease.contract.property.rooms ? `${lease.contract.property.rooms} pièce${lease.contract.property.rooms > 1 ? 's' : ''}` : null, lease.contract.property.heating?.mode ? `chauffage ${lease.contract.property.heating.mode === 'COLLECTIVE' ? 'collectif' : 'individuel'}` : null].filter(Boolean).join(', ')}`,
+              parking ? `L’emplacement : ${[PARKING_TYPES[lease.contract.property.parking?.type ?? 'PLACE'], lease.contract.property.parking?.number ? `n° ${lease.contract.property.parking.number}` : null].filter(Boolean).join(' ')}` : `Le logement : ${[lease.contract.property.surface ? `${lease.contract.property.surface} m²` : null, lease.contract.property.rooms ? `${lease.contract.property.rooms} pièce${lease.contract.property.rooms > 1 ? 's' : ''}` : null, lease.contract.property.heating?.mode ? `chauffage ${lease.contract.property.heating.mode === 'COLLECTIVE' ? 'collectif' : 'individuel'}` : null].filter(Boolean).join(', ')}`,
               lease.computed.diagnostics.filter((d) => d.required).length ? `Les diagnostics : ${lease.computed.diagnostics.filter((d) => d.required).map((d) => d.label.split(' (')[0].toLowerCase()).join(', ')}` : null,
               `${lease.tenants.length > 1 ? 'Les locataires' : 'Le locataire'}${lease.guarantors.length ? ' et son garant' : ''}`,
             ].filter((x): x is string => Boolean(x))}
@@ -251,10 +255,10 @@ export default function CreationBail() {
               Votre nom et votre adresse doivent figurer dans le bail. <TextLink to={`/espace/compte/profil?retour=${encodeURIComponent(`/espace/baux/nouveau?id=${id}&etape=3`)}`} style={{ fontSize: 13 }}>Compléter mon profil</TextLink>
             </Callout>
           ) : null}
-          <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />
+          {parking ? null : <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />}
           <div style={{ background: BAI.night, borderRadius: 18, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, color: BAI.surface }}>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel }}>Il reste quelques questions</span>
-            <span style={{ fontSize: 15, color: BAI.onDark }}>La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.</span>
+            <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer. Un garage loué seul a son propre contrat, plus simple qu’un bail d’habitation.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
           </div>
         </>
       ) : null}
@@ -267,6 +271,12 @@ export default function CreationBail() {
             <>
               <Chips big legend="Durée du bail mobilité" value={terms.durationMonths ?? null} onChange={(v) => setT({ durationMonths: v })} options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({ value: n, label: `${n} mois` }))} hint="De 1 à 10 mois, non renouvelable." />
               <Chips legend="Le locataire est en" value={terms.mobilityReason ?? null} onChange={(v) => setT({ mobilityReason: v })} options={(Object.keys(MOBILITY_REASONS) as Array<keyof typeof MOBILITY_REASONS>).map((k) => ({ value: k, label: MOBILITY_REASONS[k] }))} />
+            </>
+          ) : null}
+          {parking ? (
+            <>
+              <Chips big legend="Durée du contrat" value={terms.durationMonths ?? 12} onChange={(v) => setT({ durationMonths: v })} options={[6, 12, 24, 36].map((n) => ({ value: n, label: durationText(n) }))} hint="Libre pour un garage. À son terme, le contrat se reconduit tout seul pour la même durée." />
+              <Chips legend="Préavis pour y mettre fin" value={terms.noticeMonths ?? 1} onChange={(v) => setT({ noticeMonths: v })} options={[1, 2, 3].map((n) => ({ value: n, label: `${n} mois` }))} hint="Le même pour vous et pour le locataire. Un mois est l’usage." />
             </>
           ) : null}
           {c ? <Known items={[`Durée : ${durationText(c.durationMonths)}${terms.startDate && c.endDate ? `, jusqu’au ${dateFr(c.endDate)}` : ''}`, c.renewal]} /> : null}
@@ -305,8 +315,11 @@ export default function CreationBail() {
           </Fields>
           <Chips legend="Le loyer se paie" value={terms.paymentTerm ?? 'ADVANCE'} onChange={(v) => setT({ paymentTerm: v })} options={[{ value: 'ADVANCE', label: 'D’avance (à échoir)' }, { value: 'ARREARS', label: 'À la fin du mois (à terme échu)' }]} hint="D’avance : le loyer d’octobre est payé début octobre. C’est l’usage." />
           {terms.paymentMethod === 'OTHER' ? <Input label="Précisez le moyen et le lieu de paiement" value={terms.paymentPlace ?? ''} onChange={(v) => setT({ paymentPlace: v })} /> : null}
-          <StepNote>Le prélèvement automatique ne peut pas être imposé au locataire (article 4 de la loi du 6 juillet 1989).</StepNote>
-          {terms.kind !== 'MOBILITE' ? <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint={terms.rentCents ? `Au maximum ${euros(maxDeposit(terms.kind ?? 'VIDE', terms.rentCents))} : ${terms.kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.` : undefined} error={terms.rentCents && terms.depositCents && terms.depositCents > maxDeposit(terms.kind ?? 'VIDE', terms.rentCents) ? 'Au-dessus du maximum légal.' : null} /> : <Callout tone="info">En bail mobilité, aucun dépôt de garantie ne peut être demandé.</Callout>}
+          {parking ? null : <StepNote>Le prélèvement automatique ne peut pas être imposé au locataire (article 4 de la loi du 6 juillet 1989).</StepNote>}
+          {parking ? (
+            <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint="Libre pour un garage : un mois de loyer est l’usage, deux au plus." error={terms.rentCents && terms.depositCents && terms.depositCents > terms.rentCents * 2 ? 'Bailio limite le dépôt d’un garage à deux mois de loyer.' : null} />
+          ) : terms.kind !== 'MOBILITE' ? <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint={terms.rentCents ? `Au maximum ${euros(maxDeposit(terms.kind ?? 'VIDE', terms.rentCents))} : ${terms.kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.` : undefined} error={terms.rentCents && terms.depositCents && terms.depositCents > maxDeposit(terms.kind ?? 'VIDE', terms.rentCents) ? 'Au-dessus du maximum légal.' : null} /> : <Callout tone="info">En bail mobilité, aucun dépôt de garantie ne peut être demandé.</Callout>}
+          {parking ? null : <>
           <Chips legend="La commune est-elle en zone tendue ?" value={terms.zone?.tense ?? null} onChange={(v) => setT({ zone: { ...terms.zone, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<>En zone tendue, le loyer à la relocation est encadré. <a href="https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">Vérifier ma commune</a></>} />
           <Chips legend="Le logement est soumis à l’encadrement des loyers ?" value={terms.zone?.control ?? (c.rentControlLikely ? true : null)} onChange={(v) => setT({ zone: { ...terms.zone, control: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint={c.rentControlLikely ? 'Cette commune applique l’encadrement : le loyer ne peut pas dépasser le loyer de référence majoré.' : 'Paris, Lille, Lyon, Montpellier, Bordeaux et quelques communes d’Île-de-France l’appliquent.'} />
           {terms.zone?.control ?? c.rentControlLikely ? (
@@ -320,6 +333,7 @@ export default function CreationBail() {
               {terms.zone?.complementCents ? <TextArea label="Ce qui justifie le complément de loyer" value={terms.zone?.complementJustification ?? ''} onChange={(v) => setT({ zone: { ...terms.zone, complementJustification: v } })} rows={2} /> : null}
             </>
           ) : null}
+          </>}
           <Known items={[terms.kind === 'MOBILITE' ? 'Pas de révision du loyer en bail mobilité' : c.revisionAllowed ? 'Révision chaque année avec l’indice officiel' : 'Logement classé F ou G : le loyer ne peut pas être révisé']} />
         </>
       ) : null}
@@ -351,7 +365,7 @@ export default function CreationBail() {
 
       {step === 7 && c ? (
         <>
-          <StepTitle>Les options du bail</StepTitle>
+          <StepTitle>{parking ? 'Les options du contrat' : 'Les options du bail'}</StepTitle>
           <div>
             <Toggle
               checked={terms.kind !== 'MOBILITE' && c.revisionAllowed && terms.revision?.enabled !== false}
@@ -360,10 +374,10 @@ export default function CreationBail() {
               label="Révision annuelle du loyer"
               sub={terms.kind === 'MOBILITE' ? 'Impossible en bail mobilité.' : !c.revisionAllowed ? 'Interdite pour un logement classé F ou G.' : `Le loyer suit l’indice officiel chaque ${terms.startDate ? dateFr(terms.startDate, false) : 'année'}. Conseillé.`}
             />
-            <Toggle checked={terms.clauses?.resolutoire !== false} onChange={(v) => setT({ clauses: { ...terms.clauses, resolutoire: v } })} label="Étendre la clause de fin de bail" sub="Au défaut d’assurance et aux troubles de voisinage. La clause pour loyers impayés et dépôt non versé est toujours incluse : la loi l’impose depuis 2023." />
-            <Toggle checked={Boolean(terms.clauses?.solidarite)} disabled={(lease?.tenants.length ?? 1) < 2 && !terms.colocation} onChange={(v) => setT({ clauses: { ...terms.clauses, solidarite: v } })} label="Solidarité entre colocataires" sub="Chacun peut être tenu de payer tout le loyer. Seulement pour plusieurs locataires." />
+            {parking ? null : <Toggle checked={terms.clauses?.resolutoire !== false} onChange={(v) => setT({ clauses: { ...terms.clauses, resolutoire: v } })} label="Étendre la clause de fin de bail" sub="Au défaut d’assurance et aux troubles de voisinage. La clause pour loyers impayés et dépôt non versé est toujours incluse : la loi l’impose depuis 2023." />}
+            {parking ? null : <Toggle checked={Boolean(terms.clauses?.solidarite)} disabled={(lease?.tenants.length ?? 1) < 2 && !terms.colocation} onChange={(v) => setT({ clauses: { ...terms.clauses, solidarite: v } })} label="Solidarité entre colocataires" sub="Chacun peut être tenu de payer tout le loyer. Seulement pour plusieurs locataires." />}
           </div>
-          <CustomClauses clauses={terms.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => setT({ clauses: { ...terms.clauses, custom } })} />
+          <CustomClauses parking={parking} clauses={terms.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => setT({ clauses: { ...terms.clauses, custom } })} />
           <Fields>
             <Input big label="Fait à" value={terms.signature?.place ?? ''} onChange={(v) => setT({ signature: { ...terms.signature, place: v } })} placeholder={property?.city ?? 'Montpellier'} />
           </Fields>
@@ -374,7 +388,7 @@ export default function CreationBail() {
       {step === 8 && lease ? (
         <>
           <StepTitle>{lease.ready ? `Le bail de ${tenantName} est prêt.` : `Le bail de ${tenantName} est presque prêt.`}</StepTitle>
-          <Known items={[`Contrat de location ${KIND_LABEL[lease.kind].toLowerCase().replace('location ', '')}, conforme au contrat type`, 'Notice d’information', ...lease.annexes.filter((a) => a.done && a.key !== 'notice').map((a) => a.label)]} />
+          <Known items={[...(parking ? ['Contrat de location de l’emplacement (Code civil)'] : [`Contrat de location ${KIND_LABEL[lease.kind].toLowerCase().replace('location ', '')}, conforme au contrat type`, 'Notice d’information']), ...lease.annexes.filter((a) => a.done && a.key !== 'notice').map((a) => a.label)]} />
           {!lease.ready ? (
             <Callout tone="tip" title="Avant la signature">
               Il manque : {lease.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}. <TextLink to={`/espace/baux/${lease.id}/contrat`} style={{ fontSize: 13 }}>Compléter le contrat</TextLink>
@@ -419,7 +433,7 @@ function KindChoice({ furnished, kind, onChange }: { furnished: boolean; kind: L
   )
 }
 
-function CustomClauses({ clauses, warnings, onChange }: { clauses: string[]; warnings: Array<{ clause: string; reasons: string[] }>; onChange: (c: string[]) => void }) {
+function CustomClauses({ clauses, warnings, onChange, parking = false }: { clauses: string[]; warnings: Array<{ clause: string; reasons: string[] }>; onChange: (c: string[]) => void; parking?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {clauses.map((cl, i) => {
@@ -435,7 +449,7 @@ function CustomClauses({ clauses, warnings, onChange }: { clauses: string[]; war
         )
       })}
       <TextLink onClick={() => onChange([...clauses, ''])}>+ Ajouter une clause à vous</TextLink>
-      <StepNote>Bailio vous prévient si une clause que vous écrivez est interdite par la loi (article 4 de la loi du 6 juillet 1989).</StepNote>
+      {parking ? null : <StepNote>Bailio vous prévient si une clause que vous écrivez est interdite par la loi (article 4 de la loi du 6 juillet 1989).</StepNote>}
     </div>
   )
 }

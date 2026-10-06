@@ -21,6 +21,7 @@ export function isLegalPerson(landlord: Pick<LandlordProfile, 'kind' | 'sciFamil
  *   durée réduite d'au moins 1 an pour un événement familial ou professionnel précis, art. 11.
  * - Meublé : 1 an, art. 25-7 ; étudiant : 9 mois, non reconduit.
  * - Mobilité : de 1 à 10 mois, non renouvelable, art. 25-14.
+ * - Garage loué seul (Code civil, art. 1709 et suivants) : durée libre, convenue au contrat, 12 mois par défaut.
  */
 export function leaseDurationMonths(kind: LeaseKind, landlord: Pick<LandlordProfile, 'kind' | 'sciFamily'>, terms: Pick<LeaseTerms, 'durationMonths' | 'reduced'> = {}): number {
   switch (kind) {
@@ -37,11 +38,13 @@ export function leaseDurationMonths(kind: LeaseKind, landlord: Pick<LandlordProf
       return 9
     case 'MOBILITE':
       return Math.min(10, Math.max(1, terms.durationMonths ?? 10))
+    case 'PARKING':
+      return terms.durationMonths ?? 12
   }
 }
 
 /** Ce qui se passe à l'échéance, en une phrase. */
-export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'kind' | 'sciFamily'>): string {
+export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'kind' | 'sciFamily'>, terms: Pick<LeaseTerms, 'durationMonths'> = {}): string {
   switch (kind) {
     case 'VIDE':
       return isLegalPerson(landlord) ? 'Reconduit tacitement pour 6 ans' : 'Reconduit tacitement pour 3 ans'
@@ -51,25 +54,43 @@ export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'k
       return 'Prend fin à son terme, sans reconduction'
     case 'MOBILITE':
       return 'Prend fin à son terme : ni renouvelé, ni reconduit'
+    case 'PARKING': {
+      const months = terms.durationMonths ?? 12
+      return `Reconduit tacitement pour ${months % 12 === 0 ? `${months / 12} an${months > 12 ? 's' : ''}` : `${months} mois`}`
+    }
   }
 }
 
-/** Dépôt de garantie maximum : 1 mois (vide, art. 22), 2 mois (meublé, art. 25-6), interdit en bail mobilité (art. 25-17). */
+/**
+ * Dépôt de garantie maximum : 1 mois (vide, art. 22), 2 mois (meublé, art. 25-6), interdit en bail mobilité (art. 25-17).
+ * Garage loué seul : aucun plafond légal (Code civil), Bailio propose 2 mois au plus, comme l'usage.
+ */
 export function maxDepositFor(kind: LeaseKind, rentCents: number): number {
   if (kind === 'MOBILITE') return 0
   return kind === 'VIDE' ? rentCents : rentCents * 2
 }
 
-/** Préavis du bailleur avant l'échéance : 6 mois (vide, art. 15), 3 mois (meublé, art. 25-8). Aucun congé en bail mobilité ou étudiant 9 mois. */
-export function landlordNoticeMonthsFor(kind: LeaseKind): number | null {
+/**
+ * Préavis du bailleur avant l'échéance : 6 mois (vide, art. 15), 3 mois (meublé, art. 25-8). Aucun congé en bail mobilité
+ * ou étudiant 9 mois. Garage loué seul : préavis convenu au contrat (`noticeMonths`), 1 mois par défaut.
+ */
+export function landlordNoticeMonthsFor(kind: LeaseKind, terms: Pick<LeaseTerms, 'noticeMonths'> = {}): number | null {
   if (kind === 'VIDE') return 6
   if (kind === 'MEUBLE') return 3
+  if (kind === 'PARKING') return terms.noticeMonths ?? 1
   return null
 }
 
+/** Bail d'habitation (loi de 1989) : tout sauf le garage loué seul. */
+export const isHousing = (kind: LeaseKind) => kind !== 'PARKING'
+
+/** Bail meublé au sens de la loi de 1989 (meublé, étudiant, mobilité). Le garage loué seul n'est jamais meublé. */
+export const isFurnished = (kind: LeaseKind) => kind === 'MEUBLE' || kind === 'ETUDIANT' || kind === 'MOBILITE'
+
 /**
  * Modes de récupération des charges autorisés (art. 23, 8-1, 25-10, 25-16) :
- * vide : provisions ou paiement périodique, forfait seulement en colocation ; meublé : tous ; mobilité : forfait uniquement.
+ * vide : provisions ou paiement périodique, forfait seulement en colocation ; meublé : tous ; mobilité : forfait uniquement ;
+ * garage loué seul : libre (Code civil).
  */
 export function allowedChargesModes(kind: LeaseKind, colocation: boolean): ('PROVISION' | 'PERIODIC' | 'FORFAIT')[] {
   if (kind === 'MOBILITE') return ['FORFAIT']
@@ -198,6 +219,8 @@ export interface DiagnosticRule {
 
 /** Dossier de diagnostic technique (art. 3-3) selon la période de construction et les installations. */
 export function diagnosticsFor(p: PropertyFile): DiagnosticRule[] {
+  // Garage, box ou place loué seul : aucun diagnostic n'est exigé (ce n'est pas un logement).
+  if (p.nature === 'PARKING') return []
   const period = p.constructionPeriod
   const before1949 = period === 'BEFORE_1949'
   const before1997 = p.permitBefore1997 ?? (period ? ['BEFORE_1949', '1949_1974', '1975_1989'].includes(period) : true)

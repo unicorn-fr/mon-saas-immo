@@ -1,5 +1,6 @@
 import { formatDateFr, parseIsoDate } from './lease.js'
-import { depositDeadline } from './letters.js'
+import type { LeaseKind } from './contract.js'
+import { depositDeadline, letterAllowed } from './letters.js'
 
 /**
  * Parcours guidés « Que se passe-t-il ? » : pour une situation, les étapes dans l'ordre, avec la date limite
@@ -34,7 +35,7 @@ export interface Journey {
 
 export interface JourneyInput {
   today: string
-  leaseKind: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE'
+  leaseKind: LeaseKind
   status: 'DRAFT' | 'ACTIVE' | 'ENDED' | 'IMPORTED'
   /** Prochaine échéance du bail. */
   leaseEnd: string
@@ -76,6 +77,13 @@ export function inWinterTruce(iso: string): boolean {
 }
 
 export function buildJourney(kind: JourneyKind, input: JourneyInput): Journey {
+  const journey = journeyFor(kind, input)
+  if (input.leaseKind !== 'PARKING') return journey
+  // Garage loué seul : seulement les courriers qui ont un sens hors de la loi de 1989, sans les aides au logement.
+  return { ...journey, steps: journey.steps.filter((s) => (s.action.type !== 'LETTER' || letterAllowed(s.action.letter as never, 'PARKING')) && s.key !== 'help') }
+}
+
+function journeyFor(kind: JourneyKind, input: JourneyInput): Journey {
   switch (kind) {
     case 'DEPARTURE':
       return departure(input)
@@ -101,12 +109,12 @@ function departure(input: JourneyInput): Journey {
     kind: 'DEPARTURE',
     title: 'Mon locataire part',
     intro: notice ? `Congé reçu le ${fr(notice.receivedDate)} : le préavis prend fin le ${fr(notice.endDate)}.` : 'Quatre étapes, dans l’ordre. Bailio reprend à chaque fois ce que vous avez déjà indiqué.',
-    alert: settle || !deadline || deadline >= input.today ? null : `La date limite de restitution du dépôt de garantie (${fr(deadline)}) est dépassée : le locataire peut réclamer 10 % du loyer par mois de retard.`,
+    alert: settle || !deadline || deadline >= input.today || input.leaseKind === 'PARKING' ? null : `La date limite de restitution du dépôt de garantie (${fr(deadline)}) est dépassée : le locataire peut réclamer 10 % du loyer par mois de retard.`,
     steps: [
       {
         key: 'ack',
         title: 'Accuser réception du congé',
-        text: notice ? `Préavis ${notice.reduced ? 'réduit à un mois' : input.leaseKind === 'VIDE' ? 'de trois mois' : 'd’un mois'}, jusqu’au ${fr(notice.endDate)}.` : 'Indiquez la date de réception de sa lettre : Bailio calcule la fin du préavis.',
+        text: notice ? `Préavis ${input.leaseKind === 'PARKING' ? 'prévu au contrat' : notice.reduced ? 'réduit à un mois' : input.leaseKind === 'VIDE' ? 'de trois mois' : 'd’un mois'}, jusqu’au ${fr(notice.endDate)}.` : 'Indiquez la date de réception de sa lettre : Bailio calcule la fin du préavis.',
         status: notice ? 'DONE' : 'TODO',
         doneAt: notice?.receivedDate ?? null,
         action: { type: 'LETTER', letter: 'TENANT_NOTICE' },
@@ -122,7 +130,7 @@ function departure(input: JourneyInput): Journey {
       {
         key: 'exit',
         title: 'Faire l’état des lieux de sortie',
-        text: 'Ensemble, le jour de la remise des clés. Bailio reprend l’état des lieux d’entrée pour comparer, pièce par pièce.',
+        text: input.leaseKind === 'PARKING' ? 'Ensemble, le jour de la remise des clés et des badges.' : 'Ensemble, le jour de la remise des clés. Bailio reprend l’état des lieux d’entrée pour comparer, pièce par pièce.',
         status: exit?.status === 'SIGNED' ? 'DONE' : notice ? 'TODO' : 'LATER',
         due: notice?.endDate ?? null,
         doneAt: exit?.status === 'SIGNED' ? exit.date : null,
@@ -217,16 +225,20 @@ function sale(input: JourneyInput): Journey {
   const late = deadline && deadline < input.today && !given
   return {
     kind: 'SALE',
-    title: 'Je veux vendre ou reprendre le logement',
+    title: input.leaseKind === 'PARKING' ? 'Je veux récupérer ou vendre l’emplacement' : 'Je veux vendre ou reprendre le logement',
     intro: months
       ? `Prochaine fin du bail : ${fr(input.leaseEnd)}. Le congé doit être reçu au plus tard le ${fr(deadline!)}, ${months} mois avant.`
       : 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.',
-    alert: late ? `La date limite du congé pour cette échéance est passée : le bail sera reconduit. Le prochain congé sera possible pour le ${fr(addMonths(input.leaseEnd, input.leaseKind === 'VIDE' ? 36 : 12))}.` : null,
+    alert: late
+      ? input.leaseKind === 'PARKING'
+        ? 'La date limite du congé pour cette échéance est passée : le contrat sera reconduit. Le prochain congé sera possible pour la fin de la période suivante.'
+        : `La date limite du congé pour cette échéance est passée : le bail sera reconduit. Le prochain congé sera possible pour le ${fr(addMonths(input.leaseEnd, input.leaseKind === 'VIDE' ? 36 : 12))}.`
+      : null,
     steps: [
       {
         key: 'notice',
-        title: 'Vendre libre ou reprendre : donner congé',
-        text: input.leaseKind === 'VIDE' ? 'Pour vendre, le congé vaut offre de vente au locataire, qui est prioritaire. Bailio joint la notice officielle et recopie l’article de loi obligatoire.' : 'En meublé, le congé est motivé mais le locataire n’a pas de priorité pour acheter.',
+        title: input.leaseKind === 'PARKING' ? 'Donner congé pour la fin du contrat' : 'Vendre libre ou reprendre : donner congé',
+        text: input.leaseKind === 'PARKING' ? 'Garage loué seul : le congé n’a pas à être motivé, il suffit de respecter le préavis du contrat.' : input.leaseKind === 'VIDE' ? 'Pour vendre, le congé vaut offre de vente au locataire, qui est prioritaire. Bailio joint la notice officielle et recopie l’article de loi obligatoire.' : 'En meublé, le congé est motivé mais le locataire n’a pas de priorité pour acheter.',
         status: !months ? 'NA' : given ? 'DONE' : 'TODO',
         due: deadline,
         doneAt: given?.date ?? null,

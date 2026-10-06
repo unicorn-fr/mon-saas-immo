@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { prisma } from '../db.js'
 import { requireUser } from '../services/session.js'
-import { propertyName, readProperty, readStructure, readTenant, tenantName } from '../services/contract.js'
+import { propertyName, readProperty, readStructure, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { structureName } from '../domain/structure.js'
 import { portfolio, type PortfolioItem } from '../domain/portfolio.js'
 import { unpaidPeriods } from '../domain/rentHistory.js'
@@ -49,6 +49,7 @@ router.get('/portfolio', async (req, res) => {
       dpe: f.diagnostics?.dpe?.class ?? null,
       expiredDiagnostics: expiredDiagnostics(f, now).length,
       purchasePriceCents: f.purchase?.priceCents ?? null,
+      parkingNoticeMonths: f.nature === 'PARKING' ? ((lease ? readTerms(lease).noticeMonths : null) ?? 1) : null,
     }
   })
   res.json({ success: true, data: { today, ...portfolio(items, today) } })

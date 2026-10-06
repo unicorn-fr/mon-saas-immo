@@ -173,7 +173,9 @@ export function tenantNoticeEnd(receivedIso: string, months: number): Date {
   return new Date(Date.UTC(r.getUTCFullYear(), r.getUTCMonth() + months, Math.min(r.getUTCDate(), lastDay)))
 }
 
-export const tenantNoticeMonths = (kind: LetterContext['kind'], reduced: boolean) => ((kind ?? 'VIDE') === 'VIDE' && !reduced ? 3 : 1)
+/** Préavis du locataire : 3 mois en vide (1 mois si réduit), 1 mois en meublé ; garage loué seul : celui du contrat (1 mois par défaut). */
+export const tenantNoticeMonths = (kind: LetterContext['kind'], reduced: boolean, contractual?: number | null) =>
+  kind === 'PARKING' ? (contractual ?? 1) : (kind ?? 'VIDE') === 'VIDE' && !reduced ? 3 : 1
 
 /** Échéance de restitution : 1 mois après la remise des clés si l'état des lieux est conforme, 2 mois sinon (art. 22). */
 export function depositDeadline(keysDateIso: string, conform: boolean): Date {
@@ -211,7 +213,9 @@ export interface LetterContext {
   propertyAddress: string
   guarantorName?: string | null
   /** Type de bail : le congé ne suit pas les mêmes règles en vide (art. 15) et en meublé (art. 25-8). */
-  kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE'
+  kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING'
+  /** Garage loué seul : préavis convenu au contrat, en mois. */
+  noticeMonths?: number | null
   /** Désignation des locaux loués, reprise du bail (obligatoire dans le congé pour vendre). */
   premises?: string
   landlordName?: string
@@ -221,7 +225,121 @@ export interface LetterContext {
   guarantor?: { name: string; solidaire: boolean } | null
 }
 
+/**
+ * Garage, box ou place loué seul (Code civil, art. 1709 et suivants) : seuls ces courriers ont un sens. Les autres
+ * (chaudière, détecteurs, attestation de loyer, trouble de voisinage…) relèvent de la location d'un logement.
+ */
+export const PARKING_LETTERS: LetterType[] = ['REVISION', 'CHARGES', 'INSURANCE', 'REMINDER', 'FORMAL_NOTICE', 'NOTICE_TO_LEAVE', 'TENANT_NOTICE', 'DEPOSIT_RECEIPT', 'DEPOSIT_RETURN', 'GUARANTOR_CALL', 'DAMAGE_REPAIR', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
+
+export const letterAllowed = (type: LetterType, kind: LetterContext['kind']) => kind !== 'PARKING' || PARKING_LETTERS.includes(type)
+
+/** Variantes du garage loué seul : le contrat fixe le préavis, le dépôt et l'assurance, pas la loi du 6 juillet 1989. */
+function parkingLetter(l: LetterInput, ctx: LetterContext): LetterContent | null {
+  const place = ctx.premises || ctx.propertyAddress
+  switch (l.type) {
+    case 'INSURANCE':
+      return {
+        subject: 'Attestation d’assurance de l’emplacement',
+        recommended: false,
+        paragraphs: [
+          `Votre contrat de location vous demande d’assurer l’emplacement loué (${place}) et de m’en justifier chaque année.`,
+          l.expiresAt ? `L’attestation que je possède arrive à échéance le ${d(l.expiresAt)}.` : 'Je ne dispose pas encore de votre attestation pour cette année.',
+          'Pouvez-vous me transmettre votre nouvelle attestation d’assurance, par email ou par courrier ? Je vous remercie par avance.',
+        ],
+      }
+    case 'FORMAL_NOTICE':
+      return {
+        subject: 'Mise en demeure de payer',
+        recommended: true,
+        paragraphs: [
+          `Malgré ma précédente relance, les sommes suivantes restent impayées : loyer et charges de ${l.periods.join(', ')}, soit un total de ${e(l.amountCents)} (${eurosInWords(l.amountCents)}).`,
+          `Je vous mets en demeure de régler cette somme dans un délai de ${l.delayDays} jours à compter de la réception de ce courrier.`,
+          'À défaut, je pourrai mettre en œuvre la clause résolutoire du contrat de location, puis saisir le juge pour obtenir le paiement et la libération de l’emplacement.',
+          ...(l.guarantorInformed && ctx.guarantorName ? [`Votre garant, ${ctx.guarantorName}, est informé de cette situation.`] : []),
+        ],
+      }
+    case 'NOTICE_TO_LEAVE':
+      return {
+        subject: 'Fin du contrat de location de l’emplacement',
+        recommended: true,
+        paragraphs: [
+          `Conformément au contrat de location de l’emplacement situé ${place}, je vous informe que je ne le reconduis pas : il prendra fin le ${d(l.leaseEnd)}${ctx.noticeMonths ? `, en respectant le préavis de ${ctx.noticeMonths} mois prévu au contrat` : ''}.`,
+          'À cette date, l’emplacement devra être libéré et les clés, badges et télécommandes remis. Nous conviendrons ensemble d’un rendez-vous pour constater l’état des lieux.',
+          'Le dépôt de garantie vous sera restitué dans le mois qui suit la remise des clés, déduction faite des sommes dues et justifiées.',
+        ],
+      }
+    case 'TENANT_NOTICE': {
+      const months = tenantNoticeMonths('PARKING', false, ctx.noticeMonths)
+      const end = formatDateFr(tenantNoticeEnd(l.receivedDate, months))
+      return {
+        subject: 'Votre congé : accusé de réception et fin du préavis',
+        recommended: false,
+        paragraphs: [
+          `J’accuse réception de votre lettre de congé concernant l’emplacement situé ${place}, reçue le ${d(l.receivedDate)}.`,
+          `Le préavis prévu au contrat est de ${months} mois : il prend fin le ${end}. Vous restez redevable du loyer et des charges jusqu’à cette date.`,
+          'Le dépôt de garantie vous sera restitué dans le mois qui suit la remise des clés, déduction faite des sommes dues et justifiées. Merci de m’indiquer votre nouvelle adresse.',
+        ],
+        computed: [],
+      }
+    }
+    case 'DEPOSIT_RECEIPT':
+      return {
+        subject: 'Reçu du dépôt de garantie',
+        recommended: false,
+        form: 'ATTESTATION',
+        paragraphs: [
+          `Je soussigné(e) ${ctx.landlordName ?? ''}, bailleur de l’emplacement situé ${place}, reconnais avoir reçu de ${ctx.tenantName}, le ${d(l.receivedDate)}, la somme de ${e(l.amountCents)} (${eurosInWords(l.amountCents)})${l.method ? `, par ${l.method}` : ''}, au titre du dépôt de garantie prévu au contrat de location${ctx.leaseStart ? ` ayant pris effet le ${d(ctx.leaseStart)}` : ''}.`,
+          'Cette somme garantit l’exécution des obligations du locataire. Elle ne porte pas intérêt et sera restituée dans le mois qui suit la remise des clés, déduction faite des sommes dues et justifiées.',
+        ],
+      }
+    case 'DEPOSIT_RETURN': {
+      const retained = l.deductions.reduce((x, y) => x + y.amountCents, 0)
+      const balance = l.depositCents - retained - (l.unpaidCents ?? 0) - (l.chargesBalanceCents ?? 0)
+      const k = parseIsoDate(l.keysDate)
+      const deadline = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth() + 1, k.getUTCDate()))
+      const rows: string[][] = [['Dépôt de garantie versé', '', e(l.depositCents)]]
+      for (const x of l.deductions) rows.push([`Retenue : ${x.label}`, x.justification, `- ${e(x.amountCents)}`])
+      if (l.unpaidCents) rows.push(['Loyers et charges restant dus', '', `- ${e(l.unpaidCents)}`])
+      if (l.chargesBalanceCents) rows.push([l.chargesBalanceCents > 0 ? 'Charges à votre charge' : 'Charges en votre faveur', 'Décompte joint', l.chargesBalanceCents > 0 ? `- ${e(l.chargesBalanceCents)}` : `+ ${e(-l.chargesBalanceCents)}`])
+      rows.push([balance >= 0 ? 'Solde à vous restituer' : 'Solde restant à votre charge', '', e(Math.abs(balance))])
+      return {
+        subject: 'Restitution du dépôt de garantie et solde de tout compte',
+        recommended: false,
+        paragraphs: [
+          `Suite à la remise des clés le ${d(l.keysDate)}, voici le solde de tout compte de la location de l’emplacement situé ${place}, à partir de votre dépôt de garantie de ${e(l.depositCents)}.`,
+          retained ? 'Les retenues ci-dessous correspondent aux dégradations constatées, hors usure normale ; chacune est justifiée par la pièce indiquée.' : 'Aucune retenue pour dégradation n’est appliquée.',
+          balance >= 0
+            ? `La somme de ${e(Math.max(0, balance))} vous sera versée au plus tard le ${formatDateFr(deadline)}, comme le prévoit le contrat.`
+            : `Le dépôt de garantie ne couvre pas les sommes dues : il reste ${e(-balance)} à régler. Je vous remercie de procéder au paiement dans un délai de quinze jours.`,
+        ],
+        table: rows.length > 2 ? { columns: ['Ligne', 'Justificatif', 'Montant'], widths: [52, 26, 22], rows } : undefined,
+        computed: [
+          { label: balance >= 0 ? 'À restituer' : 'Reste dû par le locataire', cents: Math.abs(balance) },
+          { label: 'Retenues', cents: retained },
+        ],
+      }
+    }
+    case 'DAMAGE_REPAIR':
+      return {
+        subject: 'Réparation de dégradations de l’emplacement',
+        recommended: true,
+        paragraphs: [
+          `J’ai constaté les dégradations suivantes sur l’emplacement situé ${place} :`,
+          ...l.items.map((x) => `– ${x.label.trim()}`),
+          'Le locataire répond des dégradations ou des pertes qui arrivent pendant la location, à moins qu’il ne prouve qu’elles ont eu lieu sans sa faute (article 1732 du Code civil).',
+          `Je vous demande de faire réaliser ces réparations dans un délai de ${l.delayDays} jours, ou de me proposer une date pour les faire ensemble. Je reste à votre disposition pour en parler.`,
+        ],
+      }
+    default:
+      return null
+  }
+}
+
 export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent {
+  if (ctx.kind === 'PARKING') {
+    const parking = parkingLetter(l, ctx)
+    if (parking) return parking
+  }
   switch (l.type) {
     case 'REVISION': {
       const next = revisedRent(l.oldRentCents, l.irlRef.value, l.irlNew.value)
@@ -325,13 +443,13 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
         recommended: false,
         paragraphs: [
           `Voici le décompte des charges récupérables de l’année ${l.year}, par nature de charges, comparé aux provisions que vous avez versées.`,
-          ...(partial ? [`Vous avez occupé le logement ${occ.days} jours sur ${occ.yearDays} en ${l.year} : votre part est calculée au prorata de cette durée.`] : []),
+          ...(partial ? [`Vous avez occupé ${ctx.kind === 'PARKING' ? 'l’emplacement' : 'le logement'} ${occ.days} jours sur ${occ.yearDays} en ${l.year} : votre part est calculée au prorata de cette durée.`] : []),
           diff > 0
             ? `Les charges réelles dépassent vos provisions de ${e(diff)}. Ce complément est à régler avec votre prochain loyer.`
             : diff < 0
               ? `Vos provisions dépassent les charges réelles de ${e(-diff)}. Cette somme vous sera remboursée ou déduite de votre prochain loyer.`
               : 'Vos provisions couvrent exactement les charges réelles : rien n’est dû de part et d’autre.',
-          'Les pièces justificatives sont à votre disposition pendant six mois à compter de l’envoi de ce décompte (article 23 de la loi du 6 juillet 1989).',
+          ctx.kind === 'PARKING' ? 'Les pièces justificatives sont à votre disposition sur simple demande.' : 'Les pièces justificatives sont à votre disposition pendant six mois à compter de l’envoi de ce décompte (article 23 de la loi du 6 juillet 1989).',
         ],
         table: {
           columns: ['Charge récupérable', 'Montant réel'],
@@ -389,12 +507,12 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
         subject: 'Appel à la caution : loyers impayés',
         recommended: true,
         paragraphs: [
-          `Vous vous êtes porté(e) caution${g?.solidaire === false ? '' : ' solidaire'} des obligations de ${ctx.tenantName}, locataire du logement situé ${ctx.propertyAddress}${ctx.leaseStart ? `, selon le bail ayant pris effet le ${d(ctx.leaseStart)}` : ''}.`,
+          `Vous vous êtes porté(e) caution${g?.solidaire === false ? '' : ' solidaire'} des obligations de ${ctx.tenantName}, locataire ${ctx.kind === 'PARKING' ? 'de l’emplacement' : 'du logement'} situé ${ctx.propertyAddress}${ctx.leaseStart ? `, selon le bail ayant pris effet le ${d(ctx.leaseStart)}` : ''}.`,
           `Malgré mes relances, les sommes suivantes restent impayées : loyer et charges de ${l.periods.join(', ')}, soit un total de ${e(l.amountCents)} (${eurosInWords(l.amountCents)}).`,
           g?.solidaire === false
             ? `Votre engagement étant une caution simple, je vous informe de cette situation. Je vous remercie de prendre contact avec votre proche afin que cette dette soit réglée dans un délai de ${l.delayDays} jours ; à défaut, je pourrai vous en demander le paiement après avoir poursuivi le locataire.`
             : `En application de votre engagement, je vous demande de régler cette somme dans un délai de ${l.delayDays} jours à compter de la réception de ce courrier.`,
-          ...(l.commandDate ? [`Un commandement de payer a été délivré au locataire le ${d(l.commandDate)} ; il vous est également signifié par commissaire de justice, comme le prévoit l’article 24 de la loi n° 89-462 du 6 juillet 1989.`] : []),
+          ...(l.commandDate && ctx.kind !== 'PARKING' ? [`Un commandement de payer a été délivré au locataire le ${d(l.commandDate)} ; il vous est également signifié par commissaire de justice, comme le prévoit l’article 24 de la loi n° 89-462 du 6 juillet 1989.`] : []),
         ],
       }
     }

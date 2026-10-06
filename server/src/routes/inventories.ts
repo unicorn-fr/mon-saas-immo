@@ -17,6 +17,7 @@ import { renderDamagePdf } from '../pdf/damage.js'
 import { patchLeaseData } from './leases.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { fileDates, filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.js'
+import { isFurnished } from '../domain/rules.js'
 
 /**
  * États des lieux : préparés à partir de la fiche du logement (pièces, compteurs, clés),
@@ -62,7 +63,7 @@ async function inventoryInput(user: User, inv: Inventory): Promise<Omit<Inventor
     ...(data.rooms ?? []).flatMap((r) => [...(r.photoIds ?? []), ...r.items.flatMap((i) => i.photoIds ?? [])]),
     ...(data.complements ?? []).filter((c) => c.status === 'ACCEPTED').flatMap((c) => c.photoIds),
   ].filter((x): x is string => Boolean(x))
-  return { kind: inv.kind as 'ENTRY' | 'EXIT', data, entry: await entryFor(inv), landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: leaseKindOf(lease) !== 'VIDE', photoIds }
+  return { kind: inv.kind as 'ENTRY' | 'EXIT', data, entry: await entryFor(inv), landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: isFurnished(leaseKindOf(lease)), parking: leaseKindOf(lease) === 'PARKING', photoIds }
 }
 
 /** PDF de l'état des lieux, photos en annexe avec leur date d'ajout. */
@@ -89,7 +90,7 @@ router.get('/inventories/:id', async (req, res) => {
       // Sortie : ce qui avait été relevé à l'entrée, élément par élément (clé « pièce/élément »), et les compteurs.
       comparison: inv.kind === 'EXIT' ? { hasEntry: Boolean(entry), items: compareWithEntry(entry, data), meters: meterComparison(entry, data) } : null,
       progress: inventoryProgress(data),
-      lease: { id: lease.id, startDate: iso(lease.startDate), furnished: leaseKindOf(lease) !== 'VIDE' },
+      lease: { id: lease.id, startDate: iso(lease.startDate), furnished: isFurnished(leaseKindOf(lease)) },
       property: { id: lease.property.id, name: propertyName(lease.property), address: propertyAddress(c.property) },
       landlordName: landlordName(c.landlord),
       tenantName: c.tenants.map((t) => personName(t, false)).join(' et '),

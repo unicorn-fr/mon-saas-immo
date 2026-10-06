@@ -25,6 +25,7 @@ interface AdView {
   ad: { title: string; text: string; checks: Array<{ label: string; ok: boolean; hint?: string }>; warnings: string[] }
   prompt: string
   habitat: 'COLLECTIVE' | 'INDIVIDUAL' | null
+  parking?: boolean
   saved: boolean
 }
 
@@ -114,7 +115,9 @@ export default function Annonce() {
             {view.checks.some((c) => c.label === 'Honoraires à la charge du locataire') ? (
               <Money label="Honoraires du mandataire à la charge du locataire (TTC)" cents={settings.tenantFeesCents} onChange={(c) => set({ tenantFeesCents: c })} hint="Mention obligatoire de l’annonce quand un mandataire s’occupe de la location. 0 s’il n’y en a pas." />
             ) : null}
+{data.parking ? null : (
             <Money label="Dont complément de loyer (zone d’encadrement)" cents={settings.complementCents} onChange={(c) => set({ complementCents: c })} hint="Seulement si la commune encadre les loyers et que le logement le justifie. Sinon, laissez vide." />
+            )}
           </Card>
           <Writer
             id={id}

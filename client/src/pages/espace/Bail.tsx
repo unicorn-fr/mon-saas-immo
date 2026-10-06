@@ -499,7 +499,7 @@ function EndModal({ open, onClose, lease, onDone }: { open: boolean; onClose: ()
           </button>
         </Callout>
       ) : null}
-      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Le dépôt de garantie doit être restitué dans un mois si l’état des lieux de sortie est conforme à l’entrée, deux mois sinon (article 22 de la loi du 6 juillet 1989).</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>{lease.kind === 'PARKING' ? 'Le dépôt de garantie est à restituer dans le mois qui suit la remise des clés, comme le prévoit le contrat.' : 'Le dépôt de garantie doit être restitué dans un mois si l’état des lieux de sortie est conforme à l’entrée, deux mois sinon (article 22 de la loi du 6 juillet 1989).'}</span>
     </Modal>
   )
 }

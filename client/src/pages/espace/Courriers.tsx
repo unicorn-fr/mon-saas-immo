@@ -73,6 +73,9 @@ const GROUPS: Array<{ title: string; tabs: Array<{ value: Tab; label: string }> 
     ],
   },
 ]
+/** Garage loué seul : courriers qui ont un sens hors de la loi de 1989 (domain/letters.ts, PARKING_LETTERS). */
+const PARKING_TABS: Tab[] = ['RECEIPT', 'REVISION', 'CHARGES', 'UNPAID', 'INSURANCE', 'DAMAGE_REPAIR', 'DEPOSIT_RECEIPT', 'NOTICE_TO_LEAVE', 'TENANT_NOTICE', 'DEPOSIT_RETURN', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
+const groupsFor = (kind?: string) => (kind === 'PARKING' ? GROUPS.map((g) => ({ ...g, tabs: g.tabs.filter((t) => PARKING_TABS.includes(t.value)) })).filter((g) => g.tabs.length) : GROUPS)
 /** Courriers adressés à un tiers : le destinataire se choisit dans le carnet. */
 const THIRD_PARTY: LetterType[] = ['INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
 const TABS = GROUPS.flatMap((g) => g.tabs)
@@ -88,6 +91,7 @@ export default function Courriers() {
   const [params, setParams] = useSearchParams()
   const tab = fromParam(params.get('type'))
   const { data: lease, error, loading, reload } = useLoad(() => api<LeaseView>(`/leases/${id}`), [id])
+  const groups = groupsFor(lease?.kind)
 
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink }}>
@@ -115,10 +119,10 @@ export default function Courriers() {
       <div className="fiche">
         <aside>
           <div className="only-md">
-            <Select label="Courrier" value={tab} onChange={(v) => setParams({ type: v }, { replace: true })} options={GROUPS.flatMap((g) => g.tabs.map((t) => ({ value: t.value, label: `${g.title} · ${t.label}` })))} />
+            <Select label="Courrier" value={tab} onChange={(v) => setParams({ type: v }, { replace: true })} options={groups.flatMap((g) => g.tabs.map((t) => ({ value: t.value, label: `${g.title} · ${t.label}` })))} />
           </div>
           <nav className="hide-md" aria-label="Courriers" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {GROUPS.map((g) => (
+            {groups.map((g) => (
               <div key={g.title} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: BAI.inkSoft, padding: '10px 10px 4px' }}>{g.title}</span>
                 {g.tabs.map((t) => (
@@ -711,6 +715,14 @@ function NoticeFields({ lease, letter, set }: { lease: LeaseView; letter: Letter
   const resumption = lease.computed.resumptionAllowed !== false
   const sci = lease.computed.landlordKind === 'SCI'
   const deadline = end ? new Date(Date.UTC(Number(end.slice(0, 4)), Number(end.slice(5, 7)) - 1 - months, Number(end.slice(8, 10)))) : null
+  // Garage loué seul : le congé n'a pas à être motivé, seul le préavis du contrat compte.
+  if (lease.kind === 'PARKING')
+    return (
+      <>
+        <span style={{ fontSize: 14, color: BAI.inkMid }}>Préavis du contrat : {months} mois avant la fin. Aucun motif n’est nécessaire.</span>
+        <Input label="Fin du contrat" type="date" value={end} onChange={(v) => set({ leaseEnd: v })} />
+      </>
+    )
   return (
     <>
       <span style={{ fontSize: 14, color: BAI.inkMid }}>Délai : {months ? `${months} mois avant la fin du bail` : 'aucun congé nécessaire pour ce type de bail'}.</span>

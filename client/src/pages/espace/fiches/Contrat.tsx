@@ -5,7 +5,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
 import { api } from '../../../lib/api'
-import { KIND_LABEL, MOBILITY_REASONS, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
+import { KIND_LABEL, MOBILITY_REASONS, PARKING_TYPES, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
 import { openDoc } from '../../../lib/docs'
 import { dateFr, dateNum, euros, eurosCents } from '../../../lib/format'
 import { useFiche } from '../../../lib/fiche'
@@ -74,6 +74,8 @@ export default function Contrat() {
   const done = (k: string) => completion.steps.find((s) => s.key === k)?.done
   const kind = (t.kind ?? 'VIDE') as LeaseKind
   const mobility = kind === 'MOBILITE'
+  // Garage, box ou place loué seul : contrat de droit commun (Code civil), sans les rubriques propres au logement.
+  const parking = kind === 'PARKING'
   const furnished = P.furnished === true
   let n = 0
 
@@ -110,6 +112,11 @@ export default function Contrat() {
       ) : null}
       {view.status === 'ACTIVE' ? <Callout tone="warn" title="Ce bail est signé">Toute modification crée une nouvelle version, à faire signer par les deux parties (avenant). La version signée reste conservée.</Callout> : null}
 
+      {parking ? (
+        <FicheSection id="type" n={++n} title="Type de contrat" reference="Code civil, art. 1709 et suivants" done={done('type')}>
+          <Callout tone="info">Garage, box ou place loué seul : la loi du 6 juillet 1989 ne s’applique pas. Durée, préavis et dépôt sont ceux que vous fixez dans le contrat.</Callout>
+        </FicheSection>
+      ) : (
       <FicheSection id="type" guides={['meuble', 'mobilite']} n={++n} title="Type de bail" intro="Chaque type a ses règles de durée, de dépôt et de charges. Bailio les applique." reference="loi n° 89-462 du 6 juillet 1989, titres Ier, Ier bis et Ier ter" done={done('type')}>
         <Chips
           legend="Quel contrat ?"
@@ -126,6 +133,7 @@ export default function Contrat() {
         <Chips legend="Colocation" value={Boolean(t.colocation)} onChange={(v) => set({ colocation: v, clauses: { ...t.clauses, solidarite: v ? (t.clauses?.solidarite ?? true) : false } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui, bail unique' }]} />
         {mobility ? <Callout tone="tip">Bail mobilité : de 1 à 10 mois, meublé, pour un locataire en formation, études, apprentissage, stage, service civique ou mission temporaire. Pas de dépôt de garantie, charges au forfait uniquement.</Callout> : null}
       </FicheSection>
+      )}
 
       <FicheSection id="parties" guides={['bail']} n={++n} title="Les parties" intro="Repris des fiches déjà remplies. Rien à ressaisir." reference="Contrat type, rubrique I" done={done('parties')}>
         <Computed
@@ -152,23 +160,28 @@ export default function Contrat() {
         ) : null}
       </FicheSection>
 
-      <FicheSection id="property" n={++n} title="Le logement" reference="Contrat type, rubrique II" done={done('property')}>
+      <FicheSection id="property" n={++n} title={parking ? 'L’emplacement' : 'Le logement'} reference={parking ? 'Désignation du bien loué' : 'Contrat type, rubrique II'} done={done('property')}>
         <Computed
-          rows={[
+          rows={parking ? [
+            ['Adresse', view.property.address],
+            ['Emplacement', [PARKING_TYPES[P.parking?.type ?? 'PLACE'], P.parking?.number ? `n° ${P.parking.number}` : null, P.parking?.level ? `niveau ${P.parking.level}` : null].filter(Boolean).join(', ')],
+          ] : [
             ['Adresse', view.property.address],
             ['Type', [P.habitat === 'INDIVIDUAL' ? 'Maison individuelle' : P.habitat === 'COLLECTIVE' ? 'Immeuble collectif' : null, P.legalRegime === 'COPRO' ? 'copropriété' : P.legalRegime === 'MONO' ? 'monopropriété' : null].filter(Boolean).join(', ') || 'À compléter'],
             ['Surface et pièces', P.surface ? `${String(P.surface).replace('.', ',')} m², ${P.rooms ?? '?'} pièce${(P.rooms ?? 0) > 1 ? 's' : ''} principale${(P.rooms ?? 0) > 1 ? 's' : ''}` : 'À compléter'],
             ['Performance énergétique', P.diagnostics?.dpe?.class ? `Classe ${P.diagnostics.dpe.class}` : 'À compléter'],
           ]}
         />
-        <TextLink to={`/espace/logements/${view.property.id}/fiche`}>Modifier la fiche du logement</TextLink>
+        <TextLink to={`/espace/logements/${view.property.id}/fiche`}>{parking ? 'Modifier la fiche du garage' : 'Modifier la fiche du logement'}</TextLink>
         {c.energyWarning ? <Callout tone="warn">{c.energyWarning}</Callout> : null}
       </FicheSection>
 
-      <FicheSection id="dates" guides={['bail']} n={++n} title="Date et durée" reference="loi n° 89-462 du 6 juillet 1989, art. 10 et 11" done={done('dates')}>
+      <FicheSection id="dates" guides={['bail']} n={++n} title="Date et durée" reference={parking ? 'Fixées par le contrat' : 'loi n° 89-462 du 6 juillet 1989, art. 10 et 11'} done={done('dates')}>
         <Fields>
           <Input label="Date de prise d’effet" type="date" value={t.startDate} onChange={(v) => set({ startDate: v || null })} />
-          {mobility ? <Select label="Durée" value={String(t.durationMonths ?? '')} onChange={(v) => set({ durationMonths: Number(v) || null })} options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((m) => ({ value: String(m), label: `${m} mois` }))} /> : <Input label="Durée" value={durationText(c.durationMonths)} onChange={() => undefined} disabled />}
+          {parking ? (
+            <Select label="Durée" value={String(t.durationMonths ?? 12)} onChange={(v) => set({ durationMonths: Number(v) })} options={[6, 12, 24, 36].map((m) => ({ value: String(m), label: durationText(m) }))} />
+          ) : mobility ? <Select label="Durée" value={String(t.durationMonths ?? '')} onChange={(v) => set({ durationMonths: Number(v) || null })} options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((m) => ({ value: String(m), label: `${m} mois` }))} /> : <Input label="Durée" value={durationText(c.durationMonths)} onChange={() => undefined} disabled />}
         </Fields>
         {mobility ? <Select label="Motif du bail mobilité" value={t.mobilityReason ?? ''} onChange={(v) => set({ mobilityReason: (v || null) as LeaseTerms['mobilityReason'] })} options={(Object.keys(MOBILITY_REASONS) as Array<keyof typeof MOBILITY_REASONS>).map((k) => ({ value: k, label: MOBILITY_REASONS[k] }))} /> : null}
         {kind === 'VIDE' && c.reducedAllowed ? (
@@ -189,6 +202,7 @@ export default function Contrat() {
             ['Préavis du bailleur', c.noticeMonths ? `${c.noticeMonths} mois avant l’échéance` : 'Aucun congé à donner'],
           ]}
         />
+        {parking ? <Select label="Préavis, pour vous et pour le locataire" value={String(t.noticeMonths ?? 1)} onChange={(v) => set({ noticeMonths: Number(v) })} options={[1, 2, 3].map((m) => ({ value: String(m), label: `${m} mois` }))} /> : null}
         {kind === 'VIDE' ? <Callout tone="tip">Un bail de durée réduite n’est possible que pour un bailleur personne physique, avec l’événement précis qui le justifie écrit dans le bail.</Callout> : null}
       </FicheSection>
 
@@ -210,6 +224,7 @@ export default function Contrat() {
         <Callout tone="warn">Imposer le prélèvement automatique ou le paiement par retenue sur salaire est interdit.</Callout>
       </FicheSection>
 
+      {parking ? null : <>
       <FicheSection id="zone" guides={['encadrement', 'complement']} n={++n} title="Encadrement et zone tendue" reference="loi n° 89-462 du 6 juillet 1989, art. 17 et 18" done={done('zone')}>
         <Chips legend="Zone tendue" value={t.zone?.tense ?? null} onChange={(v) => set({ zone: { ...t.zone, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<><a href="https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">Vérifier ma commune</a> sur le simulateur officiel.</>} />
         <Chips legend="Encadrement des loyers" value={t.zone?.control ?? c.rentControlLikely} onChange={(v) => set({ zone: { ...t.zone, control: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />
@@ -249,9 +264,10 @@ export default function Contrat() {
           </>
         ) : null}
       </FicheSection>
+      </>}
 
       {!mobility ? (
-        <FicheSection id="revision" guides={['revision', 'irl']} n={++n} title="Révision annuelle" reference="loi n° 89-462 du 6 juillet 1989, art. 17-1" done={done('revision')}>
+        <FicheSection id="revision" guides={['revision', 'irl']} n={++n} title="Révision annuelle" reference={parking ? 'Clause du contrat' : 'loi n° 89-462 du 6 juillet 1989, art. 17-1'} done={done('revision')}>
           <Chips legend="Réviser le loyer chaque année ?" value={c.revisionAllowed ? t.revision?.enabled !== false : false} onChange={(v) => set({ revision: { ...t.revision, enabled: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />
           {c.revisionAllowed && t.revision?.enabled !== false ? (
             <Fields>
@@ -270,7 +286,7 @@ export default function Contrat() {
         </FicheSection>
       ) : null}
 
-      <FicheSection id="charges" guides={['charges']} n={++n} title="Les charges" reference="loi n° 89-462 du 6 juillet 1989, art. 23 et décret n° 87-713" done={done('charges')}>
+      <FicheSection id="charges" guides={['charges']} n={++n} title="Les charges" reference={parking ? 'Fixées par le contrat' : 'loi n° 89-462 du 6 juillet 1989, art. 23 et décret n° 87-713'} done={done('charges')}>
         <Chips
           legend="Mode de paiement des charges"
           value={t.chargesMode ?? null}
@@ -282,10 +298,10 @@ export default function Contrat() {
           ].filter((o) => c.chargesModes.includes(o.value))}
         />
         <Money label="Montant mensuel" cents={t.chargesCents} onChange={(v) => set({ chargesCents: v ?? 0 })} hint="Taxe d’enlèvement des ordures ménagères, entretien des parties communes, eau si commune." />
-        <Callout tone="tip">Location vide : le forfait n’est permis qu’en colocation. En meublé, forfait ou provisions au choix. Bail mobilité : forfait uniquement.</Callout>
-        <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F947" target="_blank" rel="noreferrer" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+        {parking ? null : <Callout tone="tip">Location vide : le forfait n’est permis qu’en colocation. En meublé, forfait ou provisions au choix. Bail mobilité : forfait uniquement.</Callout>}
+        {parking ? null : <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F947" target="_blank" rel="noreferrer" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
           Voir la liste des charges récupérables
-        </a>
+        </a>}
       </FicheSection>
 
       <FicheSection id="first" n={++n} title="Première échéance" reference="Contrat type, rubrique IV.E" done={done('first')}>
@@ -305,7 +321,7 @@ export default function Contrat() {
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>En cas d’entrée en cours de mois, le montant est calculé au prorata des jours.</span>
       </FicheSection>
 
-      {!mobility ? (
+      {!mobility && !parking ? (
         <FicheSection id="works" guides={['travaux']} n={++n} title="Travaux" reference="Contrat type, rubriques IV.C et V" done={done('works')}>
           <TextArea label="Travaux réalisés depuis le dernier bail" value={t.works?.sinceLast} onChange={(v) => set({ works: { ...t.works, sinceLast: v } })} hint="Nature et montant, obligatoires si des travaux ont eu lieu." />
           <TextArea label="Majoration de loyer pour travaux d’amélioration" value={t.works?.increase} onChange={(v) => set({ works: { ...t.works, increase: v } })} hint="Nature, montant, délai de réalisation." />
@@ -328,9 +344,12 @@ export default function Contrat() {
       ) : null}
 
       {!mobility ? (
-        <FicheSection id="deposit" guides={['depot']} n={++n} title="Dépôt de garantie" reference="loi n° 89-462 du 6 juillet 1989, art. 22" done={done('deposit')}>
+        <FicheSection id="deposit" guides={['depot']} n={++n} title="Dépôt de garantie" reference={parking ? 'Fixé par le contrat' : 'loi n° 89-462 du 6 juillet 1989, art. 22'} done={done('deposit')}>
           <Computed
-            rows={[
+            rows={parking ? [
+              ['Usage', 'Un mois de loyer ; Bailio en accepte deux au plus'],
+              ['À restituer', 'Dans le mois qui suit la remise des clés'],
+            ] : [
               ['Maximum légal', kind === 'VIDE' ? '1 mois de loyer hors charges' : '2 mois de loyer hors charges'],
               ['Montant maximum', c.maxDepositCents !== null ? eurosCents(c.maxDepositCents) : 'Loyer à indiquer'],
               ['À restituer', '1 mois après la sortie si l’état des lieux est conforme, 2 mois sinon'],
@@ -340,11 +359,13 @@ export default function Contrat() {
         </FicheSection>
       ) : null}
 
-      <FicheSection id="clauses" guides={['clauses']} n={++n} title="Clauses" reference="loi n° 89-462 du 6 juillet 1989, art. 4" done={done('clauses')}>
+      <FicheSection id="clauses" guides={['clauses']} n={++n} title="Clauses" reference={parking ? 'Code civil' : 'loi n° 89-462 du 6 juillet 1989, art. 4'} done={done('clauses')}>
+        {parking ? <Callout tone="info">Le contrat prévoit déjà l’usage, l’assurance, l’entretien, la sous-location et la résiliation en cas d’impayé. Ajoutez ici vos conditions particulières.</Callout> : <>
         <Check checked={t.clauses?.resolutoire !== false} onChange={(v) => set({ clauses: { ...t.clauses, resolutoire: v } })} label="Étendre la clause résolutoire" sub="Au défaut d’assurance et aux troubles de voisinage constatés par le juge. La clause pour loyers impayés et dépôt de garantie non versé est obligatoire : elle est toujours dans le bail (loi du 27 juillet 2023)." />
         <Check checked={Boolean(t.clauses?.solidarite)} onChange={(v) => set({ clauses: { ...t.clauses, solidarite: v } })} label="Clause de solidarité entre colocataires" sub={view.tenants.length > 1 || t.colocation ? 'Chacun peut être tenu de payer la totalité du loyer.' : 'Seulement s’il y a plusieurs locataires.'} />
+        </>}
         <Custom clauses={t.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => set({ clauses: { ...t.clauses, custom } })} />
-        <Callout tone="tip">Clauses interdites que Bailio signale : interdire tout animal domestique, imposer un assureur, facturer l’état des lieux, prévoir des pénalités de retard, interdire d’héberger ses proches, rendre le locataire responsable des dégradations collectives.</Callout>
+        {parking ? null : <Callout tone="tip">Clauses interdites que Bailio signale : interdire tout animal domestique, imposer un assureur, facturer l’état des lieux, prévoir des pénalités de retard, interdire d’héberger ses proches, rendre le locataire responsable des dégradations collectives.</Callout>}
         {t.clauses === null || t.clauses === undefined ? (
           <div>
             <Btn size="sm" variant="outline" onClick={() => set({ clauses: { resolutoire: true, solidarite: view.tenants.length > 1 } })}>

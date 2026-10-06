@@ -38,6 +38,12 @@ export function landlordCompletion(p: LandlordProfile): Completion {
 
 export function propertyCompletion(p: PropertyFile): Completion {
   const d = p.diagnostics ?? {}
+  if (p.nature === 'PARKING')
+    return summarize([
+      { key: 'address', label: 'Adresse', done: filled(p.address), applicable: true },
+      { key: 'parking', label: 'Emplacement', done: filled(p.parking?.type), applicable: true },
+      { key: 'photos', label: 'Photos', done: (p.photos?.length ?? 0) > 0, applicable: true },
+    ])
   return summarize([
     { key: 'address', label: 'Adresse et identifiant fiscal', done: filled(p.address, p.fiscalId), applicable: true },
     { key: 'type', label: 'Type et régime', done: filled(p.habitat, p.legalRegime) && p.furnished !== undefined && p.furnished !== null, applicable: true },
@@ -82,18 +88,19 @@ export function guarantorCompletion(g: Guarantor): Completion {
 
 export function termsCompletion(t: LeaseTerms, ctx: { hasLandlord: boolean; hasProperty: boolean; hasTenant: boolean; tense: boolean }): Completion {
   const prev = t.previous
+  const housing = t.kind !== 'PARKING'
   return summarize([
     { key: 'type', label: 'Type', done: filled(t.kind), applicable: true },
     { key: 'parties', label: 'Parties', done: ctx.hasLandlord && ctx.hasTenant, applicable: true },
     { key: 'property', label: 'Logement', done: ctx.hasProperty, applicable: true },
     { key: 'dates', label: 'Date et durée', done: filled(t.startDate) && (t.kind !== 'MOBILITE' || filled(t.durationMonths, t.mobilityReason)), applicable: true },
     { key: 'rent', label: 'Loyer', done: filled(t.rentCents, t.paymentDay), applicable: true },
-    { key: 'zone', label: 'Encadrement', done: t.zone?.tense !== undefined && t.zone?.tense !== null, applicable: true },
-    { key: 'previous', label: 'Locataire précédent', done: prev?.rentedWithin18Months === false || filled(prev?.lastRentCents, prev?.lastPaymentDate), applicable: true },
+    { key: 'zone', label: 'Encadrement', done: t.zone?.tense !== undefined && t.zone?.tense !== null, applicable: housing },
+    { key: 'previous', label: 'Locataire précédent', done: prev?.rentedWithin18Months === false || filled(prev?.lastRentCents, prev?.lastPaymentDate), applicable: housing },
     { key: 'revision', label: 'Révision', done: t.revision?.enabled === false || filled(t.revision?.irlQuarter), applicable: t.kind !== 'MOBILITE' },
     { key: 'charges', label: 'Charges', done: filled(t.chargesMode) && t.chargesCents !== undefined && t.chargesCents !== null, applicable: true },
     { key: 'first', label: 'Première échéance', done: filled(t.startDate, t.rentCents), applicable: true },
-    { key: 'works', label: 'Travaux', done: t.works !== undefined && t.works !== null, applicable: t.kind !== 'MOBILITE' },
+    { key: 'works', label: 'Travaux', done: t.works !== undefined && t.works !== null, applicable: housing && t.kind !== 'MOBILITE' },
     { key: 'deposit', label: 'Dépôt', done: t.depositCents !== undefined && t.depositCents !== null, applicable: t.kind !== 'MOBILITE' },
     { key: 'clauses', label: 'Clauses', done: t.clauses !== undefined && t.clauses !== null, applicable: true },
     { key: 'annexes', label: 'Annexes', done: ctx.hasProperty, applicable: true },

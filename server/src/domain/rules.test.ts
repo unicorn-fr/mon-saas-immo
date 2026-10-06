@@ -16,6 +16,9 @@ import {
   rentRevisionAllowed,
   rentalForbidden,
   rentIssues,
+  isFurnished,
+  isHousing,
+  renewalLabel,
 } from './rules.js'
 import { toIsoDate } from './lease.js'
 
@@ -200,4 +203,21 @@ test('zone tendue et encadrement d’après les listes officielles des communes'
   assert.equal(rentControlFor('38185', before), 'partial') // Grenoble : certains quartiers seulement
   assert.equal(rentControlFor('34301', before), null)
   assert.equal(rentControlFor('75111', new Date('2026-12-01')), null, 'après la fin de l’expérimentation : à confirmer')
+})
+
+test('garage loué seul : règles du contrat (Code civil), pas celles de la loi de 1989', () => {
+  const person = { kind: 'PERSON' as const }
+  assert.equal(leaseDurationMonths('PARKING', person), 12)
+  assert.equal(leaseDurationMonths('PARKING', { kind: 'COMPANY' }, { durationMonths: 24 }), 24)
+  assert.equal(landlordNoticeMonthsFor('PARKING'), 1)
+  assert.equal(landlordNoticeMonthsFor('PARKING', { noticeMonths: 3 }), 3)
+  assert.deepEqual(allowedChargesModes('PARKING', false), ['PROVISION', 'PERIODIC', 'FORFAIT'])
+  assert.equal(maxDepositFor('PARKING', 10_000), 20_000)
+  assert.equal(isFurnished('PARKING'), false)
+  assert.equal(isHousing('PARKING'), false)
+  assert.equal(renewalLabel('PARKING', person), 'Reconduit tacitement pour 1 an')
+  assert.equal(renewalLabel('PARKING', person, { durationMonths: 6 }), 'Reconduit tacitement pour 6 mois')
+  // Aucun diagnostic pour un emplacement de stationnement.
+  assert.deepEqual(diagnosticsFor({ nature: 'PARKING', constructionPeriod: 'BEFORE_1949' }), [])
+  assert.ok(diagnosticsFor({ constructionPeriod: 'BEFORE_1949' }).length > 0)
 })

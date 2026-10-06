@@ -130,6 +130,18 @@ export const propertyFileSchema = z.object({
   lotNumber: opt(text(40)),
   fiscalId: opt(text(40)),
   habitat: opt(z.enum(['COLLECTIVE', 'INDIVIDUAL'])),
+  /** Logement (par défaut) ou emplacement de stationnement loué seul : garage, box, place (Code civil, pas la loi de 1989). */
+  nature: opt(z.enum(['HOUSING', 'PARKING'])),
+  parking: opt(
+    z.object({
+      type: opt(z.enum(['GARAGE', 'BOX', 'PLACE'])),
+      number: opt(text(40)),
+      level: opt(text(40)),
+      covered: opt(z.boolean()),
+      /** Accès : portail, badge, horaires… */
+      access: opt(text(300)),
+    }),
+  ),
   legalRegime: opt(z.enum(['MONO', 'COPRO'])),
   furnished: opt(z.boolean()),
   destination: opt(z.enum(['HABITATION', 'MIXTE'])),
@@ -348,7 +360,8 @@ export type TenantFile = z.infer<typeof tenantFileSchema>
 
 // ── Conditions du bail ───────────────────────────────────────────────────────
 
-export const leaseKind = z.enum(['VIDE', 'MEUBLE', 'ETUDIANT', 'MOBILITE'])
+/** PARKING : garage, box ou place de stationnement loué seul, régi par le Code civil (art. 1709 et suivants), pas par la loi de 1989. */
+export const leaseKind = z.enum(['VIDE', 'MEUBLE', 'ETUDIANT', 'MOBILITE', 'PARKING'])
 export type LeaseKind = z.infer<typeof leaseKind>
 
 export const MOBILITY_REASONS = {
@@ -369,6 +382,8 @@ export const leaseTermsSchema = z.object({
   durationMonths: opt(z.number().int().min(1).max(72)),
   reduced: opt(z.object({ enabled: opt(z.boolean()), reason: opt(text(500)) })),
   mobilityReason: opt(z.enum(Object.keys(MOBILITY_REASONS) as [string, ...string[]])),
+  /** Garage loué seul : préavis convenu au contrat, en mois, pour chaque partie (1 par défaut). */
+  noticeMonths: opt(z.number().int().min(0).max(12)),
   rentCents: opt(cents),
   chargesCents: opt(cents),
   chargesMode: opt(z.enum(['PROVISION', 'PERIODIC', 'FORFAIT'])),
@@ -431,6 +446,11 @@ export const leaseTermsSchema = z.object({
   signature: opt(z.object({ place: opt(text(120)), date: opt(isoDate), mode: opt(z.enum(['PAPER', 'ELECTRONIC'])) })),
 })
 export type LeaseTerms = z.infer<typeof leaseTermsSchema>
+
+export const PARKING_TYPES = { GARAGE: 'Garage', BOX: 'Box fermé', PLACE: 'Place de stationnement' } as const
+
+/** Emplacement de stationnement loué seul. */
+export const isParking = (p: Pick<PropertyFile, 'nature'>) => p.nature === 'PARKING'
 
 /** Personne telle qu'elle figure dans un document. */
 export interface PartyName {

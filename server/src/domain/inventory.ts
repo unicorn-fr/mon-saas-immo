@@ -82,6 +82,17 @@ export function initialInventory(p: PropertyFile, kind: 'ENTRY' | 'EXIT', previo
       vetusteGrid: previous.vetusteGrid,
     }
   }
+  // Garage, box ou place loué seul : l'emplacement, sa porte ou son accès, et les moyens d'accès remis.
+  if (p.nature === 'PARKING') {
+    const closed = p.parking?.type !== 'PLACE'
+    return {
+      meters: [],
+      keys: [{ type: closed ? 'Clé ou télécommande' : 'Badge ou télécommande d’accès', count: 1, destination: closed ? 'Porte du garage' : 'Accès au parking' }],
+      rooms: [{ name: 'Emplacement', done: false, items: (closed ? ['Sol', 'Murs', 'Plafond', 'Porte et serrure', 'Éclairage'] : ['Sol et marquage', 'Accès']).map((label) => ({ label })) }],
+      furniture: [],
+      vetusteGrid: false,
+    }
+  }
   const rooms = p.roomList?.length ? p.roomList.map((r) => r.name) : ['Entrée', 'Séjour', 'Cuisine', 'Chambre 1', 'Salle de bain', 'WC']
   const hasGas = p.heating?.energy === 'GAS' || p.diagnostics?.gas?.hasGas
   const annexRooms = (p.annexes ?? []).filter((a) => ['garage', 'cellar', 'garden', 'terrace', 'balcony'].includes(a)).map((a) => ({ garage: 'Garage', cellar: 'Cave', garden: 'Extérieurs', terrace: 'Extérieurs', balcony: 'Balcon' })[a as 'garage'])

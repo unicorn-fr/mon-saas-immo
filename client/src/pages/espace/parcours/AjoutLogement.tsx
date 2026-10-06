@@ -11,12 +11,13 @@ import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, Money, Nu
 import { Spinner } from '../../../components/ui'
 import { Camera } from '../../../components/Icons'
 import { api } from '../../../lib/api'
-import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
+import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile, PARKING_TYPES, isParking } from '../../../lib/contract'
 import type { PropertyView } from '../../../lib/space'
 
-type StepId = 'address' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'rent' | 'photos'
+type StepId = 'address' | 'parking' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'rent' | 'photos'
 const LABELS: Record<StepId, string> = {
   address: 'Adresse',
+  parking: 'L’emplacement',
   type: 'Type de location',
   copro: 'Copropriété',
   size: 'Construction et pièces',
@@ -30,7 +31,8 @@ const LABELS: Record<StepId, string> = {
 }
 /** Étapes utiles pour ce logement : la copropriété et le mobilier seulement quand ils le concernent. */
 const stepsFor = (f: PropertyFile): StepId[] =>
-  (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'rent', 'photos'] as const).filter(
+  // Garage, box ou place loué seul : ni pièces, ni chauffage, ni diagnostics (ce n'est pas un logement).
+  isParking(f) ? ['address', 'parking', 'rent', 'photos'] : (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'rent', 'photos'] as Array<StepId | null>).filter(
     (x): x is StepId => Boolean(x),
   )
 
@@ -98,7 +100,7 @@ export default function AjoutLogement() {
       const after = stepsFor(f)
       const following = after[after.indexOf(current) + 1]
       if (!following) {
-        toast.show('Logement enregistré.')
+        toast.show(isParking(f) ? 'Garage enregistré.' : 'Logement enregistré.')
         const back = params.get('retour')
         navigate(back === 'bail' ? `/espace/baux/nouveau?logement=${newId}` : back === 'locataire' ? `/espace/locataires/nouveau?logement=${newId}` : `/espace/logements/${newId}`, { replace: true })
         return
@@ -116,7 +118,7 @@ export default function AjoutLogement() {
 
   return (
     <StepFlow
-      title="Ajouter un logement"
+      title={isParking(f) ? 'Ajouter un garage' : 'Ajouter un logement'}
       closeTo={id ? `/espace/logements/${id}` : '/espace/logements'}
       label={LABELS[current]}
       step={index + 1}
@@ -124,10 +126,11 @@ export default function AjoutLogement() {
       onBack={index > 0 ? () => goto(steps[index - 1]) : undefined}
       onNext={next}
       busy={busy}
-      nextLabel={index === steps.length - 1 ? 'Enregistrer le logement' : 'Continuer'}
+      nextLabel={index === steps.length - 1 ? (isParking(f) ? 'Enregistrer le garage' : 'Enregistrer le logement') : 'Continuer'}
     >
       {error ? <Callout tone="warn">{error}</Callout> : null}
-      {current === 'address' ? <StepAddress f={f} set={set} /> : null}
+      {current === 'address' ? <StepAddress f={f} set={set} fresh={!id} /> : null}
+      {current === 'parking' ? <StepParking f={f} set={set} /> : null}
       {current === 'address' && !id ? <StructurePicker value={structureId} onChange={setStructureId} /> : null}
       {current === 'type' ? <StepType f={f} set={set} /> : null}
       {current === 'copro' ? <StepCopro f={f} set={set} /> : null}
@@ -163,7 +166,9 @@ export default function AjoutLogement() {
 function validate(step: StepId, f: PropertyFile): string | null {
   switch (step) {
     case 'address':
-      return f.address?.trim() ? null : 'Indiquez l’adresse du logement.'
+      return f.address?.trim() ? null : isParking(f) ? 'Indiquez l’adresse du garage ou du parking.' : 'Indiquez l’adresse du logement.'
+    case 'parking':
+      return f.parking?.type ? null : 'Indiquez s’il s’agit d’un garage, d’un box ou d’une place.'
     case 'type':
       if (!f.habitat || f.furnished === null || f.furnished === undefined) return 'Choisissez le type de logement et s’il est loué vide ou meublé.'
       if (!f.legalRegime) return 'Indiquez si l’immeuble est en copropriété.'
@@ -189,8 +194,8 @@ function validate(step: StepId, f: PropertyFile): string | null {
       const r = f.rent ?? {}
       if (!r.rentCents) return 'Indiquez le loyer hors charges.'
       if (r.chargesCents === null || r.chargesCents === undefined) return 'Indiquez les charges par mois (0 s’il n’y en a pas).'
-      const max = r.rentCents * (f.furnished ? 2 : 1)
-      if (r.depositCents && r.depositCents > max) return `Le dépôt de garantie ne peut pas dépasser ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`
+      const max = r.rentCents * (f.furnished || isParking(f) ? 2 : 1)
+      if (r.depositCents && r.depositCents > max) return isParking(f) ? 'Bailio limite le dépôt de garantie d’un garage à deux mois de loyer.' : `Le dépôt de garantie ne peut pas dépasser ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`
       return null
     }
     default:
@@ -202,7 +207,9 @@ function validate(step: StepId, f: PropertyFile): string | null {
 function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
   switch (step) {
     case 'address':
-      return { address: f.address, postalCode: f.postalCode, city: f.city, inseeCode: f.inseeCode, banId: f.banId, building: f.building, floorDoor: f.floorDoor, label: f.label }
+      return { nature: f.nature ?? 'HOUSING', address: f.address, postalCode: f.postalCode, city: f.city, inseeCode: f.inseeCode, banId: f.banId, building: f.building, floorDoor: f.floorDoor, label: f.label }
+    case 'parking':
+      return { parking: f.parking, surface: f.surface, lotNumber: f.lotNumber, keys: f.keys }
     case 'type':
       return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION', fiscalId: f.fiscalId, rentalPermit: f.rentalPermit }
     case 'copro':
@@ -220,7 +227,7 @@ function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
     case 'diagnostics':
       return { diagnostics: f.diagnostics, constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997 }
     case 'rent':
-      return { rent: { ...f.rent, chargesMode: f.rent?.chargesMode ?? 'PROVISION', depositCents: f.rent?.depositCents ?? (f.rent?.rentCents ? f.rent.rentCents * (f.furnished ? 2 : 1) : null), paymentDay: f.rent?.paymentDay ?? 5 } }
+      return { rent: { ...f.rent, chargesMode: f.rent?.chargesMode ?? 'PROVISION', depositCents: f.rent?.depositCents ?? (f.rent?.rentCents ? f.rent.rentCents * (f.furnished && !isParking(f) ? 2 : 1) : null), paymentDay: f.rent?.paymentDay ?? 5 } }
     default:
       return { photos: f.photos ?? [] }
   }
@@ -235,10 +242,24 @@ function defaultRooms(f: PropertyFile): Array<{ name: string }> {
   return rooms.map((name) => ({ name }))
 }
 
-function StepAddress({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+function StepAddress({ f, set, fresh }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void; fresh: boolean }) {
+  const parking = isParking(f)
   return (
     <>
-      <StepTitle>Où se trouve le logement ?</StepTitle>
+      {fresh ? (
+        <Chips
+          big
+          legend="Vous louez"
+          value={parking ? 'PARKING' : 'HOUSING'}
+          onChange={(v) => set({ nature: v })}
+          options={[
+            { value: 'HOUSING', label: 'Un logement' },
+            { value: 'PARKING', label: 'Un garage, un box ou une place' },
+          ]}
+          hint={parking ? 'Loué seul, sans logement : un contrat simple, sans diagnostic ni DPE.' : undefined}
+        />
+      ) : null}
+      <StepTitle>{parking ? 'Où se trouve-t-il ?' : 'Où se trouve le logement ?'}</StepTitle>
       <AddressField
         label="Adresse"
         value={f.address ?? ''}
@@ -250,9 +271,28 @@ function StepAddress({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFil
         }}
         placeholder="12 rue de la Loge, Montpellier"
       />
-      <Input big label="Bâtiment, étage, porte" value={f.floorDoor ?? ''} onChange={(v) => set({ floorDoor: v })} placeholder="Bâtiment B, 2e étage, porte gauche" />
-      <Input big label="Un nom pour le reconnaître (facultatif)" value={f.label ?? ''} onChange={(v) => set({ label: v })} placeholder="Studio rue Foch" />
-      <StepNote>L’adresse apparaîtra dans le bail et sur vos quittances.</StepNote>
+      {parking ? null : <Input big label="Bâtiment, étage, porte" value={f.floorDoor ?? ''} onChange={(v) => set({ floorDoor: v })} placeholder="Bâtiment B, 2e étage, porte gauche" />}
+      <Input big label="Un nom pour le reconnaître (facultatif)" value={f.label ?? ''} onChange={(v) => set({ label: v })} placeholder={parking ? 'Box rue Foch' : 'Studio rue Foch'} />
+      <StepNote>L’adresse apparaîtra {parking ? 'dans le contrat' : 'dans le bail'} et sur vos quittances.</StepNote>
+    </>
+  )
+}
+
+function StepParking({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const k = f.parking ?? {}
+  const sk = (patch: NonNullable<PropertyFile['parking']>) => set({ parking: { ...k, ...patch } })
+  return (
+    <>
+      <StepTitle>C’est…</StepTitle>
+      <Chips big legend="Type d’emplacement" value={k.type ?? null} onChange={(v) => sk({ type: v })} options={(Object.keys(PARKING_TYPES) as Array<keyof typeof PARKING_TYPES>).map((v) => ({ value: v, label: PARKING_TYPES[v] }))} />
+      {k.type === 'PLACE' ? <Chips legend="La place est" value={k.covered ?? null} onChange={(v) => sk({ covered: v })} options={[{ value: true, label: 'Couverte' }, { value: false, label: 'En extérieur' }]} /> : null}
+      <Fields>
+        <Input label="Numéro (facultatif)" value={k.number ?? ''} onChange={(v) => sk({ number: v })} placeholder="12" />
+        <Input label="Niveau (facultatif)" value={k.level ?? ''} onChange={(v) => sk({ level: v })} placeholder="-1" />
+      </Fields>
+      <Input label="Accès (facultatif)" value={k.access ?? ''} onChange={(v) => sk({ access: v })} placeholder="Portail à badge, accès 24 h sur 24" />
+      <Input label="Clés, badges ou télécommandes remis (facultatif)" value={f.keys ?? ''} onChange={(v) => set({ keys: v })} placeholder="1 télécommande et 1 clé" />
+      <StepNote>Un garage loué seul n’est pas un logement : pas de diagnostic, pas de DPE, et un contrat dont vous fixez la durée et le préavis.</StepNote>
     </>
   )
 }
@@ -597,10 +637,12 @@ function StepPhotos({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile
 function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
   const r = f.rent ?? {}
   const sr = (patch: NonNullable<PropertyFile['rent']>) => set({ rent: { ...r, ...patch } })
-  const max = r.rentCents ? r.rentCents * (f.furnished ? 2 : 1) : null
+  const parking = isParking(f)
+  const max = r.rentCents ? r.rentCents * (f.furnished && !parking ? 2 : 1) : null
   return (
     <>
       <StepTitle>Quel loyer demandez-vous ?</StepTitle>
+      {parking ? <Callout tone="info">Un garage loué seul relève en principe de la TVA, mais un particulier en est dispensé tant que ses recettes restent sous le seuil de la franchise (37 500 € par an en 2026). Bailio l’indique sur le contrat et les quittances (article 293 B du code général des impôts). Au-delà, parlez-en à votre comptable.</Callout> : null}
       <Fields>
         <Money big label="Loyer hors charges, par mois" cents={r.rentCents ?? null} onChange={(c) => sr({ rentCents: c })} />
         <Money big label="Charges, par mois" cents={r.chargesCents ?? null} onChange={(c) => sr({ chargesCents: c })} hint="0 s’il n’y en a pas." />
@@ -613,13 +655,13 @@ function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
           { value: 'PROVISION', label: 'Une provision, régularisée chaque année' },
           { value: 'FORFAIT', label: 'Un forfait' },
         ]}
-        hint={f.furnished ? 'Provision : le locataire paie une avance, comparée chaque année aux dépenses réelles. Forfait : un montant fixe, sans régularisation.' : 'En location vide, le forfait n’est permis qu’en colocation.'}
+        hint={parking || f.furnished ? 'Provision : le locataire paie une avance, comparée chaque année aux dépenses réelles. Forfait : un montant fixe, sans régularisation.' : 'En location vide, le forfait n’est permis qu’en colocation.'}
       />
       <Fields>
-        <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
+        <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={parking ? 'Libre pour un garage. Bailio propose un mois de loyer, deux au plus.' : max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
         <NumberField label="Jour de paiement du loyer" value={r.paymentDay ?? 5} onChange={(v) => sr({ paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null })} />
       </Fields>
-      <StepNote>Ce loyer sera repris dans l’annonce et dans le bail. Vous pourrez toujours le changer : il sera mis à jour partout.</StepNote>
+      <StepNote>Ce loyer sera repris dans l’annonce et dans {parking ? 'le contrat' : 'le bail'}. Vous pourrez toujours le changer : il sera mis à jour partout.</StepNote>
     </>
   )
 }

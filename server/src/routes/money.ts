@@ -27,6 +27,7 @@ import { toTrash } from '../services/trash.js'
 import { parseIsoDate } from '../domain/lease.js'
 import { emailLetter } from './leases.js'
 import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } from './helpers.js'
+import { isFurnished } from '../domain/rules.js'
 
 /** Dépenses, factures lues automatiquement, tableau « Argent », documents et fichiers du propriétaire. */
 const router = Router()
@@ -339,14 +340,14 @@ router.get('/money/tax', async (req, res) => {
   for (const p of properties) {
     const file = readProperty(p)
     const mine = payments.filter((x) => x.lease.propertyId === p.id)
-    const kinds = new Set(mine.map((x) => leaseKindOf(x.lease) !== 'VIDE'))
+    const kinds = new Set(mine.map((x) => isFurnished(leaseKindOf(x.lease))))
     if (!kinds.size) kinds.add(Boolean(file.furnished))
     for (const furnished of kinds) {
       input.push({
         id: p.id,
         name: propertyName(p),
         furnished,
-        payments: mine.filter((x) => (leaseKindOf(x.lease) !== 'VIDE') === furnished).map((x) => splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents)),
+        payments: mine.filter((x) => (isFurnished(leaseKindOf(x.lease))) === furnished).map((x) => splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents)),
         expenses: kinds.size > 1 && furnished ? [] : expenses.filter((e) => e.propertyId === p.id),
         extra: withLoans(file, year),
       })

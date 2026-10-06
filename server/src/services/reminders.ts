@@ -58,7 +58,7 @@ export function computeReminders(lease: Pick<Lease, 'id' | 'userId' | 'type' | '
 
   // Fin de bail : rappel un mois avant la date limite du congé donné par le bailleur.
   const months = lease.durationMonths
-  const notice = landlordNoticeMonthsFor(kind) ?? 0
+  const notice = landlordNoticeMonthsFor(kind, terms) ?? 0
   for (let k = 1; k < 50; k++) {
     const end = addMonths(start, months * k)
     const due = addMonths(end, -(notice + 1))
