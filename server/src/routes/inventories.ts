@@ -10,6 +10,7 @@ import { requireUser } from '../services/session.js'
 import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readTenant } from '../services/contract.js'
 import { initialInventory, inventoryDataSchema, inventoryProgress, type InventoryData } from '../domain/inventory.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
+import { compareWithEntry, meterComparison } from '../domain/inventoryCompare.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { fileDates, filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.js'
 
@@ -41,6 +42,13 @@ router.post('/leases/:id/inventories', async (req, res) => {
   res.status(201).json({ success: true, data: { id: inv.id } })
 })
 
+/** Sortie : l'état des lieux d'entrée du même bail (signé de préférence), pour comparer. */
+async function entryFor(inv: Inventory): Promise<InventoryData | null> {
+  if (inv.kind !== 'EXIT') return null
+  const entry = await prisma.inventory.findFirst({ where: { leaseId: inv.leaseId, kind: 'ENTRY' }, orderBy: [{ status: 'desc' }, { createdAt: 'desc' }] })
+  return entry ? inventoryDataSchema.parse(entry.data) : null
+}
+
 async function inventoryInput(user: User, inv: Inventory): Promise<Omit<InventoryInput, 'photos'> & { photoIds: string[] }> {
   const lease = await leaseOwned(user.id, inv.leaseId)
   const c = await liveContract(user, lease)
@@ -50,7 +58,7 @@ async function inventoryInput(user: User, inv: Inventory): Promise<Omit<Inventor
     ...(data.rooms ?? []).flatMap((r) => [...(r.photoIds ?? []), ...r.items.flatMap((i) => i.photoIds ?? [])]),
     ...(data.complements ?? []).filter((c) => c.status === 'ACCEPTED').flatMap((c) => c.photoIds),
   ].filter((x): x is string => Boolean(x))
-  return { kind: inv.kind as 'ENTRY' | 'EXIT', data, landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: leaseKindOf(lease) !== 'VIDE', photoIds }
+  return { kind: inv.kind as 'ENTRY' | 'EXIT', data, entry: await entryFor(inv), landlord: c.landlord, tenants: c.tenants, propertyAddress: propertyAddress(c.property), furnished: leaseKindOf(lease) !== 'VIDE', photoIds }
 }
 
 /** PDF de l'état des lieux, photos en annexe avec leur date d'ajout. */
@@ -66,6 +74,7 @@ router.get('/inventories/:id', async (req, res) => {
   const lease = await leaseOwned(user.id, inv.leaseId)
   const c = await liveContract(user, lease)
   const data = inventoryDataSchema.parse(inv.data)
+  const entry = await entryFor(inv)
   res.json({
     success: true,
     data: {
@@ -73,6 +82,8 @@ router.get('/inventories/:id', async (req, res) => {
       kind: inv.kind,
       status: inv.status,
       data,
+      // Sortie : ce qui avait été relevé à l'entrée, élément par élément (clé « pièce/élément »), et les compteurs.
+      comparison: inv.kind === 'EXIT' ? { hasEntry: Boolean(entry), items: compareWithEntry(entry, data), meters: meterComparison(entry, data) } : null,
       progress: inventoryProgress(data),
       lease: { id: lease.id, startDate: iso(lease.startDate), furnished: leaseKindOf(lease) !== 'VIDE' },
       property: { id: lease.property.id, name: propertyName(lease.property), address: propertyAddress(c.property) },

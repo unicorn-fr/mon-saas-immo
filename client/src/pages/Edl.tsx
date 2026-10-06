@@ -7,7 +7,7 @@ import { display } from '../components/ui'
 import { api } from '../lib/api'
 import { openDoc } from '../lib/docs'
 import { dateFr } from '../lib/format'
-import { STATES, type InventoryData, type InventoryView, type ItemState } from '../lib/space'
+import { STATES, inventoryItemKey, stateChange, type InventoryData, type InventoryView, type ItemState } from '../lib/space'
 
 /**
  * État des lieux sur téléphone (6 écrans) : départ, compteurs, pièces, une pièce, clés, signatures.
@@ -165,6 +165,7 @@ function Flow({ inv }: { inv: InventoryView }) {
                   <span style={{ fontSize: 15, fontWeight: 700 }}>{m.label}</span>
                   {m.notApplicable ? <Pill tone="muted">Sans objet</Pill> : m.photoId ? <Pill tone="green">Photo prise</Pill> : null}
                 </div>
+                {exit && inv.comparison?.meters[m.key]?.entryIndex ? <span style={{ fontSize: 14, color: BAI.inkMid }}>À l’entrée : {inv.comparison.meters[m.key].entryIndex}</span> : null}
                 {!m.notApplicable ? (
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
                     <Input label="Index relevé" value={m.index ?? ''} inputMode="decimal" onChange={(v) => update((d) => ({ ...d, meters: (d.meters ?? []).map((x, j) => (j === i ? { ...x, index: v } : x)) }))} />
@@ -235,6 +236,8 @@ function Flow({ inv }: { inv: InventoryView }) {
             key={screen.i}
             room={rooms[screen.i]}
             previous={exit}
+            entry={(label) => inv.comparison?.items[inventoryItemKey(rooms[screen.i].name, label)] ?? null}
+            hasEntry={Boolean(inv.comparison?.hasEntry)}
             onChange={(r) => update((d) => ({ ...d, rooms: (d.rooms ?? []).map((x, j) => (j === screen.i ? r : x)) }))}
             onNext={() => {
               update((d) => ({ ...d, rooms: (d.rooms ?? []).map((x, j) => (j === screen.i ? { ...x, done: true } : x)) }))
@@ -379,7 +382,9 @@ function StateChips({ value, onChange }: { value: ItemState | null; onChange: (v
 
 type Room = NonNullable<InventoryData['rooms']>[number]
 
-function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: { room: Room; onChange: (r: Room) => void; onNext: () => void; onRemove: () => void; nextLabel: string; previous: boolean }) {
+type EntryItem = NonNullable<InventoryView['comparison']>['items'][string]
+
+function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous, entry, hasEntry }: { room: Room; onChange: (r: Room) => void; onNext: () => void; onRemove: () => void; nextLabel: string; previous: boolean; entry: (label: string) => EntryItem | null; hasEntry: boolean }) {
   const [notes, setNotes] = useState<Record<number, boolean>>({})
   const setItem = (i: number, patch: Partial<Room['items'][number]>) => onChange({ ...room, items: room.items.map((x, j) => (j === i ? { ...x, ...patch } : x)) })
   const allSet = room.items.every((it) => it.state)
@@ -392,7 +397,11 @@ function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: {
         </Btn>
       }
     >
-      {previous ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Les états indiqués sont ceux relevés à l’entrée : corrigez ce qui a changé.</span> : null}
+      {previous ? (
+        <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.45 }}>
+          {hasEntry ? 'Sous chaque élément : son état à l’entrée. Indiquez l’état d’aujourd’hui ; Bailio signale ce qui a changé.' : 'Aucun état des lieux d’entrée dans Bailio : comparez avec votre exemplaire papier.'}
+        </span>
+      ) : null}
       <Box gap={10}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
           <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -415,6 +424,7 @@ function RoomScreen({ room, onChange, onNext, onRemove, nextLabel, previous }: {
             <span style={{ fontSize: 15, fontWeight: 700 }}>{it.label}</span>
             <PhotoButton label={`Photo : ${it.label}`} count={it.photoIds?.length ?? 0} onPhotos={(ids) => setItem(i, { photoIds: [...(it.photoIds ?? []), ...ids].slice(0, 20) })} />
           </div>
+          {previous && hasEntry ? <EntryLine e={entry(it.label)} exitState={it.state ?? null} /> : null}
           <StateChips value={it.state ?? null} onChange={(v) => setItem(i, { state: v })} />
           {it.photoIds?.length ? (
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -527,5 +537,29 @@ function Complements({ invId, items, onDecided }: { invId: string; items: Comple
         </span>
       ))}
     </>
+  )
+}
+
+/** Sortie : état et photos relevés à l'entrée, puis l'évolution dès que l'état du jour est choisi. */
+function EntryLine({ e, exitState }: { e: EntryItem | null; exitState: ItemState | null }) {
+  if (!e?.entryState) return <span style={{ fontSize: 13, color: BAI.inkSoft }}>Pas relevé à l’entrée.</span>
+  const change = stateChange(e.entryState, exitState)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 14, color: BAI.inkMid }}>
+          À l’entrée : <strong>{e.entryState}</strong>
+          {e.entryNote ? `, ${e.entryNote}` : ''}
+        </span>
+        {change === 'WORSE' ? <Pill tone="caramel">À regarder</Pill> : change === 'SAME' ? <Pill tone="green">Identique</Pill> : change === 'BETTER' ? <Pill tone="green">Meilleur</Pill> : null}
+      </div>
+      {e.entryPhotoIds.length ? (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {e.entryPhotoIds.slice(0, 4).map((p, n) => (
+            <AuthImage key={p} id={p} alt={`Photo ${n + 1} de l’entrée`} size={48} />
+          ))}
+        </div>
+      ) : null}
+    </div>
   )
 }

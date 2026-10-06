@@ -370,6 +370,24 @@ export interface InventoryView {
   property: { id: string; name: string; address: string }
   landlordName: string
   tenantName: string
+  /** Sortie : ce qui avait été relevé à l'entrée (server/src/domain/inventoryCompare.ts). */
+  comparison: {
+    hasEntry: boolean
+    items: Record<string, { entryState: ItemState | null; entryNote: string | null; entryPhotoIds: string[]; change: 'SAME' | 'WORSE' | 'BETTER' | 'NEW' | 'UNKNOWN' }>
+    meters: Record<string, { entryIndex: string | null; consumption: number | null }>
+  } | null
+}
+
+/** Même clé que le serveur (`itemKey`) : pièce et élément, sans accents ni majuscules. */
+const normKey = (s: string) => s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
+export const inventoryItemKey = (room: string, label: string) => `${normKey(room)}/${normKey(label)}`
+
+/** Évolution affichée pendant la sortie, à partir de l'état choisi (même ordre que STATES). */
+export function stateChange(entryState: ItemState | null | undefined, exitState: ItemState | null | undefined): 'SAME' | 'WORSE' | 'BETTER' | null {
+  if (!entryState || !exitState) return null
+  const a = STATES.indexOf(entryState)
+  const b = STATES.indexOf(exitState)
+  return b > a ? 'WORSE' : b < a ? 'BETTER' : 'SAME'
 }
 
 export interface MissingItem {
