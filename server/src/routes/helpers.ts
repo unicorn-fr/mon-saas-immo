@@ -9,8 +9,10 @@ export const iso = (d: Date | null | undefined) => (d ? d.toISOString().slice(0,
 
 export function sendPdf(res: Response, pdf: Buffer, filename: string, download: boolean) {
   res.setHeader('Content-Type', 'application/pdf')
-  res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${filename}"`)
+  // Nom de fichier encodé (comme sendFile) : aucun caractère ne peut casser l'en-tête ni en injecter un autre.
+  res.setHeader('Content-Disposition', `${download ? 'attachment' : 'inline'}; filename="${encodeURIComponent(filename)}"`)
   res.setHeader('Cache-Control', 'private, no-store')
+  res.setHeader('X-Content-Type-Options', 'nosniff')
   res.send(pdf)
 }
 
