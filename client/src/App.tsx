@@ -65,6 +65,7 @@ const Corbeille = page('Corbeille')
 const Structures = page('Structures')
 const StructureFiche = page('StructureFiche')
 const Emprunt = page('Emprunt')
+const Degradations = page('Degradations')
 const AccesPartages = page('AccesPartages')
 const Partage = page('Partage')
 const Invitation = page('Invitation')
@@ -212,6 +213,7 @@ function Pages() {
               <Route path="/espace/compte/profil" element={<RequireAuth><FicheBailleur /></RequireAuth>} />
               <Route path="/espace/logements/:id/fiche" element={<RequireAuth><FicheLogement /></RequireAuth>} />
               <Route path="/espace/logements/:id/emprunt" element={<RequireAuth><Emprunt /></RequireAuth>} />
+              <Route path="/espace/baux/:id/degradations" element={<RequireAuth><Degradations /></RequireAuth>} />
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />
               <Route path="/espace/logements/:id/candidats" element={<RequireAuth><Candidats /></RequireAuth>} />
               <Route path="/espace/argent/declaration" element={<RequireAuth><Declaration /></RequireAuth>} />

@@ -11,6 +11,10 @@ import { contractFor, liveContract, leaseKindOf, leaseOwned, propertyName, readT
 import { initialInventory, inventoryDataSchema, inventoryProgress, type InventoryData } from '../domain/inventory.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { compareWithEntry, meterComparison } from '../domain/inventoryCompare.js'
+import { damageDecisionSchema, lineMissing } from '../domain/damage.js'
+import { damageReviewFor, savedDecisions } from '../services/damage.js'
+import { renderDamagePdf } from '../pdf/damage.js'
+import { patchLeaseData } from './leases.js'
 import { landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { fileDates, filesAsDataUrls, iso, saveGeneratedDocument, sendPdf } from './helpers.js'
 
@@ -176,6 +180,64 @@ router.post('/inventories/:id/complements/:cid', async (req, res) => {
     for (const to of tenantsTo) await sendEmail({ to, subject: 'Votre demande sur l’état des lieux', ...mail, replyTo: user.email }).catch((e) => console.error('Envoi impossible', e))
   }
   res.json({ success: true, data: { status: decided.status, notified: tenantsTo } })
+})
+
+// ── Récapitulatif des dégradations (après l'état des lieux de sortie signé) ─────
+
+router.get('/leases/:id/damages', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const review = await damageReviewFor(lease)
+  const c = await liveContract(user, lease)
+  res.json({
+    success: true,
+    data: review
+      ? {
+          ...review,
+          exitDate: review.exitDate ? iso(review.exitDate) : null,
+          lines: review.lines.map((l) => ({ ...l, missing: lineMissing(l) })),
+          totalCents: review.lines.reduce((a, l) => a + l.retainedCents, 0),
+          complete: review.lines.every((l) => !lineMissing(l)),
+          depositCents: lease.depositCents,
+          tenantName: c.tenants.map((t) => personName(t, false)).join(' et '),
+          propertyName: propertyName(lease.property),
+        }
+      : null,
+  })
+})
+
+router.put('/leases/:id/damages', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const { decisions } = z.object({ decisions: z.array(damageDecisionSchema).max(200) }).parse(req.body)
+  if (!(await damageReviewFor(lease))) throw new HttpError(400, 'Signez d’abord l’état des lieux de sortie.')
+  // Fusion avec les décisions déjà enregistrées : une ligne envoyée remplace la précédente.
+  const merged = new Map(savedDecisions(lease).map((d) => [d.key, d]))
+  for (const d of decisions) merged.set(d.key, d)
+  await patchLeaseData(lease.id, () => ({ damageReview: { decisions: [...merged.values()], updatedAt: new Date().toISOString() } }))
+  const fresh = await leaseOwned(user.id, lease.id)
+  const review = await damageReviewFor(fresh)
+  res.json({ success: true, data: { totalCents: review?.lines.reduce((a, l) => a + l.retainedCents, 0) ?? 0 } })
+})
+
+router.get('/leases/:id/damages.pdf', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const review = await damageReviewFor(lease)
+  if (!review) throw new HttpError(400, 'Signez d’abord l’état des lieux de sortie.')
+  const c = await liveContract(user, lease)
+  const ids = [...review.lines.flatMap((l) => l.exitPhotoIds), ...Object.values(review.entryPhotos).flat()]
+  const pdf = await renderDamagePdf({
+    landlord: c.landlord,
+    tenants: c.tenants,
+    propertyAddress: propertyAddress(c.property),
+    exitDate: review.exitDate ? iso(review.exitDate) : null,
+    lines: review.lines,
+    entryPhotos: review.entryPhotos,
+    photos: await filesAsDataUrls(user.id, ids),
+    photoDates: await fileDates(user.id, ids),
+  })
+  sendPdf(res, pdf, 'recapitulatif-degradations.pdf', req.query.download === '1')
 })
 
 /**

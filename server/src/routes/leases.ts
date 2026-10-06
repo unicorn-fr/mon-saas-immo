@@ -46,6 +46,8 @@ import { renderLetterPdf } from '../pdf/letter.js'
 import { annexesLabel, landlordAddress, landlordName, personName, propertyAddress } from '../pdf/labels.js'
 import { fileSlug, iso, mergeFile, saveGeneratedDocument, sendPdf } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
+import { damageReviewFor } from '../services/damage.js'
+import { damageDeductions, lineMissing } from '../domain/damage.js'
 
 /**
  * Baux de l'espace : préparation (conditions reprises des fiches, règles appliquées), signature,
@@ -831,8 +833,16 @@ router.get('/leases/:id/letters/defaults/:type', async (req, res) => {
   } else if (type === 'DEPOSIT_RETURN') {
     const keys = facts.keysDate ?? facts.tenantNotice?.endDate ?? iso(lease.endDate)
     const u = await unpaid(lease)
-    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: true, deductions: [], unpaidCents: u.reduce((a, x) => a + x.missing, 0), chargesBalanceCents: 0, heldCents: 0, writtenOn: iso(new Date()), monthlyRentCents: lease.rentCents }
-    if (u.length) note = `Loyers non réglés repris automatiquement : ${u.map((x) => monthLabel(x.period)).join(', ')}.`
+    // Retenues reprises du récapitulatif des dégradations (état des lieux de sortie comparé à l'entrée).
+    const review = await damageReviewFor(lease)
+    const deductions = review ? damageDeductions(review.lines) : []
+    data = { type, depositCents: lease.depositCents, keysDate: keys, conform: deductions.length === 0, deductions, unpaidCents: u.reduce((a, x) => a + x.missing, 0), chargesBalanceCents: 0, heldCents: 0, writtenOn: iso(new Date()), monthlyRentCents: lease.rentCents }
+    const notes = [
+      u.length ? `Loyers non réglés repris automatiquement : ${u.map((x) => monthLabel(x.period)).join(', ')}.` : null,
+      deductions.length ? `Retenues reprises du récapitulatif des dégradations : ${deductions.length}.` : null,
+      review && review.lines.some((l) => lineMissing(l)) ? 'Le récapitulatif des dégradations n’est pas terminé : certaines retenues peuvent manquer.' : null,
+    ].filter(Boolean)
+    if (notes.length) note = notes.join(' ')
   } else if (type === 'GUARANTOR_CALL') {
     const u = await unpaid(lease)
     data = { type, amountCents: u.reduce((a, x) => a + x.missing, 0), periods: u.map((x) => monthLabel(x.period)), delayDays: 15, commandDate: null }

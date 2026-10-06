@@ -231,6 +231,8 @@ export interface Task {
   expenseId?: string
   inventoryId?: string
   interventionId?: string
+  /** Dépôt de garantie : éléments abîmés encore à décider. */
+  damages?: number
   amountCents?: number
   period?: string
   step?: { key: string; label: string; to: string; optional: boolean }

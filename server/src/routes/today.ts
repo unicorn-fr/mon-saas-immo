@@ -9,7 +9,7 @@ import { ensureReminders } from '../services/reminders.js'
 import { upgradeLegacyLeases } from '../services/upgrade.js'
 import { leaseKindOf, propertyName, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { formatEuros, monthYearFr } from '../domain/lease.js'
-import { revisedRent } from '../domain/letters.js'
+import { depositDeadline, revisedRent } from '../domain/letters.js'
 import { landlordNoticeMonthsFor, rentRevisionAllowed } from '../domain/rules.js'
 import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
@@ -17,6 +17,8 @@ import { publicUser } from './auth.js'
 import { upcomingInterventions } from './contacts.js'
 import { readIssue } from '../domain/issues.js'
 import { inventoryDataSchema } from '../domain/inventory.js'
+import { damageReviewFor } from '../services/damage.js'
+import { lineMissing } from '../domain/damage.js'
 import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
@@ -47,6 +49,8 @@ export interface Task {
   expenseId?: string
   inventoryId?: string
   interventionId?: string
+  /** Dépôt de garantie : éléments abîmés encore à décider (usure normale ou dégradation). */
+  damages?: number
   amountCents?: number
   period?: string
   /** Étape de la mise en location (type STEP) : bouton vers la bonne page, et « je n'en ai pas besoin » si facultative. */
@@ -154,9 +158,26 @@ router.get('/today', async (req, res) => {
     // Clés rendues : le solde de tout compte et la restitution du dépôt, avec la date limite.
     const keys = facts.keysDate ?? (exit?.status === 'SIGNED' && exit.date ? iso(exit.date) : null)
     if (keys && !lastLetter(l.id, 'DEPOSIT_RETURN')) {
-      const limit = new Date(`${keys}T00:00:00Z`)
-      limit.setUTCMonth(limit.getUTCMonth() + 1)
-      tasks.push({ id: `settle-${l.id}`, type: 'SETTLEMENT', tag: 'Dépôt de garantie', tone: limit < today ? 'error' : 'caramel', place, title: `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`, text: limit < today ? 'La date limite est passée : la somme à rendre est majorée de 10 % du loyer mensuel par mois de retard commencé (article 22). Le solde de tout compte la calcule.' : 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.', leaseId: l.id })
+      // Un mois si la sortie est conforme à l'entrée, deux mois sinon (art. 22) ; dégradations encore à décider.
+      const review = await damageReviewFor(l)
+      const conform = !review || !review.hasEntry || review.lines.length === 0
+      const limit = depositDeadline(keys, conform)
+      const damages = review ? review.lines.filter((x) => lineMissing(x)).length : 0
+      tasks.push({
+        id: `settle-${l.id}`,
+        type: 'SETTLEMENT',
+        tag: 'Dépôt de garantie',
+        tone: limit < today ? 'error' : 'caramel',
+        place,
+        title: damages ? `Faire le point sur ${damages > 1 ? `les ${damages} éléments abîmés` : 'l’élément abîmé'} avant de rendre le dépôt de ${who}` : `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`,
+        text: limit < today
+          ? 'La date limite est passée : la somme à rendre est majorée de 10 % du loyer mensuel par mois de retard commencé (article 22). Le solde de tout compte la calcule.'
+          : damages
+            ? `Usure normale ou dégradation : vous décidez, élément par élément. Les retenues passent ensuite dans le solde de tout compte, à envoyer avant le ${short(limit)}.`
+            : 'Dépôt de garantie, retenues justifiées, loyers restant dus et charges : le document est déjà rempli.',
+        leaseId: l.id,
+        damages,
+      })
     }
     // Chaudière individuelle : attestation d'entretien chaque année.
     const heating = (l.property.data as { heating?: { mode?: string; energy?: string; lastMaintenance?: string } } | null)?.heating

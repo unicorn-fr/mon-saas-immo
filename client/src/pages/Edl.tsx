@@ -327,7 +327,12 @@ function Flow({ inv }: { inv: InventoryView }) {
             }
           >
             <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>L’état des lieux {exit ? 'de sortie' : 'd’entrée'} de {inv.property.name} est enregistré dans vos documents, avec les photos.{exit ? ' Il ne peut plus être modifié.' : ' Votre locataire peut demander à le compléter dans les 10 jours : vous déciderez.'}</span>
-            {exit ? <Callout tone="tip">Prochaine étape : restituer le dépôt de garantie, dans un mois si tout est conforme, deux mois sinon.</Callout> : null}
+            {exit ? <Callout tone="tip">Prochaine étape : faire le point sur ce qui est plus abîmé qu’à l’entrée, puis restituer le dépôt de garantie, dans un mois si tout est conforme, deux mois sinon.</Callout> : null}
+            {exit ? (
+              <Btn size="lg" full onClick={() => navigate(`/espace/baux/${inv.lease.id}/degradations`)}>
+                Faire le point sur les dégradations
+              </Btn>
+            ) : null}
             {!exit ? <Complements invId={inv.id} items={data.complements ?? []} onDecided={(c) => setData((d) => ({ ...d, complements: (d.complements ?? []).map((x) => (x.id === c.id ? c : x)) }))} /> : null}
           </Page>
         ) : null}

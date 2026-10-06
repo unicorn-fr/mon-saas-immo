@@ -204,7 +204,12 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
       ]
       break
     case 'SETTLEMENT':
-      actions = [{ label: 'Préparer le solde de tout compte', onClick: () => letters('DEPOSIT_RETURN') }]
+      actions = t.damages
+        ? [
+            { label: 'Faire le point sur les dégradations', onClick: () => navigate(`/espace/baux/${t.leaseId}/degradations`) },
+            { label: 'Préparer le solde de tout compte', variant: 'ghost', onClick: () => letters('DEPOSIT_RETURN') },
+          ]
+        : [{ label: 'Préparer le solde de tout compte', onClick: () => letters('DEPOSIT_RETURN') }]
       break
     case 'BOILER':
       actions = [
