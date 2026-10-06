@@ -14,3 +14,14 @@ test('historique des loyers : le loyer d’un mois est celui en vigueur à son �
   // Une nouvelle révision à la même date remplace la précédente
   assert.equal(withStep(h, { from: '2026-10-15', rentCents: 52500, chargesCents: 5000, reason: 'REVISION' }).length, 2)
 })
+
+test('loyers en retard : mois échus non payés, montant en vigueur à l’échéance', async () => {
+  const { unpaidPeriods } = await import('./rentHistory.js')
+  const lease = { data: { rentHistory: [{ from: '2026-07-01', rentCents: 50000, chargesCents: 5000, reason: 'START' as const }, { from: '2026-09-01', rentCents: 51000, chargesCents: 5000, reason: 'REVISION' as const }] }, startDate: new Date('2026-07-01T00:00:00Z'), rentCents: 51000, chargesCents: 5000, paymentDay: 5 }
+  const now = new Date('2026-10-06T12:00:00Z')
+  // Juillet payé, août partiel, septembre et octobre (échéance passée le 5) non payés
+  const out = unpaidPeriods(lease, [{ period: '2026-07', amountCents: 55000 }, { period: '2026-08', amountCents: 30000 }], now)
+  assert.deepEqual(out, [{ period: '2026-08', missing: 25000 }, { period: '2026-09', missing: 56000 }, { period: '2026-10', missing: 56000 }])
+  // Le 4 octobre, l'échéance d'octobre n'est pas passée
+  assert.equal(unpaidPeriods(lease, [], new Date('2026-10-04T12:00:00Z')).length, 3)
+})

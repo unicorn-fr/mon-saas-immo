@@ -41,3 +41,21 @@ export function amountsForPeriod(lease: LeaseLike, period: string): { rentCents:
 export function withStep(history: RentStep[], step: RentStep): RentStep[] {
   return [...history.filter((s) => s.from !== step.from), step].sort((a, b) => a.from.localeCompare(b.from))
 }
+
+/**
+ * Loyers attendus et non (entièrement) reçus sur les 12 derniers mois et le mois en cours, échéance passée :
+ * le montant de chaque mois est celui en vigueur à son échéance.
+ */
+export function unpaidPeriods(lease: LeaseLike, payments: Array<{ period: string; amountCents: number }>, now = new Date()): Array<{ period: string; missing: number }> {
+  const out: Array<{ period: string; missing: number }> = []
+  for (let i = 12; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, lease.paymentDay))
+    if (d < lease.startDate || d > now) continue
+    const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+    const paid = payments.find((p) => p.period === period)?.amountCents ?? 0
+    const a = amountsForPeriod(lease, period)
+    const due = a.rentCents + a.chargesCents
+    if (paid < due) out.push({ period, missing: due - paid })
+  }
+  return out
+}

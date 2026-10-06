@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { rememberRent, rentPatch } from '../services/rent.js'
-import { amountsAt, amountsForPeriod, historyOf, withStep } from '../domain/rentHistory.js'
+import { amountsAt, amountsForPeriod, historyOf, unpaidPeriods, withStep } from '../domain/rentHistory.js'
 import { z } from 'zod'
 import type { Lease, Prisma, Property, User } from '@prisma/client'
 import { prisma } from '../db.js'
@@ -753,19 +753,7 @@ async function rememberRecipient(userId: string, lease: Lease, letter: LetterInp
 
 /** Mois échus non payés (ou payés partiellement), du plus ancien au plus récent. */
 async function unpaid(lease: Lease) {
-  const payments = await prisma.payment.findMany({ where: { leaseId: lease.id } })
-  const out: { period: string; missing: number }[] = []
-  const now = new Date()
-  for (let i = 12; i >= 0; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, lease.paymentDay))
-    if (d < lease.startDate || d > now) continue
-    const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-    const paid = payments.find((p) => p.period === period)?.amountCents ?? 0
-    const a = amountsForPeriod(lease, period)
-    const due = a.rentCents + a.chargesCents
-    if (paid < due) out.push({ period, missing: due - paid })
-  }
-  return out
+  return unpaidPeriods(lease, await prisma.payment.findMany({ where: { leaseId: lease.id } }))
 }
 
 const monthLabel = (period: string) => {

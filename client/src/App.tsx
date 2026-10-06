@@ -67,6 +67,7 @@ const StructureFiche = page('StructureFiche')
 const Emprunt = page('Emprunt')
 const Degradations = page('Degradations')
 const Aides = page('Aides')
+const Patrimoine = page('Patrimoine')
 const AccesPartages = page('AccesPartages')
 const Partage = page('Partage')
 const Invitation = page('Invitation')
@@ -216,6 +217,7 @@ function Pages() {
               <Route path="/espace/logements/:id/emprunt" element={<RequireAuth><Emprunt /></RequireAuth>} />
               <Route path="/espace/baux/:id/degradations" element={<RequireAuth><Degradations /></RequireAuth>} />
               <Route path="/espace/logements/:id/aides" element={<RequireAuth><Aides /></RequireAuth>} />
+              <Route path="/espace/patrimoine" element={<RequireAuth><Patrimoine /></RequireAuth>} />
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />
               <Route path="/espace/logements/:id/candidats" element={<RequireAuth><Candidats /></RequireAuth>} />
               <Route path="/espace/argent/declaration" element={<RequireAuth><Declaration /></RequireAuth>} />
