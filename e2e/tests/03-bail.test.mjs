@@ -33,6 +33,22 @@ test('« Il manque… » : chaque lien ouvre la bonne étape de la bonne fiche',
   }
 })
 
+test('fiche du logement : le curseur ne saute pas pendant la saisie à l’arrivée sur une étape', async () => {
+  const p = await api('/properties', { method: 'POST', token: account.token, body: { address: '5 place de la Comédie, 34000 Montpellier', habitat: 'COLLECTIVE' } })
+  const ctx = await signedInContext(browser, account.token)
+  const page = await ctx.newPage()
+  const errors = []
+  watch(page, errors)
+  // Frappe dès que le champ apparaît, plus longue que le placement automatique du curseur (0,45 s)
+  await page.goto(`${BASE}/espace/logements/${p.id}/fiche#equipments`, { waitUntil: 'commit' })
+  const keys = page.getByLabel('Clés et moyens d’accès remis')
+  await keys.click()
+  await keys.pressSequentially('3 clés, 1 badge', { delay: 80 })
+  assert.equal(await keys.inputValue(), '3 clés, 1 badge')
+  await ctx.close()
+  assert.deepEqual(errors, [])
+})
+
 test('fiche du logement : nombre de détecteurs de fumée et clés', async () => {
   const p = await api('/properties', { method: 'POST', token: account.token, body: { address: '3 place de la Comédie, 34000 Montpellier', habitat: 'COLLECTIVE' } })
   const ctx = await signedInContext(browser, account.token)

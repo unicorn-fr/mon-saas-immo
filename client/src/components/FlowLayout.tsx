@@ -222,6 +222,9 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
     setOpen(true)
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     const t = window.setTimeout(() => {
+      // Déjà en train de saisir : le curseur ne bouge pas (sinon la frappe partirait dans un autre champ).
+      const active = document.activeElement as HTMLElement | null
+      if (active && active !== document.body && active.matches('input, select, textarea, [contenteditable="true"]')) return
       // Champ vide, ou groupe de boutons à choix dont aucun n'est sélectionné, dans l'ordre de la page.
       const fields = ref.current?.querySelectorAll<HTMLElement>('input, select, textarea, button[aria-pressed]') ?? []
       const empty = [...fields].find((f) => {
