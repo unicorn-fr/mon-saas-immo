@@ -11,12 +11,23 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 if [[ "$SRC" == *.enc ]]; then
   if [ ! -f "$SRC" ]; then
-    export RCLONE_CONFIG_OFFSITE_TYPE=s3 RCLONE_CONFIG_OFFSITE_PROVIDER=Other
-    export RCLONE_CONFIG_OFFSITE_ENDPOINT="$(env_value BACKUP_S3_ENDPOINT)"
-    export RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID="$(env_value BACKUP_S3_ACCESS_KEY)"
-    export RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY="$(env_value BACKUP_S3_SECRET_KEY)"
-    export RCLONE_CONFIG_OFFSITE_REGION="$(env_value BACKUP_S3_REGION)"
-    rclone copyto "offsite:$(env_value BACKUP_S3_BUCKET)/bailio/$(basename "$SRC")" "$TMP/backup.enc"
+    # Même choix que backup.sh : kDrive (WebDAV) en priorité, sinon S3.
+    KDRIVE_URL="$(env_value BACKUP_KDRIVE_URL)"
+    if [ -n "$KDRIVE_URL" ]; then
+      export RCLONE_CONFIG_OFFSITE_TYPE=webdav RCLONE_CONFIG_OFFSITE_VENDOR=other
+      export RCLONE_CONFIG_OFFSITE_URL="$KDRIVE_URL"
+      export RCLONE_CONFIG_OFFSITE_USER="$(env_value BACKUP_KDRIVE_USER)"
+      RCLONE_CONFIG_OFFSITE_PASS="$(RCLONE_CONFIG_OFFSITE_PASS= rclone obscure "$(env_value BACKUP_KDRIVE_PASS)")"
+      export RCLONE_CONFIG_OFFSITE_PASS
+      rclone copyto "offsite:bailio/$(basename "$SRC")" "$TMP/backup.enc"
+    else
+      export RCLONE_CONFIG_OFFSITE_TYPE=s3 RCLONE_CONFIG_OFFSITE_PROVIDER=Other
+      export RCLONE_CONFIG_OFFSITE_ENDPOINT="$(env_value BACKUP_S3_ENDPOINT)"
+      export RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID="$(env_value BACKUP_S3_ACCESS_KEY)"
+      export RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY="$(env_value BACKUP_S3_SECRET_KEY)"
+      export RCLONE_CONFIG_OFFSITE_REGION="$(env_value BACKUP_S3_REGION)"
+      rclone copyto "offsite:$(env_value BACKUP_S3_BUCKET)/bailio/$(basename "$SRC")" "$TMP/backup.enc"
+    fi
     SRC="$TMP/backup.enc"
   fi
   BACKUP_PASSPHRASE="$(env_value BACKUP_PASSPHRASE)" openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:BACKUP_PASSPHRASE -in "$SRC" -out "$TMP/backup.sql.gz"

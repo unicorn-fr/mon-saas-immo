@@ -90,15 +90,27 @@ de la base chaque nuit (14 jours conservés).
 ## Sauvegarde hors du serveur (à activer)
 
 Chaque nuit, `backup.sh` garde une copie sur le serveur (14 jours). Pour qu'une panne du serveur ne fasse rien
-perdre, il envoie aussi une copie **chiffrée** (AES-256) vers un stockage externe compatible S3, gardée 30 jours.
+perdre, il envoie aussi une copie **chiffrée** (AES-256) hors du serveur, gardée 30 jours. Deux choix de stockage :
+kDrive Infomaniak (WebDAV), le plus simple si vous en avez déjà un, ou un stockage compatible S3.
 
-1. Créez un stockage S3 : par exemple Manager Infomaniak → **Swiss Backup** → espace « S3 compatible »
-   (ou Infomaniak Object Storage, Scaleway, OVH). Notez l'adresse (endpoint), le nom du compartiment (bucket),
-   la clé d'accès et la clé secrète.
-2. Générez une phrase secrète : `openssl rand -base64 32`. **Notez-la ailleurs que sur le serveur**
-   (gestionnaire de mots de passe) : sans elle, impossible de restaurer.
-3. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et remplissez `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION`
-   (si demandée), `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, `BACKUP_PASSPHRASE`.
-4. Testez tout de suite : `sudo /opt/bailio/deploy/vps/backup.sh` doit afficher « copie hors serveur OK ».
+Générez d'abord une phrase secrète : `openssl rand -base64 32`. **Notez-la ailleurs que sur le serveur**
+(gestionnaire de mots de passe) : sans elle, impossible de restaurer. Elle va dans `BACKUP_PASSPHRASE`.
 
-Journal : `/var/log/bailio-backup.log`.
+**Choix A — kDrive Infomaniak (WebDAV)**
+
+1. Dans le Manager Infomaniak → **Mon profil → Sécurité → Mots de passe d'application** : créez un mot de passe
+   d'application dédié (« sauvegarde bailio »). N'utilisez **jamais** le mot de passe principal du compte.
+2. Repérez l'ID de votre kDrive (le numéro dans l'URL de kDrive). L'adresse WebDAV est alors
+   `https://<ID>.connect.kdrive.infomaniak.com/<ID>`.
+3. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et remplissez `BACKUP_KDRIVE_URL`, `BACKUP_KDRIVE_USER`
+   (votre identifiant Infomaniak), `BACKUP_KDRIVE_PASS` (le mot de passe d'application) et `BACKUP_PASSPHRASE`.
+
+**Choix B — stockage compatible S3** (Scaleway, OVH, Swiss Object Storage…)
+
+1. Créez le stockage et notez l'adresse (endpoint), le compartiment (bucket), la clé d'accès et la clé secrète.
+2. Sur le serveur : remplissez `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION` (si demandée), `BACKUP_S3_BUCKET`,
+   `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY` et `BACKUP_PASSPHRASE`. (Utilisé seulement si les variables
+   kDrive sont vides.)
+
+Dans les deux cas, testez tout de suite : `sudo /opt/bailio/deploy/vps/backup.sh` doit afficher
+« copie hors serveur OK ». Journal : `/var/log/bailio-backup.log`.
