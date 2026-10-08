@@ -16,7 +16,8 @@ find "$DIR" -name 'bailio-*.sql.gz' -mtime +14 -delete
 echo "$(date '+%F %T') sauvegarde locale OK : $FILE ($(du -h "$FILE" | cut -f1))"
 
 # Lecture d'une valeur de .env (sans exécuter le fichier).
-env_value() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
+# `|| true` : une clé absente ne doit jamais faire échouer le script sous `set -e` (sinon arrêt silencieux).
+env_value() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' || true; }
 PASSPHRASE="$(env_value BACKUP_PASSPHRASE)"
 
 # kDrive (WebDAV) en priorité, sinon S3 compatible. On choisit selon ce qui est renseigné dans .env.

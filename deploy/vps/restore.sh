@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 [ $# -eq 1 ] || { echo "Usage : $0 <fichier .sql.gz ou .sql.gz.enc>"; exit 1; }
-env_value() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
+env_value() { grep -E "^$1=" .env 2>/dev/null | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' || true; }
 SRC="$1"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
