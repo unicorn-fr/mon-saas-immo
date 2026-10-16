@@ -4,9 +4,8 @@ import { HttpError } from './http.js'
 
 /**
  * Adresse IP du visiteur.
- * Le site bailio.fr (Vercel) relaie /api vers ce serveur : Vercel remplace alors X-Forwarded-For par l'IP
- * du visiteur, que Caddy recopie dans X-Original-Forwarded-For (voir deploy/vps/Caddyfile) avant de mettre
- * sa propre valeur. Sans cet en-tête, tous les visiteurs de bailio.fr partageraient l'IP de Vercel.
+ * Caddy, seul point d'entrée des visiteurs, écrit leur IP TCP réelle dans X-Original-Forwarded-For
+ * (voir deploy/vps/Caddyfile) et écrase toute valeur envoyée par le navigateur.
  * Un en-tête inventé ne permet que de contourner la limite par IP : les envois d'emails ont en plus une
  * limite par adresse et une limite globale (ci-dessous).
  */

@@ -1,23 +1,33 @@
 # Bailio sur un VPS (Infomaniak)
 
 Un seul serveur, en Suisse, fait tourner :
-- **l'API** : bail, quittances, rappels, et la lecture des baux importés (Tesseract, sur le serveur) ;
+- **le site** (https://bailio.fr) : fichiers statiques servis par Caddy, qui relaie `/api` vers l'API ;
+- **l'API** : bail, quittances, rappels, et la lecture des baux importés (Tesseract, sur le serveur), aussi joignable sur https://api.bailio.eu ;
 - **PostgreSQL** : jamais exposée sur internet ;
-- **Caddy** : le HTTPS (certificats automatiques) ; il peut aussi servir le site lui-même (voir plus bas).
+- **Caddy** : le HTTPS (certificats Let's Encrypt automatiques) et les redirections de www.bailio.fr, bailio.eu et www.bailio.eu vers bailio.fr.
 
-Pour l'instant, le site reste sur **bailio.fr (Vercel)**, et Vercel relaie `/api` vers `api.bailio.eu`
-(`client/vercel.json`). Le navigateur des visiteurs ne contacte donc que bailio.fr, un domaine ancien et connu :
-les filtres réseau qui bloquent les domaines récemment créés (comme bailio.eu) ne gênent personne.
+Aucun service extérieur ne reçoit les documents des propriétaires. Les emails partent de ce serveur par le Service Mail
+Infomaniak de bailio.fr (SMTP authentifié, port 587) : un VPS Lite ne peut pas les remettre lui-même (port 25 sortant fermé).
 
-Aucun service extérieur ne reçoit les documents des propriétaires. Les emails partent de ce serveur par la messagerie Ionos de bailio.fr (SMTP authentifié, port 587) : un VPS Lite ne peut pas les remettre lui-même (port 25 sortant fermé par Infomaniak).
+### Emails par le Service Mail Infomaniak
 
-### Emails par la messagerie Ionos
+1. Manager Infomaniak → Service Mail → bailio.fr : l'adresse `contact@bailio.fr` (MX, SPF et DKIM gérés par Infomaniak,
+   à contrôler dans « Diagnostic DNS »).
+2. Sur le serveur, dans `/opt/bailio/deploy/vps/.env` :
+   `SMTP_HOST=mail.infomaniak.com`, `SMTP_PORT=587`, `SMTP_USER=contact@bailio.fr`, `SMTP_PASS=` son mot de passe,
+   `EMAIL_FROM=Bailio <contact@bailio.fr>`.
+3. `cd /opt/bailio/deploy/vps && sudo docker compose up -d api`
+4. Vérifiez https://bailio.fr/health : `"email":"smtp"`. Demandez un lien de connexion pour contrôler la réception.
 
-1. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et renseignez :
-   `SMTP_HOST=smtp.ionos.fr`, `SMTP_PORT=587`, `SMTP_USER=` l'adresse de la boîte Ionos (par exemple contact@bailio.fr),
-   `SMTP_PASS=` son mot de passe, `EMAIL_FROM=Bailio <la même adresse>`.
-2. `cd /opt/bailio/deploy/vps && sudo docker compose up -d api`
-3. Vérifiez https://api.bailio.eu/health : `"email":"smtp"`. Demandez un lien de connexion pour contrôler la réception.
+### DNS (zones Infomaniak)
+
+| Domaine | Enregistrements |
+|---|---|
+| bailio.fr | A et AAAA « @ » et « www » vers le serveur ; MX, SPF, DKIM et DMARC du Service Mail |
+| bailio.eu | A et AAAA « @ », « www » et « api » vers le serveur ; enregistrements de son Service Mail |
+
+Dans `.env` : `SITE_DOMAIN=bailio.fr`, `SITE_REDIRECT_DOMAINS=www.bailio.fr, bailio.eu, www.bailio.eu`,
+`SITE_URL=https://bailio.fr`, `API_DOMAIN=api.bailio.eu`. Tant que `SITE_DOMAIN` est vide, le serveur ne sert que l'API.
 
 ## Mettre à jour
 
@@ -25,7 +35,7 @@ Aucun service extérieur ne reçoit les documents des propriétaires. Les emails
 branche `production` est avancée. Toutes les 5 minutes, le serveur regarde cette branche et se met à jour seul
 (`auto-update.sh`, activé par `install.sh`). Une version qui échoue aux tests n'est jamais mise en ligne.
 
-Vérification : https://api.bailio.eu/health affiche la version en ligne (`"version":"abc1234"`, le début du
+Vérification : https://bailio.fr/health affiche la version en ligne (`"version":"abc1234"`, le début du
 numéro du dernier commit validé).
 
 **À la main** (ou pour activer la mise à jour automatique sur un serveur installé avant) — les commandes se tapent
@@ -45,27 +55,11 @@ sudo deploy/vps/auto-update.sh --install  # mises à jour automatiques ensuite
 
 Journal des mises à jour automatiques : `journalctl -u bailio-auto-update -n 50`.
 
-## Servir le site depuis ce serveur (plus tard, quand bailio.fr sera récupéré chez Ionos)
-
-1. Zone DNS de bailio.fr : A « @ » et A « www » vers l'IP du serveur (et AAAA vers l'IPv6), en supprimant les
-   enregistrements Vercel.
-2. Dans `/opt/bailio/deploy/vps/.env` :
-   ```
-   SITE_DOMAIN=bailio.fr
-   SITE_REDIRECT_DOMAINS=www.bailio.fr, bailio.eu, www.bailio.eu
-   SITE_URL=https://bailio.fr
-   ```
-   (pour bailio.eu et www : A/AAAA vers le serveur aussi, dans la zone DNS Infomaniak)
-3. `sudo /opt/bailio/deploy/vps/update.sh`. Caddy obtient les certificats seul, en quelques minutes.
-4. Le projet Vercel peut alors être supprimé.
-
-Tant que `SITE_DOMAIN` est vide, le serveur ne sert pas le site (seulement l'API).
-
 ## Première installation (nouveau serveur)
 
 - Produit : **VPS Lite**, **Ubuntu 24.04**, **2 Go de RAM minimum** (le script ajoute 2 Go de mémoire de secours).
 - Manager Infomaniak → **Firewall** : ouvrez **80** et **443** (TCP), en plus du 22 (SSH). Ajoutez votre **clé SSH** à la commande.
-- DNS : voir plus haut.
+- DNS : voir « DNS » plus haut, avant de lancer le script (Caddy en a besoin pour les certificats).
 - Sur le serveur :
 
 ```bash
@@ -82,7 +76,7 @@ de la base chaque nuit (14 jours conservés).
 | Besoin | Commande (sur le serveur) |
 |---|---|
 | Mettre à jour Bailio après un push sur `main` | automatique (5 min) ; à la main : `sudo /opt/bailio/deploy/vps/update.sh` |
-| Voir la version en ligne | https://api.bailio.eu/health |
+| Voir la version en ligne | https://bailio.fr/health |
 | Voir les journaux | `cd /opt/bailio/deploy/vps && sudo docker compose logs -f api` (ou `caddy`) |
 | Sauvegarder maintenant | `sudo /opt/bailio/deploy/vps/backup.sh` |
 | Restaurer une sauvegarde | `sudo ./restore.sh /opt/bailio-backups/bailio-AAAA-MM-JJ.sql.gz` (ou `bailio-AAAA-MM-JJ.sql.gz.enc` pour la copie hors serveur) |

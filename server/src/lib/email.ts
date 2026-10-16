@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer'
-import { Resend } from 'resend'
 import { env } from '../env.js'
 
 export interface EmailAttachment {
@@ -18,11 +17,10 @@ export interface Email {
 }
 
 /**
- * Envoi par le serveur de messagerie Ionos de bailio.fr (Allemagne), en SMTP authentifié sur le port 587.
- * Le VPS Lite d'Infomaniak ne peut pas remettre lui-même les emails (port 25 sortant fermé, sans dérogation possible) :
- * il les confie à Ionos, qui les signe (DKIM s1/s2-ionos, SPF include:_spf-eu.ionos.com).
- * Resend (États-Unis) ne sert que tant que SMTP_HOST, SMTP_USER et SMTP_PASS ne sont pas renseignés sur le serveur :
- * à retirer (code, dépendance, clé, enregistrements DNS resend._domainkey et send) dès que /health indique « smtp ».
+ * Envoi par le Service Mail Infomaniak de bailio.fr (Suisse), en SMTP authentifié sur le port 587 (mail.infomaniak.com).
+ * Le VPS Lite ne peut pas remettre lui-même les emails (port 25 sortant fermé) : il les confie au Service Mail,
+ * qui les signe (DKIM géré par Infomaniak, SPF include:spf.infomaniak.ch).
+ * Sans SMTP renseigné (développement, tests), les emails sont écrits dans les logs.
  */
 const smtp =
   env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS
@@ -40,31 +38,16 @@ const smtp =
       })
     : null
 
-const resend = !smtp && env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
-
 /** Service d'envoi utilisé (affiché sur /health, sans aucun secret). */
-export const emailMode = (): 'smtp' | 'resend' | 'none' => (smtp ? 'smtp' : resend ? 'resend' : 'none')
+export const emailMode = (): 'smtp' | 'none' => (smtp ? 'smtp' : 'none')
 
 const transient = (err: unknown) => {
   const e = err as { code?: string; responseCode?: number }
   return ['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ESOCKET', 'EDNS', 'ECONNECTION'].includes(e.code ?? '') || (e.responseCode !== undefined && e.responseCode >= 400 && e.responseCode < 500)
 }
 
-/** Envoi par SMTP, avec un nouvel essai après une erreur passagère ; sinon Resend ; sinon affichage dans les logs. */
+/** Envoi par SMTP, avec un nouvel essai après une erreur passagère ; sinon affichage dans les logs. */
 export async function sendEmail(email: Email): Promise<void> {
-  if (!smtp && resend) {
-    const { error } = await resend.emails.send({
-      from: env.EMAIL_FROM,
-      to: email.to,
-      subject: email.subject,
-      text: email.text,
-      html: email.html,
-      replyTo: email.replyTo,
-      attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
-    })
-    if (error) throw new Error(`Envoi de l'email impossible : ${error.message}`)
-    return
-  }
   if (!smtp) {
     console.info(`[email] (non envoyé, aucun service d'email configuré) → ${email.to} · ${email.subject}\n${email.text}`)
     return

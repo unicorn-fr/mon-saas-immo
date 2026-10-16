@@ -19,8 +19,9 @@
 	}
 	header {
 		X-Frame-Options "DENY"
+		Cross-Origin-Opener-Policy "same-origin-allow-popups"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 	}
 
 	handle /api/* {
@@ -54,7 +55,7 @@
 	redir https://{$SITE_DOMAIN}{uri} permanent
 }
 
-# L'API seule, joignable en direct (plus de relais Vercel).
+# L'API seule, joignable en direct sur api.bailio.eu.
 # IMPORTANT : Caddy est ici le point d'entrée direct des visiteurs. On prend l'IP TCP réelle du client
 # ({remote_host}) et JAMAIS un en-tête X-Forwarded-For envoyé par le client (falsifiable → contournement
 # des limites de débit). Le site et /api (même origine) passent déjà par le bloc {$SITE_DOMAIN} ci-dessus.

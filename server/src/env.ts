@@ -11,13 +11,11 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default(''),
   CORS_ORIGIN: z.string().default(''),
   EMAIL_FROM: z.string().default('Bailio <bonjour@bailio.fr>'),
-  // Emails : SMTP authentifié (Ionos). Sans SMTP, les emails sont écrits dans les logs (développement).
+  // Emails : SMTP authentifié (Service Mail Infomaniak). Sans SMTP, les emails sont écrits dans les logs (développement).
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  // Ancien service d'envoi (États-Unis), utilisé seulement sans SMTP : à retirer une fois le SMTP en place.
-  RESEND_API_KEY: z.string().optional(),
 })
 
 const parsed = schema.parse(process.env)

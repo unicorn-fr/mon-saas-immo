@@ -16,7 +16,7 @@ npm --prefix server run db:migrate         # crée les tables
 npm run dev                                # API sur :5000, site sur :5173
 ```
 
-Sans `RESEND_API_KEY`, les emails (lien de reprise, lien de connexion) s'affichent dans le terminal de l'API.
+Sans `SMTP_HOST`, `SMTP_USER` et `SMTP_PASS`, les emails (lien de reprise, lien de connexion) s'affichent dans le terminal de l'API.
 
 ## Structure
 
@@ -48,15 +48,14 @@ docs/     maquette et documents de conception
 
 **API (`server/.env`)** — voir `server/.env.example` :
 `DATABASE_URL`, `CLIENT_URL` (URL publique du site, utilisée dans les emails ; `FRONTEND_URL` accepté), `CORS_ORIGINS` (`CORS_ORIGIN` accepté),
-emails par SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`), `EMAIL_FROM`,
+emails par SMTP, Service Mail Infomaniak en ligne (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`), `EMAIL_FROM`,
 https://bailio.eu, https://www.bailio.eu, https://bailio.fr et https://www.bailio.fr sont toujours autorisés.
 
-**Site** : `VITE_SITE_URL` (adresse publique, `https://bailio.fr` par défaut). L'API est toujours appelée sur `/api`, même adresse que le site : relayée vers `https://api.bailio.eu` par Vercel (`client/vercel.json`), par Caddy sur le VPS, par Vite en local.
+**Site** : `VITE_SITE_URL` (adresse publique, `https://bailio.fr` par défaut). L'API est toujours appelée sur `/api`, même adresse que le site : relayée par Caddy sur le VPS, par Vite en local.
 
 ## Déploiement
 
-- **Site** : Vercel (bailio.fr) tant que le domaine ne peut pas pointer vers le VPS ; `/api` y est relayé vers le VPS. Dans Vercel, la « Production Branch » doit être `production` : le site n'est alors publié qu'après des tests verts, comme l'API.
-- **API, base, lecture des baux** : VPS (Infomaniak, Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md) : Caddy assure le HTTPS de l'API (et pourra servir le site plus tard) ; la base n'est pas exposée. À chaque push sur `main`, GitHub Actions vérifie tout (types, tests, construction, parcours dans un navigateur) puis avance la branche `production` ; le serveur suit cette branche et se met à jour seul toutes les 5 minutes ; la version en ligne est affichée par https://api.bailio.eu/health. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
+- **Tout sur un seul serveur** : VPS Infomaniak (Genève) avec Docker, voir [`deploy/vps/README.md`](deploy/vps/README.md). Caddy sert le site sur https://bailio.fr (www.bailio.fr, bailio.eu et www.bailio.eu y redirigent), relaie `/api` vers l'API et assure le HTTPS ; l'API reste joignable sur https://api.bailio.eu ; la base n'est pas exposée. Emails : Service Mail Infomaniak de bailio.fr. À chaque push sur `main`, GitHub Actions vérifie tout (types, tests, construction, parcours dans un navigateur) puis avance la branche `production` ; le serveur suit cette branche et se met à jour seul toutes les 5 minutes ; la version en ligne est affichée par https://bailio.fr/health. Au démarrage, `prisma migrate deploy` applique les migrations versionnées (jamais de suppression automatique de données).
 - Un cron quotidien (8 h, heure de Paris) prolonge les échéances et envoie l'email de rappel aux propriétaires qui ont activé le suivi (actif par défaut à l'inscription).
 
 ## Sécurité

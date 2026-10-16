@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '6 octobre 2026'
+const UPDATED = '16 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -99,11 +99,10 @@ export function MentionsLegales() {
       ) : null}
       <H2>Hébergement</H2>
       <p>
-        L'application et la base de données sont hébergées en Suisse par Infomaniak Network SA, rue Eugène-Marziano 25,
+        Le site, l'application et la base de données sont hébergés en Suisse par Infomaniak Network SA, rue Eugène-Marziano 25,
         1227 Les Acacias (Genève), Suisse, téléphone +41 22 820 35 44 (infomaniak.com). La Suisse est reconnue par la
         Commission européenne comme offrant un niveau de protection des données adéquat.
       </p>
-      <p>Les pages du site sont servies par Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis (vercel.com).</p>
       <H2>Propriété intellectuelle</H2>
       <p>
         La marque Bailio, le site, ses textes et sa présentation sont protégés. Les modèles de documents suivent les contrats types
@@ -309,10 +308,7 @@ export function Confidentialite() {
       <Table
         head={['Prestataire', 'Rôle', 'Lieu et garanties']}
         rows={[
-          ['Infomaniak Network SA', 'Serveur et base de données', 'Suisse (décision d’adéquation)'],
-          ['Vercel Inc.', 'Sert les pages du site et relaie, chiffrés, les échanges avec notre serveur ; peut garder quelques jours des journaux techniques (adresse IP, page demandée) pour la sécurité de son réseau', 'États-Unis : certifié Data Privacy Framework UE–États-Unis (décision d’adéquation du 10 juillet 2023)'],
-          ['IONOS SE', 'Messagerie de bailio.fr : remet les emails envoyés par notre serveur (liens de connexion, rappels, documents)', 'Allemagne (Union européenne)'],
-          ['Resend, Inc.', 'Envoi des emails jusqu’au passage complet sur la messagerie Ionos, prévu en octobre 2026 ; cette ligne sera alors retirée', 'États-Unis : clauses contractuelles types de la Commission européenne'],
+          ['Infomaniak Network SA', 'Site, serveur, base de données et messagerie de bailio.fr (remise des emails : liens de connexion, rappels, documents)', 'Suisse (décision d’adéquation)'],
         ]}
       />
       <H2>Les données de vos locataires</H2>

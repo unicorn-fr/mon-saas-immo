@@ -87,7 +87,7 @@ export default defineConfig({
     // En développement, /api est relayé vers l'API locale.
     proxy: { '/api': 'http://localhost:5000' },
   },
-  // Mêmes en-têtes de sécurité qu'en ligne (vercel.json), pour les vérifier en local.
+  // Mêmes en-têtes de sécurité qu'en ligne (deploy/vps/Caddyfile), pour les vérifier en local.
   preview: { proxy: { '/api': 'http://localhost:5000' }, headers: { 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" } },
   // Pages importées sans chargement différé (voir App.tsx) ; les bibliothèques sont dans des fichiers à part,
   // téléchargés en parallèle et gardés en cache d'une mise à jour à l'autre (leur nom ne change pas).
