@@ -312,7 +312,7 @@ function StepType({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
         legend="Le logement est réservé à la résidence principale par le plan local d’urbanisme ?"
         value={f.mainResidenceEasement ?? null}
         onChange={(v) => set({ mainResidenceEasement: v })}
-        options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]}
+        options={[{ value: false, label: 'Pas de restriction' }, { value: true, label: 'Oui, résidence principale imposée' }]}
         hint="Certaines communes l’imposent aux logements neufs (servitude de résidence principale). La mairie vous le dit en cas de doute."
       />
       <Input label="Identifiant fiscal du logement" value={f.fiscalId ?? ''} onChange={(v) => set({ fiscalId: v })} placeholder="12 chiffres" hint="Mention obligatoire du bail depuis 2024. Vous le trouvez sur impots.gouv.fr, espace « Gérer mes biens immobiliers », ou sur l’avis de taxe foncière." />
