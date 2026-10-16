@@ -44,6 +44,10 @@ export function validateFiles(files: UploadedFile[]): void {
     if (f.mimetype !== 'application/pdf' && !IMAGE_TYPES.has(f.mimetype)) {
       throw new HttpError(400, 'Format non pris en charge. Utilisez une photo (JPEG, PNG) ou un PDF.')
     }
+    // Le type annoncé par le navigateur ne suffit pas : le contenu doit correspondre.
+    const head = f.buffer.subarray(0, 1024)
+    const real = f.mimetype === 'application/pdf' ? head.includes('%PDF-') : f.mimetype === 'image/png' ? head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) : head[0] === 0xff && head[1] === 0xd8
+    if (!real) throw new HttpError(400, 'Ce fichier ne correspond pas à son format. Utilisez une photo (JPEG, PNG) ou un PDF.')
   }
 }
 

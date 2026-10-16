@@ -116,10 +116,11 @@ router.post('/invitation-link', limiter, async (req, res) => {
 router.post('/magic-link/verify', limiter, async (req, res) => {
   const { token } = z.object({ token: z.string().min(10).max(200) }).parse(req.body)
   const row = await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } })
-  if (!row || row.usedAt || row.expiresAt < new Date()) {
+  // Le lien est consommé en une seule écriture conditionnelle : deux clics simultanés n'ouvrent pas deux sessions.
+  const used = row ? await prisma.loginToken.updateMany({ where: { id: row.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } }) : null
+  if (!row || !used?.count) {
     throw new HttpError(400, 'Ce lien a expiré ou a déjà servi. Demandez-en un nouveau.')
   }
-  await prisma.loginToken.update({ where: { id: row.id }, data: { usedAt: new Date() } })
   const user = await prisma.user.upsert({
     where: { email: row.email },
     update: { emailVerifiedAt: new Date() },

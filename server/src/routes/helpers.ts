@@ -36,6 +36,9 @@ export const fileSlug = (s: string) =>
 
 export const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 10 } })
 
+/** Signature d'un fichier PDF (« %PDF- »), dans le premier kilo-octet comme le tolèrent les lecteurs. */
+export const isPdf = (b: Buffer) => b.subarray(0, 1024).includes('%PDF-')
+
 const ALLOWED = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
 
 /**
@@ -44,6 +47,8 @@ const ALLOWED = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/we
  */
 export async function storeFile(userId: string, f: Express.Multer.File): Promise<{ id: string; mimeType: string; sizeBytes: number; name: string }> {
   if (!ALLOWED.has(f.mimetype)) throw new HttpError(400, 'Format non pris en charge. Utilisez une photo (JPEG, PNG) ou un PDF.')
+  // Le type annoncé par le navigateur ne suffit pas : un « PDF » doit vraiment en être un (les images, elles, sont réencodées).
+  if (f.mimetype === 'application/pdf' && !isPdf(f.buffer)) throw new HttpError(400, 'Ce fichier n’est pas un PDF valide.')
   let data = f.buffer
   let mimeType = f.mimetype
   let name = f.originalname || 'fichier'

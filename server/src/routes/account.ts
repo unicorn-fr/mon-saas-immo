@@ -73,12 +73,13 @@ async function useCode(userId: string, purpose: z.infer<typeof purposeSchema>, c
   if (!parsed.success) throw new HttpError(400, 'Saisissez le code à 6 chiffres reçu par email.')
   const row = await prisma.actionCode.findFirst({ where: { userId, purpose }, orderBy: { createdAt: 'desc' } })
   if (!row || row.expiresAt < new Date()) throw new HttpError(400, 'Ce code a expiré. Demandez-en un nouveau.')
-  if (row.attempts >= 5) throw new HttpError(429, 'Trop d’essais. Demandez un nouveau code.')
-  if (row.codeHash !== hashToken(`${userId}:${purpose}:${parsed.data}`)) {
-    await prisma.actionCode.update({ where: { id: row.id }, data: { attempts: { increment: 1 } } })
-    throw new HttpError(400, 'Code incorrect.')
-  }
-  await prisma.actionCode.delete({ where: { id: row.id } })
+  // Un essai est réservé avant la comparaison, en une écriture conditionnelle : des requêtes envoyées en même temps
+  // ne peuvent pas dépasser les 5 essais.
+  const reserved = await prisma.actionCode.updateMany({ where: { id: row.id, attempts: { lt: 5 } }, data: { attempts: { increment: 1 } } })
+  if (!reserved.count) throw new HttpError(429, 'Trop d’essais. Demandez un nouveau code.')
+  if (row.codeHash !== hashToken(`${userId}:${purpose}:${parsed.data}`)) throw new HttpError(400, 'Code incorrect.')
+  const consumed = await prisma.actionCode.deleteMany({ where: { id: row.id } })
+  if (!consumed.count) throw new HttpError(400, 'Ce code a déjà servi. Demandez-en un nouveau.')
 }
 
 // Export de toutes les données du compte (RGPD, art. 20). Les fichiers sont listés, pas inclus.

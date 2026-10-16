@@ -238,10 +238,13 @@ router.post('/esign/:token/verify', limitPerVisitor(10, 20), async (req, res) =>
   const { signer } = await signerOf(req)
   const { code } = z.object({ code: z.string().trim().regex(/^\d{6}$/, 'Le code compte 6 chiffres.') }).parse(req.body)
   if (!signer.codeHash || !signer.codeExpiresAt || signer.codeExpiresAt.getTime() < Date.now()) throw new HttpError(400, 'Ce code a expiré. Demandez-en un nouveau.')
-  if (signer.codeAttempts >= CODE_ATTEMPTS) throw new HttpError(429, 'Trop d’essais. Demandez un nouveau code.')
+  // Un essai est réservé avant la comparaison, en une écriture conditionnelle : des requêtes envoyées en même temps
+  // ne peuvent pas dépasser le nombre d'essais permis.
+  const reserved = await prisma.signer.updateMany({ where: { id: signer.id, codeHash: signer.codeHash, codeAttempts: { lt: CODE_ATTEMPTS } }, data: { codeAttempts: { increment: 1 } } })
+  if (!reserved.count) throw new HttpError(429, 'Trop d’essais. Demandez un nouveau code.')
   if (hashToken(`${signer.id}:${code}`) !== signer.codeHash) {
-    await prisma.signer.update({ where: { id: signer.id }, data: { codeAttempts: { increment: 1 } } })
-    throw new HttpError(400, `Code incorrect. Il vous reste ${CODE_ATTEMPTS - signer.codeAttempts - 1} essai${CODE_ATTEMPTS - signer.codeAttempts - 1 > 1 ? 's' : ''}.`)
+    const left = Math.max(0, CODE_ATTEMPTS - signer.codeAttempts - 1)
+    throw new HttpError(400, left ? `Code incorrect. Il vous reste ${left} essai${left > 1 ? 's' : ''}.` : 'Code incorrect. Demandez un nouveau code.')
   }
   await prisma.signer.update({ where: { id: signer.id }, data: { codeVerifiedAt: new Date(), codeHash: null } })
   res.json({ success: true, data: { verified: true } })
