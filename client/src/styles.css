@@ -69,6 +69,8 @@ img { max-width: 100%; }
 @media (max-width: 1180px) {
   .split-aside { flex-direction: column; align-items: stretch; }
   .split-aside > .aside, .split-aside > .aside-wide { width: auto; }
+  /* Encadrés de côté à largeur fixe (style en ligne) : pleine largeur sous le contenu, jamais plus large que l'écran. */
+  .aside, .aside-wide { width: auto !important; max-width: 100%; box-sizing: border-box; }
   .cards-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 1023px) {
