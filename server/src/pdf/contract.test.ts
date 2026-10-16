@@ -77,3 +77,19 @@ test('garage loué seul : contrat de droit commun (Code civil), sans contrat typ
   assert.match(t, /article 1732/)
   assert.doesNotMatch(t, /2015-587|Notice d’information|Dépenses énergétiques|89-462 du 6 juillet 1989 tendant/)
 })
+
+test('contrat type modifié par le décret n° 2026-596 : téléphone facultatif, servitude de résidence principale', { skip: !hasPoppler && 'pdftotext absent', timeout: 60_000 }, async () => {
+  const c = {
+    ...SAMPLE_CONTRACT,
+    landlord: { ...SAMPLE_CONTRACT.landlord, phone: '06 11 22 33 44' },
+    property: { ...SAMPLE_CONTRACT.property, mainResidenceEasement: true },
+  }
+  const t = await text(c)
+  assert.match(t, /M O D I F I É , A N N E X E 1/) // en-tête en lettres espacées
+  assert.match(t, /téléphone portable : 06 11 22 33 44/)
+  assert.match(t, /Servitude de résidence principale : le logement objet du présent contrat est soumis à l’obligation prévue à l’article L\. 151-14-1 du code de l’urbanisme/)
+  assert.match(t, /usage exclusif de résidence principale du logement soumis à la servitude.*L\. 481-4/)
+  // Sans servitude, aucune de ces mentions.
+  const plain = await text(SAMPLE_CONTRACT)
+  assert.doesNotMatch(plain, /Servitude de résidence principale/)
+})

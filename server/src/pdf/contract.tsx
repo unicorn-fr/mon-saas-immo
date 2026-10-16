@@ -13,7 +13,7 @@ import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } f
 
 /**
  * Contrat de location établi selon le contrat type du décret n° 2015-587 du 29 mai 2015 (annexe 1 : logement nu ;
- * annexe 2 : logement meublé ; version en vigueur depuis le 1er janvier 2024) : mêmes rubriques I à XI, dans le même
+ * annexe 2 : logement meublé ; rédaction issue du décret n° 2026-596 du 6 juillet 2026, applicable aux baux conclus ou renouvelés depuis le 1er octobre 2026) : mêmes rubriques I à XI, dans le même
  * ordre et avec les mêmes intitulés, remplies avec les fiches du propriétaire. Les clauses utiles et licites (assurance,
  * entretien, animaux, visites, congé…) figurent à la rubrique X « Autres conditions particulières ». Aucune clause
  * interdite par l'article 4 de la loi du 6 juillet 1989. Une information inconnue laisse une ligne à compléter.
@@ -88,6 +88,7 @@ function landlordParagraph(l: LandlordProfile): [string, string] {
         `, dont le siège est situé ${c.seat || BLANK}`,
         `, représentée par ${c.representedBy || BLANK}${c.representativeRole ? `, en qualité de ${c.representativeRole}` : ''}, dûment habilité(e) aux fins des présentes`,
         l.email ? ` ; adresse électronique : ${l.email}` : '',
+        l.phone ? ` ; téléphone portable : ${l.phone}` : '',
         ' ;',
       ].join(''),
     ]
@@ -95,11 +96,11 @@ function landlordParagraph(l: LandlordProfile): [string, string] {
   const others = (l.coOwners ?? []).map((o) => formal(o)).filter((x) => x !== BLANK)
   const name = others.length ? `${formal(l)} et ${others.join(', ')}` : formal(l)
   const address = l.address ? [l.address, [l.postalCode, l.city ? upper(l.city) : ''].filter(Boolean).join(' ')].filter(Boolean).join(', ') : BLANK
-  return [name, `${others.length ? '' : born(l)}, demeurant ${address}${l.email ? ` ; adresse électronique : ${l.email}` : ''} ;`]
+  return [name, `${others.length ? '' : born(l)}, demeurant ${address}${l.email ? ` ; adresse électronique : ${l.email}` : ''}${l.phone ? ` ; téléphone portable : ${l.phone}` : ''} ;`]
 }
 
 function tenantParagraph(t: TenantFile & PartyName): [string, string] {
-  return [formal(t), `${born(t)}${t.currentAddress ? `, demeurant actuellement ${t.currentAddress}` : ''}${t.email ? ` ; adresse électronique : ${t.email}` : ''} ;`]
+  return [formal(t), `${born(t)}${t.currentAddress ? `, demeurant actuellement ${t.currentAddress}` : ''}${t.email ? ` ; adresse électronique : ${t.email}` : ''}${t.phone ? ` ; téléphone portable : ${t.phone}` : ''} ;`]
 }
 
 const Party = ({ v }: { v: [string, string] }) => (
@@ -176,7 +177,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
       <Page size="A4" style={s.page}>
         {/* En-tête : intitulé du contrat type */}
         <View style={{ borderBottomWidth: 1.5, borderColor: INK, paddingBottom: 10, marginBottom: 10 }}>
-          <Text style={{ fontSize: 8, color: MUTED, letterSpacing: 1, textTransform: 'uppercase' }}>{mobility ? 'Bail mobilité' : `Contrat type – décret n° 2015-587 du 29 mai 2015, annexe ${furnished ? '2' : '1'}`}</Text>
+          <Text style={{ fontSize: 8, color: MUTED, letterSpacing: 1, textTransform: 'uppercase' }}>{mobility ? 'Bail mobilité' : `Contrat type – décret n° 2015-587 du 29 mai 2015 modifié, annexe ${furnished ? '2' : '1'}`}</Text>
           <Text style={{ fontSize: 16, fontWeight: 700, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.6 }}>
             Contrat de location{colocation ? ' ou de colocation' : ''}
           </Text>
@@ -253,6 +254,11 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
         <Text style={[st.small, { marginTop: 4 }]}>{decencyText}</Text>
         <Sub>B. Destination des locaux</Sub>
         <P>{p.destination === 'MIXTE' ? 'Usage mixte professionnel et d’habitation.' : 'Usage d’habitation.'} Le logement constitue la résidence principale {plural ? 'des locataires' : 'du locataire'}.</P>
+        {p.mainResidenceEasement ? (
+          <P>
+            Servitude de résidence principale : le logement objet du présent contrat est soumis à l’obligation prévue à l’article L. 151-14-1 du code de l’urbanisme ; il est à usage exclusif de résidence principale au sens de l’article 2 de la loi n° 89-462 du 6 juillet 1989.
+          </P>
+        ) : null}
         <Sub>C. Locaux et équipements accessoires de l’immeuble à usage privatif du locataire</Sub>
         <P>{annexesLabel(p) ? `${annexesLabel(p)}${p.garageNumber ? ` (n° ${p.garageNumber})` : ''}.` : 'Néant.'}</P>
         <Sub>D. Locaux, parties, équipements et accessoires de l’immeuble à usage commun</Sub>
@@ -454,7 +460,10 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
         {showResolutoire ? (
           <>
             <Dash>un mois après un commandement demeuré infructueux, à défaut de souscription d’une assurance des risques locatifs ;</Dash>
-            <Dash>en cas de non-respect de l’obligation d’user paisiblement des locaux loués, résultant de troubles de voisinage constatés par une décision de justice passée en force de chose jugée.</Dash>
+            <Dash>en cas de non-respect de l’obligation d’user paisiblement des locaux loués, résultant de troubles de voisinage constatés par une décision de justice passée en force de chose jugée{p.mainResidenceEasement ? ' ;' : '.'}</Dash>
+            {p.mainResidenceEasement ? (
+              <Dash>en cas de non-respect de l’usage exclusif de résidence principale du logement soumis à la servitude prévue à l’article L. 151-14-1 du code de l’urbanisme, après la mise en demeure prévue au II de l’article L. 481-4 du même code demeurée sans effet.</Dash>
+            ) : null}
           </>
         ) : null}
         <P>Le commandement est délivré par commissaire de justice et reproduit les mentions prévues à l’article 24 de la loi du 6 juillet 1989.</P>

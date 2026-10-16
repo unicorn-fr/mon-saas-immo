@@ -129,6 +129,7 @@ export interface PropertyFile {
   legalRegime?: N<'MONO' | 'COPRO'>
   furnished?: N<boolean>
   destination?: N<'HABITATION' | 'MIXTE'>
+  mainResidenceEasement?: N<boolean>
   copro?: N<{ syndic?: N<string>; quotePart?: N<string>; extractsProvided?: N<boolean> }>
   constructionPeriod?: N<'BEFORE_1949' | '1949_1974' | '1975_1989' | '1990_2005' | 'AFTER_2005'>
   permitBefore1997?: N<boolean>

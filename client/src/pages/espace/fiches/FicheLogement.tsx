@@ -119,6 +119,7 @@ export default function FicheLogement() {
         <Chips legend="Régime juridique de l’immeuble" value={f.legalRegime ?? null} onChange={(v) => set({ legalRegime: v })} options={[{ value: 'MONO', label: 'Monopropriété' }, { value: 'COPRO', label: 'Copropriété' }]} />
         <Chips legend="Le logement est loué" value={f.furnished ?? null} onChange={(v) => set({ furnished: v })} options={[{ value: false, label: 'Vide' }, { value: true, label: 'Meublé' }]} />
         <Chips legend="Destination" value={f.destination ?? null} onChange={(v) => set({ destination: v })} options={[{ value: 'HABITATION', label: 'Habitation uniquement' }, { value: 'MIXTE', label: 'Habitation et usage professionnel' }]} />
+        <Chips legend="Servitude de résidence principale" value={f.mainResidenceEasement ?? null} onChange={(v) => set({ mainResidenceEasement: v })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint="Imposée par le plan local d’urbanisme de certaines communes : le logement ne peut être que la résidence principale du locataire." />
       </FicheSection>
 
       {f.legalRegime === 'COPRO' ? (

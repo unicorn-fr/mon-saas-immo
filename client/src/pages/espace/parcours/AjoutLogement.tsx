@@ -211,7 +211,7 @@ function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
     case 'parking':
       return { parking: f.parking, surface: f.surface, lotNumber: f.lotNumber, keys: f.keys }
     case 'type':
-      return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION', fiscalId: f.fiscalId, rentalPermit: f.rentalPermit }
+      return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION', mainResidenceEasement: f.mainResidenceEasement, fiscalId: f.fiscalId, rentalPermit: f.rentalPermit }
     case 'copro':
       return { copro: f.copro, lotNumber: f.lotNumber }
     case 'size':
@@ -308,6 +308,13 @@ function StepType({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
       <Chips big legend="Il sera loué" value={f.furnished ?? null} onChange={(v) => set({ furnished: v })} options={[{ value: false, label: 'Vide' }, { value: true, label: 'Meublé' }]} hint="Meublé : il faut au moins les 11 éléments de mobilier fixés par la loi." />
       <Chips legend={f.habitat === 'INDIVIDUAL' ? 'La maison fait partie d’une copropriété ?' : 'L’immeuble est'} value={f.legalRegime ?? null} onChange={(v) => set({ legalRegime: v })} options={[{ value: 'COPRO', label: f.habitat === 'INDIVIDUAL' ? 'Oui, copropriété' : 'En copropriété' }, { value: 'MONO', label: f.habitat === 'INDIVIDUAL' ? 'Non' : 'À un seul propriétaire' }]} hint="Copropriété : il y a un syndic et un règlement de copropriété." />
       <Chips legend="Usage" value={f.destination ?? 'HABITATION'} onChange={(v) => set({ destination: v })} options={[{ value: 'HABITATION', label: 'Habitation seulement' }, { value: 'MIXTE', label: 'Habitation et activité professionnelle' }]} />
+      <Chips
+        legend="Le logement est réservé à la résidence principale par le plan local d’urbanisme ?"
+        value={f.mainResidenceEasement ?? null}
+        onChange={(v) => set({ mainResidenceEasement: v })}
+        options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]}
+        hint="Certaines communes l’imposent aux logements neufs (servitude de résidence principale). La mairie vous le dit en cas de doute."
+      />
       <Input label="Identifiant fiscal du logement" value={f.fiscalId ?? ''} onChange={(v) => set({ fiscalId: v })} placeholder="12 chiffres" hint="Mention obligatoire du bail depuis 2024. Vous le trouvez sur impots.gouv.fr, espace « Gérer mes biens immobiliers », ou sur l’avis de taxe foncière." />
       <Chips
         legend="La commune impose une autorisation avant de louer (« permis de louer ») ?"

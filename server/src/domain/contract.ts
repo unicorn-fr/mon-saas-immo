@@ -145,6 +145,8 @@ export const propertyFileSchema = z.object({
   legalRegime: opt(z.enum(['MONO', 'COPRO'])),
   furnished: opt(z.boolean()),
   destination: opt(z.enum(['HABITATION', 'MIXTE'])),
+  /** Servitude de résidence principale (code de l'urbanisme, art. L. 151-14-1), mention du contrat type depuis le 1er octobre 2026. */
+  mainResidenceEasement: opt(z.boolean()),
   copro: opt(z.object({ syndic: opt(text(160)), quotePart: opt(text(80)), extractsProvided: opt(z.boolean()) })),
   constructionPeriod: opt(constructionPeriod),
   /** Permis de construire délivré avant le 1er juillet 1997 (repérage de l'amiante). */
