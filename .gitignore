@@ -8,3 +8,6 @@ dist/
 coverage/
 server/src/generated/
 *.tsbuildinfo
+
+# Captures et rapports de l'outil de design (taste-skill)
+.taste-skill/

@@ -24,6 +24,8 @@
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.1",
+    "@fontsource/young-serif": "^5.3.0",
     "qrcode-generator": "^1.5.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
