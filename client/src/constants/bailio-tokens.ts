@@ -54,8 +54,6 @@ export const BAI = {
   // Typographies
   fontDisplay: "'Cormorant Garamond', Georgia, serif",
   fontBody: "'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
-  // Écriture manuscrite : seulement les notes en marge et la signature de l'accueil.
-  fontHand: "'Caveat', 'Segoe Print', 'Bradley Hand', cursive",
   // Points de rupture
   bpMd: 768,
   bpLg: 1024,
