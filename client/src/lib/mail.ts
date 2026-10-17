@@ -10,7 +10,7 @@ export interface MailProvider {
 }
 
 export const MAIL_PROVIDERS: MailProvider[] = [
-  { key: 'gmail', label: 'Gmail', url: 'https://mail.google.com/mail/u/0/#search/Bailio+in%3Aanywhere', domains: ['gmail.com', 'googlemail.com'] },
+  { key: 'gmail', label: 'Gmail', url: 'https://mail.google.com/mail/u/0/#inbox', domains: ['gmail.com', 'googlemail.com'] },
   { key: 'outlook', label: 'Outlook, Hotmail', url: 'https://outlook.live.com/mail/0/', domains: ['outlook.com', 'outlook.fr', 'hotmail.com', 'hotmail.fr', 'live.com', 'live.fr', 'msn.com'] },
   { key: 'icloud', label: 'Apple (iCloud Mail)', url: 'https://www.icloud.com/mail/', domains: ['icloud.com', 'me.com', 'mac.com'] },
   { key: 'orange', label: 'Orange', url: 'https://messagerie.orange.fr/', domains: ['orange.fr', 'wanadoo.fr'] },
