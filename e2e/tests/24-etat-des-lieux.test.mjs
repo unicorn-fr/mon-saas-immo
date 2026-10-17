@@ -36,7 +36,9 @@ test('état des lieux d’entrée : photo d’ensemble, demande de complément d
     // Signatures (posées ici directement) puis signature de l'état des lieux
     const inv = (await api(`/inventories/${id}`, { token })).data
     assert.equal(inv.rooms[0].photoIds.length, 1)
-    await api(`/inventories/${id}`, { method: 'PUT', token, body: { ...inv, signatures: { landlord: PNG, tenant: PNG } } })
+    // État des lieux daté du jour : la demande de complément n'est ouverte que 10 jours après (loi de 1989, art. 3-2).
+    const signedOn = new Date().toISOString().slice(0, 10)
+    await api(`/inventories/${id}`, { method: 'PUT', token, body: { ...inv, date: signedOn, signatures: { landlord: PNG, tenant: PNG } } })
     await api(`/inventories/${id}/sign`, { method: 'POST', token })
 
     // Locataire : demande de complément dans les 10 jours, avec photo
