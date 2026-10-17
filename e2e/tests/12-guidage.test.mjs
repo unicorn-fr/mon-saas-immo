@@ -17,6 +17,12 @@ test('connexion : bouton vers la messagerie de l’adresse saisie', async () => 
   await page.getByRole('button', { name: 'Recevoir mon lien de connexion' }).click()
   await page.getByText('Regardez vos emails.').waitFor()
   assert.match(await page.getByRole('link', { name: 'Ouvrir Gmail' }).getAttribute('href'), /^https:\/\/mail\.google\.com\//)
+  // Messagerie reconnue : un seul bouton, pas la liste des autres.
+  assert.equal(await page.getByRole('link', { name: 'Orange' }).count(), 0)
+  await page.getByRole('button', { name: 'recommencez' }).click()
+  await page.getByLabel('Email').fill(`marie.${Date.now()}@entreprise-inconnue.fr`)
+  await page.getByRole('button', { name: 'Recevoir mon lien de connexion' }).click()
+  await page.getByText('Regardez vos emails.').waitFor()
   await page.getByRole('link', { name: 'Orange' }).waitFor()
   await page.getByRole('link', { name: 'Outlook, Hotmail' }).waitFor()
   await shot(page, 'connexion-messageries')
