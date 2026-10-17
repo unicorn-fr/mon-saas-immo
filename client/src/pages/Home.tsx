@@ -10,8 +10,9 @@ import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../confi
 
 /**
  * Accueil. Direction « split stage » (taste-skill) : la carte et le bail en direct défilent à gauche,
- * les façades de Montpellier restent à droite et changent quand la section change. Les persiennes du Midi
- * donnent la bande rayée. Photos : Wikimedia Commons, créditées en pied de page (public/accueil/credits.json).
+ * les grands lieux de Montpellier restent à droite et changent quand la section change. « Tout le dossier »
+ * montre des aperçus de l'application (HTML, pas d'image). Photos : Wikimedia Commons, créditées en pied de page
+ * (public/accueil/credits.json).
  */
 
 type Kind = 'VIDE' | 'MEUBLE' | 'GARAGE'
@@ -49,10 +50,10 @@ function termsFor(kind: Kind, rent: number): Array<[string, string]> {
 }
 
 const ROWS = [
-  { title: 'L’annonce', img: 'facade', alt: 'Façade sculptée d’un hôtel particulier de Montpellier', items: ['Texte prêt à coller', 'Leboncoin, SeLoger, PAP', 'Mentions obligatoires incluses', 'Un lien pour les candidatures'] },
-  { title: 'Le bail signé', img: 'balcons', alt: 'Immeuble à balcons fleuris, Montpellier', items: ['Contrat type d’octobre 2026', 'Vide, meublé ou garage', 'Signature en ligne, sans compte', 'Locataire et garant'] },
-  { title: 'Chaque mois', img: 'cour', alt: 'Cour d’un immeuble ancien de Montpellier, orangers en pots', items: ['Quittance envoyée seule', 'Loyer révisé à l’IRL', 'Rappel d’assurance', 'Relance si le loyer manque'] },
-]
+  { title: 'L’annonce', mock: 'ad', items: ['Texte prêt à coller', 'Leboncoin, SeLoger, PAP', 'Mentions obligatoires incluses', 'Un lien pour les candidatures'] },
+  { title: 'Le bail signé', mock: 'lease', items: ['Contrat type d’octobre 2026', 'Vide, meublé ou garage', 'Signature en ligne, sans compte', 'Locataire et garant'] },
+  { title: 'Chaque mois', mock: 'month', items: ['Quittance envoyée seule', 'Loyer révisé à l’IRL', 'Rappel d’assurance', 'Relance si le loyer manque'] },
+] as const
 
 const FAQ: Array<[string, string]> = [
   ['Le bail est-il valable ?', 'Oui. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026.'],
@@ -74,17 +75,94 @@ const LEGAL = [
   { to: '/accessibilite', label: 'Accessibilité' },
 ]
 
-const Slats = ({ thin = false }: { thin?: boolean }) => (
-  <div className={thin ? 'slats slats--thin' : 'slats'} aria-hidden>
-    {Array.from({ length: 80 }, (_, i) => (
-      <span key={i} />
-    ))}
-  </div>
-)
+/** Aperçus de l'application, dessinés en HTML : ce que le propriétaire verra vraiment. */
+function MockAd() {
+  return (
+    <div className="mock" data-ui role="img" aria-label="Aperçu d’une annonce prête à publier sur Leboncoin, SeLoger et PAP">
+      <div className="mock-bar">
+        <span>Annonce</span>
+        <span className="mock-ok">Prête</span>
+      </div>
+      <p className="mock-title">T2 lumineux, quartier Écusson</p>
+      <p className="mock-price">
+        780 € <small>charges comprises, par mois</small>
+      </p>
+      <div className="mock-facts">
+        <span>42 m²</span>
+        <span>DPE C</span>
+        <span>Dépôt 700 €</span>
+      </div>
+      <div className="mock-sites">
+        <span>Leboncoin</span>
+        <span>SeLoger</span>
+        <span>PAP</span>
+      </div>
+      <p className="mock-link">bailio.fr/candidature/t2-ecusson</p>
+    </div>
+  )
+}
+
+function MockLease() {
+  return (
+    <div className="mock mock--paper" data-ui role="img" aria-label="Aperçu d’un bail signé en ligne par le bailleur, le locataire et le garant">
+      <p className="mock-doc">Contrat de location</p>
+      <p className="mock-sub">Logement vide · contrat type, octobre 2026</p>
+      <div className="mock-lines" aria-hidden>
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="mock-signs">
+        {[
+          ['Bailleur', '2 oct.'],
+          ['Locataire', '2 oct.'],
+          ['Garant', '3 oct.'],
+        ].map(([who, when]) => (
+          <div key={who}>
+            <span className="mock-check" aria-hidden>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 6.5 5 9.2 10 3" />
+              </svg>
+            </span>
+            <strong>{who}</strong>
+            <span>signé le {when}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MockMonth() {
+  const rows: Array<[string, string, string]> = [
+    ['1 nov.', 'Quittance d’octobre', 'Envoyée à Léa'],
+    ['15 nov.', 'Loyer révisé (IRL)', '780 € → 791 €'],
+    ['20 nov.', 'Attestation d’assurance', 'Demandée'],
+    ['6 déc.', 'Loyer de décembre', 'Relance prête'],
+  ]
+  return (
+    <div className="mock" data-ui role="img" aria-label="Aperçu du suivi mensuel : quittance envoyée, loyer révisé, assurance demandée, relance prête">
+      <div className="mock-bar">
+        <span>Aujourd’hui</span>
+        <span>T2 Écusson</span>
+      </div>
+      <ul className="mock-feed">
+        {rows.map(([d, what, state]) => (
+          <li key={what}>
+            <span className="mock-date">{d}</span>
+            <span className="mock-what">{what}</span>
+            <span className="mock-state">{state}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 const STAGE_PHOTOS = [
-  { src: '/accueil/rue.webp', alt: 'Rue aux volets clairs dans le centre de Montpellier' },
-  { src: '/accueil/cour-haute.webp', alt: 'Cour d’un immeuble ancien de Montpellier, orangers en pots' },
+  { src: '/accueil/peyrou.webp', place: 'Château d’eau du Peyrou', alt: 'Le château d’eau du Peyrou, à Montpellier, reflété dans son bassin' },
+  { src: '/accueil/arc.webp', place: 'Arc de triomphe, rue Foch', alt: 'L’arc de triomphe de Montpellier au soleil couchant, un réverbère au premier plan' },
 ]
 
 export default function Home() {
@@ -122,7 +200,6 @@ export default function Home() {
         <div className="stage">
           <div className="stage-col">
             <section className="card" data-photo="0" data-section>
-              <Slats />
               <div className="card-body">
                 <span data-in style={{ ['--i' as string]: 0 }}>
                   <Logo size={28} color="var(--ink)" to={null} />
@@ -189,6 +266,7 @@ export default function Home() {
             {STAGE_PHOTOS.map((p, i) => (
               <img key={p.src} src={p.src} alt={i === photo ? p.alt : ''} aria-hidden={i !== photo} className={i === photo ? 'is-on' : undefined} width={960} height={1200} />
             ))}
+            <p className="stage-place">{STAGE_PHOTOS[photo].place}, Montpellier</p>
           </div>
         </div>
 
@@ -199,7 +277,9 @@ export default function Home() {
               <article key={r.title} className="drow" data-section>
                 <h3 data-in>{r.title}</h3>
                 <div className="drow-body">
-                  <img data-in style={{ ['--i' as string]: 1 }} src={`/accueil/${r.img}.webp`} alt={r.alt} width={720} height={960} loading="lazy" decoding="async" />
+                  <div data-in style={{ ['--i' as string]: 1 }} className="mock-wrap">
+                    {r.mock === 'ad' ? <MockAd /> : r.mock === 'lease' ? <MockLease /> : <MockMonth />}
+                  </div>
                   <ul data-in style={{ ['--i' as string]: 2 }}>
                     {r.items.map((it) => (
                       <li key={it}>{it}</li>
@@ -287,7 +367,7 @@ export default function Home() {
         </section>
 
         <section className="last" data-section aria-labelledby="last-title">
-          <img src="/accueil/canal.webp" alt="Le canal de Sète bordé de façades, bateaux à quai" width={1920} height={1080} loading="lazy" decoding="async" />
+          <img src="/accueil/antigone.webp" alt="Le quartier Antigone et l’hôtel de Région au bord du Lez, à la tombée du jour" width={1920} height={1080} loading="lazy" decoding="async" />
           <div className="last-text">
             <h2 id="last-title" data-in>
               Votre premier bail est offert.
@@ -304,9 +384,8 @@ export default function Home() {
         </section>
       </main>
 
-      <Slats thin />
       <footer className="foot">
-        <img src="/accueil/porte.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
+        <img src="/accueil/comedie.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
         <div className="foot-menu">
           <Logo size={28} color="var(--ink)" />
           <nav aria-label="Pied de page">
@@ -348,7 +427,7 @@ export default function Home() {
               ))}
             </ul>
             <p>
-              Photos : Fred Romero (CC BY 2.0), Montpellier ; GFreihalter (CC BY-SA 4.0), canal de Sète ; via Wikimedia Commons, recadrées.
+              Photos : Christian Ferrer (CC BY 4.0), château d’eau du Peyrou ; Elisaveta Abazova (CC BY-SA 4.0), arc de triomphe ; Mike (CC BY 2.0), Antigone ; Benoît Prieur (CC0), place de la Comédie ; via Wikimedia Commons, recadrées.
             </p>
           </div>
         </div>
