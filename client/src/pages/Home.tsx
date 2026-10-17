@@ -202,9 +202,11 @@ export default function Home() {
             <section className="card" data-photo="0" data-section>
               <div className="card-body">
                 <span data-in style={{ ['--i' as string]: 0 }}>
-                  <Logo size={28} color="var(--ink)" to={null} />
+                  <Logo size={28} color="var(--accent)" to={null} />
                 </span>
-                <h1 data-in style={{ ['--i' as string]: 1 }}>Le bail juste, du premier coup.</h1>
+                <h1 data-in style={{ ['--i' as string]: 1 }}>
+                  Le bail <span className="hl">juste</span>, du premier coup.
+                </h1>
                 <p className="card-lead" data-in style={{ ['--i' as string]: 2 }}>
                   Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
                 </p>
@@ -230,7 +232,7 @@ export default function Home() {
                 ))}
               </div>
               <h2 id="live-title" data-in style={{ ['--i' as string]: 1 }}>
-                {current.title}, déjà calculé.
+                {current.title}, <span className="hl">déjà calculé</span>.
               </h2>
               <div className="rent" data-in style={{ ['--i' as string]: 2 }}>
                 <label htmlFor="live-rent">Loyer hors charges</label>
@@ -339,7 +341,7 @@ export default function Home() {
             <h2>Premier bail</h2>
             <p className="plan-for">Pour louer un logement, une fois.</p>
             <div className="plan-foot">
-              <span className="plan-price">0 €</span>
+              <span className="plan-price hl">0 €</span>
               <Link to="/commencer" className="btn btn--ink">
                 Créer mon bail
               </Link>
@@ -397,7 +399,7 @@ export default function Home() {
       <footer className="foot">
         <img src="/accueil/rue-foch.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
         <div className="foot-menu">
-          <Logo size={28} color="var(--ink)" />
+          <Logo size={28} color="var(--accent)" />
           <nav aria-label="Pied de page">
             <ul>
               <li>

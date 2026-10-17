@@ -68,11 +68,12 @@
 .tabs-live button:hover { color: var(--ink); }
 .rent { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .rent label { font-size: var(--step-body); color: var(--muted); }
-.rent input { width: 7ch; font-family: var(--serif-display); font-size: var(--step-head); line-height: 1; background: transparent; border: 0; border-bottom: 3px solid var(--ink); color: var(--ink); padding: 0; }
+.rent input { width: 7ch; font-family: var(--serif-display); font-size: var(--step-head); line-height: 1; background: transparent; border: 0; border-bottom: 3px solid var(--accent); color: var(--accent); padding: 0; }
 .rent input:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 .terms { margin: 0; display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 14px 24px; }
 .terms dt { color: var(--muted); }
-.terms dd { margin: 0; font-weight: 600; }
+.terms dd { margin: 0; font-weight: 600; color: var(--accent); }
+.hm .hl { color: var(--accent); }
 .live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-top: auto; }
 .live-actions .btn { min-height: 72px; }
 
@@ -114,7 +115,7 @@
 .mock-date { grid-row: span 2; color: var(--muted); font-variant-numeric: tabular-nums; }
 .mock-what { font-weight: 600; }
 .mock-state { color: var(--accent); }
-.stage-place { position: absolute; left: 0; bottom: 0; margin: 0; background: var(--ink); color: var(--paper); padding: 8px 14px; font-size: var(--step-small); }
+.stage-place { position: absolute; left: 0; bottom: 0; margin: 0; background: var(--accent); color: var(--accent-ink); padding: 8px 14px; font-size: var(--step-small); }
 .drow > .drow-body > ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; font-size: var(--step-body); }
 
 /* ── Itinéraire sur un ticket ── */
@@ -146,7 +147,7 @@
 .faq h2 { grid-column: 1 / 4; font-size: var(--step-lead); }
 .faq-text { grid-column: 5 / 13; columns: 2; column-gap: 56px; font-size: var(--step-body); }
 .faq-text p { break-inside: avoid; margin: 0 0 20px; }
-.faq-text strong { font-weight: 600; }
+.faq-text strong { font-weight: 600; color: var(--accent); }
 
 /* ── Dernier appel sur la photo du canal ── */
 .last { position: relative; min-height: 90svh; overflow: hidden; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: end; color: var(--paper); }
