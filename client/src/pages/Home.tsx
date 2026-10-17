@@ -131,7 +131,7 @@ export default function Home() {
                 <p className="card-lead" data-in style={{ ['--i' as string]: 2 }}>
                   Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
                 </p>
-                <span data-in style={{ ['--i' as string]: 3 }}>
+                <span>
                   <Link to="/commencer" className="btn">
                     Créer mon bail gratuit
                   </Link>
@@ -174,7 +174,7 @@ export default function Home() {
                   </div>
                 ))}
               </dl>
-              <div className="live-actions" data-in style={{ ['--i' as string]: 4 }}>
+              <div className="live-actions">
                 <Link to="/commencer" className="btn btn--ink">
                   Créer ce bail
                 </Link>
@@ -295,7 +295,7 @@ export default function Home() {
             <p data-in style={{ ['--i' as string]: 1 }}>
               Cinq minutes de questions, et vous repartez avec un bail prêt à signer.
             </p>
-            <span data-in style={{ ['--i' as string]: 2 }}>
+            <span>
               <Link to="/commencer" className="btn btn--paper">
                 Créer mon bail
               </Link>
