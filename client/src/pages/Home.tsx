@@ -291,6 +291,16 @@ export default function Home() {
           </div>
         </section>
 
+        <div className="ribbon" data-section role="region" aria-label="Montpellier en images" tabIndex={0}>
+          {[
+            ['arc', 'L’arc de triomphe de Montpellier, une statue au premier plan'],
+            ['ruelle', 'Ruelle pavée bordée de façades en pierre et de balcons en fer forgé'],
+            ['rue-coloree', 'Rue étroite aux façades colorées et aux balcons fleuris'],
+          ].map(([f, alt], i) => (
+            <img key={f} data-in style={{ ['--i' as string]: i }} src={`/accueil/${f}.webp`} alt={alt} width={960} height={1200} loading="lazy" decoding="async" />
+          ))}
+        </div>
+
         <section className="itin" data-section aria-labelledby="itin-title">
           <div className="itin-intro">
             <h2 id="itin-title" data-in>
