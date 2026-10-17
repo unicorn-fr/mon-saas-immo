@@ -11,7 +11,7 @@ import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../confi
 /**
  * Accueil. Direction « split stage » (taste-skill) : la carte et le bail en direct défilent à gauche,
  * les grands lieux de Montpellier restent à droite et changent quand la section change. « Tout le dossier »
- * montre des aperçus de l'application (HTML, pas d'image). Photos : Wikimedia Commons, créditées en pied de page
+ * montre des aperçus de l'application (HTML, pas d'image). Photos fournies par l'éditeur
  * (public/accueil/credits.json).
  */
 
@@ -161,8 +161,8 @@ function MockMonth() {
 }
 
 const STAGE_PHOTOS = [
-  { src: '/accueil/peyrou.webp', place: 'Château d’eau du Peyrou', alt: 'Le château d’eau du Peyrou, à Montpellier, reflété dans son bassin' },
-  { src: '/accueil/arc.webp', place: 'Arc de triomphe, rue Foch', alt: 'L’arc de triomphe de Montpellier au soleil couchant, un réverbère au premier plan' },
+  { src: '/accueil/arbre-blanc.webp', place: 'L’Arbre Blanc', alt: 'L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier' },
+  { src: '/accueil/comedie.webp', place: 'Place de la Comédie', alt: 'La fontaine des Trois Grâces devant l’opéra Comédie, à Montpellier' },
 ]
 
 export default function Home() {
@@ -367,7 +367,7 @@ export default function Home() {
         </section>
 
         <section className="last" data-section aria-labelledby="last-title">
-          <img src="/accueil/antigone.webp" alt="Le quartier Antigone et l’hôtel de Région au bord du Lez, à la tombée du jour" width={1920} height={1080} loading="lazy" decoding="async" />
+          <img src="/accueil/peyrou.webp" alt="La promenade du Peyrou, la statue de Louis XIV et le château d’eau, à Montpellier" width={1920} height={1080} loading="lazy" decoding="async" />
           <div className="last-text">
             <h2 id="last-title" data-in>
               Votre premier bail est offert.
@@ -385,7 +385,7 @@ export default function Home() {
       </main>
 
       <footer className="foot">
-        <img src="/accueil/comedie.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
+        <img src="/accueil/rue-foch.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
         <div className="foot-menu">
           <Logo size={28} color="var(--ink)" />
           <nav aria-label="Pied de page">
@@ -426,9 +426,6 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-            <p>
-              Photos : Christian Ferrer (CC BY 4.0), château d’eau du Peyrou ; Elisaveta Abazova (CC BY-SA 4.0), arc de triomphe ; Mike (CC BY 2.0), Antigone ; Benoît Prieur (CC0), place de la Comédie ; via Wikimedia Commons, recadrées.
-            </p>
           </div>
         </div>
       </footer>
