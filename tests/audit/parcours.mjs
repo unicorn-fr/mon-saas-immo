@@ -28,7 +28,8 @@ const visible = async (loc, timeout = 8000) => {
 async function run(config) {
   const res = new Results(`parcours-${config.id}`)
   const D = config.label
-  const mobile = config.kind === 'Smartphone'
+  // Menu du bas (téléphone, tablette en portrait) ou menu latéral : selon la largeur, comme le site (< 1024 px).
+  const mobile = config.opts.viewport.width < 1024
 
   // P1 — Découvrir : accueil → Tarif → FAQ → pied de page.
   if (want('P1')) {
@@ -290,7 +291,8 @@ async function run(config) {
         await step(res, config, page, P, 'Carnet et « Que se passe-t-il ? »', 'Trouver ces pages sur téléphone', 'Carnet depuis Mon compte, situations depuis Aujourd’hui', async () => {
           await page.goto(BASE + '/espace')
           await settle(page)
-          const s = await page.getByRole('link', { name: 'Que se passe-t-il ?' }).filter({ visible: true }).count() + (await page.getByRole('button', { name: 'Que se passe-t-il ?' }).filter({ visible: true }).count())
+          // Compte vide : « Aujourd'hui » n'affiche que l'accueil (ajouter un logement), les situations viennent ensuite.
+          const s = (await page.locator('a[href="/espace/situations"]').filter({ visible: true }).count()) + (await page.getByText('Ajouter un logement').filter({ visible: true }).count())
           await page.goto(BASE + '/espace/compte')
           await settle(page)
           const n = await page.locator('a[href="/espace/carnet"]').filter({ visible: true }).count()
