@@ -1,0 +1,80 @@
+{
+ "generatedAt": "2026-10-18T11:29:00.556Z",
+ "elements": 16062,
+ "ok": 15581,
+ "ko": 3,
+ "improve": 478,
+ "bySeverity": {
+  "Bloquant": 0,
+  "Majeur": 0,
+  "Mineur": 300,
+  "Cosmétique": 181
+ },
+ "byDevice": {
+  "iPhone portrait (Safari/WebKit)": {
+   "tested": 1526,
+   "ko": 1,
+   "improve": 87
+  },
+  "iPhone paysage (Safari/WebKit)": {
+   "tested": 1511,
+   "ko": 1,
+   "improve": 88
+  },
+  "Android portrait (Chrome)": {
+   "tested": 1513,
+   "ko": 0,
+   "improve": 87
+  },
+  "Android paysage (Chrome)": {
+   "tested": 1537,
+   "ko": 1,
+   "improve": 96
+  },
+  "iPad portrait (Safari/WebKit)": {
+   "tested": 1389,
+   "ko": 0,
+   "improve": 52
+  },
+  "iPad paysage (Safari/WebKit)": {
+   "tested": 1447,
+   "ko": 0,
+   "improve": 60
+  },
+  "Chrome 1366 px": {
+   "tested": 1219,
+   "ko": 0,
+   "improve": 0
+  },
+  "Chrome 1920 px": {
+   "tested": 1209,
+   "ko": 0,
+   "improve": 0
+  },
+  "Firefox 1366 px": {
+   "tested": 1177,
+   "ko": 0,
+   "improve": 2
+  },
+  "Firefox 1920 px": {
+   "tested": 1177,
+   "ko": 0,
+   "improve": 2
+  },
+  "Safari 1366 px (WebKit)": {
+   "tested": 1177,
+   "ko": 0,
+   "improve": 2
+  },
+  "Safari 1920 px (WebKit)": {
+   "tested": 1180,
+   "ko": 0,
+   "improve": 2
+  },
+  "Serveur (curl)": {
+   "tested": 0,
+   "ko": 0,
+   "improve": 0
+  }
+ }
+}

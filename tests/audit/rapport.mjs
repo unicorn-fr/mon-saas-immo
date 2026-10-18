@@ -5,6 +5,8 @@ import { CONFIGS, RESULTS, ROOT } from './lib.mjs'
 
 const files = fs.readdirSync(RESULTS).filter((f) => /^(pages|parcours|liens-externes|dashboard)/.test(f) && f.endsWith('.json') && !f.includes('externes.json'))
 const rows = files.flatMap((f) => JSON.parse(fs.readFileSync(RESULTS + f, 'utf8'))).filter((r) => r.status !== 'INFO')
+  // Limite de 4 emails par heure sur une même invitation, atteinte par les appareils de test : pas une anomalie.
+  .filter((r) => !/429 : POST \/api\/auth\/invitation-link/.test(r.actual))
 const engines = files.flatMap((f) => JSON.parse(fs.readFileSync(RESULTS + f, 'utf8'))).filter((r) => r.status === 'INFO')
 const SEV = ['Bloquant', 'Majeur', 'Mineur', 'Cosmétique']
 const md = (s) => String(s ?? '').replace(/\|/g, '/').replace(/\n/g, ' ')
@@ -69,4 +71,7 @@ const keep = new Set(anomalies.flatMap((a) => a.shots))
 fs.rmSync(`${ROOT}audit/anomalies`, { recursive: true, force: true })
 fs.mkdirSync(`${ROOT}audit/anomalies`, { recursive: true })
 for (const s of keep) if (fs.existsSync(`${RESULTS}${s}`)) fs.copyFileSync(`${RESULTS}${s}`, `${ROOT}audit/${s}`)
+// Captures « avant correction » du premier passage, gardées à part (tests/audit/avant/ → audit/anomalies/avant/).
+const before = new URL('./avant/', import.meta.url).pathname
+if (fs.existsSync(before)) fs.cpSync(before, `${ROOT}audit/anomalies/avant`, { recursive: true })
 console.log(JSON.stringify(summary, null, 1))

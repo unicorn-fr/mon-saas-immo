@@ -5,7 +5,35 @@
 
 ## 1. Résumé
 
-__RESUME__
+| | Nombre |
+|---|---|
+| Vérifications automatiques (passage final) | **16 062**, sur 12 configurations, dont 74 pages, chaque lien et chaque bouton cliqués, 8 parcours complets, 42 liens externes, le tableau de bord |
+| Anomalies distinctes trouvées | **12** : 0 bloquante, 7 majeures, 3 mineures, 2 cosmétiques (détail partie 2) |
+| Anomalies corrigées | **12 sur 12**, toutes vérifiées par une nouvelle passe des tests (une à confirmer en ligne : caméra de l'ordinateur) |
+| KO restants au passage final | **3**, tous le même point de design en attente de votre accord : « Créer mon bail » sous le bas de l'écran sur téléphone (partie 3, point 1) |
+| « À améliorer » restants | **478** : 300 mineurs (cibles tactiles entre 24 et 44 px) et 181 cosmétiques (textes de 12 px sur téléphone, liens externes non vérifiables depuis la machine de test), voir partie 3 |
+| Sécurité | Aucune faille exploitable trouvée ; 2 corrections préventives (caméra, injection CSV) |
+
+**Anomalies par appareil (avant corrections, constats distincts)**
+
+| Appareil | Bloquant | Majeur | Mineur | Cosmétique |
+|---|---|---|---|---|
+| Smartphones (iPhone, Android, portrait et paysage) | 0 | 5 (A1, A2, A4, A6, A7) | 3 (A8, A9, A10) | 2 (A11, A12) |
+| Tablettes (iPad portrait et paysage) | 0 | 6 (A1, A2, A4, A5, A6, A7) | 3 | 2 |
+| Ordinateurs (Chrome, Firefox, Safari, 1366 et 1920 px) | 0 | 3 (A1, A2, A3) | 3 | 1 (A11) |
+
+**Passage final, par appareil** (le détail est dans [`resultats-tests.md`](resultats-tests.md)) :
+
+| Appareil | Vérifications | KO | À améliorer |
+|---|---|---|---|
+| iPhone portrait | 1 526 | 1 (point de design 1) | 87 |
+| iPhone paysage | 1 511 | 1 (point de design 1) | 88 |
+| Android portrait | 1 513 | 0 | 87 |
+| Android paysage | 1 537 | 1 (point de design 1) | 96 |
+| iPad portrait | 1 389 | 0 | 52 |
+| iPad paysage | 1 447 | 0 | 60 |
+| Chrome 1366 / 1920 px | 1 210 / 1 210 | 0 | 0 |
+| Firefox et Safari 1366 / 1920 px (premier passage) | 1 179 à 1 181 chacun | 0 | 2 (lien LinkedIn, corrigé depuis) |
 
 ### Conditions des tests
 
@@ -19,7 +47,7 @@ __RESUME__
 
 ### Ce qui a été testé, sur chaque configuration
 
-- **Chaque page** (77 adresses, publiques, protégées, liens reçus par email, liens invalides, 404) : accès direct, code HTTP, page blanche, rafraîchissement, temps de chargement, erreurs JavaScript et réseau, images, textes oubliés, défilement horizontal, éléments coupés, cibles tactiles, taille des champs, survol, lisibilité, clavier mobile, accessibilité WCAG 2.1 AA (axe-core : contrastes, intitulés, textes alternatifs).
+- **Chaque page** (74 adresses, publiques, protégées, liens reçus par email, liens invalides, 404) : accès direct, code HTTP, page blanche, rafraîchissement, temps de chargement, erreurs JavaScript et réseau, images, textes oubliés, défilement horizontal, éléments coupés, cibles tactiles, taille des champs, survol, lisibilité, clavier mobile, accessibilité WCAG 2.1 AA (axe-core : contrastes, intitulés, textes alternatifs).
 - **Chaque lien** cliqué pour de vrai (destination vérifiée, puis retour arrière), et **chaque bouton** cliqué sur une page fraîche (une réaction doit se produire). Les fenêtres doivent se fermer avec Échap. Les boutons qui effacent ou envoient (supprimer, signer, envoyer…) ne sont pas cliqués automatiquement : ils sont dans le tableau de bord manuel.
 - **Parcours complets** : découverte de l'accueil, « Créer mon bail » écran par écran jusqu'au lien de l'email, connexion et déconnexion, page protégée, candidature, signalement du locataire, dossier du locataire. Formulaires remplis avec des champs vides, des formats invalides, des textes très longs, des accents, des apostrophes et des emojis.
 - **Navigation au clavier** (ordinateur) : lien « Aller au contenu », contour de focus, fenêtre ouverte et fermée au clavier.
@@ -48,12 +76,13 @@ Faux positifs écartés après vérification (aucune correction) : le champ cach
 
 ### Étapes pour reproduire les anomalies principales
 
-- **A1** : Accueil → « Créer mon bail » → « Vide » → collez 200 caractères dans « Bâtiment, étage, porte » → l'indicateur en haut affiche « Non enregistré » → continuez jusqu'à l'étape 5, rechargez : les informations saisies depuis sont perdues. Capture : [`anomalies/`](anomalies/) (iPhone, étape 5).
-- **A2** : Déconnecté, ouvrez `/espace/argent` → connexion → ouvrez le lien de l'email dans un nouvel onglet → arrivée sur `/espace` au lieu de `/espace/argent`.
+- **A1** : Accueil → « Créer mon bail » → « Vide » → collez 200 caractères dans « Bâtiment, étage, porte » → l'indicateur en haut affiche « Non enregistré » → continuez jusqu'à l'étape 5, rechargez : les informations saisies depuis sont perdues. Capture (avant correction, Chrome 1366) : [`anomalies/avant/chrome-1366--P2-…-Rafra-chissement-du-tunnel.jpg`](anomalies/avant/chrome-1366--P2-Cr-er-son-bail-tunnel-Rafra-chissement-du-tunnel.jpg).
+- **A2** : Déconnecté, ouvrez `/espace/argent` → connexion → ouvrez le lien de l'email dans un nouvel onglet → arrivée sur `/espace` au lieu de `/espace/argent`. Capture : [`anomalies/avant/chrome-1366--P6-…`](anomalies/avant/chrome-1366--P6-Page-prot-g-e-Retour-apr-s-connexion.jpg).
 - **A3** : En production, signez un document depuis un ordinateur → « Utiliser la caméra de l'ordinateur » → message « La caméra n'est pas accessible ».
 - **A4** : Sur téléphone, cherchez le carnet depuis n'importe quelle page de l'espace : aucun lien.
-- **A5** : iPad portrait, ouvrez `/mentions-legales` → la page défile de côté, « Contact » est coupé.
-- **A6** : Sur téléphone, page d'un bail → le fil d'Ariane « Logements / Studio » fait 18 px de haut.
+- **A5** : iPad portrait, ouvrez `/mentions-legales` → la page défile de côté, « Contact » est coupé. Capture : [`anomalies/avant/ipad-portrait--Contact-debordement.jpg`](anomalies/avant/ipad-portrait--Contact-debordement.jpg).
+- **A6** : Sur téléphone, page d'un bail → le fil d'Ariane « Logements / Studio » fait 18 px de haut. Capture : [`anomalies/avant/android-portrait--Bail-sign-cibles-24.jpg`](anomalies/avant/android-portrait--Bail-sign-cibles-24.jpg) ; bouton Fermer sans nom (A7) : [`anomalies/avant/android-portrait--Ajouter-un-logement-axe.jpg`](anomalies/avant/android-portrait--Ajouter-un-logement-axe.jpg).
+- **Point de design 1** (non corrigé) : [`anomalies/iphone-portrait--P1-…`](anomalies/iphone-portrait--P1-D-couvrir-le-site-Action-principale.jpg).
 
 ## 3. Points en attente de votre validation
 
@@ -89,7 +118,22 @@ Pistes, sans urgence : le jeton de session est gardé dans le stockage du naviga
 
 Branche `claude/busy-babbage-2maznh` : un commit par correction.
 
-__COMMITS__
+| Commit | Correction |
+|---|---|
+| `b9fbba1` | A1 : longueur des champs du tunnel limitée comme sur le serveur |
+| `86ef706` | A2 : retour à la page demandée après la connexion par email |
+| `64ad63d` | A8 : premier groupe des actions groupées repliable |
+| `934a8b9` | A7 : bouton Fermer des parcours pas à pas nommé, cible de 44 px |
+| `1234028` | A5 : pied de page des pages légales sur tablette |
+| `8caffda` | A6 : petits liens et boutons texte touchables au doigt |
+| `c32a7a0` | A4 : carnet accessible sur téléphone et tablette |
+| `fcdca99` | A3 : caméra de l'ordinateur autorisée (signature en ligne) |
+| `cff0cda` | A10 : export CSV protégé contre les formules |
+| `f39e175` | Dépendance de développement `source-map-js` mise à jour |
+| `825a2c8` | A9 : titres principaux des fiches, courriers et pages en erreur |
+| `e52fbf5` | A11, A12 : logo, barre du bas, lien LinkedIn |
+
+Les autres commits « Audit : … » ajoutent les tests (`tests/audit/`), la cartographie, ce rapport et le tableau de bord.
 
 ## 6. Vérification finale
 
