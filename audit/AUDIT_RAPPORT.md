@@ -137,4 +137,16 @@ Les autres commits « Audit : … » ajoutent les tests (`tests/audit/`), la car
 
 ## 6. Vérification finale
 
-__FINAL__
+Après toutes les corrections, sur le code final :
+
+| Suite | Résultat |
+|---|---|
+| `tests/audit/pages.mjs` : 74 pages sur 8 configurations relancées (téléphones, tablettes, Chrome 1366 et 1920 px) | 0 KO ; restent les points « à améliorer » de la partie 3 |
+| `tests/audit/parcours.mjs` : 8 parcours sur 8 configurations | Tout passe, sauf le point de design 1 (téléphones) |
+| `tests/audit/dashboard.mjs` : tableau de bord manuel (iPhone, iPad, ordinateur) | 30 sur 30 |
+| `tests/audit/liens-externes.mjs` : 42 liens | Format correct ; réponse non vérifiable (réseau de test bloqué) |
+| Suite existante `e2e/` (68 parcours métier, accessibilité axe-core comprise) | **68 sur 68** |
+| Tests du serveur (`npm --prefix server test`) | 151 réussis, 0 échec (3 ignorés) |
+| Tests du site (vitest) et vérification des types (client, serveur) | OK |
+
+La colonne « Corrigé / Vérifié » de la partie 2 reflète cette vérification finale.
