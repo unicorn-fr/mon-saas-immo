@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bailio · Tests manuels</title>
+<meta name="description" content="Tableau de bord des tests manuels de Bailio : parcours à refaire sur téléphone, tablette et ordinateur, retours exportables.">
+<style>
+:root {
+  --bg: #faf7f2; --surface: #ffffff; --ink: #1a1a2e; --mid: #45455a; --soft: #6b6b80; --line: #e4ded3; --line-strong: #8a8496;
+  --blue: #1a3270; --blue-tint: #e8edf8; --green: #1f6b45; --green-tint: #e3f2ea; --red: #a3231b; --red-tint: #fbe9e7;
+  --amber: #8a5a00; --amber-tint: #fdf1d8; --grey-tint: #efece6; --focus: #1a3270;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14141c; --surface: #1e1e29; --ink: #f1efe9; --mid: #c9c6d3; --soft: #a3a0b0; --line: #34343f; --line-strong: #6f6c7d;
+    --blue: #9db4ef; --blue-tint: #26304d; --green: #7fd1a3; --green-tint: #1d3a2b; --red: #f29b93; --red-tint: #43211e;
+    --amber: #f0c56b; --amber-tint: #3d3018; --grey-tint: #2a2a35; --focus: #9db4ef; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14141c; --surface: #1e1e29; --ink: #f1efe9; --mid: #c9c6d3; --soft: #a3a0b0; --line: #34343f; --line-strong: #6f6c7d;
+  --blue: #9db4ef; --blue-tint: #26304d; --green: #7fd1a3; --green-tint: #1d3a2b; --red: #f29b93; --red-tint: #43211e;
+  --amber: #f0c56b; --amber-tint: #3d3018; --grey-tint: #2a2a35; --focus: #9db4ef; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--blue); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 96px; }
+header.top { padding: 24px 0 8px; }
+h1 { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; margin: 0 0 6px; }
+h2 { font-size: 20px; margin: 0; }
+.muted { color: var(--soft); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+details.help summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+details.help ol, details.help ul { margin: 8px 0 0; padding-left: 22px; }
+details.help li { margin-bottom: 6px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.grow { flex: 1 1 200px; min-width: 0; }
+label.field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; font-weight: 600; }
+select, input[type="text"], input[type="url"], textarea { font: inherit; font-size: 16px; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 12px; min-height: 44px; padding: 8px 12px; width: 100%; }
+textarea { min-height: 88px; resize: vertical; }
+button, .btn { font: inherit; font-weight: 600; font-size: 15px; min-height: 44px; padding: 8px 16px; border-radius: 12px; border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+button.primary { background: var(--blue); border-color: var(--blue); color: var(--surface); }
+button.danger { color: var(--red); border-color: var(--red); }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 640px) { .sticky .seg button { padding: 8px 10px; font-size: 14px; } }
+.seg button[aria-pressed="true"] { background: var(--blue); color: var(--surface); border-color: var(--blue); }
+.sticky { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); }
+.bars { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.bar { font-size: 14px; }
+.bar .track { height: 10px; border-radius: 6px; background: var(--grey-tint); overflow: hidden; margin-top: 4px; display: flex; }
+.bar .ok { background: var(--green); } .bar .bug { background: var(--red); } .bar .imp { background: var(--amber); }
+.group { margin-top: 28px; }
+.group > h2 { margin-bottom: 4px; }
+.test { margin-top: 12px; }
+.test-head { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.num { font-weight: 800; color: var(--blue); margin-right: 6px; }
+.title { font-weight: 700; font-size: 17px; }
+.pill { display: inline-block; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--grey-tint); color: var(--mid); white-space: nowrap; }
+.pill.OK { background: var(--green-tint); color: var(--green); }
+.pill.BUG { background: var(--red-tint); color: var(--red); }
+.pill.AMELIORER { background: var(--amber-tint); color: var(--amber); }
+.steps { margin: 10px 0 6px; padding-left: 22px; }
+.steps li { margin-bottom: 4px; }
+.expected { background: var(--blue-tint); border-radius: 12px; padding: 10px 12px; font-size: 15px; }
+.devstate { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.result { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; display: grid; gap: 10px; }
+.status-seg button[data-v="OK"][aria-pressed="true"] { background: var(--green); border-color: var(--green); }
+.status-seg button[data-v="BUG"][aria-pressed="true"] { background: var(--red); border-color: var(--red); }
+.status-seg button[data-v="AMELIORER"][aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--bg); }
+.shot img { max-width: 220px; max-height: 220px; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.hidden { display: none !important; }
+.notice { font-size: 14px; color: var(--soft); }
+.remark { border-top: 1px solid var(--line); padding-top: 10px; margin-top: 10px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) { .test-head .pill { margin-top: 4px; } .bars { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Tests manuels de Bailio</h1>
+    <p class="muted" style="margin:0">Votre progression est enregistrée automatiquement dans ce navigateur. Vous pouvez fermer la page et reprendre plus tard.</p>
+  </header>
+
+  <details class="help card" open>
+    <summary>Mode d’emploi (2 minutes)</summary>
+    <ol>
+      <li><strong>Ouvrir sur votre téléphone</strong> : envoyez-vous ce fichier (<code>audit/dashboard-test.html</code>) par email, AirDrop, WhatsApp ou Google Drive, puis ouvrez-le avec Safari ou Chrome (« Ouvrir avec… » ou « Partager → Ouvrir dans Safari »). Sur ordinateur, double-cliquez simplement sur le fichier. Aucune installation, aucun serveur.</li>
+      <li><strong>Choisissez l’appareil et le navigateur</strong> dans la barre du haut : chaque réponse est rangée sous cet appareil. Faites le tour une fois sur téléphone, une fois sur tablette, une fois sur ordinateur.</li>
+      <li><strong>Dans l’ordre</strong> : les tests sont rangés comme un vrai parcours. Commencez par « Visiteur » et « Créer mon bail » <em>sans être connecté</em> (fenêtre de navigation privée), puis connectez-vous et continuez groupe par groupe. Prévoyez une seconde adresse email (ou celle d’un proche) pour jouer le locataire, le garant ou le candidat.</li>
+      <li><strong>Pour chaque test</strong> : cliquez sur le lien, suivez les étapes, puis choisissez <em>OK</em>, <em>Bug</em> ou <em>À améliorer</em>. Pour un bug, indiquez la gravité, décrivez ce qui s’est passé et ajoutez une capture si vous pouvez.</li>
+      <li><strong>Une idée ou un bug hors liste</strong> : utilisez « Remarque libre » tout en bas.</li>
+      <li><strong>Exporter</strong> : bouton « Exporter mes retours ». Deux fichiers se téléchargent : <code>retours-test.json</code> (à me donner) et <code>retours-test.md</code> (lisible). Faites-le sur chaque appareil, ou importez le fichier d’un appareil sur l’autre avec « Importer » pour tout réunir.</li>
+    </ol>
+    <p class="notice">Attention : ces tests se font sur le vrai site. Les emails partent vraiment : utilisez vos propres adresses. Les liens s’ouvrent sur l’adresse ci-dessous (modifiable pour un site de test).</p>
+    <label class="field" style="max-width:420px">Adresse du site testé
+      <input type="url" id="base" value="https://bailio.fr" inputmode="url" autocomplete="off">
+    </label>
+  </details>
+
+  <div class="sticky">
+    <div class="row">
+      <div class="seg" role="group" aria-label="Appareil utilisé" id="deviceSeg"></div>
+      <label class="field" style="width:auto"><span class="sr">Navigateur</span>
+        <select id="browser" aria-label="Navigateur" style="width:auto">
+          <option>Safari</option><option>Chrome</option><option>Firefox</option><option>Edge</option><option>Samsung Internet</option><option>Autre</option>
+        </select>
+      </label>
+    </div>
+    <div class="notice" id="mini" style="margin-top:6px"></div>
+  </div>
+
+  <section class="card" style="margin-top:16px" aria-label="Progression">
+    <div class="bars" id="bars" aria-live="polite"></div>
+  </section>
+
+  <section class="card" style="margin-top:16px" aria-label="Filtres">
+    <div class="row">
+      <label class="field grow">Statut
+        <select id="fStatus"><option value="">Tous</option><option value="NONE">Pas testé</option><option value="OK">OK</option><option value="BUG">Bug</option><option value="AMELIORER">À améliorer</option></select>
+      </label>
+      <label class="field grow">Appareil
+        <select id="fDevice"><option value="">Appareil choisi en haut</option><option value="ALL">Tous les appareils</option></select>
+      </label>
+      <label class="field grow">Page ou parcours
+        <select id="fGroup"><option value="">Toutes</option></select>
+      </label>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="primary" id="export">Exporter mes retours</button>
+      <button id="import">Importer</button>
+      <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+      <button class="danger" id="reset">Tout réinitialiser</button>
+    </div>
+    <p class="notice" id="count" style="margin:8px 0 0"></p>
+  </section>
+
+  <main id="list"></main>
+
+  <section class="card group" id="remarks" aria-labelledby="remarksTitle">
+    <h2 id="remarksTitle">Remarque libre</h2>
+    <p class="muted" style="margin:4px 0 12px">Un bug ou une idée qui ne correspond à aucun test prévu.</p>
+    <div class="row">
+      <label class="field grow">Page concernée<input type="text" id="rPage" placeholder="Ex. : /espace/argent ou « page du bail »"></label>
+      <label class="field grow">Type
+        <select id="rKind"><option value="BUG">Bug</option><option value="AMELIORER">À améliorer</option><option value="IDEE">Idée</option></select>
+      </label>
+      <label class="field grow">Gravité (si bug)
+        <select id="rSev"><option value="">—</option><option>Bloquant</option><option>Majeur</option><option>Mineur</option><option>Cosmétique</option></select>
+      </label>
+    </div>
+    <label class="field" style="margin-top:10px">Description<textarea id="rText" placeholder="Ce que vous avez fait, ce qui s’est passé, ce que vous attendiez"></textarea></label>
+    <div class="row" style="margin-top:10px">
+      <label class="btn">Ajouter une capture<input type="file" accept="image/*" id="rShot" class="hidden"></label>
+      <span class="notice" id="rShotName"></span>
+      <button class="primary" id="rAdd">Ajouter la remarque</button>
+    </div>
+    <div id="rList"></div>
+  </section>
+</div>
+
+<script>
+'use strict'
+/* Tests à refaire à la main. Chaque test : numéro, groupe, page, étapes, résultat attendu, lien. */
+const T = []
+let groupName = ''
+const G = (name) => { groupName = name }
+const t = (path, title, steps, expected) => T.push({ group: groupName, path, title, steps, expected })
+
+G('1. Visiteur : accueil et pages publiques')
+t('/', 'L’accueil s’affiche correctement', ['Ouvrez le lien dans une fenêtre de navigation privée.', 'Faites défiler toute la page jusqu’en bas.'], 'Aucun texte coupé, aucune image cassée, aucun défilement de côté. Le bouton « Créer mon bail » est visible sans chercher.')
+t('/', 'Choisir le type de location et tester le loyer', ['Dans « Type de location », touchez « Meublé » puis « Vide ».', 'Saisissez un loyer (ex. 850) dans le champ.'], 'Le calcul (dépôt, durée…) se met à jour à chaque changement.')
+t('/', 'Lien « Tarif »', ['Touchez « Tarif » (en haut ou dans le menu).'], 'La page descend jusqu’à la section des tarifs. Le prix et « Offert pendant le lancement » sont affichés.')
+t('/', 'Questions fréquentes', ['Descendez jusqu’aux questions fréquentes.', 'Ouvrez puis refermez deux questions.'], 'Chaque réponse s’ouvre et se ferme au toucher.')
+t('/', 'Bande de photos', ['Faites glisser la bande de photos avec le doigt (ou la molette/flèches au clavier).'], 'La bande défile sans faire bouger toute la page de côté.')
+t('/', 'Liens du pied de page', ['En bas de l’accueil, touchez chaque lien : Créer mon bail, Importer un bail, Tarif, Se connecter, Contact, puis chaque lien légal.', 'Revenez avec le bouton retour du navigateur après chaque lien.'], 'Chaque lien ouvre la bonne page ; le retour ramène à l’accueil.')
+t('/', 'Lien email du pied de page', ['Touchez l’adresse contact@bailio.fr.'], 'Votre application d’email s’ouvre avec l’adresse déjà remplie.')
+t('/mentions-legales', 'Mentions légales', ['Lisez la page, touchez les liens « Pour aller plus loin ».'], 'Page lisible sans zoomer ; liens fonctionnels.')
+t('/conditions', 'Conditions d’utilisation', ['Ouvrez la page et faites défiler.'], 'Texte lisible, titres clairs, pied de page complet.')
+t('/confidentialite', 'Confidentialité', ['Ouvrez la page et faites défiler.'], 'Tableaux lisibles sur téléphone (sans texte coupé).')
+t('/cookies', 'Cookies', ['Ouvrez la page.'], 'Aucun bandeau de cookies n’apparaît (le site n’en utilise pas) ; la page l’explique.')
+t('/prix-et-remboursement', 'Prix et remboursement', ['Ouvrez la page.'], 'Le prix affiché est le même que sur l’accueil.')
+t('/accessibilite', 'Accessibilité', ['Ouvrez la page.'], 'Page lisible.')
+t('/contact', 'Contact', ['Ouvrez la page, touchez l’adresse email et le lien LinkedIn.'], 'L’email s’ouvre dans votre messagerie ; LinkedIn s’ouvre dans un nouvel onglet.')
+t('/page-qui-n-existe-pas', 'Page introuvable (404)', ['Ouvrez ce lien qui n’existe pas.', 'Touchez « Retour à l’accueil ».'], 'Message clair « Page introuvable » et retour à l’accueil.')
+t('/importer', 'Importer un bail déjà signé', ['Touchez la zone de dépôt et choisissez une photo ou un PDF de bail.', 'Retirez le fichier, puis remettez-le.', 'Touchez « Lire mon bail ».'], 'Le bail est lu ; vous arrivez sur la relecture avec les informations trouvées. Un fichier non pris en charge donne un message clair.')
+
+G('2. Créer mon bail (sans compte)')
+t('/commencer', 'Étape 1 : type de logement', ['Touchez « Vide » (ou « Meublé »).'], 'Passage à l’étape 2 « Où se trouve le logement ? ». La barre de progression avance.')
+t('/commencer/logement', 'Étape 2 : envoi vide', ['Sans rien remplir, touchez « Continuer ».'], 'Chaque oubli est signalé en rouge sous le champ (adresse, surface, pièces, appartement/maison, copropriété, période, chauffage). On reste sur l’étape.')
+t('/commencer/logement', 'Étape 2 : adresse et suggestions', ['Tapez le début d’une vraie adresse.', 'Choisissez une suggestion dans la liste.'], 'Des suggestions apparaissent ; l’adresse choisie remplit le champ. Si un DPE est trouvé, il est proposé.')
+t('/commencer/logement', 'Étape 2 : formats et textes longs', ['Dans « Surface habitable », tapez des lettres puis « 42,5 ».', 'Dans « Bâtiment, étage, porte », collez un très long texte avec accents, apostrophes et emojis.'], 'Les lettres sont refusées dans la surface. Le texte long est limité (pas de blocage). L’indicateur en haut affiche « Enregistré », jamais « Non enregistré ».')
+t('/commencer/logement', 'Étape 2 : clavier adapté', ['Touchez le champ « Surface habitable » sur téléphone.'], 'Le clavier numérique s’ouvre.')
+t('/commencer/personnes', 'Étape 3 : vous et votre locataire', ['Remplissez votre prénom avec un accent et un emoji (ex. Zoé 😀), un nom avec apostrophe (D’Artagnan).', 'Pour le locataire, saisissez un email invalide (« pas-un-email ») puis touchez « Continuer ».', 'Corrigez l’email et continuez.'], 'L’email invalide est refusé avec un message clair ; ce que vous avez tapé reste en place. Ensuite, passage à l’étape 4.')
+t('/commencer/personnes', 'Étape 3 : colocataire et garant', ['Touchez « + Un colocataire » puis « + Un garant ».', 'Retirez-les avec « Retirer ».'], 'Les blocs s’ajoutent et se retirent sans erreur.')
+t('/commencer/loyer', 'Étape 4 : loyer et dépôt', ['Saisissez un loyer et des charges.', 'Touchez « Modifier » à côté du dépôt et mettez un montant énorme.', 'Touchez « Continuer ».'], 'Le dépôt trop élevé est refusé avec le plafond légal ; « Revenir au maximum » corrige.')
+t('/commencer/loyer', 'Étape 4 : date et jour de paiement', ['Choisissez la date d’entrée.', 'Changez le jour de paiement.'], 'La fin du bail se calcule toute seule.')
+t('/commencer/relecture', 'Étape 5 : relecture', ['Vérifiez chaque ligne.', 'Touchez « Modifier » sur une ligne, changez une valeur, touchez « Enregistrer ».', 'Touchez « Voir le bail complet ».'], 'Les modifications sont reprises ; l’aperçu du bail s’ouvre.')
+t('/commencer/relecture', 'Rechargement et retour', ['À l’étape 5, rechargez la page.', 'Utilisez le bouton retour du navigateur, puis « Avancer ».'], 'Rien n’est perdu ; chaque étape garde ses valeurs.')
+t('/commencer/relecture', 'Enregistrer et terminer plus tard', ['Touchez « Enregistrer et terminer plus tard », saisissez votre email, touchez « Envoyer le lien ».', 'Ouvrez l’email reçu et son lien.'], 'Vous revenez exactement à l’étape où vous étiez.')
+t('/commencer/recevoir', 'Étape 6 : recevoir son bail', ['Saisissez un email invalide (« abc@ ») puis touchez « Continuer mon bail ».', 'Saisissez votre vrai email et validez.', 'Ouvrez l’email reçu et touchez le bouton.'], 'Email invalide refusé. Puis « Regardez vos emails. » et un bouton vers votre messagerie. Le lien ouvre « Votre bail est enregistré ».')
+t('/espace', 'Bienvenue après le tunnel', ['Sur la page « Votre bail est enregistré », touchez « Voir le brouillon », puis « Activer le suivi » ou « Compléter mon bail ».'], 'Le brouillon s’ouvre ; vous arrivez ensuite dans votre espace.')
+
+G('3. Connexion, inscription, déconnexion')
+t('/inscription', 'Créer son espace directement', ['Saisissez une nouvelle adresse email, touchez le bouton.', 'Ouvrez le lien reçu.'], 'Votre espace s’ouvre, vide, avec « Ajouter un logement » mis en avant.')
+t('/connexion', 'Connexion : erreurs', ['Touchez « Recevoir mon lien » sans email.', 'Saisissez « abc » puis validez.'], '« Indiquez une adresse email valide. » ; le champ garde ce que vous avez tapé.')
+t('/connexion', 'Connexion par lien', ['Saisissez votre email, validez.', 'Touchez le bouton vers votre messagerie, ouvrez l’email, touchez le lien.'], 'Le bouton ouvre la bonne messagerie. Le lien ouvre « Aujourd’hui ».')
+t('/connexion', 'Lien déjà utilisé', ['Rouvrez le même lien de connexion une seconde fois.'], '« Lien expiré. » et un bouton pour en recevoir un nouveau.')
+t('/espace/argent', 'Page protégée sans être connecté', ['Déconnecté (navigation privée), ouvrez ce lien.', 'Connectez-vous avec le lien reçu par email.'], 'Vous êtes envoyé vers la connexion, puis le lien de l’email vous ramène sur « Argent » (la page demandée).')
+t('/espace/compte', 'Déconnexion', ['Dans « Mon compte », touchez « Se déconnecter ».', 'Faites « retour » dans le navigateur.'], 'Retour à l’accueil ; l’espace ne se rouvre pas sans reconnexion.')
+t('/espace/compte', 'Appareils connectés', ['Dans « Mon compte », regardez la liste des appareils, déconnectez un ancien appareil.'], 'L’appareil disparaît de la liste ; il devra se reconnecter.')
+
+G('4. Espace : navigation et « Aujourd’hui »')
+t('/espace', 'Menu sur téléphone', ['Touchez chaque bouton de la barre du bas : Aujourd’hui, Logements, Documents, Argent.', 'Touchez l’icône Locataires et vos initiales en haut.'], 'Chaque page s’ouvre ; le bouton actif est mis en évidence ; rien n’est caché sous la barre du bas.')
+t('/espace', 'Menu sur ordinateur', ['Cliquez chaque entrée du menu de gauche, puis « Mon compte » en bas.'], 'Chaque page s’ouvre ; le compteur d’actions s’affiche sur « Aujourd’hui ».')
+t('/espace', 'Bouton « Ajouter »', ['Touchez « + » (téléphone) ou « Ajouter » (ordinateur).', 'Fermez la fenêtre avec la croix, puis rouvrez-la et fermez-la en touchant le fond (ou Échap).', 'Rouvrez-la et choisissez chaque entrée une à une.'], 'La fenêtre s’ouvre et se ferme facilement ; chaque choix mène au bon formulaire.')
+t('/espace', 'Tâches du jour', ['Lisez la liste « Aujourd’hui », touchez une tâche.'], 'La tâche ouvre directement le bon écran (courrier, état des lieux, intervention…).')
+t('/espace', 'Prochaines échéances et logements', ['Touchez un logement dans « Vos logements », puis « Tout voir ».'], 'Les pages s’ouvrent.')
+t('/espace/compte', 'Carnet sur téléphone', ['Sur téléphone ou tablette, ouvrez « Mon compte » et touchez « Carnet ».'], 'Le carnet s’ouvre (il n’est pas dans la barre du bas).')
+t('/espace', 'Clavier (ordinateur)', ['Rechargez la page et appuyez sur Tab.', 'Appuyez sur Entrée sur « Aller au contenu », puis continuez avec Tab.'], 'Un contour bleu bien visible suit chaque élément ; tout est utilisable sans souris.')
+
+G('5. Logements')
+t('/espace/logements/nouveau', 'Ajouter un logement (appartement)', ['Suivez chaque étape jusqu’au bout avec un appartement en copropriété, meublé.', 'Essayez « Passer cette étape » sur une étape facultative.'], 'Chaque étape est claire ; à la fin le logement apparaît dans « Logements ».')
+t('/espace/logements/nouveau', 'Ajouter un garage ou une place', ['Choisissez « Un garage, un box ou une place » et terminez.'], 'Parcours court (adresse, emplacement, loyer, photos) ; pas de DPE demandé.')
+t('/espace/logements', 'Liste des logements', ['Ouvrez la liste ; si deux logements ont la même adresse, vérifiez le regroupement.', 'Touchez « Tableau de bord » et « Vos structures ».'], 'Les logements de même adresse sont regroupés ; les liens fonctionnent.')
+t('/espace/logements', 'Page d’un logement : onglets', ['Ouvrez un logement.', 'Touchez chaque onglet : Vue d’ensemble, Dossier du logement, Bail et locataire, Travaux et dépenses, Diagnostics, États des lieux.'], 'Chaque onglet s’affiche ; sur téléphone les onglets défilent de côté sans couper la page.')
+t('/espace/logements', 'Fiche du logement', ['Dans un logement, ouvrez « Fiche du logement ».', 'Modifiez un champ, quittez puis revenez.'], 'La modification est gardée (enregistrement automatique).')
+t('/espace/logements', 'Dossier du logement : ajouter un document', ['Onglet « Dossier du logement » : ajoutez un titre de propriété (PDF ou photo).'], 'Le document apparaît, s’ouvre et se télécharge.')
+t('/espace/logements', 'Travaux : nouvelle intervention', ['Onglet « Travaux et dépenses » : touchez « + Nouvelle », remplissez avec un artisan et un coût, marquez-la terminée.'], 'L’intervention s’affiche ; une dépense est créée ; l’artisan rejoint le carnet.')
+t('/espace/logements', 'Annonce', ['Ouvrez « Annonce et candidats » puis l’annonce.', 'Modifiez le loyer, touchez « Copier l’annonce ».', 'Touchez « Copier la consigne » (IA), collez un texte dans « Réponse de l’IA » et « Utiliser ce texte ».'], 'Mentions obligatoires présentes ; le texte est copié ; les liens Leboncoin, SeLoger, PAP s’ouvrent dans un nouvel onglet.')
+t('/espace/logements', 'Candidats', ['Ouvrez « Candidats » : créez le lien, copiez-le, copiez le message.', 'Ouvrez le lien de candidature dans une autre fenêtre et envoyez une candidature (voir groupe 12).', 'Revenez : retenez, écartez, puis « Choisir ce candidat ».'], 'La candidature apparaît avec sa note et ses raisons ; le candidat choisi devient un locataire.')
+t('/espace/logements', 'Emprunt', ['Dans un logement, ouvrez « Emprunt » : ajoutez un prêt (montant, taux, durée, date).', 'Ouvrez le détail d’une année.'], 'Mensualité et tableau calculés ; la trésorerie du mois s’affiche.')
+t('/espace/logements', 'Aides et dispositifs', ['Ouvrez « Aides et dispositifs », ouvrez puis refermez chaque aide.'], 'Une aide ouverte à la fois ; statut et sources visibles.')
+t('/espace/patrimoine', 'Tableau de bord des logements', ['Ouvrez le tableau de bord.', 'Touchez une ligne « À surveiller ».'], 'Chiffres du mois et alertes ; la ligne ouvre le bon logement.')
+
+G('6. Locataires')
+t('/espace/locataires/nouveau', 'Ajouter un locataire complet', ['Remplissez identité, naissance, coordonnées, situation et revenus, puis un garant.', 'Ajoutez un justificatif (photo).'], 'Le locataire est créé ; sa fiche reprend tout.')
+t('/espace/locataires/nouveau', 'Le locataire remplit lui-même', ['Choisissez « Mon locataire le remplit lui-même », saisissez votre seconde adresse email.', 'Ouvrez l’email reçu sur cette adresse et complétez le dossier (voir groupe 12).'], 'Le dossier rempli arrive dans la fiche, marqué « à vérifier ».')
+t('/espace/locataires', 'Fiche du locataire', ['Ouvrez un locataire : touchez « Modifier », changez le téléphone, revenez.', 'Touchez le numéro de téléphone.'], 'Changement gardé ; le téléphone lance un appel.')
+t('/espace/locataires', 'Vérifier le dossier', ['Sur un dossier rempli par le locataire, touchez « Vérifier maintenant », marquez une pièce « Conforme » et une « À corriger ».'], 'Le locataire reçoit la demande de correction ; la fiche se met à jour.')
+t('/espace/locataires', 'Acte de caution', ['Ouvrez « Acte de caution », remplissez, touchez « Aperçu de l’acte ».'], 'Le PDF de l’acte s’ouvre.')
+
+G('7. Bail : création, contrat, signature')
+t('/espace/baux/nouveau', 'Créer un bail', ['Choisissez le logement et le locataire.', 'Suivez les étapes (date, durée, loyer, zone tendue, clauses).'], 'Si une information primordiale manque, un lien mène à l’étape à compléter. À la fin, la page du bail s’ouvre.')
+t('/espace/baux/nouveau', 'Créer un bail : logement interdit', ['Essayez avec un logement classé G.'], 'La création est refusée avec le motif.')
+t('/espace/logements', 'Contrat : toutes les rubriques', ['Sur la page d’un bail en préparation, ouvrez le contrat.', 'Modifiez une clause, ajoutez une clause personnelle, touchez « Aperçu du bail ».'], 'Les changements sont gardés et apparaissent dans le PDF.')
+t('/espace/logements', 'Relire le bail', ['Sur la page du bail, touchez « Ouvrir le bail », puis « J’ai relu, tout est juste ».'], 'L’étape de relecture se coche.')
+t('/espace/logements', 'Signature en ligne', ['Touchez « Signer en ligne ».', 'Signez côté propriétaire (voir groupe 12 pour le locataire et le garant).'], 'Les invitations partent ; le bail est figé pendant la signature ; « Signé le … » une fois tout le monde passé.')
+t('/espace/logements', 'Annuler la signature et modifier', ['Pendant une signature, touchez « Annuler la signature en ligne ».'], 'Le bail redevient modifiable.')
+t('/espace/logements', 'Bail signé : PDF', ['Sur un bail signé, touchez « Télécharger le PDF », puis « L’envoyer … par email ».'], 'Le PDF se télécharge ; l’email part au locataire.')
+t('/espace/logements', 'Loyer reçu et quittance', ['Touchez « Loyer reçu », choisissez le mois, le montant, la date.', 'Touchez « Enregistrer et envoyer ».'], 'Le paiement s’affiche ; la quittance part (ou reste dans Documents si le locataire n’a pas d’email).')
+t('/espace/logements', 'Quittance automatique', ['Sur la page du bail, coupez puis réactivez la quittance automatique.'], 'L’interrupteur change et reste dans cet état après rechargement.')
+t('/espace/logements', 'Départ du locataire', ['Sur un bail signé de test, touchez « Enregistrer le départ du locataire », remplissez la date et la nouvelle adresse.'], 'Le départ est enregistré ; l’état des lieux de sortie est proposé.')
+
+G('8. Courriers')
+t('/espace/logements', 'Choisir et préparer un courrier', ['Sur un bail signé, ouvrez « Quittances et courriers ».', 'Choisissez « Impayés » (relance), remplissez, touchez « Aperçu ».'], 'Le PDF s’ouvre avec vos informations.')
+t('/espace/logements', 'Saisie gardée', ['Commencez un courrier, rechargez la page.'], 'La saisie est retrouvée.')
+t('/espace/logements', 'Enregistrer et envoyer', ['Touchez « Enregistrer et envoyer » sur un courrier.', 'Touchez « Voir les courriers envoyés ».'], 'Le courrier est dans Documents ; l’email part au bon destinataire.')
+t('/espace/logements', 'Courriers à un tiers', ['Préparez une déclaration de sinistre à l’assureur et une réclamation à un artisan.'], 'Le destinataire vient du carnet ; le numéro de contrat est gardé.')
+
+G('9. États des lieux et dégradations')
+t('/espace/logements', 'État des lieux d’entrée', ['Sur un bail signé, ouvrez « État des lieux » puis « Commencer ».', 'Pour chaque pièce, notez l’état et ajoutez une photo ; relevez les compteurs ; ajoutez les clés.', 'Faites signer et touchez « Terminer et créer le PDF ».'], 'Le PDF reprend tout, avec la date de chaque photo.')
+t('/espace/logements', 'Continuer sur le téléphone (QR code)', ['Sur ordinateur, scannez le QR code de l’état des lieux avec votre téléphone.'], 'L’état des lieux s’ouvre sur le téléphone, connecté.')
+t('/espace/logements', 'État des lieux de sortie comparé', ['Lancez la sortie.', 'Vérifiez sous chaque élément l’état d’entrée.'], 'Entrée, sortie et évolution côte à côte.')
+t('/espace/logements', 'Dégradations', ['Ouvrez « Faire le point sur les dégradations ».', 'Pour un élément, choisissez « dégradation », un coût et un justificatif.', 'Touchez « Voir le récapitulatif (PDF) ».'], 'Le récapitulatif et le solde de tout compte reprennent la retenue.')
+
+G('10. Argent')
+t('/espace/argent', 'Page Argent', ['Ouvrez « Argent », regardez les loyers par mois.', 'Touchez « Exporter l’année ».'], 'Le fichier CSV se télécharge et s’ouvre dans un tableur avec les accents corrects.')
+t('/espace/argent', 'Ajouter une dépense', ['Touchez « Ajouter une dépense », remplissez avec un fournisseur contenant une apostrophe, enregistrez.', 'Rouvrez-la et supprimez-la.'], 'La dépense apparaît puis va dans la corbeille.')
+t('/espace/argent/facture', 'Facture en photo', ['Prenez en photo une facture.', 'Vérifiez les champs lus, touchez « Valider et ranger ».'], 'La facture est lue et rangée dans le bon logement.')
+t('/espace/argent/releve', 'Relevé bancaire', ['Déposez le relevé CSV ou OFX de votre banque.', 'Cochez les loyers reconnus et validez.'], 'Les loyers reconnus sont proposés ; la validation enregistre les loyers et envoie les quittances.')
+t('/espace/argent/declaration', 'Aide à la déclaration', ['Choisissez l’année, saisissez les intérêts d’emprunt.'], 'Les cases à reporter s’affichent ; les montants saisis restent après rechargement.')
+t('/espace/argent/bilan', 'Bilan', ['Changez d’année, saisissez un prix d’achat.'], 'Le rendement brut s’affiche.')
+t('/espace/argent/repartir', 'Répartir une dépense de l’immeuble', ['Suivez les trois écrans (dépense, logements et clé, vérification).'], 'La somme des parts est égale au total ; une dépense est créée par logement.')
+
+G('11. Documents, carnet, compte, structures, accès')
+t('/espace/documents', 'Documents : filtres et actions', ['Touchez chaque filtre (Baux, Quittances…).', 'Sur un document : Ouvrir, Télécharger, Imprimer, Envoyer.'], 'Les filtres trient ; chaque action fonctionne.')
+t('/espace/documents', 'Ajouter un document', ['Touchez « Ajouter un document », choisissez le type « Diagnostic », un fichier, le logement.'], 'Le document apparaît au bon endroit.')
+t('/espace/carnet', 'Carnet', ['Ajoutez un contact avec emoji et apostrophe, modifiez-le, retirez-le.'], 'Tout fonctionne ; le contact retiré va dans la corbeille.')
+t('/espace/compte', 'Mon compte : profil et signature', ['Modifiez votre adresse, signez dans le cadre « Votre signature ».', 'Rechargez la page.'], 'Tout est gardé.')
+t('/espace/compte', 'Exporter mes données', ['Touchez « Tout exporter », saisissez le code reçu par email.'], 'Un fichier se télécharge. Un code faux donne un message clair.')
+t('/espace/compte/profil', 'Profil complet du bailleur', ['Remplissez le profil, IBAN compris.'], 'Les champs se valident ; un IBAN faux est signalé.')
+t('/espace/structures', 'Structures (SCI, indivision)', ['Ajoutez une SCI avec deux associés, attribuez-lui un logement.'], 'La structure apparaît ; le logement indique son propriétaire.')
+t('/espace/compte/acces', 'Accès partagés', ['Invitez votre seconde adresse comme comptable sur un logement.', 'Ouvrez l’invitation reçue, connectez-vous.', 'Essayez de modifier quelque chose, puis « Revenir à mon espace ».'], 'Le comptable voit le logement mais ne peut rien modifier ; le bandeau indique l’espace partagé.')
+t('/espace/corbeille', 'Corbeille', ['Restaurez un élément supprimé.'], 'L’élément revient à l’identique.')
+
+G('12. Liens reçus par email (locataire, garant, candidat)')
+t('/espace/logements', 'Candidature (lien public)', ['Ouvrez le lien de candidature d’un logement sur un autre appareil.', 'Envoyez sans rien remplir, puis remplissez avec accents et emoji et envoyez.', 'Déposez les pièces demandées.'], 'Message clair si incomplet ; confirmation à l’envoi ; les pièces sont reçues.')
+t('/espace/locataires', 'Dossier du locataire (lien /dossier)', ['Ouvrez le lien « Votre dossier de location » reçu.', 'Remplissez, ajoutez une pièce, rechargez la page, touchez « J’ai terminé ».'], 'Rien n’est perdu au rechargement ; le propriétaire est prévenu.')
+t('/espace/logements', 'Signature du locataire et du garant', ['Ouvrez le lien de signature reçu par le locataire.', 'Cochez « J’ai lu », recevez le code, saisissez-le, prenez une photo (ou « Signer sans photo »), recopiez la mention, signez avec le doigt.'], '« C’est signé. » ; le document signé se télécharge.')
+t('/espace/logements', 'Signature : caméra de l’ordinateur', ['Sur ordinateur, au moment de la photo, touchez « Utiliser la caméra de l’ordinateur ».'], 'Le navigateur demande l’accès à la caméra ; la photo se prend.')
+t('/espace/logements', 'Lien du locataire : assurance et chaudière', ['Depuis la page du bail, envoyez le lien au locataire et ouvrez-le.', 'Envoyez une attestation d’assurance et une attestation d’entretien de chaudière.', 'Donnez puis retirez l’accord pour la quittance par email.'], 'Chaque envoi est confirmé ; le propriétaire les voit sur la page du bail.')
+t('/espace/logements', 'Lien du locataire : signaler un problème', ['Touchez « Signaler un problème », suivez les 3 écrans avec une photo.'], '« Signalement envoyé à votre bailleur » ; le propriétaire a une tâche dans « Aujourd’hui ».')
+t('/espace/logements', 'Lien du locataire : compléter l’état des lieux', ['Dans les 10 jours après l’état des lieux d’entrée, demandez un ajout avec une photo.', 'Côté propriétaire, acceptez ou refusez avec un motif.'], 'Le locataire est prévenu ; accepté, le complément entre dans le PDF.')
+t('/espace/compte/acces', 'Invitation expirée ou inconnue', ['Ouvrez un lien d’invitation modifié (quelques lettres changées).'], 'Message clair « Cette invitation n’est plus valable ».')
+
+G('13. Situations et actions groupées')
+t('/espace/situations', 'Que se passe-t-il ?', ['Ouvrez chaque situation : départ, impayé, vente ou reprise, problème.', 'Cochez « C’est fait » sur une démarche manuelle puis décochez.'], 'Les étapes sont claires et mènent aux bons courriers.')
+t('/espace/actions', 'Actions groupées', ['Ouvrez puis refermez chaque groupe (y compris le premier).', 'Touchez « Relire la lettre » sur une ligne.'], 'Chaque groupe s’ouvre et se ferme ; l’aperçu de la lettre s’ouvre.')
+
+G('14. Sur chaque page')
+t('/', 'Rotation de l’écran', ['Sur téléphone et tablette, tournez l’appareil sur quelques pages (accueil, tunnel, bail, état des lieux).'], 'La page s’adapte ; rien n’est coupé ni superposé.')
+t('/', 'Zoom du texte', ['Agrandissez le texte du navigateur à 200 %.'], 'Tout reste lisible et utilisable.')
+t('/', 'Connexion lente', ['Sur téléphone en 4G faible, ouvrez quelques pages.'], 'Un indicateur de chargement s’affiche, jamais un écran blanc.')
+t('/espace', 'Retour et rechargement partout', ['Sur plusieurs pages de l’espace, rechargez la page et utilisez le bouton retour.'], 'La page se rouvre à l’identique ; le retour ramène à la page précédente.')
+
+/* ── État et stockage ─────────────────────────────────────────────── */
+const KEY = 'bailio.tests-manuels.v1'
+const DEVICES = ['Smartphone', 'Tablette', 'Ordinateur']
+const STATUS_LABEL = { OK: 'OK', BUG: 'Bug', AMELIORER: 'À améliorer', NONE: 'Pas testé' }
+T.forEach((x, i) => { x.id = 'T' + String(i + 1).padStart(3, '0') })
+
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.results) return s } catch (e) { /* stockage indisponible */ }
+  return { device: guessDevice(), browser: guessBrowser(), base: 'https://bailio.fr', results: {}, remarks: [] }
+}
+let S = load()
+let storageWarned = false
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {
+    if (!storageWarned) { storageWarned = true; alert('Le navigateur ne peut plus enregistrer (mémoire pleine, souvent à cause des captures). Exportez vos retours maintenant pour ne rien perdre.') }
+  }
+}
+function guessDevice() { const w = Math.min(screen.width, screen.height); const touch = matchMedia('(pointer: coarse)').matches; return !touch ? 'Ordinateur' : w < 600 ? 'Smartphone' : 'Tablette' }
+function guessBrowser() { const u = navigator.userAgent; return /SamsungBrowser/.test(u) ? 'Samsung Internet' : /Edg\//.test(u) ? 'Edge' : /Firefox|FxiOS/.test(u) ? 'Firefox' : /Chrome|CriOS/.test(u) ? 'Chrome' : /Safari/.test(u) ? 'Safari' : 'Autre' }
+const res = (id, dev) => (S.results[id] && S.results[id][dev]) || null
+function setRes(id, dev, patch) {
+  S.results[id] = S.results[id] || {}
+  const cur = S.results[id][dev] || { status: 'NONE', severity: '', comment: '', browser: S.browser, screenshot: null }
+  S.results[id][dev] = Object.assign(cur, patch, { browser: patch.browser || cur.browser || S.browser, updatedAt: new Date().toISOString() })
+  save()
+}
+
+/* ── Affichage ────────────────────────────────────────────────────── */
+const $ = (s) => document.querySelector(s)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+const url = (p) => (S.base || 'https://bailio.fr').replace(/\/$/, '') + p
+
+function renderHeader() {
+  $('#deviceSeg').innerHTML = DEVICES.map((d) => `<button type="button" aria-pressed="${S.device === d}" data-dev="${d}">${d}</button>`).join('')
+  $('#browser').value = S.browser
+  $('#base').value = S.base
+  const groups = [...new Set(T.map((x) => x.group))]
+  if ($('#fGroup').options.length === 1) groups.forEach((g) => $('#fGroup').add(new Option(g, g)))
+  if ($('#fDevice').options.length === 2) DEVICES.forEach((d) => $('#fDevice').add(new Option(d, d)))
+}
+
+function renderBars() {
+  const parts = DEVICES.map((d) => counts([d]))
+  const all = counts(DEVICES)
+  const bar = (label, c) => {
+    const pct = (n) => (c.total ? (n / c.total) * 100 : 0)
+    const done = c.ok + c.bug + c.imp
+    return `<div class="bar"><strong>${label}</strong> · ${done}/${c.total} testés (${Math.round(pct(done))} %)<div class="track" role="img" aria-label="${c.ok} OK, ${c.bug} bugs, ${c.imp} à améliorer sur ${c.total}"><span class="ok" style="width:${pct(c.ok)}%"></span><span class="bug" style="width:${pct(c.bug)}%"></span><span class="imp" style="width:${pct(c.imp)}%"></span></div><span class="muted">${c.ok} OK · ${c.bug} bug${c.bug > 1 ? 's' : ''} · ${c.imp} à améliorer</span></div>`
+  }
+  $('#bars').innerHTML = DEVICES.map((d, i) => bar(d, parts[i])).join('') + bar('Global (3 appareils)', all)
+  const cur = parts[DEVICES.indexOf(S.device)]
+  $('#mini').textContent = `${S.device} : ${cur.ok + cur.bug + cur.imp}/${cur.total} testés · global ${all.ok + all.bug + all.imp}/${all.total}`
+}
+function counts(devs) {
+  const c = { total: T.length * devs.length, ok: 0, bug: 0, imp: 0 }
+  for (const x of T) for (const d of devs) { const r = res(x.id, d); if (!r) continue; if (r.status === 'OK') c.ok++; else if (r.status === 'BUG') c.bug++; else if (r.status === 'AMELIORER') c.imp++ }
+  return c
+}
+
+function matches(x) {
+  const fs = $('#fStatus').value, fd = $('#fDevice').value, fg = $('#fGroup').value
+  if (fg && x.group !== fg) return false
+  if (!fs) return true
+  const devs = fd === 'ALL' ? DEVICES : [fd || S.device]
+  return devs.some((d) => (res(x.id, d)?.status || 'NONE') === fs)
+}
+
+function renderList() {
+  let html = ''
+  let last = ''
+  let shown = 0
+  for (const x of T) {
+    if (!matches(x)) continue
+    shown++
+    if (x.group !== last) { if (last) html += '</section>'; html += `<section class="group" aria-label="${esc(x.group)}"><h2>${esc(x.group)}</h2>`; last = x.group }
+    const r = res(x.id, S.device) || { status: 'NONE', severity: '', comment: '', screenshot: null, browser: S.browser }
+    const devPills = DEVICES.map((d) => { const s = res(x.id, d)?.status || 'NONE'; return `<span class="pill ${s}" title="${d}">${d} : ${STATUS_LABEL[s]}</span>` }).join('')
+    html += `<article class="card test" id="${x.id}">
+      <div class="test-head"><div><span class="num">${x.id.replace('T', 'n° ')}</span><span class="title">${esc(x.title)}</span></div>
+        <a class="btn" href="${esc(url(x.path))}" target="_blank" rel="noopener">Ouvrir la page ↗</a></div>
+      <div class="devstate">${devPills}</div>
+      <ol class="steps">${x.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+      <div class="expected"><strong>Résultat attendu :</strong> ${esc(x.expected)}</div>
+      <div class="result" data-id="${x.id}">
+        <div class="row"><span class="muted" style="font-size:14px">Sur <strong>${S.device}</strong>, navigateur
+          <select data-k="browser" aria-label="Navigateur pour ce test" style="width:auto;min-height:36px">${['Safari', 'Chrome', 'Firefox', 'Edge', 'Samsung Internet', 'Autre'].map((b) => `<option ${b === (r.browser || S.browser) ? 'selected' : ''}>${b}</option>`).join('')}</select></span></div>
+        <div class="seg status-seg" role="group" aria-label="Statut du test ${x.id}">${['OK', 'BUG', 'AMELIORER', 'NONE'].map((s) => `<button type="button" data-k="status" data-v="${s}" aria-pressed="${r.status === s}">${STATUS_LABEL[s]}</button>`).join('')}</div>
+        <label class="field ${r.status === 'BUG' ? '' : 'hidden'}" data-sev>Gravité
+          <select data-k="severity"><option value="">Choisir…</option>${['Bloquant', 'Majeur', 'Mineur', 'Cosmétique'].map((v) => `<option ${r.severity === v ? 'selected' : ''}>${v}</option>`).join('')}</select>
+        </label>
+        <label class="field">Commentaire<textarea data-k="comment" placeholder="Ce qui ne va pas, ou ce que vous aimeriez changer">${esc(r.comment)}</textarea></label>
+        <div class="row shot">
+          <label class="btn">${r.screenshot ? 'Remplacer la capture' : 'Ajouter une capture'}<input type="file" accept="image/*" data-k="screenshot" class="hidden"></label>
+          ${r.screenshot ? `<img src="${r.screenshot}" alt="Capture du test ${x.id}"><button type="button" data-k="noshot">Retirer la capture</button>` : ''}
+        </div>
+      </div>
+    </article>`
+  }
+  if (last) html += '</section>'
+  $('#list').innerHTML = html || '<p class="card" style="margin-top:16px">Aucun test ne correspond à ces filtres.</p>'
+  $('#count').textContent = `${shown} test${shown > 1 ? 's' : ''} affiché${shown > 1 ? 's' : ''} sur ${T.length}. Appareil en cours : ${S.device}, ${S.browser}.`
+  renderBars()
+}
+
+/* Capture réduite (1280 px, JPEG) pour tenir dans le navigateur et dans l'export. */
+function shrink(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const fr = new FileReader()
+    fr.onload = () => { img.src = fr.result }
+    fr.onerror = reject
+    img.onload = () => {
+      const k = Math.min(1, 1280 / Math.max(img.width, img.height))
+      const c = document.createElement('canvas')
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k)
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+      resolve(c.toDataURL('image/jpeg', 0.6))
+    }
+    img.onerror = () => reject(new Error('image'))
+    fr.readAsDataURL(file)
+  })
+}
+
+/* ── Événements ───────────────────────────────────────────────────── */
+$('#deviceSeg').addEventListener('click', (e) => { const b = e.target.closest('button[data-dev]'); if (!b) return; S.device = b.dataset.dev; save(); renderHeader(); renderList() })
+$('#browser').addEventListener('change', (e) => { S.browser = e.target.value; save(); renderList() })
+$('#base').addEventListener('change', (e) => { const v = e.target.value.trim(); if (/^https?:\/\//.test(v)) { S.base = v; save(); renderList() } else { alert('Indiquez une adresse qui commence par https://'); e.target.value = S.base } })
+;['#fStatus', '#fDevice', '#fGroup'].forEach((s) => $(s).addEventListener('change', renderList))
+
+$('#list').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-k]')
+  if (!b) return
+  const id = b.closest('.result').dataset.id
+  if (b.dataset.k === 'status') { setRes(id, S.device, { status: b.dataset.v, severity: b.dataset.v === 'BUG' ? res(id, S.device)?.severity || '' : '' }); rerender(id) }
+  if (b.dataset.k === 'noshot') { setRes(id, S.device, { screenshot: null }); rerender(id) }
+})
+$('#list').addEventListener('change', async (e) => {
+  const el = e.target
+  const box = el.closest('.result')
+  if (!box) return
+  const id = box.dataset.id
+  if (el.dataset.k === 'severity' || el.dataset.k === 'browser') setRes(id, S.device, { [el.dataset.k]: el.value })
+  if (el.dataset.k === 'screenshot' && el.files[0]) {
+    try { setRes(id, S.device, { screenshot: await shrink(el.files[0]) }); rerender(id) } catch { alert('Cette image ne peut pas être lue.') }
+  }
+})
+let typing = null
+$('#list').addEventListener('input', (e) => {
+  const el = e.target
+  if (el.dataset.k !== 'comment') return
+  const id = el.closest('.result').dataset.id
+  clearTimeout(typing)
+  typing = setTimeout(() => setRes(id, S.device, { comment: el.value }), 300)
+})
+function rerender(id) {
+  const y = window.scrollY
+  renderList()
+  window.scrollTo(0, y)
+  document.getElementById(id)?.querySelector('[aria-pressed="true"]')?.focus({ preventScroll: true })
+}
+
+/* Remarques libres */
+let remarkShot = null
+$('#rShot').addEventListener('change', async (e) => { if (!e.target.files[0]) return; try { remarkShot = await shrink(e.target.files[0]); $('#rShotName').textContent = 'Capture ajoutée' } catch { alert('Cette image ne peut pas être lue.') } })
+$('#rAdd').addEventListener('click', () => {
+  const text = $('#rText').value.trim()
+  if (!text) { alert('Décrivez la remarque.'); $('#rText').focus(); return }
+  S.remarks.push({ id: 'R' + Date.now(), page: $('#rPage').value.trim(), kind: $('#rKind').value, severity: $('#rSev').value, text, device: S.device, browser: S.browser, screenshot: remarkShot, createdAt: new Date().toISOString() })
+  save()
+  $('#rText').value = ''; $('#rPage').value = ''; $('#rSev').value = ''; remarkShot = null; $('#rShotName').textContent = ''
+  renderRemarks()
+})
+function renderRemarks() {
+  $('#rList').innerHTML = S.remarks.map((r) => `<div class="remark"><div class="row" style="justify-content:space-between"><strong>${esc(r.kind === 'IDEE' ? 'Idée' : STATUS_LABEL[r.kind])}${r.severity ? ' · ' + esc(r.severity) : ''} · ${esc(r.page || 'page non précisée')}</strong><button type="button" data-rm="${r.id}">Supprimer</button></div><div class="muted" style="font-size:14px">${esc(r.device)}, ${esc(r.browser)} · ${new Date(r.createdAt).toLocaleString('fr-FR')}</div><p style="margin:6px 0">${esc(r.text)}</p>${r.screenshot ? `<img src="${r.screenshot}" alt="Capture de la remarque" style="max-width:220px;border-radius:10px">` : ''}</div>`).join('')
+}
+$('#rList').addEventListener('click', (e) => { const b = e.target.closest('button[data-rm]'); if (!b || !confirm('Supprimer cette remarque ?')) return; S.remarks = S.remarks.filter((r) => r.id !== b.dataset.rm); save(); renderRemarks() })
+
+/* Export, import, réinitialisation */
+function download(name, text, type) {
+  const blob = new Blob([text], { type })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 1000)
+}
+function exportData() {
+  const tests = T.map((x) => ({ id: x.id, group: x.group, title: x.title, page: x.path, expected: x.expected, results: S.results[x.id] || {} }))
+  return { tool: 'bailio-dashboard-test', version: 1, exportedAt: new Date().toISOString(), base: S.base, summary: Object.fromEntries(DEVICES.map((d) => [d, counts([d])])), tests, remarks: S.remarks }
+}
+function toMarkdown(data) {
+  const lines = [`# Retours de test Bailio`, '', `Exporté le ${new Date(data.exportedAt).toLocaleString('fr-FR')} · site testé : ${data.base}`, '', '## Résumé', '', '| Appareil | Testés | OK | Bugs | À améliorer |', '|---|---|---|---|---|']
+  for (const d of DEVICES) { const c = data.summary[d]; lines.push(`| ${d} | ${c.ok + c.bug + c.imp}/${c.total} | ${c.ok} | ${c.bug} | ${c.imp} |`) }
+  lines.push('', '## Bugs et améliorations', '')
+  let any = false
+  for (const x of data.tests) for (const d of DEVICES) {
+    const r = x.results[d]
+    if (!r || (r.status !== 'BUG' && r.status !== 'AMELIORER')) continue
+    any = true
+    lines.push(`### ${x.id} · ${x.title} — ${d} (${r.browser || '?'})`, '', `- Statut : **${STATUS_LABEL[r.status]}**${r.severity ? ` · gravité **${r.severity}**` : ''}`, `- Page : ${data.base}${x.page}`, `- Attendu : ${x.expected}`, `- Commentaire : ${r.comment || '—'}`, `- Capture : ${r.screenshot ? 'oui (dans retours-test.json)' : 'non'}`, '')
+  }
+  if (!any) lines.push('Aucun bug ni amélioration signalé.', '')
+  lines.push('## Remarques libres', '')
+  if (!data.remarks.length) lines.push('Aucune.', '')
+  for (const r of data.remarks) lines.push(`- **${r.kind === 'IDEE' ? 'Idée' : STATUS_LABEL[r.kind]}**${r.severity ? ` (${r.severity})` : ''} · ${r.page || 'page non précisée'} · ${r.device}, ${r.browser} : ${r.text}${r.screenshot ? ' _(capture dans le JSON)_' : ''}`)
+  lines.push('', '## Tous les tests', '', '| N° | Test | Smartphone | Tablette | Ordinateur |', '|---|---|---|---|---|')
+  for (const x of data.tests) lines.push(`| ${x.id} | ${x.title.replace(/\|/g, '/')} | ${DEVICES.map((d) => STATUS_LABEL[x.results[d]?.status || 'NONE']).join(' | ')} |`)
+  return lines.join('\n') + '\n'
+}
+$('#export').addEventListener('click', () => {
+  const data = exportData()
+  download('retours-test.json', JSON.stringify(data, null, 2), 'application/json')
+  setTimeout(() => download('retours-test.md', toMarkdown(data), 'text/markdown'), 400)
+})
+$('#import').addEventListener('click', () => $('#importFile').click())
+$('#importFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0]
+  if (!f) return
+  try {
+    const data = JSON.parse(await f.text())
+    if (data.tool !== 'bailio-dashboard-test' || !Array.isArray(data.tests)) throw new Error('format')
+    const merge = confirm('Fusionner avec vos retours actuels ?\nOK : fusionner (les réponses du fichier complètent ou remplacent celles du même appareil).\nAnnuler : remplacer entièrement vos retours par ceux du fichier.')
+    if (!merge) { S.results = {}; S.remarks = [] }
+    for (const x of data.tests) {
+      // Les numéros peuvent changer d'une version à l'autre : on retrouve le test par son titre.
+      const target = T.find((y) => y.id === x.id && y.title === x.title) || T.find((y) => y.title === x.title)
+      if (!target) continue
+      S.results[target.id] = Object.assign({}, S.results[target.id] || {}, x.results || {})
+    }
+    const known = new Set(S.remarks.map((r) => r.id))
+    for (const r of data.remarks || []) if (!known.has(r.id)) S.remarks.push(r)
+    if (data.base) S.base = data.base
+    save(); renderHeader(); renderList(); renderRemarks()
+    alert('Retours importés.')
+  } catch { alert('Ce fichier n’est pas un export du tableau de bord (retours-test.json).') }
+  e.target.value = ''
+})
+$('#reset').addEventListener('click', () => {
+  if (!confirm('Effacer tous vos statuts, commentaires, captures et remarques ? Pensez à exporter avant.')) return
+  if (!confirm('Vraiment tout effacer ? Cette action est définitive.')) return
+  S = { device: S.device, browser: S.browser, base: S.base, results: {}, remarks: [] }
+  save(); renderList(); renderRemarks()
+})
+
+renderHeader()
+renderList()
+renderRemarks()
+</script>
+</body>
+</html>

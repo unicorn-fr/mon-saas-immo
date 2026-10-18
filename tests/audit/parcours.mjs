@@ -151,8 +151,8 @@ async function run(config) {
     }
     if (ok) {
       await step(res, config, page, P, 'Étape 4 — dépôt trop élevé', 'Loyer 780 €, dépôt modifié au-delà du plafond', 'Refus avec le plafond légal', async () => {
-        await page.getByLabel('Loyer hors charges').fill('780')
-        await page.getByLabel('Charges').fill('60')
+        await page.getByLabel('Loyer hors charges').first().fill('780')
+        await page.getByLabel('Charges', { exact: true }).first().fill('60')
         const modify = page.getByRole('button', { name: 'Modifier' }).first()
         if (await modify.count()) {
           await modify.click()
@@ -282,14 +282,17 @@ async function run(config) {
           await page.getByRole('link', { name: 'Mon compte' }).filter({ visible: true }).first().tap()
           await page.waitForURL(/\/espace\/compte$/)
         }, 'Majeur')
-        await step(res, config, page, P, 'Menu « Carnet » et « Que se passe-t-il ? »', 'Trouver ces pages sur téléphone', 'Accessibles depuis le menu', async () => {
+        await step(res, config, page, P, 'Carnet et « Que se passe-t-il ? »', 'Trouver ces pages sur téléphone', 'Carnet depuis Mon compte, situations depuis Aujourd’hui', async () => {
           await page.goto(BASE + '/espace')
           await settle(page)
+          const s = await page.getByRole('link', { name: 'Que se passe-t-il ?' }).filter({ visible: true }).count() + (await page.getByRole('button', { name: 'Que se passe-t-il ?' }).filter({ visible: true }).count())
+          await page.goto(BASE + '/espace/compte')
+          await settle(page)
           const n = await page.locator('a[href="/espace/carnet"]').filter({ visible: true }).count()
-          const s = await page.locator('a[href="/espace/situations"]').filter({ visible: true }).count()
-          if (!n) throw new Error(`« Carnet » absent du menu mobile${s ? '' : ' ; « Que se passe-t-il ? » aussi'}`)
+          if (!n) throw new Error('« Carnet » introuvable sur téléphone')
+          if (!s) throw new Error('« Que se passe-t-il ? » introuvable sur Aujourd’hui')
           return 'présents'
-        }, 'Mineur')
+        }, 'Majeur')
       } else {
         await step(res, config, page, P, 'Menu latéral', 'Clic sur chaque entrée', 'Chaque page s’ouvre', async () => {
           for (const name of ['Logements', 'Locataires', 'Documents', 'Argent', 'Carnet', 'Que se passe-t-il ?', 'Aujourd’hui']) {
