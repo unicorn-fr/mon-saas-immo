@@ -249,10 +249,12 @@ router.get('/money/export', async (req, res) => {
   ])
   const eur = (c: number) => (c / 100).toFixed(2).replace('.', ',')
   const cell = (s: string | null | undefined) => `"${(s ?? '').replace(/"/g, '""')}"`
+  // Texte saisi (fournisseur, logement) : une formule de tableur (=, +, -, @) n'est jamais exécutée à l'ouverture.
+  const text = (s: string | null | undefined) => cell(/^[=+\-@\t\r]/.test(s ?? '') ? `'${s}` : s)
   const rows = [
     ['Date', 'Type', 'Logement', 'Libellé', 'Catégorie', 'Montant (€)', 'Dont récupérable (€)'].map(cell).join(';'),
-    ...payments.map((p) => [iso(p.receivedAt)!, 'Loyer', propertyName(p.lease.property), `Loyer ${p.period}`, 'loyer', eur(p.amountCents), ''].map(cell).join(';')),
-    ...expenses.map((e) => [iso(e.date)!, 'Dépense', e.property ? propertyName(e.property) : '', `${e.vendor}${e.description ? `, ${e.description}` : ''}`, CATEGORY_LABEL[e.category] ?? '', `-${eur(e.amountCents)}`, eur(e.recoverableCents)].map(cell).join(';')),
+    ...payments.map((p) => [cell(iso(p.receivedAt)), cell('Loyer'), text(propertyName(p.lease.property)), cell(`Loyer ${p.period}`), cell('loyer'), cell(eur(p.amountCents)), cell('')].join(';')),
+    ...expenses.map((e) => [cell(iso(e.date)), cell('Dépense'), text(e.property ? propertyName(e.property) : ''), text(`${e.vendor}${e.description ? `, ${e.description}` : ''}`), cell(CATEGORY_LABEL[e.category] ?? ''), cell(`-${eur(e.amountCents)}`), cell(eur(e.recoverableCents))].join(';')),
   ]
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="bailio-${year}.csv"`)
