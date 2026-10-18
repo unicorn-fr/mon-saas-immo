@@ -86,8 +86,11 @@ export function watch(page, { allow = [] } = {}) {
     if (/aborted|cancelled|NS_BINDING_ABORTED|Load request cancelled/i.test(f)) return
     if (ok(r.url())) errors.push(`Requête en échec : ${r.method()} ${r.url().replace(BASE, '')} (${f})`)
   })
-  page.on('response', (r) => {
-    if (r.status() >= 400 && ok(r.url()) && (r.url().startsWith(BASE) || r.url().startsWith(API))) errors.push(`HTTP ${r.status()} : ${r.request().method()} ${r.url().replace(BASE, '')}`)
+  page.on('response', async (r) => {
+    if (!(r.status() >= 400 && ok(r.url()) && (r.url().startsWith(BASE) || r.url().startsWith(API)))) return
+    // Message de l'API (affiché à l'utilisateur), pour comprendre l'erreur.
+    const message = r.url().includes('/api/') ? await r.json().then((j) => j.message).catch(() => '') : ''
+    errors.push(`HTTP ${r.status()} : ${r.request().method()} ${r.url().replace(BASE, '')}${message ? ` (« ${message} »)` : ''}`)
   })
   return errors
 }
@@ -131,6 +134,19 @@ export async function settle(page, ms = 350) {
   await page.waitForFunction(() => !document.querySelector('[aria-label="Chargement"]') && document.querySelector('#root')?.children.length, null, { timeout: 15000 }).catch(() => undefined)
   await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => undefined)
   await page.waitForTimeout(ms)
+}
+
+/** Lien de connexion envoyé à cette adresse (plusieurs tests tournent en même temps : on ne prend pas le lien d'un autre). */
+export async function loginLinkFor(email, after, timeout = 15000) {
+  const end = Date.now() + timeout
+  while (Date.now() < end) {
+    const text = fs.readFileSync(process.env.E2E_API_LOG ?? '/tmp/bailio-api.log').subarray(after).toString('utf8')
+    const at = text.lastIndexOf(`→ ${email}`)
+    const m = at >= 0 ? /(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/.exec(text.slice(at)) : null
+    if (m) return m[1]
+    await wait(250)
+  }
+  throw new Error(`Lien de connexion introuvable pour ${email}`)
 }
 
 export function readSeed() {

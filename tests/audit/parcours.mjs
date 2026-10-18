@@ -1,10 +1,13 @@
 // Parcours complets et formulaires (données valides, vides, invalides, très longues, accents, apostrophes, emojis), sur chaque appareil.
 // Usage : AUDIT_DEVICES=iphone-portrait node tests/audit/parcours.mjs
-import { BASE, Results, anomalyShot, closeBrowsers, contextFor, fromLog, logSize, readSeed, selectedConfigs, settle, watch } from './lib.mjs'
+import { BASE, Results, anomalyShot, closeBrowsers, contextFor, loginLinkFor, logSize, newAccount, readSeed, selectedConfigs, settle, watch } from './lib.mjs'
 
 const seed = readSeed()
 const LONG = 'Très long texte '.repeat(40)
 const SPECIAL = 'Zoé-Anaïs D’Artagnan 😀'
+// AUDIT_PARCOURS=P2,P5 : seulement ces parcours.
+const ONLY = process.env.AUDIT_PARCOURS?.split(',')
+const want = (p) => !ONLY || ONLY.includes(p)
 
 async function step(res, config, page, name, element, action, expected, fn, severity = 'Bloquant') {
   try {
@@ -28,7 +31,7 @@ async function run(config) {
   const mobile = config.kind === 'Smartphone'
 
   // P1 — Découvrir : accueil → Tarif → FAQ → pied de page.
-  {
+  if (want('P1')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page)
@@ -74,7 +77,7 @@ async function run(config) {
   }
 
   // P2 — Créer son bail sans compte, écran par écran (action principale).
-  {
+  if (want('P2')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page, { allow: ['/api/geo/', 'api-adresse'] })
@@ -217,9 +220,9 @@ async function run(config) {
       })
       if (ok) {
         ok = await step(res, config, page, P, 'Lien reçu par email', 'Ouvrir le lien', 'Bail enregistré dans l’espace (/bienvenue)', async () => {
-          const [m] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
+          const link = await loginLinkFor(email, before)
           clicks++
-          await page.goto(m[1].replace(/^http:\/\/[^/]+/, BASE))
+          await page.goto(link.replace(/^http:\/\/[^/]+/, BASE))
           await page.waitForURL(/\/bienvenue\//, { timeout: 15000 })
           await visible(page.getByText('Votre bail est enregistré'))
           return `${clicks} clics, ${Math.round((Date.now() - t0) / 1000)} s (automatisé)`
@@ -233,11 +236,13 @@ async function run(config) {
   }
 
   // P5 — Connexion, navigation dans l'espace, menus, déconnexion.
-  {
+  if (want('P5')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page)
     const P = 'P5 Connexion et déconnexion'
+    // Compte propre à cet appareil : les appareils testés en parallèle ne se partagent pas les liens.
+    const me = await newAccount()
     await page.goto(BASE + '/connexion')
     await settle(page)
     await step(res, config, page, P, 'Email vide', 'Clic « Recevoir mon lien »', 'Message « Indiquez une adresse email valide. »', async () => {
@@ -253,14 +258,14 @@ async function run(config) {
     }, 'Majeur')
     const before = logSize()
     let ok = await step(res, config, page, P, 'Email valide', 'Demander le lien', '« Regardez vos emails. » et bouton vers la messagerie', async () => {
-      await page.getByLabel('Email').fill(seed.owner.email)
+      await page.getByLabel('Email').fill(me.email)
       await page.getByRole('button', { name: /Recevoir mon lien/ }).click()
       await visible(page.getByText('Regardez vos emails.'))
     })
     if (ok) {
       ok = await step(res, config, page, P, 'Lien reçu', 'Ouvrir le lien', 'Espace « Aujourd’hui »', async () => {
-        const [m] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
-        await page.goto(m[1].replace(/^http:\/\/[^/]+/, BASE))
+        const link = await loginLinkFor(me.email, before)
+        await page.goto(link.replace(/^http:\/\/[^/]+/, BASE))
         await page.waitForURL(/\/espace$/, { timeout: 15000 })
         await settle(page)
       })
@@ -341,10 +346,11 @@ async function run(config) {
   }
 
   // P6 — Page protégée sans être connecté : connexion puis retour à la page demandée.
-  {
+  if (want('P6')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const P = 'P6 Page protégée'
+    const me = await newAccount()
     await page.goto(BASE + '/espace/argent')
     await settle(page)
     await step(res, config, page, P, 'Redirection', 'Ouvrir /espace/argent sans session', 'Page de connexion', async () => {
@@ -352,13 +358,13 @@ async function run(config) {
     })
     const before = logSize()
     await step(res, config, page, P, 'Retour après connexion', 'Lien reçu par email ouvert', 'Arrivée sur /espace/argent (la page demandée)', async () => {
-      await page.getByLabel('Email').fill(seed.owner.email)
+      await page.getByLabel('Email').fill(me.email)
       await page.getByRole('button', { name: /Recevoir mon lien/ }).click()
       await visible(page.getByText('Regardez vos emails.'))
-      const [m] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
+      const link = await loginLinkFor(me.email, before)
       // Comme dans la vraie vie : le lien de l'email s'ouvre dans un nouvel onglet.
       const tab = await ctx.newPage()
-      await tab.goto(m[1].replace(/^http:\/\/[^/]+/, BASE))
+      await tab.goto(link.replace(/^http:\/\/[^/]+/, BASE))
       await tab.waitForURL(/\/espace/, { timeout: 15000 })
       await settle(tab)
       const path = new URL(tab.url()).pathname
@@ -368,7 +374,7 @@ async function run(config) {
   }
 
   // P9 — Candidature (formulaire public).
-  {
+  if (want('P9')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page)
@@ -399,7 +405,7 @@ async function run(config) {
   }
 
   // P13 — Le locataire signale un problème depuis son lien.
-  {
+  if (want('P13')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page)
@@ -428,7 +434,7 @@ async function run(config) {
   }
 
   // Dossier du locataire : envoi vide puis complet.
-  {
+  if (want('P8')) {
     const ctx = await contextFor(config)
     const page = await ctx.newPage()
     const errors = watch(page)
