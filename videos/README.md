@@ -38,9 +38,13 @@ Sans accès à l'API : collez le texte des scènes (une phrase par paragraphe, u
 elevenlabs.io, téléchargez le MP3, puis :
 
 ```bash
-node videos/scripts/import-voix.mjs presentation ~/Téléchargements/voix.mp3   # découpe aux silences, une piste par scène
+node videos/scripts/import-voix.mjs presentation voix.mp3 [mots.json]   # une piste par scène
 node videos/scripts/rendu.mjs presentation
 ```
+
+`mots.json` : la transcription horodatée d'ElevenLabs (Speech to Text) de ce même fichier. Avec elle, la coupure
+tombe exactement entre deux phrases et les sous-titres suivent la voix au mot près ; sans elle, découpe aux silences.
+Avec le connecteur ElevenLabs de Claude, il suffit de demander : Claude génère la voix, la transcrit et lance l'import.
 
 ## Ajouter une vidéo
 
