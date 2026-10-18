@@ -124,7 +124,7 @@ export default function Courriers() {
           <nav className="hide-md" aria-label="Courriers" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {groups.map((g) => (
               <div key={g.title} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: BAI.inkSoft, padding: '10px 10px 4px' }}>{g.title}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: BAI.inkSoft, padding: '10px 10px 4px' }}>{g.title}</span>
                 {g.tabs.map((t) => (
                   <button
                     key={t.value}

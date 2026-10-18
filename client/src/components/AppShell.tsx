@@ -104,7 +104,7 @@ function Sidebar({ taskCount, onAdd }: { taskCount: number | null; onAdd: () => 
             style={({ isActive }) => ({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.nightActive : 'transparent', color: isActive ? BAI.surface : BAI.onDarkNav })}
           >
             <span>{n.label}</span>
-            {n.end && taskCount ? <span style={{ background: BAI.caramel, color: BAI.night, fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
+            {n.end && taskCount ? <span style={{ background: BAI.caramel, color: BAI.night, fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
           </NavLink>
         ))}
       </div>
@@ -147,7 +147,7 @@ function BottomNav({ onAdd }: { onAdd: () => void }) {
     <nav aria-label="Navigation principale" className="mobile-only bottom-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40, height: 'calc(76px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxSizing: 'border-box', background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
       {items.map((n) =>
         n ? (
-          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 12, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
+          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 13, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
             {({ isActive }) => (
               <>
                 <n.icon color={isActive ? BAI.caramel : 'currentColor'} />

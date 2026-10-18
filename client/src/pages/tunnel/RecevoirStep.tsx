@@ -68,19 +68,19 @@ export default function RecevoirStep() {
       <div className="stack hide-lg" style={{ width: '47%', maxWidth: 680, background: BAI.night, padding: '48px 72px', gap: 40 }}>
         <Logo size={28} color={BAI.caramel} />
         <div aria-hidden className="stack" style={{ alignSelf: 'center', position: 'relative', width: 400, maxWidth: '100%', height: 520, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, overflow: 'hidden' }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>{imported ? 'Bail signé' : 'Contrat de location'}</div>
+          <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>{imported ? 'Bail signé' : 'Contrat de location'}</div>
           <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>
             Logement {data.type === 'FURNISHED' ? 'meublé' : 'vide'} à usage de résidence principale
           </div>
           <div style={{ height: 1, background: BAI.rule, margin: '6px 0' }} />
-          <div style={{ fontSize: 12, fontWeight: 700 }}>I. Les parties</div>
-          <div style={{ fontSize: 12, color: BAI.inkMid }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>I. Les parties</div>
+          <div style={{ fontSize: 13, color: BAI.inkMid }}>
             Le bailleur : {fullName(data.landlord)}. {(data.tenants?.length ?? 0) > 1 ? 'Les locataires' : 'Le locataire'} : {tenants}.
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700 }}>II. Le logement</div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>II. Le logement</div>
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2 }} />
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2, width: '85%' }} />
-          <div style={{ fontSize: 12, fontWeight: 700 }}>III. Durée</div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>III. Durée</div>
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2, width: '70%' }} />
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 260, background: `linear-gradient(to bottom, rgba(255,255,255,0), ${BAI.surface} 60%)`, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 36 }}>
             <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15, fontWeight: 600 }}>

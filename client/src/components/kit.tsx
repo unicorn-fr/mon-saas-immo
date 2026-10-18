@@ -104,7 +104,7 @@ const PILL: Record<Tone, { color: string; bg: string }> = {
 
 export function Pill({ tone = 'owner', children, style }: { tone?: Tone; children: ReactNode; style?: CSSProperties }) {
   const p = PILL[tone]
-  return <span style={{ fontSize: 12, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
+  return <span style={{ fontSize: 13, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
 }
 
 export const toneColor = (tone: string | undefined) => (tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? BAI.caramelInk : tone === 'owner' ? BAI.owner : BAI.inkSoft)
@@ -265,7 +265,7 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
 export function Computed({ title = 'Calculé par Bailio', rows }: { title?: string; rows: Array<[ReactNode, ReactNode]> }) {
   return (
     <div style={{ background: BAI.night, borderRadius: 14, padding: '14px 18px 6px' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 8 }}>{title}</div>
       {rows.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '9px 0', borderTop: `1px solid ${BAI.nightLine}`, fontSize: 14 }}>
           <span style={{ color: BAI.onDarkMuted }}>{k}</span>
@@ -614,7 +614,7 @@ export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs:
 /** Filtres en pastilles (Documents). */
 export function Filters<T extends string>({ items, value, onChange }: { items: Array<{ value: T; label: string }>; value: T; onChange: (v: T) => void }) {
   return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div className="filters" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       {items.map((it) => (
         <button
           key={it.value}

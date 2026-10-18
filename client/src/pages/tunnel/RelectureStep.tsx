@@ -223,7 +223,7 @@ export default function RelectureStep() {
 
         {!imported ? (
           <aside className="stack full-md" style={{ width: 420, flexShrink: 0, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, boxShadow: '0 16px 40px rgba(26,26,46,0.10)' }} aria-label="Aperçu du bail">
-            <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>Contrat de location</div>
+            <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>Contrat de location</div>
             <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>
               Logement {type === 'FURNISHED' ? 'meublé' : 'vide'} à usage de résidence principale
             </div>
@@ -235,8 +235,8 @@ export default function RelectureStep() {
               ['IV. Conditions financières', r.rentCents ? `Loyer de ${euros(r.rentCents)} et ${euros(r.chargesCents ?? 0)} de charges par mois.` : '…'],
             ].map(([t, v]) => (
               <div key={t} className="stack" style={{ gap: 4 }}>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{t}</div>
-                <div style={{ fontSize: 12, color: BAI.inkMid, lineHeight: 1.5 }}>{v}</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{t}</div>
+                <div style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.5 }}>{v}</div>
               </div>
             ))}
             <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2 }} />

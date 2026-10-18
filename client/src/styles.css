@@ -100,3 +100,9 @@ img { max-width: 100%; }
 @media (pointer: coarse) {
   .tap { padding-top: 7px !important; padding-bottom: 7px !important; margin-top: -7px !important; margin-bottom: -7px !important; }
 }
+
+/* Écran tactile : onglets et filtres d'au moins 44 px de haut. */
+@media (pointer: coarse) {
+  .tabs [role='tab'] { min-height: 44px; display: inline-flex; align-items: flex-end; }
+  .filters button { min-height: 44px; }
+}

@@ -35,7 +35,7 @@ export function Guide({ to, label, style }: { to: GuideKey; label?: string; styl
 export function Sources({ reference, guides }: { reference?: string; guides?: GuideKey[] }) {
   if (!reference && !guides?.length) return null
   return (
-    <div style={{ fontSize: 12, color: BAI.inkSoft, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ fontSize: 13, color: BAI.inkSoft, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
       {reference ? (
         <span>
           Source : <Cite reference={reference} />
@@ -45,7 +45,7 @@ export function Sources({ reference, guides }: { reference?: string; guides?: Gu
         <span style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px' }}>
           <span>Fiche officielle :</span>
           {guides.map((g) => (
-            <Guide key={g} to={g} style={{ fontSize: 12 }} />
+            <Guide key={g} to={g} style={{ fontSize: 13 }} />
           ))}
         </span>
       ) : null}

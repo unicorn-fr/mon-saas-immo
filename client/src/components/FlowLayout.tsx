@@ -193,7 +193,7 @@ export function FicheLayout({
             <nav aria-label="Étapes" className="fiche-steps" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
               {steps.map((s, i) => (
                 <a key={s.key} href={`#${stepIds?.[s.key] ?? s.key}`} style={{ textDecoration: 'none', display: 'flex', gap: 10, alignItems: 'center', padding: '9px 10px', borderRadius: 8, fontSize: 14, color: s.done ? BAI.ink : BAI.inkSoft, fontWeight: s.key === firstTodo ? 600 : 500, background: s.key === firstTodo ? BAI.dividerSoft : 'transparent' }}>
-                  <span style={{ width: 22, height: 22, borderRadius: 11, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, ...(s.done ? { background: BAI.green, color: BAI.surface } : s.key === firstTodo ? { background: BAI.owner, color: BAI.surface } : { border: `1.5px solid ${BAI.dashed}`, color: BAI.inkSoft }) }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 11, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, ...(s.done ? { background: BAI.green, color: BAI.surface } : s.key === firstTodo ? { background: BAI.owner, color: BAI.surface } : { border: `1.5px solid ${BAI.dashed}`, color: BAI.inkSoft }) }}>
                     {s.done ? '✓' : i + 1}
                   </span>
                   {s.label}
@@ -245,7 +245,7 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
         <h2 style={{ margin: 0 }}>
           <button type="button" aria-expanded={false} onClick={() => setOpen(true)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', background: 'none', border: 'none', padding: 'clamp(14px, 2.4vw, 18px) clamp(18px, 3vw, 28px)', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', color: BAI.ink }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-              <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 11, flexShrink: 0, background: BAI.green, color: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>✓</span>
+              <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 11, flexShrink: 0, background: BAI.green, color: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 }}>✓</span>
               <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: BAI.green }}>Rempli</span>
             </span>
@@ -258,10 +258,10 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
     <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.caramel : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>{kicker ?? `Étape ${n}`}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>{kicker ?? `Étape ${n}`}</span>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{title}</h2>
         </div>
-        {done ? <span style={{ fontSize: 12, fontWeight: 700, color: BAI.green, background: BAI.greenLight, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Rempli</span> : null}
+        {done ? <span style={{ fontSize: 13, fontWeight: 700, color: BAI.green, background: BAI.greenLight, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Rempli</span> : null}
       </div>
       {intro ? <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{intro}</p> : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{children}</div>
