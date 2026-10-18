@@ -14,3 +14,4 @@ server/src/generated/
 
 # Résultats bruts de l'audit (régénérés à chaque passage)
 tests/audit/resultats/
+tests/audit/resultats-passage1/

@@ -10,7 +10,8 @@ const seed = readSeed()
 const CLICKS = process.env.AUDIT_CLICKS !== '0'
 const ONLY = process.env.AUDIT_ROUTES
 // Messages attendus : la page 404 et les liens invalides testés exprès renvoient 404 de l'API ; la vérification d'un faux lien de connexion, 400.
-const EXPECTED = ['/api/esign/lien-inconnu', '/api/locataire/inconnu', '/api/candidature/inconnu', '/api/dossier/inconnu', '/api/auth/magic-link/verify', '/api/drafts/', '00000000-0000-4000-8000-000000000000', 'Failed to load resource: the server responded with a status of 404', 'Failed to load resource: the server responded with a status of 400']
+// invitation-link : la même invitation reçoit au plus 4 emails par heure ; les 12 appareils cliquent tous le bouton.
+const EXPECTED = ['/api/auth/invitation-link', 'status of 429', '/api/esign/lien-inconnu', '/api/locataire/inconnu', '/api/candidature/inconnu', '/api/dossier/inconnu', '/api/auth/magic-link/verify', '/api/drafts/', '00000000-0000-4000-8000-000000000000', 'Failed to load resource: the server responded with a status of 404', 'Failed to load resource: the server responded with a status of 400']
 
 /** Relevés faits dans la page (mise en page, texte, images, champs, cibles tactiles). */
 function inspect({ touch, mobile }) {
