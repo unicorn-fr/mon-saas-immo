@@ -151,7 +151,7 @@ export function FicheLayout({
       <FlowHeader
         height={80}
         left={
-          <Link to={backTo} style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
+          <Link to={backTo} className="tap" style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
             {backLabel}
           </Link>
         }

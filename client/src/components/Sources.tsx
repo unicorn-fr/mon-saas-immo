@@ -10,7 +10,7 @@ export function Cite({ reference, style }: { reference: string; style?: CSSPrope
     <span style={style}>
       {citeParts(reference).map((p, i) =>
         p.url ? (
-          <a key={i} href={p.url} {...ext} style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }} title="Lire le texte officiel sur Légifrance">
+          <a key={i} href={p.url} {...ext} className="tap" style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }} title="Lire le texte officiel sur Légifrance">
             {p.text}
           </a>
         ) : (
@@ -25,7 +25,7 @@ export function Cite({ reference, style }: { reference: string; style?: CSSPrope
 export function Guide({ to, label, style }: { to: GuideKey; label?: string; style?: CSSProperties }) {
   const g = GUIDES[to]
   return (
-    <a href={g.url} {...ext} style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none', ...style }}>
+    <a href={g.url} {...ext} className="tap" style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none', ...style }}>
       {label ?? g.label} <span aria-hidden>↗</span>
     </a>
   )

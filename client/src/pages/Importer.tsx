@@ -68,7 +68,7 @@ export default function Importer() {
             <Notice tone="info">
               La lecture automatique arrive très bientôt. En attendant, vous pouvez saisir votre bail en 4 questions : cela prend 5 minutes.
               <div style={{ marginTop: 12 }}>
-                <Link to="/commencer" style={{ fontWeight: 600 }}>
+                <Link to="/commencer" className="tap" style={{ fontWeight: 600 }}>
                   Saisir mon bail
                 </Link>
               </div>

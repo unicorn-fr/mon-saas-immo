@@ -228,3 +228,8 @@
   .foot-menu nav ul { gap: 20px; }
   .foot-info { grid-template-columns: 1fr; }
 }
+
+/* Écran tactile : liens légaux du pied de page assez hauts pour le doigt. */
+@media (pointer: coarse) {
+  .foot-legal a { display: inline-block; padding: 10px 0; margin: -6px 0; }
+}

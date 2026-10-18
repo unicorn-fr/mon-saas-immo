@@ -204,10 +204,10 @@ export default function Signer() {
         </p>
         <div style={{ display: 'flex', gap: '4px 16px', flexWrap: 'wrap' }}>
           <Guide to="signature" />
-          <a href={EIDAS} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none' }}>
+          <a href={EIDAS} target="_blank" rel="noreferrer" className="tap" style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none' }}>
             Règlement européen eIDAS <span aria-hidden>↗</span>
           </a>
-          <a href={GUIDES.caution.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none' }}>
+          <a href={GUIDES.caution.url} target="_blank" rel="noreferrer" className="tap" style={{ fontSize: 13, fontWeight: 600, color: BAI.owner, textDecoration: 'none' }}>
             {guarantor ? 'La caution du locataire' : 'Rédaction du bail'} <span aria-hidden>↗</span>
           </a>
         </div>

@@ -116,19 +116,19 @@ export function MentionsLegales() {
       <H2>Pour aller plus loin</H2>
       <ul>
         <li>
-          <Link to="/conditions">Conditions d'utilisation</Link>
+          <Link to="/conditions" className="tap">Conditions d'utilisation</Link>
         </li>
         <li>
-          <Link to="/confidentialite">Confidentialité et données personnelles</Link>
+          <Link to="/confidentialite" className="tap">Confidentialité et données personnelles</Link>
         </li>
         <li>
-          <Link to="/cookies">Cookies et stockage dans le navigateur</Link>
+          <Link to="/cookies" className="tap">Cookies et stockage dans le navigateur</Link>
         </li>
         <li>
-          <Link to="/prix-et-remboursement">Prix, rétractation et remboursement</Link>
+          <Link to="/prix-et-remboursement" className="tap">Prix, rétractation et remboursement</Link>
         </li>
         <li>
-          <Link to="/accessibilite">Accessibilité</Link>
+          <Link to="/accessibilite" className="tap">Accessibilité</Link>
         </li>
       </ul>
     </SimplePage>
@@ -488,7 +488,7 @@ export function NotFound() {
     <SimplePage title="Page introuvable">
       <p>Cette page n'existe pas ou n'existe plus.</p>
       <p>
-        <Link to="/">Retour à l'accueil</Link>
+        <Link to="/" className="tap">Retour à l'accueil</Link>
       </p>
     </SimplePage>
   )

@@ -56,11 +56,13 @@ function inspect({ touch, mobile }) {
   for (const el of interactive) {
     if (el.closest('[aria-hidden=true]')) continue
     const b = el.getBoundingClientRect()
-    const inline = el.tagName === 'A' && getComputedStyle(el).display === 'inline' && el.parentElement && el.parentElement.innerText.trim().length > el.innerText.trim().length + 3
+    const inline = el.tagName === 'A' && getComputedStyle(el).display.startsWith('inline') && el.parentElement && el.parentElement.innerText.trim().length > el.innerText.trim().length + 12
     if (inline) continue
     // Case à cocher ou bouton radio dans un libellé cliquable : la cible est le libellé.
     const target = (el.type === 'checkbox' || el.type === 'radio') && el.closest('label') ? el.closest('label').getBoundingClientRect() : b
     const w = Math.round(target.width), h = Math.round(target.height)
+    // Champ masqué visuellement (fichier, case personnalisée) : c'est son libellé qu'on touche.
+    if (el.tagName === 'INPUT' && w <= 2 && h <= 2 && (el.labels?.length || el.closest('label'))) continue
     if (w < 24 || h < 24) r.small24.push(`${el.tagName.toLowerCase()} « ${label(el)} » ${w}×${h}`)
     else if (w < 44 || h < 44) r.small44.push(`${el.tagName.toLowerCase()} « ${label(el)} » ${w}×${h}`)
   }
@@ -199,6 +201,9 @@ async function auditConfig(config) {
     else res.ok(pageName, 'Images', device, 'Affichage', 'Toutes les images chargées')
     if (r.noAlt.length) res.ko(pageName, 'Texte alternatif', device, 'Lecteur d’écran', 'alt sur chaque image', r.noAlt.join(', '), 'Mineur')
     // 4. Accessibilité (axe-core, WCAG 2.1 AA) : contraste, intitulés, alternatives.
+    // Les blocs qui apparaissent au défilement (accueil) sont révélés avant le contrôle des contrastes.
+    await page.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += innerHeight / 2) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)) } scrollTo(0, 0) })
+    await page.waitForTimeout(700)
     const violations = await runAxe(page)
     if (violations.length) res.ko(pageName, 'Accessibilité (axe-core)', device, 'Contrôle WCAG 2.1 AA', 'Aucune violation', violations.map((v) => `${v.id} (${v.impact}, ${v.nodes}) : ${v.help} → ${v.target.join(' | ')}`).join(' ; '), violations.some((v) => v.impact === 'critical' || v.impact === 'serious') ? 'Majeur' : 'Mineur', { screenshot: await shotIf(true, 'axe') })
     else res.ok(pageName, 'Accessibilité (axe-core)', device, 'Contrôle WCAG 2.1 AA', 'Aucune violation')

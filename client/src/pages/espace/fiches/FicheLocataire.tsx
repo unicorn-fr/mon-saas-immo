@@ -155,7 +155,7 @@ function DocList({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) => v
               <Input label="Document fourni" value={d?.label} onChange={(v) => upd(k, { label: v })} placeholder={k === 'income' ? '3 derniers bulletins de salaire' : k === 'identity' ? 'Carte d’identité' : ''} />
             </div>
             <FileSlot compact label="" fileId={d?.fileId} onFile={(fileId) => upd(k, { fileId, received: true })} />
-            <button type="button" aria-pressed={Boolean(d?.received)} onClick={() => upd(k, { received: !d?.received })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <button type="button" className="tap" aria-pressed={Boolean(d?.received)} onClick={() => upd(k, { received: !d?.received })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
               <Pill tone={d?.received ? 'green' : 'muted'}>{d?.received ? 'Reçu' : 'À recevoir'}</Pill>
             </button>
           </div>

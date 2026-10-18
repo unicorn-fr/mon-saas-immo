@@ -68,7 +68,7 @@ export function Crumbs({ items }: { items: Array<{ label: string; to?: string }>
         <span key={i} style={{ display: 'inline-flex', gap: 6 }}>
           {i > 0 ? <span aria-hidden>/</span> : null}
           {it.to ? (
-            <Link to={it.to} style={{ textDecoration: 'none', fontWeight: 600 }}>
+            <Link to={it.to} className="tap" style={{ textDecoration: 'none', fontWeight: 600 }}>
               {it.label}
             </Link>
           ) : (
@@ -227,11 +227,11 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, newT
 export function TextLink({ to, onClick, children, style }: { to?: string; onClick?: () => void; children: ReactNode; style?: CSSProperties }) {
   const s: CSSProperties = { fontSize: 15, fontWeight: 600, color: BAI.owner, textDecoration: 'none', background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', ...style }
   return to ? (
-    <Link to={to} style={s}>
+    <Link to={to} className="tap" style={s}>
       {children}
     </Link>
   ) : (
-    <button type="button" onClick={onClick} style={s}>
+    <button type="button" className="tap" onClick={onClick} style={s}>
       {children}
     </button>
   )
@@ -571,7 +571,7 @@ export function Toggle({ checked, onChange, label, sub, disabled, border = true 
 
 export function Check({ checked, onChange, label, sub }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode }) {
   return (
-    <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, cursor: 'pointer', lineHeight: 1.4 }}>
+    <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, cursor: 'pointer', lineHeight: 1.4, minHeight: 24 }}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, accentColor: BAI.owner }} />
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span>{label}</span>

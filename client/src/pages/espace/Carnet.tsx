@@ -67,7 +67,7 @@ export default function Carnet() {
                 </span>
                 <span style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                   {c.phone ? (
-                    <a href={`tel:${c.phone.replace(/\s/g, '')}`} style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
+                    <a href={`tel:${c.phone.replace(/\s/g, '')}`} className="tap" style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
                       Appeler
                     </a>
                   ) : null}

@@ -159,7 +159,7 @@ export default function Candidature() {
                 </a>
               </span>
               <details style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
+                <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink, padding: '10px 0' }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
                 {data.allowedDocuments.map((g) => (
                   <div key={g.title} style={{ marginTop: 10 }}>
                     <strong>{g.title}</strong>

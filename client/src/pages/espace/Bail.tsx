@@ -372,45 +372,45 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           </Card>
           <Card dark title="Plus tard" style={{ gap: 12 }}>
             {l.status === 'ACTIVE' ? (
-              <Link to={`/espace/baux/${l.id}/contrat`} style={darkLink}>
+              <Link to={`/espace/baux/${l.id}/contrat`} className="tap" style={darkLink}>
                 Créer un avenant
               </Link>
             ) : null}
             {l.status !== 'DRAFT' && l.status !== 'ENDED' ? (
               <>
-                <Link to={`/espace/baux/${l.id}/courriers`} style={darkLink}>
+                <Link to={`/espace/baux/${l.id}/courriers`} className="tap" style={darkLink}>
                   Quittances et courriers
                 </Link>
-                <Link to="/espace/situations" style={darkLink}>
+                <Link to="/espace/situations" className="tap" style={darkLink}>
                   Que se passe-t-il ?
                 </Link>
                 {l.computed.noticeMonths ? (
-                  <Link to={`/espace/baux/${l.id}/courriers?type=NOTICE_TO_LEAVE`} style={darkLink}>
+                  <Link to={`/espace/baux/${l.id}/courriers?type=NOTICE_TO_LEAVE`} className="tap" style={darkLink}>
                     Donner congé
                   </Link>
                 ) : null}
-                <button type="button" onClick={() => setEndOpen(true)} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+                <button type="button" className="tap" onClick={() => setEndOpen(true)} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                   Enregistrer le départ du locataire
                 </button>
               </>
             ) : null}
             {l.status === 'ENDED' ? (
-              <Link to={`/espace/baux/${l.id}/courriers?type=DEPOSIT_RETURN`} style={darkLink}>
+              <Link to={`/espace/baux/${l.id}/courriers?type=DEPOSIT_RETURN`} className="tap" style={darkLink}>
                 Restituer le dépôt de garantie
               </Link>
             ) : null}
             {l.status === 'DRAFT' ? (
-              <button type="button" onClick={removeDraft} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+              <button type="button" className="tap" onClick={removeDraft} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                 Supprimer ce bail en préparation
               </button>
             ) : null}
           </Card>
           <Card title="Personnes">
             {l.tenants.map((x) => (
-              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} style={{ textDecoration: 'none' }}>{x.name}</Link>} />
+              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} className="tap" style={{ textDecoration: 'none' }}>{x.name}</Link>} />
             ))}
             {l.guarantors.map((g) => (
-              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} style={{ textDecoration: 'none' }}>{g.name}</Link>} />
+              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} className="tap" style={{ textDecoration: 'none' }}>{g.name}</Link>} />
             ))}
           </Card>
           <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>

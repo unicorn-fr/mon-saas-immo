@@ -98,7 +98,7 @@ export default function Courriers() {
       <FlowHeader
         height={80}
         left={
-          <Link to={`/espace/baux/${id}`} style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
+          <Link to={`/espace/baux/${id}`} className="tap" style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
             Retour
           </Link>
         }
@@ -111,7 +111,7 @@ export default function Courriers() {
           </div>
         }
         right={
-          <Link to="/espace/documents" className="hide-md" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid }}>
+          <Link to="/espace/documents" className="hide-md tap" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid }}>
             Documents
           </Link>
         }
