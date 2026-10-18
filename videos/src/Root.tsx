@@ -1,25 +1,25 @@
 import { Composition } from 'remotion'
 import { FPS, H, W } from './theme'
-import { BailioVideo, sceneFrames, type VideoDef } from './Video'
+import { BailioVideo, totalFrames, type VideoDef, type Voix } from './Video'
 import presentation from './videos/presentation.json'
 import presentationVoix from './videos/presentation.voix.json'
 
 /** Chaque vidéo : son script (src/videos/<id>.json) et la durée de ses phrases (voix.mjs). */
-const VIDEOS: Array<{ video: VideoDef; durees: number[] }> = [{ video: presentation as VideoDef, durees: presentationVoix.durees }]
+const VIDEOS: Array<{ video: VideoDef; voix: Voix }> = [{ video: presentation as VideoDef, voix: presentationVoix as Voix }]
 
 export function Root() {
   return (
     <>
-      {VIDEOS.map(({ video, durees }) => (
+      {VIDEOS.map(({ video, voix }) => (
         <Composition
           key={video.id}
           id={video.id}
           component={BailioVideo}
-          durationInFrames={sceneFrames(durees).reduce((a, b) => a + b, 0)}
+          durationInFrames={totalFrames(voix.durees)}
           fps={FPS}
           width={W}
           height={H}
-          defaultProps={{ video, durees }}
+          defaultProps={{ video, voix }}
         />
       ))}
     </>

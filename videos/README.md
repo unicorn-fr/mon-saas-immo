@@ -5,7 +5,12 @@ française et des sous-titres intégrés. Tout est fabriqué par du code : aucun
 
 - **Remotion** (React → MP4) : scènes animées dans `src/scenes/` (typographie animée, téléphone avec les vraies pages
   du site, logo, liste, appel à l'action, volets de transition, sous-titres mot à mot).
-- **Piper** : synthèse vocale libre et hors ligne, voix française « siwis » (licence CC BY 4.0).
+- **Voix off** : ElevenLabs si `ELEVENLABS_API_KEY` est défini (voix naturelle, mots horodatés pour des sous-titres
+  exacts ; `ELEVENLABS_VOICE_ID` pour choisir la voix ; `api.elevenlabs.io` doit être autorisé par le réseau), sinon
+  Piper, synthèse libre et hors ligne (voix « siwis », licence CC BY 4.0).
+- **Montage** : transitions fouettées, zoom traversant et cercle (`src/transitions.tsx`), textes révélés par masque,
+  caméra qui pousse, grain et vignettage (`src/fx.tsx`), bruitages (`public/sfx/`), sous-titres façon réseaux sociaux
+  (`src/captions.tsx`). `node scripts/apercu.mjs <id> 30 90 150` : planche d'images sans tout fabriquer.
 - **Une vidéo = un fichier** `src/videos/<id>.json` : la liste des scènes, le texte de la voix off et la légende à
   publier.
 

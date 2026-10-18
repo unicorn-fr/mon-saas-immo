@@ -5,7 +5,7 @@
   "scenes": [
     {
       "type": "mots",
-      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… La paperasse vous prend des heures.",
+      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… Vous y passez des heures.",
       "mots": [
         "Bail",
         "Quittances",
@@ -31,7 +31,11 @@
       "titre": "Un bail conforme",
       "accent": "en 3 minutes",
       "image": "ecrans/tunnel-type.png",
-      "cote": "droite"
+      "cote": "droite",
+      "tap": [
+        50,
+        32
+      ]
     },
     {
       "type": "ecran",
@@ -40,7 +44,11 @@
       "accent": "sans papier",
       "image": "ecrans/bail.png",
       "cote": "gauche",
-      "badge": "Signé ✓"
+      "badge": "Signé ✓",
+      "tap": [
+        78,
+        62
+      ]
     },
     {
       "type": "ecran",
@@ -49,7 +57,11 @@
       "accent": "chaque matin",
       "image": "ecrans/aujourdhui.png",
       "cote": "droite",
-      "zoom": true
+      "zoom": true,
+      "tap": [
+        30,
+        34
+      ]
     },
     {
       "type": "ecran",
@@ -57,7 +69,11 @@
       "titre": "Quittances",
       "accent": "automatiques",
       "image": "ecrans/argent.png",
-      "cote": "gauche"
+      "cote": "gauche",
+      "tap": [
+        40,
+        19
+      ]
     },
     {
       "type": "liste",
