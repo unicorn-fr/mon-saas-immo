@@ -21,7 +21,7 @@ export function FlowHeader({ left, center, right, height = 72 }: { left: ReactNo
 
 export function CloseLink({ to, label = 'Fermer' }: { to: string; label?: string }) {
   return (
-    <Link to={to} style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+    <Link to={to} aria-label={label} style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600, display: 'inline-flex', gap: 8, alignItems: 'center', justifyContent: 'center', minWidth: 44, minHeight: 44 }}>
       <Close size={16} />
       <span className="hide-md">{label}</span>
     </Link>
