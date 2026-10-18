@@ -24,7 +24,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }} className="col-md">
       <div className="auth-side" style={{ width: 'min(600px, 42vw)', background: BAI.night, boxSizing: 'border-box', padding: 'clamp(28px, 4vw, 48px) clamp(24px, 5vw, 72px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}>
-        <Link to="/" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: BAI.caramel }}>
+        <Link to="/" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: BAI.caramel, alignSelf: 'flex-start', padding: '6px 0' }}>
           Bailio
         </Link>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>

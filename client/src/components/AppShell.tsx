@@ -126,7 +126,7 @@ function MobileHeader() {
   const round = { width: 44, height: 44, borderRadius: 22, border: `1px solid ${BAI.border}`, background: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BAI.ink, textDecoration: 'none' } as const
   return (
     <header className="mobile-only" style={{ padding: '20px 22px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Link to="/espace" style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textDecoration: 'none' }}>
+      <Link to="/espace" style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textDecoration: 'none', display: 'inline-block', padding: '6px 0' }}>
         Bailio
       </Link>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -147,7 +147,7 @@ function BottomNav({ onAdd }: { onAdd: () => void }) {
     <nav aria-label="Navigation principale" className="mobile-only bottom-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40, height: 'calc(76px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxSizing: 'border-box', background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
       {items.map((n) =>
         n ? (
-          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 12, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 60 })}>
+          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 12, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
             {({ isActive }) => (
               <>
                 <n.icon color={isActive ? BAI.caramel : 'currentColor'} />

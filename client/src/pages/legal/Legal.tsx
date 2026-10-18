@@ -79,7 +79,7 @@ export function MentionsLegales() {
           </>
         )}{' '}
         {EDITOR.phone ? <>Téléphone : {EDITOR.phone}. </> : null}
-        Email : <Mail />. Profil professionnel : <a href={FOUNDER_LINKEDIN} rel="noopener">linkedin.com/in/enzo-mercier</a>.
+        Email : <Mail />. Profil professionnel : <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">linkedin.com/in/enzo-mercier</a>.
       </p>
       {EDITOR.vat ? <p>Numéro de TVA intracommunautaire : {EDITOR.vat}.</p> : null}
       {EDITOR.company ? null : (
@@ -474,7 +474,7 @@ export function Contact() {
       </p>
       <p>
         Bailio a été fondé à Montpellier par{' '}
-        <a href={FOUNDER_LINKEDIN} rel="noopener">
+        <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">
           Enzo Mercier
         </a>
         .
