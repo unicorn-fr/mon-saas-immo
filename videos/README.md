@@ -32,6 +32,16 @@ npm --prefix videos run studio          # aperçu en direct dans le navigateur, 
 
 `CHROMIUM_PATH` : navigateur « headless shell » déjà installé (sinon Remotion le télécharge).
 
+## Voix enregistrée sur le site d'ElevenLabs
+
+Sans accès à l'API : collez le texte des scènes (une phrase par paragraphe, une courte pause entre chaque) sur
+elevenlabs.io, téléchargez le MP3, puis :
+
+```bash
+node videos/scripts/import-voix.mjs presentation ~/Téléchargements/voix.mp3   # découpe aux silences, une piste par scène
+node videos/scripts/rendu.mjs presentation
+```
+
 ## Ajouter une vidéo
 
 Copiez `src/videos/presentation.json`, changez les scènes (`mots`, `grand`, `logo`, `ecran`, `liste`, `fin`),
