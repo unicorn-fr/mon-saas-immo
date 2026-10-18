@@ -12,7 +12,8 @@ export { BASE, API, api, fromLog, logSize, newAccount, completeLease, signAs, wa
 
 export const ROOT = new URL('../../', import.meta.url).pathname
 export const RESULTS = new URL('./resultats/', import.meta.url).pathname
-export const SHOTS = `${ROOT}audit/anomalies/`
+// Captures écrites pendant les tests dans resultats/ (ignoré par git) ; rapport.mjs copie celles du rapport dans audit/anomalies/.
+export const SHOTS = `${RESULTS}anomalies/`
 fs.mkdirSync(RESULTS, { recursive: true })
 fs.mkdirSync(SHOTS, { recursive: true })
 

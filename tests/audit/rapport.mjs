@@ -64,4 +64,9 @@ for (const g of [...all.values()].sort((a, b) => a.page.localeCompare(b.page))) 
   out += `| ${md(g.page)} | ${md(g.element)} | ${md(g.action)} | ${md(g.expected)} | ${status} | ${short(g.ok)} | ${short(new Set([...g.ko, ...g.imp]))} | ${status === 'OK' ? '' : md(g.actual).slice(0, 200)} |\n`
 }
 fs.writeFileSync(`${ROOT}audit/resultats-tests.md`, out)
+// Captures du rapport : copiées dans audit/anomalies/ (les anciennes sont retirées).
+const keep = new Set(anomalies.flatMap((a) => a.shots))
+fs.rmSync(`${ROOT}audit/anomalies`, { recursive: true, force: true })
+fs.mkdirSync(`${ROOT}audit/anomalies`, { recursive: true })
+for (const s of keep) if (fs.existsSync(`${RESULTS}${s}`)) fs.copyFileSync(`${RESULTS}${s}`, `${ROOT}audit/${s}`)
 console.log(JSON.stringify(summary, null, 1))
