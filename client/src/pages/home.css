@@ -236,8 +236,14 @@
 
 /* Téléphone (portrait ou paysage) : le bloc d'accueil commence en haut, plus serré, pour que « Créer mon bail » soit visible sans défiler. */
 @media (max-width: 768px), (max-height: 520px) {
-  .card-body { justify-content: flex-start; gap: 16px; padding: 24px var(--pad) 28px; }
+  .card-body { justify-content: flex-start; gap: 14px; padding: 16px var(--pad) 24px; }
+  .card-body h1 { font-size: 2rem; }
 }
+/* Téléphone en paysage (écran bas) : titre sur toute la largeur, sans le texte d'introduction. */
 @media (max-height: 520px) {
-  .card-body h1 { font-size: clamp(1.9rem, 6vh, 2.4rem); }
+  .card-body h1 { font-size: 1.75rem; max-width: none; }
+  .card-lead { display: none; }
 }
+/* La photo du haut laisse la place au bouton « Créer mon bail » sur téléphone. */
+@media (max-width: 768px) { .stage-photo { height: 46svh; } }
+@media (max-height: 520px) and (max-width: 1023px) { .stage-photo { height: 28svh; } }
