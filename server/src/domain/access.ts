@@ -80,6 +80,9 @@ function readFilter(model: string, s: Scope): Record<string, unknown> | 'DENY' |
       return s.role === 'CONTRACTOR' ? 'DENY' : null
     case 'User':
       return { id: s.ownerId }
+    case 'IrlPoint':
+      // Indice publié par l'INSEE, identique pour tous : lisible partout.
+      return null
     default:
       // Corbeille, brouillons, codes, sessions, accès, liens de connexion : jamais dans un espace partagé.
       return 'DENY'
