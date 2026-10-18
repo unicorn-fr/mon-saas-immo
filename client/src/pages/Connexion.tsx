@@ -59,7 +59,8 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Indiquez une adresse email valide.')
     setLoading(true)
     try {
-      await api('/auth/magic-link', { method: 'POST', body: { email: email.trim(), signup } })
+      // Page demandée avant la connexion : le lien reçu par email y ramènera.
+      await api('/auth/magic-link', { method: 'POST', body: { email: email.trim(), signup, next: safePath(state?.from) ?? undefined } })
       setSent(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Envoi impossible.')

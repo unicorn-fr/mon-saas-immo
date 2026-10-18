@@ -95,7 +95,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const location = useLocation()
   if (loading) return <Loading />
-  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname }} />
+  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname + location.search }} />
   return <>{children}</>
 }
 
