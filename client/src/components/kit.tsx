@@ -4,6 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { ApiError } from '../lib/api'
 import { centsToInput, parseEuros } from '../lib/format'
 import { Spinner, display } from './ui'
+import { useAddressSuggestions, type AddressSuggestion } from './AddressField'
 
 /**
  * Composants de l'espace propriétaire, repris de la maquette : cartes blanches à bord crème,
@@ -360,6 +361,29 @@ export function Input({ label, hideLabel, hint, error, big, style, value, onChan
           style={{ ...fieldStyle(big, Boolean(error)), paddingRight: suffix ? 44 : undefined, opacity: disabled ? 0.6 : 1 }}
         />
         {suffix ? <span aria-hidden style={{ position: 'absolute', right: 14, top: 0, bottom: 0, display: 'flex', alignItems: 'center', color: BAI.inkSoft, fontSize: 16 }}>{suffix}</span> : null}
+      </div>
+    </Shell>
+  )
+}
+
+/** Adresse avec suggestions de la Base Adresse Nationale : même apparence que les autres champs. */
+export function AddressInput({ label, hint, error, big, style, value, onChange, onSelect, placeholder }: FieldShell & { value: string | null | undefined; onChange: (v: string) => void; onSelect?: (s: AddressSuggestion) => void; placeholder?: string }) {
+  const { id, inputProps, list, reopen } = useAddressSuggestions(value ?? '', (s) => (onSelect ? onSelect(s) : onChange(s.label)))
+  return (
+    <Shell id={id} label={label} hint={hint} error={error} big={big} style={style}>
+      <div style={{ position: 'relative' }}>
+        <input
+          {...inputProps}
+          value={value ?? ''}
+          placeholder={placeholder}
+          aria-invalid={Boolean(error) || undefined}
+          onChange={(e) => {
+            onChange(e.target.value)
+            reopen()
+          }}
+          style={fieldStyle(big, Boolean(error))}
+        />
+        {list}
       </div>
     </Shell>
   )

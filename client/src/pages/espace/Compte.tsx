@@ -5,7 +5,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Fields } from '../../components/FlowLayout'
 import { SignaturePad } from '../../components/media'
-import { Btn, Card, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, TextLink, Toggle, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, TextLink, Toggle, useLoad, useToast, AddressInput } from '../../components/kit'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { dateNum } from '../../lib/format'
@@ -58,7 +58,7 @@ export default function Compte() {
                 <Input label="Prénom" value={p.firstNames} onChange={(v) => set({ firstNames: v })} />
                 <Input label="Nom" value={p.lastName} onChange={(v) => set({ lastName: v })} />
               </Fields>
-              <Input label="Adresse" value={p.address} onChange={(v) => set({ address: v })} hint="Obligatoire dans le bail : c’est là que votre locataire peut vous écrire." />
+              <AddressInput label="Adresse" value={p.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city })} hint="Obligatoire dans le bail : c’est là que votre locataire peut vous écrire." />
               <Fields>
                 <Input label="Code postal" value={p.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
                 <Input label="Ville" value={p.city} onChange={(v) => set({ city: v })} />

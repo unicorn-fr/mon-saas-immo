@@ -3,7 +3,7 @@ import { Cite } from '../../../components/Sources'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
-import { Btn, Callout, Chips, Computed, Input, LoadError, Loader, Money, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, Computed, Input, LoadError, Loader, Money, useToast, AddressInput } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { fullName, type Guarantor, type TenantFile } from '../../../lib/contract'
 import { openDoc } from '../../../lib/docs'
@@ -78,7 +78,7 @@ export default function ActeCaution() {
           <Input label="Lien avec le locataire" value={g.link} onChange={(v) => set({ link: v })} placeholder="Père, mère, ami…" />
           <Input label="Email" type="email" value={g.email} onChange={(v) => set({ email: v })} />
         </Fields>
-        <Input label="Adresse" value={g.address} onChange={(v) => set({ address: v })} />
+        <AddressInput label="Adresse" value={g.address} onChange={(v) => set({ address: v })} />
         <Input label="Téléphone" type="tel" value={g.phone} onChange={(v) => set({ phone: v })} />
       </FicheSection>
 

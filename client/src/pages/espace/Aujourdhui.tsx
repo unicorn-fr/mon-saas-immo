@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
 import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast } from '../../components/kit'
 import { Check, Upload } from '../../components/Icons'
+import { Onboarding } from '../../components/Onboarding'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
@@ -329,6 +330,9 @@ function SetupSteps({ counts }: { counts: TodayView['counts'] }) {
 
 /** Premier pas : l'espace est vide. Maquette « Premier pas, espace vide ». */
 function FirstSteps({ name, counts }: { name: string | null; counts: TodayView['counts'] }) {
+  const [later, setLater] = useState(false)
+  // Compte tout neuf (seulement un email) : on fait connaissance, puis on propose la première action.
+  if (!name && !counts.properties && !counts.tenants && !later) return <Onboarding onLater={() => setLater(true)} />
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 'clamp(8px, 3vw, 40px)' }}>

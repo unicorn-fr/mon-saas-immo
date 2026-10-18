@@ -18,7 +18,7 @@ export interface WizardStep {
  * Assistant dans une page ou une fenêtre : une question par écran, une barre d'avancement, « Continuer » comme seule
  * action principale. La dernière étape lance `onFinish`.
  */
-export function Wizard({ steps, onFinish, finishLabel, onCancel, busy, error }: { steps: WizardStep[]; onFinish: () => unknown; finishLabel: string; onCancel?: () => void; busy?: boolean; error?: string | null }) {
+export function Wizard({ steps, onFinish, finishLabel, onCancel, cancelLabel = 'Annuler', busy, error, focusOnOpen = true }: { steps: WizardStep[]; onFinish: () => unknown; finishLabel: string; onCancel?: () => void; cancelLabel?: string; busy?: boolean; error?: string | null; focusOnOpen?: boolean }) {
   const [index, setIndex] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -27,7 +27,11 @@ export function Wizard({ steps, onFinish, finishLabel, onCancel, busy, error }: 
   const last = i === steps.length - 1
 
   // À chaque nouvelle étape, la question est annoncée et le curseur va dans le premier champ.
+  // focusOnOpen = false : la page s'ouvre sur l'assistant, le clavier garde le lien « Aller au contenu » en premier.
+  const shown = useRef<number | null>(focusOnOpen ? null : 0)
   useEffect(() => {
+    if (shown.current === i) return
+    shown.current = i
     const box = heading.current?.parentElement
     const field = box?.querySelector<HTMLElement>('input, select, textarea, button[aria-pressed]')
     if (field) field.focus()
@@ -72,7 +76,7 @@ export function Wizard({ steps, onFinish, finishLabel, onCancel, busy, error }: 
             </button>
           ) : onCancel ? (
             <button type="button" onClick={onCancel} style={{ border: 'none', background: 'transparent', color: BAI.owner, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, padding: '12px 4px', cursor: 'pointer' }}>
-              Annuler
+              {cancelLabel}
             </button>
           ) : null}
         </div>

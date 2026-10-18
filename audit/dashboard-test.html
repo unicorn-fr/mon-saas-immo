@@ -208,7 +208,9 @@ t('/commencer/recevoir', 'Étape 6 : recevoir son bail', ['Saisissez un email in
 t('/espace', 'Bienvenue après le tunnel', ['Sur la page « Votre bail est enregistré », touchez « Voir le brouillon », puis « Activer le suivi » ou « Compléter mon bail ».'], 'Le brouillon s’ouvre ; vous arrivez ensuite dans votre espace.')
 
 G('3. Connexion, inscription, déconnexion')
-t('/inscription', 'Créer son espace directement', ['Saisissez une nouvelle adresse email, touchez le bouton.', 'Ouvrez le lien reçu.'], 'Votre espace s’ouvre, vide, avec « Ajouter un logement » mis en avant.')
+t('/inscription', 'Créer son espace directement', ['Saisissez une nouvelle adresse email, touchez le bouton.', 'Ouvrez le lien reçu.'], 'Votre espace s’ouvre sur « Bienvenue sur Bailio » : trois questions pour faire connaissance.')
+t('/inscription', 'Accueil d’un nouveau compte', ['Avec un compte tout neuf, répondez : prénom et nom, puis adresse (choisissez une suggestion), puis « Que voulez-vous faire en premier ? ».', 'Essayez aussi « Plus tard » et « Passer cette étape ».'], 'Le code postal et la ville se remplissent avec la suggestion ; votre choix ouvre la bonne page (logement, bail, import) ; l’accueil ne revient plus ensuite.')
+t('/espace/compte', 'Suggestions d’adresse dans l’espace', ['Dans « Mon compte », le profil du bailleur, la fiche du logement, l’ajout d’un locataire et le carnet, tapez le début d’une adresse.'], 'Des suggestions apparaissent ; en choisir une remplit l’adresse (et le code postal et la ville quand ils sont à part).')
 t('/connexion', 'Connexion : erreurs', ['Touchez « Recevoir mon lien » sans email.', 'Saisissez « abc » puis validez.'], '« Indiquez une adresse email valide. » ; le champ garde ce que vous avez tapé.')
 t('/connexion', 'Connexion par lien', ['Saisissez votre email, validez.', 'Touchez le bouton vers votre messagerie, ouvrez l’email, touchez le lien.'], 'Le bouton ouvre la bonne messagerie. Le lien ouvre « Aujourd’hui ».')
 t('/connexion', 'Lien déjà utilisé', ['Rouvrez le même lien de connexion une seconde fois.'], '« Lien expiré. » et un bouton pour en recevoir un nouveau.')

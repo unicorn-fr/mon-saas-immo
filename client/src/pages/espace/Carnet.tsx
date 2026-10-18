@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Fields } from '../../components/FlowLayout'
-import { Btn, Card, Chips, Input, LoadError, Loader, Modal, PageHead, TextArea, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Chips, Input, LoadError, Loader, Modal, PageHead, TextArea, TextLink, useLoad, useToast, AddressInput } from '../../components/kit'
 import { api } from '../../lib/api'
 import { CONTACT_KIND, type Contact, type ContactKind } from '../../lib/contacts'
 
@@ -106,7 +106,7 @@ export default function Carnet() {
               <Input label="Téléphone" value={edit.phone} onChange={(v) => setEdit({ ...edit, phone: v })} inputMode="tel" />
               <Input label="Email" type="email" value={edit.email} onChange={(v) => setEdit({ ...edit, email: v })} />
             </Fields>
-            <Input label="Adresse" value={edit.address} onChange={(v) => setEdit({ ...edit, address: v })} />
+            <AddressInput label="Adresse" value={edit.address} onChange={(v) => setEdit({ ...edit, address: v })} />
             <TextArea label="Note" value={edit.note} onChange={(v) => setEdit({ ...edit, note: v })} />
           </>
         ) : null}

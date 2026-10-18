@@ -31,6 +31,52 @@ async function run(config) {
   // Menu du bas (téléphone, tablette en portrait) ou menu latéral : selon la largeur, comme le site (< 1024 px).
   const mobile = config.opts.viewport.width < 1024
 
+  // P0 — Nouveau compte (seulement un email) : on fait connaissance, puis la première action ; suggestions d'adresses.
+  if (want('P0')) {
+    const me = await newAccount()
+    const ctx = await contextFor(config, { token: me.token })
+    const page = await ctx.newPage()
+    const errors = watch(page)
+    const P = 'P0 Accueil d’un nouveau compte'
+    await page.goto(BASE + '/espace')
+    await settle(page)
+    await step(res, config, page, P, 'Bienvenue', 'Ouvrir l’espace d’un compte vide', '« Comment vous appelez-vous ? »', async () => {
+      await visible(page.getByRole('heading', { name: 'Comment vous appelez-vous ?' }))
+    })
+    await step(res, config, page, P, 'Nom obligatoire', 'Continuer sans rien remplir', 'Message « Indiquez votre prénom. »', async () => {
+      await page.getByRole('button', { name: 'Continuer' }).click()
+      await visible(page.getByText('Indiquez votre prénom.'))
+    }, 'Majeur')
+    await step(res, config, page, P, 'Identité, adresse suggérée, choix', 'Prénom, nom, adresse choisie dans les suggestions, « Ajouter mon logement »', 'Profil enregistré, ajout du logement ouvert', async () => {
+      await page.getByRole('button', { name: 'Madame' }).click()
+      await page.getByLabel('Prénom', { exact: true }).fill('Zoé')
+      await page.getByLabel('Nom', { exact: true }).fill('D’Artagnan')
+      await page.getByRole('button', { name: 'Continuer' }).click()
+      await page.getByLabel('Adresse', { exact: true }).fill('12 rue de')
+      await page.getByRole('option').first().click({ timeout: 8000 })
+      if ((await page.getByLabel('Code postal').inputValue()) !== '34000') throw new Error('Code postal non rempli par la suggestion')
+      await page.getByRole('button', { name: 'Continuer' }).click()
+      await page.getByRole('button', { name: /Ajouter mon logement/ }).click()
+      await page.getByRole('button', { name: 'C’est parti' }).click()
+      await page.waitForURL(/\/espace\/logements\/nouveau/, { timeout: 10000 })
+      await page.goto(BASE + '/espace')
+      await settle(page)
+      if (await page.getByRole('heading', { name: 'Comment vous appelez-vous ?' }).count()) throw new Error('L’accueil revient alors que le profil est rempli')
+      await visible(page.getByRole('heading', { name: /Bienvenue, Zoé/ }))
+    })
+    await step(res, config, page, P, 'Suggestions d’adresse dans Mon compte', 'Taper une adresse dans « Mon compte »', 'Liste de suggestions, ville remplie', async () => {
+      await page.goto(BASE + '/espace/compte')
+      await settle(page)
+      await page.getByLabel('Adresse', { exact: true }).fill('12 rue de')
+      await page.getByRole('option').first().click({ timeout: 8000 })
+      if ((await page.getByLabel('Ville').inputValue()) !== 'Montpellier') throw new Error('Ville non remplie')
+    }, 'Majeur')
+    await step(res, config, page, P, 'Erreurs', 'Tout le parcours', 'Aucune erreur', async () => {
+      if (errors.length) throw new Error([...new Set(errors)].slice(0, 5).join(' ; '))
+    }, 'Majeur')
+    await ctx.close()
+  }
+
   // P1 — Découvrir : accueil → Tarif → FAQ → pied de page.
   if (want('P1')) {
     const ctx = await contextFor(config)
@@ -292,7 +338,7 @@ async function run(config) {
           await page.goto(BASE + '/espace')
           await settle(page)
           // Compte vide : « Aujourd'hui » n'affiche que l'accueil (ajouter un logement), les situations viennent ensuite.
-          const s = (await page.locator('a[href="/espace/situations"]').filter({ visible: true }).count()) + (await page.getByText('Ajouter un logement').filter({ visible: true }).count())
+          const s = (await page.locator('a[href="/espace/situations"]').filter({ visible: true }).count()) + (await page.getByText('Ajouter un logement').filter({ visible: true }).count()) + (await page.getByRole('heading', { name: 'Comment vous appelez-vous ?' }).count())
           await page.goto(BASE + '/espace/compte')
           await settle(page)
           const n = await page.locator('a[href="/espace/carnet"]').filter({ visible: true }).count()

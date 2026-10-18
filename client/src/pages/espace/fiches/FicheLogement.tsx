@@ -4,7 +4,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
 import { AuthImage, uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
+import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, PARKING_TYPES, isParking, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
@@ -50,7 +50,7 @@ export default function FicheLogement() {
     return (
       <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du garage" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
         <FicheSection id="address" n={++n} title="Adresse" done={done('address')}>
-          <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
+          <AddressInput label="Adresse" value={f.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode })} />
           <Fields>
             <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
             <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
@@ -92,7 +92,7 @@ export default function FicheLogement() {
   return (
     <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du logement" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
       <FicheSection id="address" guides={['bail']} n={++n} title="Adresse et localisation" reference="Contrat type, décret n° 2015-587 du 29 mai 2015, rubrique II.A" done={done('address')}>
-        <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
+        <AddressInput label="Adresse" value={f.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode })} />
         <Fields>
           <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
           <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
