@@ -104,7 +104,7 @@ export default function Courriers() {
         }
         center={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <span style={{ fontSize: 17, fontWeight: 700 }}>Actes et courriers</span>
+            <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Actes et courriers</h1>
             <span className="hide-md" style={{ fontSize: 13, color: BAI.inkSoft }}>
               {lease ? `${lease.tenantName}, ${lease.property.name}` : 'Tous les documents de la vie du bail'}
             </span>

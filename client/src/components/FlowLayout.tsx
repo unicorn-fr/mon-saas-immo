@@ -157,7 +157,7 @@ export function FicheLayout({
         }
         center={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
+            <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>{title}</h1>
             {subtitle ? (
               <span className="hide-md" style={{ fontSize: 13, color: BAI.inkSoft }}>
                 {subtitle}

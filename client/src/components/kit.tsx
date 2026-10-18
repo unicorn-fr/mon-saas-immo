@@ -749,7 +749,8 @@ export function Loader({ label = 'Chargement' }: { label?: string }) {
 export function LoadError({ message, retry }: { message: string; retry?: () => void }) {
   return (
     <Card>
-      <Callout tone="warn" title="Impossible d’afficher cette page">
+      {/* Titre principal de la page en erreur (titre de l'onglet, lecteurs d'écran). */}
+      <Callout tone="warn" title={<h1 style={{ margin: 0, font: 'inherit' }}>Impossible d’afficher cette page</h1>}>
         {message}
       </Callout>
       {retry ? (
