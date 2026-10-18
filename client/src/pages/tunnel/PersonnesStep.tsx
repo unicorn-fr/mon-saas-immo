@@ -70,8 +70,8 @@ export default function PersonnesStep() {
         <h2 style={{ ...overline, margin: 0 }}>Vous, le propriétaire</h2>
         <Civility value={landlord.civility} onChange={(v) => save({ landlord: { ...landlord, civility: v } })} />
         <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-          <TextField label="Prénom" name="l-first" autoComplete="given-name" value={landlord.firstName ?? ''} error={errors['l.firstName']} onChange={(e) => save({ landlord: { ...landlord, firstName: e.target.value } })} />
-          <TextField label="Nom" name="l-last" autoComplete="family-name" value={landlord.lastName ?? ''} error={errors['l.lastName']} onChange={(e) => save({ landlord: { ...landlord, lastName: e.target.value } })} />
+          <TextField maxLength={80} label="Prénom" name="l-first" autoComplete="given-name" value={landlord.firstName ?? ''} error={errors['l.firstName']} onChange={(e) => save({ landlord: { ...landlord, firstName: e.target.value } })} />
+          <TextField maxLength={80} label="Nom" name="l-last" autoComplete="family-name" value={landlord.lastName ?? ''} error={errors['l.lastName']} onChange={(e) => save({ landlord: { ...landlord, lastName: e.target.value } })} />
         </div>
         <AddressField
           label="Votre adresse"
@@ -95,10 +95,11 @@ export default function PersonnesStep() {
           </div>
           <Civility value={t.civility} onChange={(v) => setTenant(i, { civility: v })} />
           <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-            <TextField label="Prénom" name={`t${i}-first`} value={t.firstName ?? ''} error={errors[`t${i}.firstName`]} onChange={(e) => setTenant(i, { firstName: e.target.value })} />
-            <TextField label="Nom" name={`t${i}-last`} value={t.lastName ?? ''} error={errors[`t${i}.lastName`]} onChange={(e) => setTenant(i, { lastName: e.target.value })} />
+            <TextField maxLength={80} label="Prénom" name={`t${i}-first`} value={t.firstName ?? ''} error={errors[`t${i}.firstName`]} onChange={(e) => setTenant(i, { firstName: e.target.value })} />
+            <TextField maxLength={80} label="Nom" name={`t${i}-last`} value={t.lastName ?? ''} error={errors[`t${i}.lastName`]} onChange={(e) => setTenant(i, { lastName: e.target.value })} />
           </div>
           <TextField
+            maxLength={200}
             label={i === 0 ? 'Son email' : 'Son email (facultatif)'}
             name={`t${i}-email`}
             type="email"
@@ -120,8 +121,8 @@ export default function PersonnesStep() {
             </button>
           </div>
           <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-            <TextField label="Prénom" name="g-first" value={guarantor.firstName ?? ''} error={errors['g.firstName']} onChange={(e) => save({ guarantor: { ...guarantor, firstName: e.target.value } })} />
-            <TextField label="Nom" name="g-last" value={guarantor.lastName ?? ''} error={errors['g.lastName']} onChange={(e) => save({ guarantor: { ...guarantor, lastName: e.target.value } })} />
+            <TextField maxLength={80} label="Prénom" name="g-first" value={guarantor.firstName ?? ''} error={errors['g.firstName']} onChange={(e) => save({ guarantor: { ...guarantor, firstName: e.target.value } })} />
+            <TextField maxLength={80} label="Nom" name="g-last" value={guarantor.lastName ?? ''} error={errors['g.lastName']} onChange={(e) => save({ guarantor: { ...guarantor, lastName: e.target.value } })} />
           </div>
           <AddressField
             label="Son adresse"

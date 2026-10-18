@@ -117,7 +117,7 @@ export default function RecevoirStep() {
                 ? 'Où voulez-vous le ranger ?'
                 : 'Votre bail n’est pas encore valable : il est enregistré en brouillon. Avec votre email, vous ouvrez votre espace pour compléter les mentions qui manquent, puis le faire signer.'}</p>
             <form onSubmit={finish} className="stack" style={{ gap: 14 }}>
-              <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
+              <TextField maxLength={200} label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
               <Button type="submit" full loading={loading}>
                 {imported ? 'Enregistrer mon bail' : 'Continuer mon bail'}
               </Button>

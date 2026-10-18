@@ -69,6 +69,7 @@ export function AddressField({ label, value, onChange, onSelect, error, placehol
       </label>
       <input
         id={id}
+        maxLength={300}
         role="combobox"
         aria-expanded={open}
         aria-controls={`${id}-list`}

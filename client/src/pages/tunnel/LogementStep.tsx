@@ -196,7 +196,7 @@ export default function LogementStep() {
         </span>
       </fieldset>
 
-      <TextField label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
+      <TextField maxLength={120} label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
 
       <ChipGroup
         legend="C’est"

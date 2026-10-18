@@ -163,8 +163,8 @@ export default function RelectureStep() {
 
             <Row label="Propriétaire" value={data.landlord?.firstName ? `${fullName(data.landlord)}${data.landlord.address ? ` · ${data.landlord.address}` : ''}` : TODO} editing={editing === 'bailleur'} onEdit={() => edit('bailleur')}>
               <div style={{ display: 'flex', gap: 16 }}>
-                <TextField label="Prénom" name="e-lfirst" value={form.landlord?.firstName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, firstName: e.target.value } })} />
-                <TextField label="Nom" name="e-llast" value={form.landlord?.lastName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, lastName: e.target.value } })} />
+                <TextField maxLength={80} label="Prénom" name="e-lfirst" value={form.landlord?.firstName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, firstName: e.target.value } })} />
+                <TextField maxLength={80} label="Nom" name="e-llast" value={form.landlord?.lastName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, lastName: e.target.value } })} />
               </div>
               <AddressField label="Votre adresse" value={form.landlord?.address ?? ''} onChange={(v) => setF({ landlord: { ...form.landlord, address: v } })} onSelect={(s) => setF({ landlord: { ...form.landlord, address: s.label } })} />
               <EditActions onSave={() => commit({ landlord: form.landlord })} onCancel={() => setEditing(null)} />
@@ -178,9 +178,9 @@ export default function RelectureStep() {
             >
               {(form.tenants?.length ? form.tenants : [{}]).map((t, i) => (
                 <div key={i} className="col-md" style={{ display: 'flex', gap: 12 }}>
-                  <TextField label={i === 0 ? 'Prénom' : `Prénom (colocataire ${i + 1})`} name={`e-t${i}f`} value={t.firstName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, firstName: e.target.value } : x)) })} />
-                  <TextField label="Nom" name={`e-t${i}l`} value={t.lastName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, lastName: e.target.value } : x)) })} />
-                  <TextField label="Email" name={`e-t${i}e`} type="email" value={t.email ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, email: e.target.value } : x)) })} />
+                  <TextField maxLength={80} label={i === 0 ? 'Prénom' : `Prénom (colocataire ${i + 1})`} name={`e-t${i}f`} value={t.firstName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, firstName: e.target.value } : x)) })} />
+                  <TextField maxLength={80} label="Nom" name={`e-t${i}l`} value={t.lastName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, lastName: e.target.value } : x)) })} />
+                  <TextField maxLength={200} label="Email" name={`e-t${i}e`} type="email" value={t.email ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, email: e.target.value } : x)) })} />
                 </div>
               ))}
               <Link to="/commencer/personnes" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
