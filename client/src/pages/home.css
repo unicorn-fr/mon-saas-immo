@@ -233,3 +233,11 @@
 @media (pointer: coarse) {
   .foot-legal a { display: inline-block; padding: 10px 0; margin: -6px 0; }
 }
+
+/* Téléphone (portrait ou paysage) : le bloc d'accueil commence en haut, plus serré, pour que « Créer mon bail » soit visible sans défiler. */
+@media (max-width: 768px), (max-height: 520px) {
+  .card-body { justify-content: flex-start; gap: 16px; padding: 24px var(--pad) 28px; }
+}
+@media (max-height: 520px) {
+  .card-body h1 { font-size: clamp(1.9rem, 6vh, 2.4rem); }
+}
