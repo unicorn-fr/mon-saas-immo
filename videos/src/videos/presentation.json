@@ -1,0 +1,87 @@
+{
+  "id": "presentation",
+  "titre": "Bailio, c'est quoi ?",
+  "legende": "Propriétaire ? Bail, quittances, relances : Bailio prépare tout, selon la loi. Créez votre bail gratuitement sur bailio.fr 🏠 #proprietaire #immobilier #location #bailleur #investissementlocatif",
+  "scenes": [
+    {
+      "type": "mots",
+      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… La paperasse vous prend des heures.",
+      "mots": [
+        "Bail",
+        "Quittances",
+        "Relances",
+        "État des lieux"
+      ],
+      "chute": "Des heures perdues."
+    },
+    {
+      "type": "grand",
+      "voix": "Et si tout se faisait presque tout seul ?",
+      "texte": "Et si tout se faisait",
+      "accent": "presque tout seul ?"
+    },
+    {
+      "type": "logo",
+      "voix": "Voici Bailio.",
+      "sous": "Le bail et le suivi de votre location"
+    },
+    {
+      "type": "ecran",
+      "voix": "Créez un bail conforme à la loi en quelques minutes. Bailio vous pose les bonnes questions, une à la fois.",
+      "titre": "Un bail conforme",
+      "accent": "en 3 minutes",
+      "image": "ecrans/tunnel-type.png",
+      "cote": "droite"
+    },
+    {
+      "type": "ecran",
+      "voix": "Faites-le signer en ligne, par le locataire et le garant, sans imprimer une seule page.",
+      "titre": "Signé en ligne",
+      "accent": "sans papier",
+      "image": "ecrans/bail.png",
+      "cote": "gauche",
+      "badge": "Signé ✓"
+    },
+    {
+      "type": "ecran",
+      "voix": "Chaque matin, Bailio prépare ce qu'il y a à faire : une relance, un état des lieux, la révision du loyer.",
+      "titre": "Tout est prêt",
+      "accent": "chaque matin",
+      "image": "ecrans/aujourdhui.png",
+      "cote": "droite",
+      "zoom": true
+    },
+    {
+      "type": "ecran",
+      "voix": "Les quittances partent toutes seules, chaque mois.",
+      "titre": "Quittances",
+      "accent": "automatiques",
+      "image": "ecrans/argent.png",
+      "cote": "gauche"
+    },
+    {
+      "type": "liste",
+      "voix": "Annonce, candidats, dépenses, déclaration de revenus : tout est au même endroit.",
+      "titre": "Tout au même endroit",
+      "items": [
+        "Annonce",
+        "Candidats",
+        "Dépenses",
+        "Déclaration"
+      ],
+      "images": [
+        "ecrans/annonce.png",
+        "ecrans/logement.png",
+        "ecrans/courriers.png"
+      ]
+    },
+    {
+      "type": "fin",
+      "voix": "Créez votre bail gratuitement sur bailio point f r.",
+      "texte": "Créez votre bail",
+      "accent": "gratuitement",
+      "url": "bailio.fr",
+      "sousTitre": "Créez votre bail gratuitement sur bailio.fr"
+    }
+  ]
+}
