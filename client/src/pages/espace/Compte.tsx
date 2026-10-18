@@ -92,6 +92,12 @@ export default function Compte() {
               <Toggle border={false} checked={weekly} onChange={(v) => prefs({ notifyWeekly: v })} label="Récapitulatif du lundi" sub="Ce qui arrive dans la semaine : loyers, révisions, attestations." />
               <Toggle checked={urgent} onChange={(v) => prefs({ notifyUrgent: v })} label="Alertes urgentes" sub="Loyer en retard, échéance dans les trois jours." />
             </Card>
+            {/* Téléphone et tablette : le carnet n'est pas dans la barre du bas, il s'ouvre d'ici. */}
+            <div className="mobile-only" style={{ flexDirection: 'column' }}>
+              <Card title="Carnet" action={<TextLink to="/espace/carnet" style={{ fontSize: 14 }}>Ouvrir</TextLink>}>
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Artisans, syndic, assureur : vos contacts, saisis une fois, repris dans les interventions.</span>
+              </Card>
+            </div>
             <Card title="Accès partagés" action={<TextLink to="/espace/compte/acces" style={{ fontSize: 14 }}>Gérer</TextLink>}>
               <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Invitez un associé, votre comptable ou un artisan sur certains logements, ou ouvrez un espace partagé avec vous.</span>
             </Card>
