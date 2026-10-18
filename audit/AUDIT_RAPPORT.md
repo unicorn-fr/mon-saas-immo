@@ -10,7 +10,7 @@
 | Vérifications automatiques (passage final) | **16 062**, sur 12 configurations, dont 74 pages, chaque lien et chaque bouton cliqués, 8 parcours complets, 42 liens externes, le tableau de bord |
 | Anomalies distinctes trouvées | **12** : 0 bloquante, 7 majeures, 3 mineures, 2 cosmétiques (détail partie 2) |
 | Anomalies corrigées | **12 sur 12**, toutes vérifiées par une nouvelle passe des tests (une à confirmer en ligne : caméra de l'ordinateur) |
-| KO restants au passage final | **3**, tous le même point de design en attente de votre accord : « Créer mon bail » sous le bas de l'écran sur téléphone (partie 3, point 1) |
+| KO restants | **0** après application des points validés (partie 3) |
 | « À améliorer » restants | **478** : 300 mineurs (cibles tactiles entre 24 et 44 px) et 181 cosmétiques (textes de 12 px sur téléphone, liens externes non vérifiables depuis la machine de test), voir partie 3 |
 | Sécurité | Aucune faille exploitable trouvée ; 2 corrections préventives (caméra, injection CSV) |
 
@@ -26,10 +26,10 @@
 
 | Appareil | Vérifications | KO | À améliorer |
 |---|---|---|---|
-| iPhone portrait | 1 526 | 1 (point de design 1) | 87 |
-| iPhone paysage | 1 511 | 1 (point de design 1) | 88 |
+| iPhone portrait | 1 526 | 1 avant V1, 0 après | 87 |
+| iPhone paysage | 1 511 | 1 avant V1, 0 après | 88 |
 | Android portrait | 1 513 | 0 | 87 |
-| Android paysage | 1 537 | 1 (point de design 1) | 96 |
+| Android paysage | 1 537 | 1 avant V1, 0 après | 96 |
 | iPad portrait | 1 389 | 0 | 52 |
 | iPad paysage | 1 447 | 0 | 60 |
 | Chrome 1366 / 1920 px | 1 210 / 1 210 | 0 | 0 |
@@ -82,17 +82,23 @@ Faux positifs écartés après vérification (aucune correction) : le champ cach
 - **A4** : Sur téléphone, cherchez le carnet depuis n'importe quelle page de l'espace : aucun lien.
 - **A5** : iPad portrait, ouvrez `/mentions-legales` → la page défile de côté, « Contact » est coupé. Capture : [`anomalies/avant/ipad-portrait--Contact-debordement.jpg`](anomalies/avant/ipad-portrait--Contact-debordement.jpg).
 - **A6** : Sur téléphone, page d'un bail → le fil d'Ariane « Logements / Studio » fait 18 px de haut. Capture : [`anomalies/avant/android-portrait--Bail-sign-cibles-24.jpg`](anomalies/avant/android-portrait--Bail-sign-cibles-24.jpg) ; bouton Fermer sans nom (A7) : [`anomalies/avant/android-portrait--Ajouter-un-logement-axe.jpg`](anomalies/avant/android-portrait--Ajouter-un-logement-axe.jpg).
-- **Point de design 1** (non corrigé) : [`anomalies/iphone-portrait--P1-…`](anomalies/iphone-portrait--P1-D-couvrir-le-site-Action-principale.jpg).
+- **Accueil sur téléphone, avant V1** : [`anomalies/iphone-portrait--P1-…`](anomalies/iphone-portrait--P1-D-couvrir-le-site-Action-principale.jpg).
 
-## 3. Points en attente de votre validation
+## 3. Points soumis à votre validation : acceptés et appliqués
 
-Ces changements touchent le design ou une fonctionnalité. Je ne les ai pas appliqués :
+Vous avez validé les 5 changements proposés. Ils sont appliqués et vérifiés :
 
-1. **Accueil sur téléphone** : le bouton « Créer mon bail » est juste sous le bas de l'écran (iPhone portrait : 677 px pour 664 px visibles ; téléphones en paysage : nettement plus bas). Proposition : le remonter (texte d'introduction plus court) ou ajouter « Créer mon bail » dans l'en-tête de l'accueil sur téléphone.
-2. **Textes de 12 px** sur téléphone (pastilles, mentions sous les champs, dates). Ils sont lisibles et contrastés, mais en dessous des 16 px demandés pour le corps du texte. Proposition : passer les textes de 12 px à 13-14 px. C'est un changement de style global.
-3. **Cibles de 24 à 44 px** encore présentes (onglets, filtres en pastilles de « Documents », onglets du logement). Elles respectent le minimum WCAG (24 px), mais pas les 44 px idéaux. Les agrandir change leur apparence (pastilles plus hautes).
-4. **IRL quand l'INSEE ne répond pas** : le bail est créé sans trimestre de référence, et la signature est refusée (« Il manque encore : révision ») jusqu'à ce que le propriétaire le choisisse dans le contrat. Proposition : garder en base le dernier IRL connu et le proposer automatiquement.
-5. **Outil de test du site (vitest)** : `npm audit` signale une faille critique dans `tinypool`, utilisé seulement pour lancer les tests en développement, jamais en production. La correction demande une version majeure de vitest (3 → 5). Je propose de la faire dans une modification à part.
+| # | Changement | Commit | Vérifié |
+|---|---|---|---|
+| V1 | Accueil sur téléphone : bloc d'accueil plus serré, photo du haut moins haute, texte d'introduction masqué en paysage. « Créer mon bail » est visible sans défiler sur iPhone et Android, en portrait et en paysage. | `58bfb65`, `c76f652` | ✅ parcours P1 sur 5 appareils |
+| V2 | Plus aucun texte de 11 ou 12 px : passés à 13 px. | `9ff49fc` | ✅ 0 texte trop petit (contrôle « Lisibilité ») |
+| V3 | Onglets et filtres en pastilles : 44 px de haut sur écran tactile. | `9ff49fc` | ✅ |
+| V4 | IRL : les dernières valeurs de l'INSEE sont gardées en base (table `IrlPoint`, migration `20261018133225_irl_cache`) et reprises quand l'INSEE ne répond pas : le bail n'est plus bloqué. | `ec3a190` | ✅ essai avec l'INSEE coupé, test d'accès ajouté (`access.test.ts`) |
+| V5 | vitest 3 → 5 : `npm audit` du site à 0 faille, dépendances de développement comprises. | `9201b73` | ✅ tests du site (17) et construction OK |
+
+Il reste environ 45 cibles de 24 à 44 px par téléphone (« à améliorer », conformes au minimum WCAG) : liens dans des listes et boutons secondaires. On pourra les reprendre au fil des retours du tableau de bord.
+
+**À faire au déploiement** : la migration `irl_cache` s'applique toute seule au démarrage (`prisma migrate deploy`), et la caméra (A3) est à vérifier une fois en ligne.
 
 ## 4. Sécurité
 
@@ -110,7 +116,7 @@ Vérifié dans le code et par des tentatives réelles sur l'API locale :
 | Appels vers l'extérieur (SSRF) | ✅ Adresses fixes (Géoplateforme, ADEME, INSEE) ; les paramètres saisis sont seulement encodés. |
 | En-têtes (Caddy, Helmet) | ✅ HTTPS forcé (HSTS), CSP stricte (`script-src 'self'`), `frame-ancestors 'none'`, `nosniff`, Referrer-Policy ; caméra autorisée pour le site seulement (A3). |
 | Base de données | ✅ Non exposée (seul Caddy écoute sur 80 et 443) ; l'API tourne en `NODE_ENV=production`. |
-| Dépendances (`npm audit --omit=dev`) | ✅ 0 faille en production pour le serveur et le site. Outils de développement : `source-map-js` mis à jour (`f39e175`) ; vitest, voir point 3.5. |
+| Dépendances (`npm audit --omit=dev`) | ✅ 0 faille en production pour le serveur et le site. Outils de développement : `source-map-js` mis à jour (`f39e175`), vitest 5 (V5) : 0 faille. |
 
 Pistes, sans urgence : le jeton de session est gardé dans le stockage du navigateur (la CSP stricte limite le risque) ; l'import de baux (OCR) a une file d'attente, mais pas de taille maximale.
 
@@ -142,7 +148,7 @@ Après toutes les corrections, sur le code final :
 | Suite | Résultat |
 |---|---|
 | `tests/audit/pages.mjs` : 74 pages sur 8 configurations relancées (téléphones, tablettes, Chrome 1366 et 1920 px) | 0 KO ; restent les points « à améliorer » de la partie 3 |
-| `tests/audit/parcours.mjs` : 8 parcours sur 8 configurations | Tout passe, sauf le point de design 1 (téléphones) |
+| `tests/audit/parcours.mjs` : 8 parcours sur 8 configurations | Tout passe (P1 revérifié après V1 sur iPhone, Android et iPad) |
 | `tests/audit/dashboard.mjs` : tableau de bord manuel (iPhone, iPad, ordinateur) | 30 sur 30 |
 | `tests/audit/liens-externes.mjs` : 42 liens | Format correct ; réponse non vérifiable (réseau de test bloqué) |
 | Suite existante `e2e/` (68 parcours métier, accessibilité axe-core comprise) | **68 sur 68** |
