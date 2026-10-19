@@ -1,5 +1,6 @@
 import { AbsoluteFill, Audio, Img, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion'
 import { Backdrop, Camera, Highlight, MaskLine, Slam, clamp, easeInOut, easeOut, glass, label, title, useBounce, useCount, useProgress } from '../fx'
+import type { Word } from '../captions'
 import type { GuideStop } from '../guide'
 import { C, serif } from '../theme'
 
@@ -10,7 +11,7 @@ export type Carte = { titre: string; sous?: string; montant?: number; etape?: [n
 
 /** sousTitre : texte affiché à la place de la voix off quand elle s'écrit autrement (« bailio point f r »). */
 export type Scene = { sousTitre?: string } & (
-  | { type: 'mots'; voix: string; mots: string[]; chute: string }
+  | { type: 'mots'; voix: string; mots: string[]; chute: string; reperes?: string[]; relance?: { repere: string; texte: string } }
   | { type: 'grand'; voix: string; texte: string; accent: string }
   | { type: 'logo'; voix: string; sous: string }
   | { type: 'ecran'; voix: string; titre: string; accent: string; image: string; cote?: 'droite' | 'gauche'; badge?: string; zoom?: boolean; tap?: [number, number]; notifs?: Notif[]; carte?: Carte }
@@ -20,13 +21,27 @@ export type Scene = { sousTitre?: string } & (
 
 const sfx = (name: string, volume = 0.6) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume} />
 
-/** Accroche : chaque tâche claque plein écran, une par coupe, puis un tampon rouge « des heures perdues ». */
-function Mots({ s, frames }: { s: Extract<Scene, { type: 'mots' }>; frames: number }) {
+/**
+ * Accroche : chaque tâche claque plein écran au moment où la voix la prononce, puis un tampon « des heures perdues ».
+ * reperes : un mot prononcé par tâche, puis un pour le tampon (calés sur l'horodatage de la voix s'il existe).
+ */
+function Mots({ s, frames, words, voiceAt = 0 }: { s: Extract<Scene, { type: 'mots' }>; frames: number; words?: Word[]; voiceAt?: number }) {
   const frame = useCurrentFrame()
-  const intro = 14
-  const per = Math.max(7, Math.floor((frames * 0.62 - intro) / s.mots.length))
-  const endWords = intro + per * s.mots.length
-  const idx = frame < intro ? -1 : Math.min(s.mots.length - 1, Math.floor((frame - intro) / per))
+  const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '')
+  const cue = (k: number) => {
+    const r = s.reperes?.[k]
+    const w = r && words?.find((x) => norm(x.w) === norm(r))
+    return w ? voiceAt + Math.round(w.start * 30) : null
+  }
+  const fallbackIntro = Math.floor(frames * 0.2)
+  const fallbackPer = Math.max(7, Math.floor((frames * 0.6 - fallbackIntro) / s.mots.length))
+  const starts = s.mots.map((_, k) => cue(k) ?? fallbackIntro + k * fallbackPer)
+  const intro = starts[0]
+  const endWords = cue(s.mots.length) ?? fallbackIntro + fallbackPer * s.mots.length
+  const idx = frame < intro ? -1 : starts.reduce((a, st, k) => (frame >= st ? k : a), 0)
+  // Entre la question et la première tâche : une phrase de relance (« Vous connaissez ça… »).
+  const relanceWord = s.relance && words?.find((x) => norm(x.w) === norm(s.relance!.repere))
+  const relanceAt = relanceWord ? voiceAt + Math.round(relanceWord.start * 30) : null
   const stamp = useBounce(endWords + 2, 300, 12)
   return (
     <AbsoluteFill>
@@ -34,12 +49,14 @@ function Mots({ s, frames }: { s: Extract<Scene, { type: 'mots' }>; frames: numb
       <Camera frames={frames} push={0.08} shakeAt={endWords + 2}>
         {frame < endWords ? (
           <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 30 }}>
-            {idx < 0 ? (
+            {idx < 0 && relanceAt !== null && frame >= relanceAt ? (
+              <Slam key="relance" delay={relanceAt} style={{ ...title(150, C.surface), textAlign: 'center', padding: '0 80px' }}>{s.relance!.texte}</Slam>
+            ) : idx < 0 ? (
               <Slam style={label(110, C.caramel)}>PROPRIÉTAIRE ?</Slam>
             ) : (
               <>
                 <div style={{ ...label(46, C.onDark, 500), opacity: 0.8 }}>{`${idx + 1} / ${s.mots.length}`}</div>
-                <Slam key={idx} delay={intro + idx * per} style={title(190, C.surface)}>{s.mots[idx]}</Slam>
+                <Slam key={idx} delay={starts[idx]} style={title(170, C.surface)}>{s.mots[idx]}</Slam>
               </>
             )}
           </AbsoluteFill>
@@ -52,7 +69,7 @@ function Mots({ s, frames }: { s: Extract<Scene, { type: 'mots' }>; frames: numb
           </AbsoluteFill>
         )}
       </Camera>
-      {[0, ...s.mots.map((_, i) => intro + i * per)].map((f, i) => <Sequence key={i} from={f} durationInFrames={10}>{sfx('pop', 0.5)}</Sequence>)}
+      {[0, ...(relanceAt !== null ? [relanceAt] : []), ...starts].map((f, i) => <Sequence key={i} from={f} durationInFrames={10}>{sfx('pop', 0.5)}</Sequence>)}
       <Sequence from={endWords + 2} durationInFrames={12}>{sfx('impact', 0.9)}</Sequence>
     </AbsoluteFill>
   )
@@ -297,10 +314,10 @@ function Fin({ s, frames }: { s: Extract<Scene, { type: 'fin' }>; frames: number
   )
 }
 
-export function SceneView({ scene, frames }: { scene: Scene; frames: number }) {
+export function SceneView({ scene, frames, words, voiceAt }: { scene: Scene; frames: number; words?: Word[]; voiceAt?: number }) {
   switch (scene.type) {
     case 'mots':
-      return <Mots s={scene} frames={frames} />
+      return <Mots s={scene} frames={frames} words={words} voiceAt={voiceAt} />
     case 'grand':
       return <Grand s={scene} frames={frames} />
     case 'logo':

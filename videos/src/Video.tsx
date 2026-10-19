@@ -52,7 +52,7 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
       <TransitionSeries>
         {video.scenes.flatMap((scene, i) => [
           <TransitionSeries.Sequence key={`s${i}`} durationInFrames={frames[i]}>
-            <SceneView scene={scene} frames={frames[i]} />
+            <SceneView scene={scene} frames={frames[i]} words={voix.mots?.[i] ?? undefined} voiceAt={i ? Math.round(T * 0.6) : 4} />
           </TransitionSeries.Sequence>,
           ...(i < video.scenes.length - 1
             ? [<TransitionSeries.Transition key={`t${i}`} presentation={transitionFor(video.scenes[i + 1], i) as never} timing={linearTiming({ durationInFrames: T, easing: easeInOut })} />]

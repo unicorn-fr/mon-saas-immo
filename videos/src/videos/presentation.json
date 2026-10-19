@@ -6,14 +6,23 @@
   "scenes": [
     {
       "type": "mots",
-      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… vous y passez des heures.",
+      "voix": "Vous êtes propriétaire ? Alors vous connaissez ça… Rédiger le bail. Envoyer les quittances. Relancer quand le loyer n'arrive pas… Et au final ? Des heures perdues, chaque mois.",
       "mots": [
-        "Bail",
-        "Quittances",
-        "Relances",
-        "État des lieux"
+        "Le bail",
+        "Les quittances",
+        "Les relances"
       ],
-      "chute": "Des heures perdues."
+      "chute": "Des heures perdues.",
+      "reperes": [
+        "rediger",
+        "envoyer",
+        "relancer",
+        "heures"
+      ],
+      "relance": {
+        "repere": "alors",
+        "texte": "Vous connaissez ça…"
+      }
     },
     {
       "type": "grand",
