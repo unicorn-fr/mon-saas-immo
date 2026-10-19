@@ -23,7 +23,8 @@ export type Scene = { sousTitre?: string } & (
   | { type: 'etapes'; voix: string; titre: string; etapes: string[]; reperes?: string[] }
 )
 
-const sfx = (name: string, volume = 0.6) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume} />
+// Bruitages discrets : moitié du volume demandé, la voix reste devant.
+const sfx = (name: string, volume = 0.6) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume * 0.5} />
 
 /**
  * Accroche : chaque tâche claque plein écran au moment où la voix la prononce, puis un tampon « des heures perdues ».

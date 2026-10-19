@@ -88,7 +88,14 @@ if (wordsFile) {
     groups.push(words.slice(from, c.i + 1))
     from = c.i + 1
   }
-  bounds = groups.map((g) => [Math.max(0, g[0].start - 0.04), Math.min(total, g[g.length - 1].end + 0.12)])
+  // Marges prises dans le blanc entre deux phrases (la moitié au plus) : aucune attaque ni fin de mot coupée.
+  let pos = 0
+  bounds = groups.map((g) => {
+    const before = pos > 0 ? words[pos - 1].end : 0
+    const after = pos + g.length < words.length ? words[pos + g.length].start : total
+    pos += g.length
+    return [Math.max(0, g[0].start - Math.min(0.15, (g[0].start - before) / 2)), Math.min(total, g[g.length - 1].end + Math.min(0.3, (after - g[g.length - 1].end) / 2))]
+  })
   // Sous-titres : le texte du script quand il a autant de mots que la transcription (orthographe exacte), sinon la transcription.
   sceneWords = groups.map((g, k) => {
     const script = video.scenes[k].voix.split(/\s+/).reduce((acc, t) => (/[\p{L}\p{N}]/u.test(t) || !acc.length ? [...acc, t] : [...acc.slice(0, -1), `${acc[acc.length - 1]} ${t}`]), [])
@@ -105,6 +112,11 @@ const edges = [0, ...cuts.map((c) => c.at), total]
 bounds = edges.slice(0, -1).map((e, i) => [e, edges[i + 1]])
 }
 
+// Niveau : la voix d'ElevenLabs sort très bas (crêtes vers -18 dB) ; elle est remontée pour que ses crêtes soient à
+// -3 dB, sinon musique et bruitages passent devant elle une fois le mixage normalisé.
+const peak = Number(/max_volume: (-?[\d.]+)/.exec(spawnSync('ffmpeg', ['-i', input, '-af', 'volumedetect', '-f', 'null', '-'], { encoding: 'utf8' }).stderr)?.[1] ?? -3)
+const gain = Math.max(0, -3 - peak)
+
 const dir = path.join(ROOT, `public/voix/${id}`)
 if (only === null) fs.rmSync(dir, { recursive: true, force: true })
 fs.mkdirSync(dir, { recursive: true })
@@ -112,7 +124,7 @@ const durees = []
 for (let i = 0; i < n; i++) {
   const file = path.join(dir, `${String(only ? only[i] : i).padStart(2, '0')}.mp3`)
   // Chaque morceau sans les silences du début et de la fin.
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', input, '-ss', String(bounds[i][0]), '-to', String(bounds[i][1]), '-af', [...(sceneWords ? [] : ['silenceremove=start_periods=1:start_threshold=-40dB,areverse,silenceremove=start_periods=1:start_threshold=-40dB,areverse']), `atempo=${tempo}`].join(','), '-c:a', 'libmp3lame', '-q:a', '2', file])
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-ss', String(bounds[i][0]), '-to', String(bounds[i][1]), '-i', input, '-af', [...(sceneWords ? [] : ['silenceremove=start_periods=1:start_threshold=-40dB,areverse,silenceremove=start_periods=1:start_threshold=-40dB,areverse']), `volume=${gain.toFixed(1)}dB`, `atempo=${tempo}`, ...(sceneWords ? [`afade=t=in:d=0.02`, `afade=t=out:st=${Math.max(0, (bounds[i][1] - bounds[i][0]) / tempo - 0.06)}:d=0.06`] : [])].join(','), '-c:a', 'libmp3lame', '-q:a', '2', file])
   durees.push(Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], { encoding: 'utf8' }).trim()))
 }
 const voixFile = path.join(ROOT, `src/videos/${id}.voix.json`)
