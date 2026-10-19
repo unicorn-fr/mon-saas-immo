@@ -1,0 +1,162 @@
+{
+ "id": "yt-presentation",
+ "titre": "Bailio : votre bail et votre location, sans y passer vos soirées",
+ "legende": "Présentation de Bailio en 2 minutes : le bail conforme, la signature en ligne, les quittances automatiques.",
+ "musique": "musique/boucle-1.mp3",
+ "scenes": [
+  {
+   "type": "phrase",
+   "voix": "Être propriétaire, c'est un bon placement. Mais c'est aussi un deuxième métier, que personne ne vous a appris.",
+   "texte": "Être propriétaire, c'est un bon placement.",
+   "accent": "Et un deuxième métier."
+  },
+  {
+   "type": "phrase",
+   "voix": "Dans cette vidéo, je vous montre comment Bailio fait ce métier avec vous. En deux minutes.",
+   "texte": "Bailio le fait avec vous.",
+   "accent": "En deux minutes."
+  },
+  {
+   "type": "titre",
+   "voix": "Premier point : le problème.",
+   "numero": "01",
+   "titre": "Le problème"
+  },
+  {
+   "type": "chiffre",
+   "voix": "La location est encadrée par une loi de 1989. Modifiée des dizaines de fois depuis. Durée du bail, dépôt de garantie, révision du loyer, diagnostics : chaque détail a sa règle.",
+   "kicker": "La loi",
+   "valeur": 1989,
+   "groupe": false,
+   "texte": "Une loi modifiée des dizaines de fois. Chaque détail a sa règle.",
+   "note": "Loi n° 89-462 du 6 juillet 1989"
+  },
+  {
+   "type": "phrase",
+   "voix": "Une erreur, et c'est une clause nulle, un dépôt à rendre, ou un loyer bloqué. Alors on passe ses soirées à vérifier. Ou on paie une agence.",
+   "texte": "Une erreur coûte cher.",
+   "accent": "Le temps aussi."
+  },
+  {
+   "type": "titre",
+   "voix": "Deuxième point : votre bail, en quatre étapes.",
+   "numero": "02",
+   "titre": "Votre bail en 4 étapes"
+  },
+  {
+   "type": "etapes",
+   "voix": "D'abord, votre logement. Ensuite, votre locataire : il peut remplir son dossier lui-même. Bailio prépare le bail. Et tout le monde signe en ligne, depuis son téléphone.",
+   "titre": "Du logement à la signature",
+   "etapes": [
+    "Votre logement",
+    "Votre locataire",
+    "Le bail",
+    "La signature"
+   ],
+   "reperes": [
+    "logement",
+    "locataire",
+    "bail",
+    "signe"
+   ]
+  },
+  {
+   "type": "ecran",
+   "voix": "Pas de formulaire de quarante pages : une question à la fois. Bailio vérifie les règles pour vous, le plafond du dépôt, la durée, le DPE. Et votre bail, conforme au contrat type officiel, est prêt en quelques minutes.",
+   "titre": "Une question à la fois",
+   "points": [
+    "Des questions simples",
+    "Les règles vérifiées pour vous",
+    "Un bail conforme en quelques minutes"
+   ],
+   "image": "ecrans/tunnel-type.png",
+   "reperes": [
+    "question",
+    "règles",
+    "prêt"
+   ]
+  },
+  {
+   "type": "titre",
+   "voix": "Troisième point : le quotidien.",
+   "numero": "03",
+   "titre": "Au quotidien"
+  },
+  {
+   "type": "ecran",
+   "voix": "Une fois le bail signé, Bailio vous prévient par email quand il faut agir. Les quittances partent toutes seules. Une relance est prête si le loyer n'arrive pas. Et la révision du loyer est calculée avec le bon indice.",
+   "titre": "Prévenu au bon moment",
+   "points": [
+    "Quittances automatiques",
+    "Relances prêtes à partir",
+    "Révision du loyer calculée"
+   ],
+   "image": "ecrans/aujourdhui.png",
+   "cote": "gauche",
+   "reperes": [
+    "quittances",
+    "relance",
+    "révision"
+   ]
+  },
+  {
+   "type": "chiffre",
+   "voix": "Concrètement : sept jours après l'échéance, la quittance part toute seule. Vous êtes prévenu trois jours avant. Et vous n'agissez que si le loyer n'est pas arrivé.",
+   "kicker": "Quittance automatique",
+   "valeur": 7,
+   "suffixe": "jours",
+   "texte": "après l'échéance, la quittance part toute seule.",
+   "note": "Vous êtes prévenu 3 jours avant"
+  },
+  {
+   "type": "titre",
+   "voix": "Quatrième point : tout, au même endroit.",
+   "numero": "04",
+   "titre": "Tout au même endroit"
+  },
+  {
+   "type": "liste",
+   "voix": "Le bail et la signature. Les états des lieux sur téléphone, avec photos. Les quittances, les courriers, l'aide à la déclaration de revenus. Et les rappels : assurance, diagnostics, dépôt de garantie.",
+   "titre": "Tout votre suivi locatif",
+   "items": [
+    {
+     "texte": "Bail conforme",
+     "icone": "le-bail"
+    },
+    {
+     "texte": "Signature en ligne",
+     "icone": "signature"
+    },
+    {
+     "texte": "États des lieux",
+     "icone": "etat-des-lieux"
+    },
+    {
+     "texte": "Quittances",
+     "icone": "quittances"
+    },
+    {
+     "texte": "Courriers prêts",
+     "icone": "guide"
+    },
+    {
+     "texte": "Rappels",
+     "icone": "actu"
+    }
+   ]
+  },
+  {
+   "type": "phrase",
+   "sombre": true,
+   "voix": "Moins de temps. Moins de risques. Et un bail fait dans les règles.",
+   "texte": "Moins de temps. Moins de risques.",
+   "accent": "Un bail dans les règles."
+  },
+  {
+   "type": "fin",
+   "voix": "Créez votre bail gratuitement sur bailio point f r. Et abonnez-vous : chaque semaine, un conseil pour les propriétaires.",
+   "texte": "Votre bail, gratuitement, sur",
+   "url": "bailio.fr"
+  }
+ ]
+}

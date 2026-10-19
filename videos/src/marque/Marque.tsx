@@ -22,7 +22,7 @@ export const M = {
   ligne: '#e6e0d5',
 }
 
-const polices = `
+export const polices = `
 @font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 700; src: url('${staticFile('fonts/cormorant-garamond-latin-700-italic.woff2')}') format('woff2'); }
 @font-face { font-family: 'Cormorant Garamond'; font-style: italic; font-weight: 500; src: url('${staticFile('fonts/cormorant-garamond-latin-500-italic.woff2')}') format('woff2'); }
 @font-face { font-family: 'DM Sans'; font-weight: 400; src: url('${staticFile('fonts/dm-sans-latin-400-normal.woff2')}') format('woff2'); }
@@ -134,7 +134,7 @@ export const IconeMarque = ({ nom, size }: { nom: IconeMarque; size: number }) =
  * Façades haussmanniennes beige pâle (comme la bannière LinkedIn) : immeubles de hauteurs voisines,
  * fenêtres en grille, toit mansardé. Tirage fixe (seed) : la même rue à chaque rendu.
  */
-const Rue = ({ width, height, seed = 'rue' }: { width: number; height: number; seed?: string }) => {
+export const Rue = ({ width, height, seed = 'rue' }: { width: number; height: number; seed?: string }) => {
   const u = height / 10
   const blocs: ReactNode[] = []
   let x = -u

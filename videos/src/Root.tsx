@@ -23,6 +23,13 @@ import revision from './videos/revision.json'
 import revisionVoix from './videos/revision.voix.json'
 import impaye from './videos/impaye.json'
 import impayeVoix from './videos/impaye.voix.json'
+import { BailioYT, totalYT, YT_H, YT_W, type VideoYTDef } from './yt/VideoYT'
+import ytPresentation from './videos/yt-presentation.json'
+import ytPresentationVoix from './videos/yt-presentation.voix.json'
+import ytVideMeuble from './videos/yt-vide-meuble.json'
+import ytVideMeubleVoix from './videos/yt-vide-meuble.voix.json'
+import ytCalendrier from './videos/yt-calendrier.json'
+import ytCalendrierVoix from './videos/yt-calendrier.voix.json'
 
 /** Chaque vidéo : son script (src/videos/<id>.json) et la durée de ses phrases (voix.mjs). */
 const VIDEOS: Array<{ video: VideoDef; voix: Voix }> = [
@@ -30,6 +37,13 @@ const VIDEOS: Array<{ video: VideoDef; voix: Voix }> = [
   { video: erreurs as VideoDef, voix: erreursVoix as Voix },
   { video: revision as VideoDef, voix: revisionVoix as Voix },
   { video: impaye as VideoDef, voix: impayeVoix as Voix },
+]
+
+/** Vidéos YouTube, en 16:9 (src/yt). */
+const VIDEOS_YT: Array<{ video: VideoYTDef; voix: Voix }> = [
+  { video: ytPresentation as VideoYTDef, voix: ytPresentationVoix as Voix },
+  { video: ytVideMeuble as VideoYTDef, voix: ytVideMeubleVoix as Voix },
+  { video: ytCalendrier as VideoYTDef, voix: ytCalendrierVoix as Voix },
 ]
 
 export function Root() {
@@ -46,6 +60,9 @@ export function Root() {
           height={H}
           defaultProps={{ video, voix }}
         />
+      ))}
+      {VIDEOS_YT.map(({ video, voix }) => (
+        <Composition key={video.id} id={video.id} component={BailioYT} durationInFrames={totalYT(voix.durees)} fps={FPS} width={YT_W} height={YT_H} defaultProps={{ video, voix }} />
       ))}
       {/* Kit des réseaux sociaux (scripts/marque.mjs → marque/). */}
       <Still id="profil" component={Profil} width={1080} height={1080} />
