@@ -36,7 +36,9 @@ test('déclaration : logements de la SCI à part, fiche 2072 et parts des associ
   await page.getByRole('button', { name: String(year) }).click()
   await page.getByRole('heading', { name: 'SCI Les Tilleuls' }).waitFor()
   await page.getByText('Aide à vérifier').waitFor()
-  await page.getByText(/2072-S/).waitFor()
+  await page.getByText(/Formulaire : 2072-S/).waitFor()
+  // Fiche de dépôt de la SCI : espace professionnel, 2072-S, part de chaque associé.
+  await page.getByText('Remplissez la 2072-S').waitFor()
   await page.getByText('Claire (60 %)').waitFor()
   await shot(page, 'declaration-sci')
   await browser.close()

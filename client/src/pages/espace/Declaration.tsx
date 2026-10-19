@@ -3,8 +3,9 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Guide } from '../../components/Sources'
 import { display } from '../../components/ui'
-import { Callout, Card, Chips, Crumbs, Input, Line, LoadError, Loader, Money, NumberField, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Callout, Card, Check, Chips, Crumbs, Input, Line, LoadError, Loader, Money, NumberField, Pill, TextLink, useLoad, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
+import { downloadDoc } from '../../lib/docs'
 import { eurosCents } from '../../lib/format'
 
 interface TaxLine {
@@ -36,6 +37,31 @@ interface TaxView {
   loanComputed?: Record<string, number>
   /** SCI et sociétés : leur propre fiche (formulaires, dates, montants, parts des associés). */
   structures?: StructureSheet[]
+  /** Préparer le dépôt : documents, étapes, liens et contacts, situation par situation. */
+  filing?: FilingGuide[]
+  contacts?: Contact[]
+}
+interface FilingLink {
+  label: string
+  url: string
+}
+interface FilingGuide {
+  id: string
+  title: string
+  summary: string
+  deadline: string | null
+  documents: Array<{ label: string; detail?: string; bailio?: boolean }>
+  steps: Array<{ title: string; detail?: string; link?: FilingLink }>
+  links: FilingLink[]
+  watch: string[]
+  structure?: string
+  alternative?: boolean
+}
+interface Contact {
+  label: string
+  value: string
+  detail: string
+  url?: string
 }
 interface StructureSheet {
   id: string
@@ -87,6 +113,9 @@ export default function Declaration() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h1 style={display('clamp(34px, 5vw, 48px)')}>Vos revenus locatifs</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Les montants à reporter sur votre déclaration de revenus, calculés à partir des loyers encaissés et des dépenses enregistrés dans Bailio.</span>
+        <a href="#depot" style={{ fontSize: 15, fontWeight: 600, color: BAI.owner, textDecoration: 'none' }}>
+          Documents, étapes et liens pour déposer votre déclaration <span aria-hidden>↓</span>
+        </a>
       </div>
       <Chips legend="Année des revenus" value={year} onChange={setYear} options={[thisYear - 2, thisYear - 1, thisYear].map((y) => ({ value: y, label: String(y) }))} />
       {loading && !data ? (
@@ -94,7 +123,10 @@ export default function Declaration() {
       ) : error || !data ? (
         <LoadError message={error ?? ''} retry={reload} />
       ) : !data.properties.length && data.structures?.length ? (
-        <StructureSheets list={data.structures} year={year} />
+        <>
+          <StructureSheets list={data.structures} year={year} />
+          <Filing guides={data.filing ?? []} contacts={data.contacts ?? []} year={year} />
+        </>
       ) : !data.properties.length ? (
         <Card>
           <span style={{ fontSize: 17, fontWeight: 600 }}>Aucun loyer encaissé en {year}.</span>
@@ -209,6 +241,7 @@ export default function Declaration() {
             Sommes encaissées ou payées entre le 1er janvier et le 31 décembre {year}. Bailio vous aide à préparer votre déclaration ; vous restez responsable des montants déclarés sur impots.gouv.fr. Votre situation est particulière (indivision, société, plusieurs régimes) ? Demandez conseil au centre des impôts.
           </span>
           {data.structures?.length ? <StructureSheets list={data.structures} year={year} /> : null}
+          <Filing guides={data.filing ?? []} contacts={data.contacts ?? []} year={year} />
         </>
       )}
     </AppShell>
@@ -282,6 +315,95 @@ function StructureSheets({ list, year }: { list: StructureSheet[]; year: number 
           </Card>
         ) : null,
       )}
+    </>
+  )
+}
+
+const ext = { target: '_blank', rel: 'noreferrer' } as const
+const linkStyle = { color: BAI.owner, fontWeight: 600, textDecoration: 'none' } as const
+const ExternalLink = ({ link }: { link: FilingLink }) => (
+  <a href={link.url} {...ext} style={linkStyle}>
+    {link.label} <span aria-hidden>↗</span>
+    <span className="sr-only"> (nouvelle fenêtre)</span>
+  </a>
+)
+
+/**
+ * Préparer le dépôt : une situation ouverte à la fois (vide, meublé, début en meublé, SCI, occupation), avec les
+ * documents à réunir (à cocher), les étapes sur impots.gouv.fr, les pièges, les liens officiels, puis les contacts.
+ * La même fiche se télécharge en PDF, montants compris.
+ */
+function Filing({ guides, contacts, year }: { guides: FilingGuide[]; contacts: Contact[]; year: number }) {
+  const toast = useToast()
+  const [open, setOpen] = useState(0)
+  const [done, setDone] = useState<Record<string, boolean>>({})
+  if (!guides.length) return null
+  const g = guides[Math.min(open, guides.length - 1)]
+  const key = (label: string) => `${g.id}:${g.structure ?? ''}:${label}`
+  const short = (x: FilingGuide) => (x.structure ? x.structure : x.title) + (x.alternative ? ' (autre régime)' : '')
+  return (
+    <>
+      <Card id="depot" title={<h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Préparer votre dépôt</h2>} action={<TextLink onClick={() => downloadDoc(`/money/tax/fiche.pdf?year=${year}`, `bailio-declaration-${year}.pdf`).catch(toast.error)}>Télécharger la fiche (PDF)</TextLink>}>
+        <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Ce qu’il vous faut pour déclarer vos revenus {year}, situation par situation : les documents à réunir, les étapes sur impots.gouv.fr et les liens directs.</span>
+        {guides.length > 1 ? <Chips legend="Votre situation" value={open} onChange={setOpen} options={guides.map((x, k) => ({ value: k, label: short(x) }))} /> : null}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <strong style={{ fontSize: 18 }}>{g.title}</strong>
+          {g.alternative ? <span style={{ fontSize: 14, color: BAI.inkMid }}>Moins avantageux d’après vos chiffres : à suivre si vous avez déjà choisi ce régime.</span> : null}
+          <span style={{ fontSize: 15, lineHeight: 1.5 }}>{g.summary}</span>
+          {g.deadline ? <span style={{ fontSize: 15, color: BAI.caramelInk, fontWeight: 600, lineHeight: 1.5 }}>Date limite : {g.deadline}.</span> : null}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Documents à réunir</h3>
+          {g.documents.map((d) => (
+            <Check key={d.label} checked={Boolean(done[key(d.label)])} onChange={(v) => setDone((x) => ({ ...x, [key(d.label)]: v }))} label={d.bailio ? <>{d.label} <Pill tone="owner">Dans Bailio</Pill></> : d.label} sub={d.detail} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Étapes</h3>
+          <ol style={{ margin: 0, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {g.steps.map((st) => (
+              <li key={st.title} style={{ fontSize: 15, lineHeight: 1.5 }}>
+                <strong>{st.title}</strong>
+                {st.detail ? ` : ${st.detail}` : ''}
+                {st.link ? (
+                  <>
+                    {st.detail ? ' ' : ' : '}
+                    <ExternalLink link={st.link} />
+                  </>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </div>
+        {g.watch.length ? (
+          <Callout tone="tip" title="À savoir">
+            <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {g.watch.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </Callout>
+        ) : null}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Liens officiels</h3>
+          {g.links.map((l) => (
+            <span key={l.url} style={{ fontSize: 15 }}>
+              <ExternalLink link={l} />
+            </span>
+          ))}
+        </div>
+      </Card>
+      {contacts.length ? (
+        <Card title={<h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Qui contacter</h2>}>
+          {contacts.map((c) => (
+            <div key={c.label} style={{ display: 'flex', flexDirection: 'column', gap: 4, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+              <span style={{ fontSize: 14, color: BAI.inkMid }}>{c.label}</span>
+              <strong style={{ fontSize: 16 }}>{c.url ? <a href={c.url} {...ext} style={linkStyle}>{c.value}</a> : c.value}</strong>
+              <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>{c.detail}</span>
+            </div>
+          ))}
+        </Card>
+      ) : null}
     </>
   )
 }

@@ -126,7 +126,9 @@ export async function completeLease(token, { furnished = true } = {}) {
   const v = await api(`/leases/${l.id}/terms`, {
     method: 'PUT',
     token,
-    body: { rentCents: 51000, chargesCents: 5000, chargesMode: 'PROVISION', depositCents: furnished ? 102000 : 51000, paymentDay: 4, zone: { tense: true, control: false }, previous: { rentedWithin18Months: false }, works: { sinceLast: '' }, clauses: { resolutoire: true, solidarite: false, custom: [] }, signature: { place: 'Sète', mode: 'ELECTRONIC' } },
+    body: { rentCents: 51000, chargesCents: 5000, chargesMode: 'PROVISION', depositCents: furnished ? 102000 : 51000, paymentDay: 4, zone: { tense: true, control: false }, previous: { rentedWithin18Months: false }, works: { sinceLast: '' }, clauses: { resolutoire: true, solidarite: false, custom: [] }, signature: { place: 'Sète', mode: 'ELECTRONIC' },
+      // Indice de référence fixé : sans accès à l'Insee (réseau fermé), il ne serait pas rempli.
+      revision: { enabled: true, irlQuarter: '2026-Q2', irlValue: 146.68 } },
   })
   return { leaseId: l.id, propertyId: p.id, tenantId: t.id, lease: v }
 }
