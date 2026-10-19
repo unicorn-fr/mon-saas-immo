@@ -72,7 +72,7 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
           <Sequence key={i} from={from} durationInFrames={frames[i]}>
             <Audio src={staticFile(`voix/${video.id}/${String(i).padStart(2, '0')}.${voix.ext ?? 'wav'}`)} />
             {/* Sous-titres seulement quand l'écran ne montre pas déjà la phrase en grand. */}
-            {scene.type === 'ecran' || scene.type === 'liste' ? <Captions words={words} /> : null}
+            {scene.type === 'ecran' || scene.type === 'liste' || scene.type === 'chiffre' || scene.type === 'etapes' ? <Captions words={words} /> : null}
           </Sequence>
         )
       })}

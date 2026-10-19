@@ -103,9 +103,9 @@ export const glass = (dark = false): CSSProperties => ({
 })
 
 /** Nombre qui défile jusqu'à sa valeur (compteur), au format français. */
-export function useCount(to: number, delay: number, duration = 24, decimals = 2) {
+export function useCount(to: number, delay: number, duration = 24, decimals = 2, grouping = true) {
   const p = useProgress(delay, duration)
-  return (to * p).toLocaleString('fr-FR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  return (to * p).toLocaleString('fr-FR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals, useGrouping: grouping })
 }
 
 /** Grain de pellicule et vignettage : enlèvent l'aspect « trop propre » d'une image de synthèse. */

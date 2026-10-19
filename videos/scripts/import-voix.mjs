@@ -75,10 +75,12 @@ if (wordsFile) {
   for (let k = 0; k < n - 1; k++) {
     acc += counts[k]
     const target = acc - 1
-    const near = cands.filter((c) => c.i > last && Math.abs(c.i - target) <= 2).sort((a, b) => Math.abs(a.i - target) - Math.abs(b.i - target) || b.gap - a.gap)[0]
+    // Tolérance : les nombres s'écrivent en chiffres dans le script, en toutes lettres dans la transcription.
+    const near = cands.filter((c) => c.i > last && Math.abs(c.i - target) <= 5).sort((a, b) => Math.abs(a.i - target) - Math.abs(b.i - target) || b.gap - a.gap)[0]
     const i = near ? near.i : Math.max(last + 1, Math.min(words.length - 2, target))
     cuts.push(near ?? { i, at: (words[i].end + words[i + 1].start) / 2, gap: 0 })
     last = i
+    acc = i + 1 // on repart de la coupure réelle : un écart ne se propage pas aux phrases suivantes
   }
   const groups = []
   let from = 0

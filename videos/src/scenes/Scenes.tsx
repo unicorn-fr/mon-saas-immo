@@ -19,6 +19,8 @@ export type Scene = { sousTitre?: string } & (
   | { type: 'ecran'; voix: string; titre: string; accent: string; image: string; cote?: 'droite' | 'gauche'; badge?: string; zoom?: boolean; tap?: [number, number]; focus?: Focus; notifs?: Notif[]; carte?: Carte }
   | { type: 'liste'; voix: string; titre: string; items: string[]; images: string[] }
   | { type: 'fin'; voix: string; texte: string; accent: string; url: string }
+  | { type: 'chiffre'; voix: string; kicker: string; valeur: number; suffixe?: string; texte: string; note?: string; decimales?: number; groupe?: boolean }
+  | { type: 'etapes'; voix: string; titre: string; etapes: string[]; reperes?: string[] }
 )
 
 const sfx = (name: string, volume = 0.6) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume} />
@@ -364,6 +366,80 @@ function Fin({ s, frames }: { s: Extract<Scene, { type: 'fin' }>; frames: number
   )
 }
 
+/**
+ * Grand chiffre : une étiquette, le nombre qui défile en très grand, une barre qui se trace, l'explication
+ * mot par mot, puis une précision dans une pastille. Le tout sort avant la transition.
+ */
+function Chiffre({ s, frames }: { s: Extract<Scene, { type: 'chiffre' }>; frames: number }) {
+  const frame = useCurrentFrame()
+  const exit = useExit(frames, T)
+  const kick = useBounce(2, 220, 15)
+  const value = useCount(s.valeur, 6, 30, s.decimales ?? 0, s.groupe ?? true)
+  const bar = useProgress(14, 22)
+  const note = useBounce(Math.floor(frames * 0.5), 200, 15)
+  const glow = 0.5 + Math.sin(frame / 12) * 0.12
+  return (
+    <AbsoluteFill>
+      <Backdrop dark />
+      <Camera frames={frames} push={0.06}>
+        <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'column', padding: '0 80px', gap: 28, marginTop: -180, transform: `translateY(${-exit * 80}px) scale(${1 - exit * 0.06})`, opacity: 1 - exit, filter: `blur(${exit * 10}px)` }}>
+          <div style={{ transform: `scale(${kick})`, background: C.caramel, borderRadius: 999, padding: '14px 40px', ...label(44, C.night), letterSpacing: 2, textTransform: 'uppercase' }}>{s.kicker}</div>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'baseline', gap: 18 }}>
+            <div style={{ position: 'absolute', inset: '-40px -80px', background: `radial-gradient(ellipse, rgba(196,151,106,${0.35 * glow}) 0%, transparent 70%)` }} />
+            <span style={{ position: 'relative', ...label(330, C.surface), letterSpacing: -14, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+            {s.suffixe ? <span style={{ position: 'relative', ...label(110, C.caramel) }}>{s.suffixe}</span> : null}
+          </div>
+          <div style={{ width: 560 * bar, height: 10, borderRadius: 5, background: C.caramel }} />
+          <KineticText text={s.texte} delay={16} stagger={2} style={{ ...title(76, C.surface), textAlign: 'center', lineHeight: 1.1 }} />
+          {s.note ? (
+            <div style={{ marginTop: 10, transform: `scale(${note})`, opacity: Math.min(1, note * 1.5), ...glass(true), padding: '18px 36px', ...label(42, C.onDark, 500) }}>{s.note}</div>
+          ) : null}
+        </AbsoluteFill>
+      </Camera>
+      <Sequence from={6} durationInFrames={12}>{sfx('pop', 0.2)}</Sequence>
+    </AbsoluteFill>
+  )
+}
+
+/** Étapes : cartes numérotées qui arrivent quand la voix les annonce ; l'étape en cours est mise en avant, les précédentes cochées. */
+function Etapes({ s, frames, words, voiceAt = 0 }: { s: Extract<Scene, { type: 'etapes' }>; frames: number; words?: Word[]; voiceAt?: number }) {
+  const frame = useCurrentFrame()
+  const exit = useExit(frames, T)
+  const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')
+  const fallback = (k: number) => 10 + Math.floor(((frames * 0.75) / s.etapes.length) * k)
+  const cues = s.etapes.map((_, k) => {
+    const r = s.reperes?.[k]
+    const w = r && words?.find((x) => norm(x.w) === norm(r))
+    return w ? voiceAt + Math.round(w.start * 30) : fallback(k)
+  })
+  const bounces = cues.map((c) => useBounce(c, 200, 17))
+  const current = cues.reduce((a, c, k) => (frame >= c ? k : a), -1)
+  return (
+    <AbsoluteFill>
+      <Backdrop />
+      <Camera frames={frames} push={0.04}>
+        <div style={{ position: 'absolute', top: 160, left: 70, right: 70, transform: `translateY(${-exit * 80}px)`, opacity: 1 - exit, filter: `blur(${exit * 10}px)` }}>
+          <KineticText text={s.titre} style={title(120)} />
+        </div>
+        <div style={{ position: 'absolute', top: 520, left: 70, right: 70, display: 'flex', flexDirection: 'column', gap: 36 }}>
+          {s.etapes.map((e, k) => {
+            const b = bounces[k]
+            const active = k === current
+            const done = k < current
+            return (
+              <div key={k} style={{ transform: `translateX(${(1 - b) * 260 + exit * (k % 2 ? 1 : -1) * 300}px) scale(${active ? 1.04 : 1})`, opacity: Math.min(1, b * 1.5) * (1 - exit), ...glass(), borderRadius: 38, padding: '38px 38px', display: 'flex', alignItems: 'center', gap: 32, border: `3px solid ${active ? C.owner : 'rgba(255,255,255,0.9)'}` }}>
+                <div style={{ width: 100, height: 100, flexShrink: 0, borderRadius: 50, background: done ? C.green : active ? C.caramel : C.ownerLight, display: 'flex', alignItems: 'center', justifyContent: 'center', ...label(44, done ? C.surface : C.night) }}>{done ? '✓' : k + 1}</div>
+                <div style={{ ...label(58, C.ink), lineHeight: 1.15 }}>{e}</div>
+              </div>
+            )
+          })}
+        </div>
+      </Camera>
+      {cues.map((c, k) => <Sequence key={k} from={c} durationInFrames={10}>{sfx('pop', 0.2)}</Sequence>)}
+    </AbsoluteFill>
+  )
+}
+
 export function SceneView({ scene, frames, words, voiceAt }: { scene: Scene; frames: number; words?: Word[]; voiceAt?: number }) {
   switch (scene.type) {
     case 'mots':
@@ -378,6 +454,10 @@ export function SceneView({ scene, frames, words, voiceAt }: { scene: Scene; fra
       return <Liste s={scene} frames={frames} />
     case 'fin':
       return <Fin s={scene} frames={frames} />
+    case 'chiffre':
+      return <Chiffre s={scene} frames={frames} />
+    case 'etapes':
+      return <Etapes s={scene} frames={frames} words={words} voiceAt={voiceAt} />
   }
 }
 
@@ -401,5 +481,9 @@ export function guideStop(scene: Scene, frames: number): GuideStop {
       return { x: 760, y: 430, dir: -140 }
     case 'fin':
       return { x: 720, y: 880, dir: -130, click: FIN_CLICK }
+    case 'chiffre':
+      return { x: 975, y: 700, dir: -165 }
+    case 'etapes':
+      return { x: 1000, y: 470, dir: -160 }
   }
 }
