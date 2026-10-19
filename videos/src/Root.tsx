@@ -1,5 +1,19 @@
 import { Composition, Still } from 'remotion'
-import { ALaUne, Banniere, Bienvenue, Profil } from './marque/Marque'
+import { ALaUne, Banniere, Bienvenue, Charte, Profil } from './marque/Marque'
+
+/** Stories à la une, dans l'ordre conseillé sur Instagram. */
+const A_LA_UNE = [
+  ['1-bienvenue', 'logo'],
+  ['2-le-bail', 'file-text'],
+  ['3-signature', 'pen-line'],
+  ['4-quittances', 'receipt-euro'],
+  ['5-etat-des-lieux', 'clipboard-check'],
+  ['6-conseils', 'lightbulb'],
+  ['7-tutos', 'circle-play'],
+  ['8-nouveautes', 'sparkles'],
+  ['9-avis', 'star'],
+  ['10-questions', 'circle-help'],
+] as const
 import { FPS, H, W } from './theme'
 import { BailioVideo, totalFrames, type VideoDef, type Voix } from './Video'
 import presentation from './videos/presentation.json'
@@ -37,17 +51,14 @@ export function Root() {
       {/* Kit des réseaux sociaux (scripts/marque.mjs → marque/). */}
       <Still id="profil" component={Profil} width={1080} height={1080} />
       <Still id="profil-clair" component={() => <Profil clair />} width={1080} height={1080} />
-      <Still id="banniere-facebook" component={() => <Banniere width={1640} height={624} zone={{ left: 274, right: 274, top: 50, bottom: 70 }} telephones={1} />} width={1640} height={624} />
-      <Still id="banniere-linkedin-page" component={() => <Banniere width={1128} height={191} zone={{ left: 230, right: 40, top: 22, bottom: 22 }} points={0} telephones={0} />} width={1128} height={191} />
-      <Still id="banniere-linkedin-profil" component={() => <Banniere width={1584} height={396} zone={{ left: 440, right: 60, top: 40, bottom: 40 }} telephones={1} />} width={1584} height={396} />
-      <Still id="banniere-x" component={() => <Banniere width={1500} height={500} zone={{ left: 360, right: 60, top: 50, bottom: 60 }} telephones={1} />} width={1500} height={500} />
-      <Still id="banniere-youtube" component={() => <Banniere width={2560} height={1440} zone={{ left: 507, right: 507, top: 508, bottom: 509 }} telephones={2} />} width={2560} height={1440} />
-      <Still id="a-la-une-bail" component={() => <ALaUne icone="bail" titre="Le bail" />} width={1080} height={1920} />
-      <Still id="a-la-une-quittances" component={() => <ALaUne icone="quittances" titre="Quittances" />} width={1080} height={1920} />
-      <Still id="a-la-une-conseils" component={() => <ALaUne icone="conseils" titre="Conseils" />} width={1080} height={1920} />
-      <Still id="a-la-une-tutos" component={() => <ALaUne icone="tutos" titre="Tutos" />} width={1080} height={1920} />
-      <Still id="a-la-une-avis" component={() => <ALaUne icone="avis" titre="Avis" />} width={1080} height={1920} />
+      <Still id="banniere-facebook" component={() => <Banniere width={1640} height={624} zone={{ left: 274, right: 274, top: 50, bottom: 70 }} />} width={1640} height={624} />
+      <Still id="banniere-linkedin-page" component={() => <Banniere width={1128} height={191} zone={{ left: 230, right: 40, top: 26, bottom: 26 }} points={0} telephone={false} />} width={1128} height={191} />
+      <Still id="banniere-linkedin-profil" component={() => <Banniere width={1584} height={396} zone={{ left: 440, right: 60, top: 40, bottom: 40 }} />} width={1584} height={396} />
+      <Still id="banniere-x" component={() => <Banniere width={1500} height={500} zone={{ left: 360, right: 60, top: 50, bottom: 60 }} />} width={1500} height={500} />
+      <Still id="banniere-youtube" component={() => <Banniere width={2560} height={1440} zone={{ left: 507, right: 507, top: 508, bottom: 509 }} />} width={2560} height={1440} />
+      {A_LA_UNE.map(([id, icone]) => <Still key={id} id={`a-la-une-${id}`} component={() => <ALaUne icone={icone} />} width={1080} height={1920} />)}
       <Still id="post-bienvenue" component={Bienvenue} width={1080} height={1350} />
+      <Still id="charte" component={Charte} width={2400} height={1500} />
     </>
   )
 }

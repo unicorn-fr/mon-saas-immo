@@ -1,6 +1,7 @@
 # Kit réseaux sociaux de Bailio
 
 Images dans ce dossier (refaites avec `node videos/scripts/marque.mjs`, modèles dans `videos/src/marque/Marque.tsx`).
+Charte graphique (logo, couleurs, polices, icônes) : `CHARTE.md` et `charte.png` ; logos vectoriels dans `logo/`.
 Lien à mettre partout : **https://bailio.fr**. Nom de compte conseillé : **@bailio.fr**, sinon **@bailio_fr**
 (même nom sur tous les réseaux : vérifiez qu'il est libre partout avant de créer le premier compte).
 
@@ -8,7 +9,7 @@ Lien à mettre partout : **https://bailio.fr**. Nom de compte conseillé : **@ba
 
 | Réseau | Photo de profil | Bannière / couverture | Autres |
 |---|---|---|---|
-| Instagram | `profil.png` | — | `a-la-une-*.png` (stories à la une), `post-bienvenue.png` (1er post, à épingler) |
+| Instagram | `profil.png` | — | `a-la-une-1-…` à `a-la-une-10-…` (stories à la une), `post-bienvenue.png` (1er post, à épingler) |
 | TikTok | `profil.png` | — | — |
 | Facebook (page) | `profil.png` | `banniere-facebook.png` (1640 × 624) | `post-bienvenue.png` |
 | LinkedIn (page entreprise) | `profil.png` | `banniere-linkedin-page.png` (1128 × 191) | `post-bienvenue.png` |
@@ -34,8 +35,9 @@ posée par-dessus) : rien d'important n'est coupé.
 ```
 
 - **Lien** : https://bailio.fr
-- **Stories à la une** (dans cet ordre) : Le bail, Quittances, Conseils, Tutos, Avis. Le titre se saisit dans
-  l'application, l'image ne porte que l'icône (Instagram n'en garde que le cercle central).
+- **Stories à la une** (dans cet ordre, le numéro est dans le nom du fichier) : Bienvenue, Le bail, Signature,
+  Quittances, État des lieux, Conseils, Tutos, Nouveautés, Avis, Questions. Le titre se saisit dans l'application,
+  l'image ne porte que l'icône (Instagram n'en garde que le cercle central).
 
 ## TikTok
 
