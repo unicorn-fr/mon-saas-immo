@@ -1,4 +1,5 @@
 import { linearTiming, TransitionSeries } from '@remotion/transitions'
+import { Fragment } from 'react'
 import { AbsoluteFill, Audio, Sequence, interpolate, staticFile } from 'remotion'
 import { Captions, estimateWords, type Word } from './captions'
 import { FilmLook, easeInOut } from './fx'
@@ -69,11 +70,17 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
         // Sous-titres : le texte écrit (sousTitre) s'il diffère de ce que dit la voix, sinon les mots horodatés.
         const words = scene.sousTitre ? estimateWords(scene.sousTitre, voix.durees[i]) : (voix.mots?.[i] ?? estimateWords(scene.voix, voix.durees[i]))
         return (
-          <Sequence key={i} from={from} durationInFrames={frames[i]}>
-            <Audio src={staticFile(`voix/${video.id}/${String(i).padStart(2, '0')}.${voix.ext ?? 'wav'}`)} />
-            {/* Sous-titres seulement quand l'écran ne montre pas déjà la phrase en grand. */}
-            {scene.type === 'ecran' || scene.type === 'liste' || scene.type === 'chiffre' || scene.type === 'etapes' ? <Captions words={words} /> : null}
-          </Sequence>
+          <Fragment key={i}>
+            <Sequence from={from} durationInFrames={frames[i]}>
+              <Audio src={staticFile(`voix/${video.id}/${String(i).padStart(2, '0')}.${voix.ext ?? 'wav'}`)} />
+            </Sequence>
+            {/* Sous-titres seulement quand l'écran ne montre pas déjà la phrase en grand ; ils partent avant la transition. */}
+            {scene.type === 'ecran' || scene.type === 'liste' || scene.type === 'chiffre' || scene.type === 'etapes' ? (
+              <Sequence from={from} durationInFrames={Math.max(1, starts[i] + frames[i] - T - from)}>
+                <Captions words={words} />
+              </Sequence>
+            ) : null}
+          </Fragment>
         )
       })}
       {/* Un souffle par transition (deux variantes en alternance), un clic quand la flèche touche. */}

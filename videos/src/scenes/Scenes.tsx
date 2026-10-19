@@ -307,10 +307,16 @@ function Ecran({ s, frames }: { s: Extract<Scene, { type: 'ecran' }>; frames: nu
 }
 
 /** Plusieurs fonctions : les écrans défilent en carrousel, le mot-clé change à chaque coupe. */
-function Liste({ s, frames }: { s: Extract<Scene, { type: 'liste' }>; frames: number }) {
+function Liste({ s, frames, words, voiceAt = 0 }: { s: Extract<Scene, { type: 'liste' }>; frames: number; words?: Word[]; voiceAt?: number }) {
   const frame = useCurrentFrame()
   const per = Math.max(8, Math.floor((frames - 6) / s.items.length))
-  const idx = Math.min(s.items.length - 1, Math.floor(frame / per))
+  // Chaque rubrique apparaît quand la voix la prononce (mot horodaté), sinon à intervalles réguliers.
+  const key = (t: string) => t.toLowerCase().normalize('NFD').replace(/[^a-z]/g, '')
+  const cues = s.items.map((it, k) => {
+    const w = words?.find((x) => key(x.w).startsWith(key(it).slice(0, 5)))
+    return w ? Math.max(0, voiceAt + Math.round(w.start * 30) - 2) : k * per
+  })
+  const idx = Math.max(0, cues.reduce((a, c, k) => (frame >= c ? k : a), 0))
   const slide = interpolate(frame, [0, frames], [0, -1], clamp)
   return (
     <AbsoluteFill>
@@ -319,7 +325,7 @@ function Liste({ s, frames }: { s: Extract<Scene, { type: 'liste' }>; frames: nu
         <div style={{ position: 'absolute', top: 150, left: 70, right: 70, textAlign: 'center' }}>
           <MaskLine style={title(118, C.surface)}>{s.titre}</MaskLine>
           <div style={{ marginTop: 34, height: 110 }}>
-            <Slam key={idx} delay={idx * per} style={{ display: 'inline-block', background: C.caramel, borderRadius: 22, padding: '10px 36px', ...label(76, C.night) }}>{s.items[idx]}</Slam>
+            <Slam key={idx} delay={cues[idx]} style={{ display: 'inline-block', background: C.caramel, borderRadius: 22, padding: '10px 36px', ...label(76, C.night) }}>{s.items[idx]}</Slam>
           </div>
         </div>
         <div style={{ position: 'absolute', top: 760, left: 0, display: 'flex', gap: 60, transform: `translateX(${200 + slide * 900}px)` }}>
@@ -332,7 +338,7 @@ function Liste({ s, frames }: { s: Extract<Scene, { type: 'liste' }>; frames: nu
           ))}
         </div>
       </Camera>
-      {s.items.map((_, i) => <Sequence key={i} from={i * per} durationInFrames={10}>{sfx('pop', 0.2)}</Sequence>)}
+      {s.items.map((_, i) => <Sequence key={i} from={cues[i]} durationInFrames={10}>{sfx('pop', 0.2)}</Sequence>)}
     </AbsoluteFill>
   )
 }
@@ -451,7 +457,7 @@ export function SceneView({ scene, frames, words, voiceAt }: { scene: Scene; fra
     case 'ecran':
       return <Ecran s={scene} frames={frames} />
     case 'liste':
-      return <Liste s={scene} frames={frames} />
+      return <Liste s={scene} frames={frames} words={words} voiceAt={voiceAt} />
     case 'fin':
       return <Fin s={scene} frames={frames} />
     case 'chiffre':
