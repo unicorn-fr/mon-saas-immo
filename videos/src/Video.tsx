@@ -61,7 +61,7 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
       </TransitionSeries>
       <Guide stops={stops} starts={starts} T={T} />
       {video.musique ? (
-        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 12, total - 24, total], [0, 0.06, 0.06, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
+        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 12, total - 24, total], [0, 0.16, 0.16, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
       ) : null}
       <FilmLook />
       {video.scenes.map((scene, i) => {
