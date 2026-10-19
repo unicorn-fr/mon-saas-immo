@@ -69,14 +69,16 @@ function Mots({ s, frames, words, voiceAt = 0 }: { s: Extract<Scene, { type: 'mo
           </AbsoluteFill>
         )}
       </Camera>
-      {[0, ...(relanceAt !== null ? [relanceAt] : []), ...starts].map((f, i) => <Sequence key={i} from={f} durationInFrames={10}>{sfx('pop', 0.5)}</Sequence>)}
-      <Sequence from={endWords + 2} durationInFrames={12}>{sfx('impact', 0.9)}</Sequence>
+      {[0, ...(relanceAt !== null ? [relanceAt] : []), ...starts].map((f, i) => <Sequence key={i} from={f} durationInFrames={10}>{sfx('pop', 0.22)}</Sequence>)}
+      <Sequence from={endWords + 2} durationInFrames={12}>{sfx('impact', 0.45)}</Sequence>
     </AbsoluteFill>
   )
 }
 
 /** Question qui retourne la situation : lignes révélées par masque, la fin surlignée. */
 function Grand({ s, frames }: { s: Extract<Scene, { type: 'grand' }>; frames: number }) {
+  // Un mot long (« propriétaires ») doit tenir sur une ligne.
+  const size = Math.max(...s.texte.split(' ').map((w) => w.length)) > 11 ? 128 : 160
   return (
     <AbsoluteFill>
       <Backdrop />
@@ -84,11 +86,11 @@ function Grand({ s, frames }: { s: Extract<Scene, { type: 'grand' }>; frames: nu
         <AbsoluteFill style={{ justifyContent: 'center', padding: '0 90px', gap: 6 }}>
           {s.texte.split(' ').reduce<string[][]>((lines, w) => {
             const last = lines[lines.length - 1]
-            if (last && last.join(' ').length + w.length < 12) last.push(w)
+            if (last && last.join(' ').length + w.length < (size < 160 ? 16 : 12)) last.push(w)
             else lines.push([w])
             return lines
           }, []).map((l, i) => (
-            <MaskLine key={i} delay={i * 4} style={title(160)}>{l.join(' ')}</MaskLine>
+            <MaskLine key={i} delay={i * 4} style={title(size)}>{l.join(' ')}</MaskLine>
           ))}
           <MaskLine delay={14} style={{ ...title(175, C.owner), marginTop: 10 }}>
             <Highlight delay={26} color={C.caramel} style={{ color: C.night }}>{s.accent}</Highlight>
@@ -117,7 +119,7 @@ function Logo({ s, frames }: { s: Extract<Scene, { type: 'logo' }>; frames: numb
         </AbsoluteFill>
       </Camera>
       <AbsoluteFill style={{ background: C.surface, opacity: flash }} />
-      <Sequence from={0} durationInFrames={20}>{sfx('impact', 0.8)}</Sequence>
+      <Sequence from={0} durationInFrames={20}>{sfx('impact', 0.4)}</Sequence>
     </AbsoluteFill>
   )
 }
@@ -168,7 +170,7 @@ function Phone({ src, side = 'droite', frames, zoom, badge, tap }: { src: string
           <div style={{ position: 'absolute', top: 150, [side === 'droite' ? 'left' : 'right']: -90, transform: `translateZ(80px) scale(${b}) rotate(${-dir * 6}deg)`, background: C.green, ...label(56, C.surface), padding: '24px 44px', borderRadius: 999, boxShadow: '0 24px 50px rgba(27,94,59,0.45)' }}>{badge}</div>
         ) : null}
       </div>
-      {badge ? <Sequence from={16} durationInFrames={30}>{sfx('ding', 0.35)}</Sequence> : null}
+      {badge ? <Sequence from={16} durationInFrames={30}>{sfx('ding', 0.14)}</Sequence> : null}
     </div>
   )
 }
@@ -202,7 +204,7 @@ function Notifs({ items, frames, pressAt }: { items: Notif[]; frames: number; pr
           </div>
         )
       })}
-      {times.map((t, j) => <Sequence key={j} from={t} durationInFrames={30}>{sfx('ding', 0.4)}</Sequence>)}
+      {times.map((t, j) => <Sequence key={j} from={t} durationInFrames={30}>{sfx('ding', 0.15)}</Sequence>)}
     </>
   )
 }
@@ -212,7 +214,7 @@ function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauch
   const frame = useCurrentFrame()
   const at = Math.floor(frames * 0.28)
   const b = useBounce(at, 180, 15)
-  const amount = useCount(c.montant ?? 0, at + 4, 26)
+  const amount = useCount(c.montant ?? 0, at + 4, 26, (c.montant ?? 0) >= 1000 ? 0 : 2)
   const fill = useProgress(at + 4, 30)
   const dir = side === 'droite' ? 1 : -1
   return (
@@ -230,7 +232,7 @@ function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauch
         ) : null}
         {c.sous ? <div style={{ ...label(32, C.green), marginTop: 12 }}>{c.sous}</div> : null}
       </div>
-      <Sequence from={at} durationInFrames={10}>{sfx('pop', 0.4)}</Sequence>
+      <Sequence from={at} durationInFrames={10}>{sfx('pop', 0.18)}</Sequence>
     </>
   )
 }
@@ -280,7 +282,7 @@ function Liste({ s, frames }: { s: Extract<Scene, { type: 'liste' }>; frames: nu
           ))}
         </div>
       </Camera>
-      {s.items.map((_, i) => <Sequence key={i} from={i * per} durationInFrames={10}>{sfx('pop', 0.45)}</Sequence>)}
+      {s.items.map((_, i) => <Sequence key={i} from={i * per} durationInFrames={10}>{sfx('pop', 0.2)}</Sequence>)}
     </AbsoluteFill>
   )
 }
@@ -309,7 +311,7 @@ function Fin({ s, frames }: { s: Extract<Scene, { type: 'fin' }>; frames: number
           <div style={{ ...label(90, C.owner), transform: `translateY(${arrow}px)`, opacity: btn }}>↓</div>
         </AbsoluteFill>
       </Camera>
-      <Sequence from={14} durationInFrames={12}>{sfx('impact', 0.7)}</Sequence>
+      <Sequence from={14} durationInFrames={12}>{sfx('impact', 0.35)}</Sequence>
     </AbsoluteFill>
   )
 }

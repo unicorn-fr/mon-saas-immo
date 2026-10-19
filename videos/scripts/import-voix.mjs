@@ -3,19 +3,25 @@
 // Usage : node scripts/import-voix.mjs presentation chemin/vers/voix.mp3 [mots.json]
 // mots.json (facultatif) : transcription horodatée d'ElevenLabs (liste { text, start, end }) : coupures au mot près et
 // sous-titres synchronisés. Sans elle, coupures aux silences.
-// --scene N : le fichier ne contient que la phrase de la scène N (0 = la première) ; les autres restent telles quelles.
+// --scene N (ou --scene 6,8,9) : le fichier ne contient que les phrases de ces scènes, dans l'ordre ; les autres
+// restent telles quelles. --tempo 1.1 : voix accélérée de 10 % (hauteur conservée).
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 
 const ROOT = new URL('..', import.meta.url).pathname
 const args = process.argv.slice(2)
-const sceneArg = args.indexOf('--scene')
-const only = sceneArg >= 0 ? Number(args.splice(sceneArg, 2)[1]) : null
+const option = (name) => {
+  const at = args.indexOf(name)
+  return at >= 0 ? args.splice(at, 2)[1] : null
+}
+const sceneList = option('--scene')
+const only = sceneList === null ? null : sceneList.split(',').map(Number)
+const tempo = Number(option('--tempo') ?? 1)
 const [id, input, wordsFile] = args
 if (!id || !input) throw new Error('Usage : node scripts/import-voix.mjs <id> <fichier audio>')
 const video = JSON.parse(fs.readFileSync(path.join(ROOT, `src/videos/${id}.json`), 'utf8'))
-if (only !== null) video.scenes = [video.scenes[only]]
+if (only !== null) video.scenes = only.map((k) => video.scenes[k])
 const n = video.scenes.length
 const total = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', input], { encoding: 'utf8' }).trim())
 
@@ -84,7 +90,7 @@ if (wordsFile) {
   // Sous-titres : le texte du script quand il a autant de mots que la transcription (orthographe exacte), sinon la transcription.
   sceneWords = groups.map((g, k) => {
     const script = video.scenes[k].voix.split(/\s+/).reduce((acc, t) => (/[\p{L}\p{N}]/u.test(t) || !acc.length ? [...acc, t] : [...acc.slice(0, -1), `${acc[acc.length - 1]} ${t}`]), [])
-    return g.map((w, i) => ({ w: script.length === g.length ? script[i] : w.text, start: w.start - bounds[k][0], end: w.end - bounds[k][0] }))
+    return g.map((w, i) => ({ w: script.length === g.length ? script[i] : w.text, start: (w.start - bounds[k][0]) / tempo, end: (w.end - bounds[k][0]) / tempo }))
   })
 } else {
 // Silences d'au moins 0,25 s. Une voix naturelle respire aussi au milieu des phrases : on choisit, dans l'ordre,
@@ -102,9 +108,9 @@ if (only === null) fs.rmSync(dir, { recursive: true, force: true })
 fs.mkdirSync(dir, { recursive: true })
 const durees = []
 for (let i = 0; i < n; i++) {
-  const file = path.join(dir, `${String(only ?? i).padStart(2, '0')}.mp3`)
+  const file = path.join(dir, `${String(only ? only[i] : i).padStart(2, '0')}.mp3`)
   // Chaque morceau sans les silences du début et de la fin.
-  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', input, '-ss', String(bounds[i][0]), '-to', String(bounds[i][1]), ...(sceneWords ? [] : ['-af', 'silenceremove=start_periods=1:start_threshold=-40dB,areverse,silenceremove=start_periods=1:start_threshold=-40dB,areverse']), '-c:a', 'libmp3lame', '-q:a', '2', file])
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', input, '-ss', String(bounds[i][0]), '-to', String(bounds[i][1]), '-af', [...(sceneWords ? [] : ['silenceremove=start_periods=1:start_threshold=-40dB,areverse,silenceremove=start_periods=1:start_threshold=-40dB,areverse']), `atempo=${tempo}`].join(','), '-c:a', 'libmp3lame', '-q:a', '2', file])
   durees.push(Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], { encoding: 'utf8' }).trim()))
 }
 const voixFile = path.join(ROOT, `src/videos/${id}.voix.json`)
@@ -112,9 +118,11 @@ let result = { durees, ext: 'mp3', ...(sceneWords ? { mots: sceneWords } : {}) }
 if (only !== null) {
   // Une seule scène remplacée : on garde les autres phrases.
   const prev = JSON.parse(fs.readFileSync(voixFile, 'utf8'))
-  prev.durees[only] = durees[0]
-  if (prev.mots) prev.mots[only] = sceneWords ? sceneWords[0] : null
+  only.forEach((k, i) => {
+    prev.durees[k] = durees[i]
+    if (prev.mots) prev.mots[k] = sceneWords ? sceneWords[i] : null
+  })
   result = prev
 }
 fs.writeFileSync(voixFile, JSON.stringify(result, null, 1))
-console.log(id, only !== null ? `scène ${only} :` : '', durees.map((d) => d.toFixed(1)).join(' + '), '=', durees.reduce((a, b) => a + b, 0).toFixed(1), 's')
+console.log(id, only !== null ? `scènes ${only.join(', ')} :` : '', durees.map((d) => d.toFixed(1)).join(' + '), '=', durees.reduce((a, b) => a + b, 0).toFixed(1), 's')

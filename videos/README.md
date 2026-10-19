@@ -45,7 +45,7 @@ Sans accès à l'API : collez le texte des scènes (une phrase par paragraphe, u
 elevenlabs.io, téléchargez le MP3, puis :
 
 ```bash
-node videos/scripts/import-voix.mjs presentation voix.mp3 [mots.json] [--scene N]   # une piste par scène
+node videos/scripts/import-voix.mjs presentation voix.mp3 [mots.json] [--scene N,M] [--tempo 1.1]   # une piste par scène
 node videos/scripts/rendu.mjs presentation
 ```
 

@@ -92,6 +92,20 @@
     },
     {
       "type": "ecran",
+      "voix": "Une fuite chez votre locataire ? Il la signale en quelques clics, photos à l'appui, et vous êtes prévenu tout de suite.",
+      "titre": "Un problème ?",
+      "accent": "tout de suite",
+      "image": "ecrans/logement.png",
+      "cote": "gauche",
+      "notifs": [
+        {
+          "titre": "Fuite signalée · Studio Sète",
+          "texte": "2 photos jointes, intervention à organiser."
+        }
+      ]
+    },
+    {
+      "type": "ecran",
       "voix": "Et les quittances ? Elles partent toutes seules, chaque mois !",
       "titre": "Quittances",
       "accent": "automatiques",
@@ -108,20 +122,56 @@
       }
     },
     {
+      "type": "ecran",
+      "voix": "Révision du loyer, relance, congé… vos courriers sont prêts en un clic, conformes à la loi.",
+      "titre": "Vos courriers",
+      "accent": "en un clic",
+      "image": "ecrans/courriers.png",
+      "cote": "droite",
+      "tap": [
+        50,
+        30
+      ],
+      "carte": {
+        "titre": "Révision du loyer",
+        "sous": "Prête à envoyer ✓"
+      }
+    },
+    {
+      "type": "ecran",
+      "voix": "Et au moment de déclarer vos revenus ? Bailio fait les calculs et vous montre les bonnes cases.",
+      "titre": "Vos impôts",
+      "accent": "déjà calculés",
+      "image": "ecrans/argent.png",
+      "cote": "gauche",
+      "zoom": true,
+      "carte": {
+        "titre": "Revenus fonciers · 4BE",
+        "montant": 10200,
+        "sous": "Micro-foncier ✓"
+      }
+    },
+    {
       "type": "liste",
-      "voix": "Annonce, candidats, dépenses, déclaration de revenus : tout est au même endroit.",
+      "voix": "Annonce, candidats, dépenses, documents : tout est au même endroit.",
       "titre": "Tout au même endroit",
       "items": [
         "Annonce",
         "Candidats",
         "Dépenses",
-        "Déclaration"
+        "Documents"
       ],
       "images": [
         "ecrans/annonce.png",
         "ecrans/logement.png",
         "ecrans/courriers.png"
       ]
+    },
+    {
+      "type": "grand",
+      "voix": "Simple, clair… et pensé pour les propriétaires comme vous.",
+      "texte": "Pensé pour les propriétaires",
+      "accent": "comme vous."
     },
     {
       "type": "fin",

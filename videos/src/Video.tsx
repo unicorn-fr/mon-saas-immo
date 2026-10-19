@@ -61,7 +61,7 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
       </TransitionSeries>
       <Guide stops={stops} starts={starts} T={T} />
       {video.musique ? (
-        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 12, total - 24, total], [0, 0.11, 0.11, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
+        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 12, total - 24, total], [0, 0.08, 0.08, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
       ) : null}
       <FilmLook />
       {video.scenes.map((scene, i) => {
@@ -80,13 +80,13 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
       {/* Un souffle par transition (deux variantes en alternance), un clic quand la flèche touche. */}
       {starts.slice(1).map((s, i) => (
         <Sequence key={`w${i}`} from={s - 4} durationInFrames={28}>
-          <Audio src={staticFile(i % 2 ? 'sfx/whoosh2.wav' : 'sfx/whoosh.wav')} volume={0.42} />
+          <Audio src={staticFile(i % 2 ? 'sfx/whoosh2.wav' : 'sfx/whoosh.wav')} volume={0.18} />
         </Sequence>
       ))}
       {stops.map((st, i) =>
         st.click !== undefined ? (
           <Sequence key={`c${i}`} from={starts[i] + st.click} durationInFrames={10}>
-            <Audio src={staticFile('sfx/click.wav')} volume={0.7} />
+            <Audio src={staticFile('sfx/click.wav')} volume={0.3} />
           </Sequence>
         ) : null,
       )}
