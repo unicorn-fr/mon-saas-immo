@@ -1,7 +1,8 @@
 {
   "id": "presentation",
   "titre": "Bailio, c'est quoi ?",
-  "legende": "Propriétaire ? Bail, quittances, relances : Bailio prépare tout, selon la loi. Créez votre bail gratuitement sur bailio.fr 🏠 #proprietaire #immobilier #location #bailleur #investissementlocatif",
+  "legende": "Propriétaire ? Bail, quittances, relances : Bailio prépare tout selon la loi et vous prévient quand il faut agir. Créez votre bail gratuitement sur bailio.fr 🏠 #proprietaire #immobilier #location #bailleur #investissementlocatif",
+  "musique": "musique/boucle-1.mp3",
   "scenes": [
     {
       "type": "mots",
@@ -35,7 +36,15 @@
       "tap": [
         50,
         32
-      ]
+      ],
+      "carte": {
+        "titre": "Votre bail",
+        "etape": [
+          5,
+          7
+        ],
+        "sous": "Conforme à la loi ✓"
+      }
     },
     {
       "type": "ecran",
@@ -52,15 +61,24 @@
     },
     {
       "type": "ecran",
-      "voix": "Chaque matin, Bailio prépare ce qu'il y a à faire : une relance, un état des lieux, la révision du loyer.",
-      "titre": "Tout est prêt",
-      "accent": "chaque matin",
+      "voix": "Dès qu'il y a quelque chose à faire, Bailio vous prévient par email : une relance, un état des lieux, la révision du loyer.",
+      "titre": "Prévenu",
+      "accent": "au bon moment",
       "image": "ecrans/aujourdhui.png",
       "cote": "droite",
-      "zoom": true,
-      "tap": [
-        30,
-        34
+      "notifs": [
+        {
+          "titre": "Loyer de Lucas en retard",
+          "texte": "La relance est prête, il suffit de l'envoyer."
+        },
+        {
+          "titre": "État des lieux jeudi",
+          "texte": "La grille de l'entrée est prête à comparer."
+        },
+        {
+          "titre": "Révision du loyer",
+          "texte": "Le nouveau loyer est déjà calculé."
+        }
       ]
     },
     {
@@ -73,7 +91,12 @@
       "tap": [
         40,
         19
-      ]
+      ],
+      "carte": {
+        "titre": "Quittance envoyée",
+        "montant": 850,
+        "sous": "Octobre · payé ✓"
+      }
     },
     {
       "type": "liste",

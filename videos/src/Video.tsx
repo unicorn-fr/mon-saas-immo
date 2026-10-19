@@ -1,8 +1,9 @@
 import { linearTiming, TransitionSeries } from '@remotion/transitions'
-import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion'
+import { AbsoluteFill, Audio, Sequence, interpolate, staticFile } from 'remotion'
 import { Captions, estimateWords, type Word } from './captions'
-import { FilmLook } from './fx'
-import { SceneView, type Scene } from './scenes/Scenes'
+import { FilmLook, easeInOut } from './fx'
+import { Guide } from './guide'
+import { guideStop, SceneView, type Scene } from './scenes/Scenes'
 import { C, FPS, fontFaces } from './theme'
 import { circleReveal, whip, zoomThrough } from './transitions'
 
@@ -10,6 +11,8 @@ export interface VideoDef {
   id: string
   titre: string
   legende: string
+  /** Nappe musicale en boucle (public/musique/…), discrète sous la voix. */
+  musique?: string
   scenes: Scene[]
 }
 
@@ -23,7 +26,7 @@ export interface Voix {
 }
 
 /** Durée d'une transition, en images : courte, c'est ce qui donne le rythme. */
-export const T = 10
+export const T = 12
 /** Marge après chaque phrase. */
 const PAD = 0.25
 
@@ -33,7 +36,7 @@ export const totalFrames = (durees: number[]) => sceneFrames(durees).reduce((a, 
 /** Transitions variées, choisies selon la scène qui arrive. */
 function transitionFor(next: Scene, i: number) {
   if (next.type === 'logo' || next.type === 'fin') return zoomThrough()
-  if (next.type === 'ecran' && next.tap) return circleReveal(next.tap[0], 40 + next.tap[1] * 0.5)
+  if (next.type === 'ecran' && next.tap && !next.notifs) return circleReveal(next.tap[0], 40 + next.tap[1] * 0.5)
   return whip(i % 2 ? 'gauche' : 'droite')
 }
 
@@ -41,6 +44,8 @@ function transitionFor(next: Scene, i: number) {
 export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
   const frames = sceneFrames(voix.durees)
   const starts = frames.map((_, i) => frames.slice(0, i).reduce((a, b) => a + b, 0) - i * T)
+  const stops = video.scenes.map((s, i) => guideStop(s, frames[i]))
+  const total = totalFrames(voix.durees)
   return (
     <AbsoluteFill style={{ background: C.bg }}>
       <style>{fontFaces}</style>
@@ -50,10 +55,14 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
             <SceneView scene={scene} frames={frames[i]} />
           </TransitionSeries.Sequence>,
           ...(i < video.scenes.length - 1
-            ? [<TransitionSeries.Transition key={`t${i}`} presentation={transitionFor(video.scenes[i + 1], i) as never} timing={linearTiming({ durationInFrames: T })} />]
+            ? [<TransitionSeries.Transition key={`t${i}`} presentation={transitionFor(video.scenes[i + 1], i) as never} timing={linearTiming({ durationInFrames: T, easing: easeInOut })} />]
             : []),
         ])}
       </TransitionSeries>
+      <Guide stops={stops} starts={starts} T={T} />
+      {video.musique ? (
+        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 12, total - 24, total], [0, 0.11, 0.11, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
+      ) : null}
       <FilmLook />
       {video.scenes.map((scene, i) => {
         // La voix démarre quand la scène est installée (après la transition d'entrée).
@@ -68,11 +77,19 @@ export function BailioVideo({ video, voix }: { video: VideoDef; voix: Voix }) {
           </Sequence>
         )
       })}
+      {/* Un souffle par transition (deux variantes en alternance), un clic quand la flèche touche. */}
       {starts.slice(1).map((s, i) => (
-        <Sequence key={`w${i}`} from={s - 3} durationInFrames={16}>
-          <Audio src={staticFile('sfx/whoosh.wav')} volume={0.5} />
+        <Sequence key={`w${i}`} from={s - 4} durationInFrames={28}>
+          <Audio src={staticFile(i % 2 ? 'sfx/whoosh2.wav' : 'sfx/whoosh.wav')} volume={0.42} />
         </Sequence>
       ))}
+      {stops.map((st, i) =>
+        st.click !== undefined ? (
+          <Sequence key={`c${i}`} from={starts[i] + st.click} durationInFrames={10}>
+            <Audio src={staticFile('sfx/click.wav')} volume={0.7} />
+          </Sequence>
+        ) : null,
+      )}
     </AbsoluteFill>
   )
 }

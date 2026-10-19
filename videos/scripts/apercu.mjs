@@ -15,7 +15,7 @@ fs.mkdirSync(path.join(ROOT, 'out/apercu'), { recursive: true })
 const files = []
 for (const f of frames.map(Number)) {
   const output = path.join(ROOT, `out/apercu/${f}.jpg`)
-  await renderStill({ composition, serveUrl, frame: f, output, imageFormat: 'jpeg', jpegQuality: 70, browserExecutable, scale: 0.25 })
+  await renderStill({ composition, serveUrl, frame: f, output, imageFormat: 'jpeg', jpegQuality: 70, browserExecutable, scale: Number(process.env.SCALE ?? 0.25) })
   files.push(output)
 }
 execFileSync('ffmpeg', ['-v', 'error', '-y', ...files.flatMap((f) => ['-i', f]), '-filter_complex', `hstack=${files.length}`, path.join(ROOT, `out/${id}-apercu.jpg`)])

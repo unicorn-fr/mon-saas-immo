@@ -73,17 +73,39 @@ export function Camera({ children, frames, push = 0.06, shakeAt }: { children: R
   return <AbsoluteFill style={{ transform: `translate(${x}px, ${y}px) scale(${z})` }}>{children}</AbsoluteFill>
 }
 
-/** Fond : couleur pleine, grille fine qui défile, halo de couleur qui respire. */
+/**
+ * Fond : dégradé « maillé » qui dérive lentement (deux halos de couleur qui tournent l'un autour de l'autre),
+ * trame de points très fine. Jamais immobile, jamais distrayant.
+ */
 export function Backdrop({ dark = false, accent = C.caramel }: { dark?: boolean; accent?: string }) {
   const frame = useCurrentFrame()
-  const line = dark ? 'rgba(255,255,255,0.05)' : 'rgba(26,26,46,0.05)'
-  const glow = 0.5 + Math.sin(frame / 25) * 0.15
+  const dot = dark ? 'rgba(255,255,255,0.07)' : 'rgba(26,26,46,0.07)'
+  const a = frame / 70
+  const blob = (color: string, x: number, y: number, size: number, opacity: number) => (
+    <div style={{ position: 'absolute', width: size, height: size, left: x - size / 2, top: y - size / 2, borderRadius: '50%', background: `radial-gradient(circle, ${color} 0%, transparent 62%)`, opacity }} />
+  )
   return (
-    <AbsoluteFill style={{ background: dark ? C.night : C.bg, overflow: 'hidden' }}>
-      <AbsoluteFill style={{ backgroundImage: `linear-gradient(${line} 2px, transparent 2px), linear-gradient(90deg, ${line} 2px, transparent 2px)`, backgroundSize: '120px 120px', backgroundPosition: `0 ${frame * 1.2}px` }} />
-      <div style={{ position: 'absolute', width: 1300, height: 1300, left: -110, top: 300, borderRadius: '50%', background: `radial-gradient(circle, ${accent} 0%, transparent 65%)`, opacity: (dark ? 0.35 : 0.22) * glow }} />
+    <AbsoluteFill style={{ background: dark ? `linear-gradient(170deg, ${C.night} 0%, ${C.nightSoft} 130%)` : C.bg, overflow: 'hidden' }}>
+      {blob(accent, 540 + Math.cos(a) * 260, 700 + Math.sin(a) * 220, 1500, dark ? 0.32 : 0.26)}
+      {blob(dark ? C.owner : C.ownerLight, 540 - Math.cos(a * 0.8) * 300, 1350 - Math.sin(a * 0.8) * 200, 1700, dark ? 0.55 : 0.9)}
+      <AbsoluteFill style={{ backgroundImage: `radial-gradient(${dot} 2px, transparent 2.5px)`, backgroundSize: '44px 44px', backgroundPosition: `0 ${frame * 0.6}px`, maskImage: 'linear-gradient(180deg, black 0%, transparent 75%)' }} />
     </AbsoluteFill>
   )
+}
+
+/** Carte « verre dépoli » : fond translucide flouté, liseré clair, ombre douce (les cartes flottantes façon fintech). */
+export const glass = (dark = false): CSSProperties => ({
+  background: dark ? 'rgba(46,46,74,0.72)' : 'rgba(255,255,255,0.78)',
+  backdropFilter: 'blur(24px) saturate(1.4)',
+  border: `2px solid ${dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)'}`,
+  boxShadow: '0 30px 80px rgba(26,26,46,0.22), 0 4px 14px rgba(26,26,46,0.08)',
+  borderRadius: 40,
+})
+
+/** Nombre qui défile jusqu'à sa valeur (compteur), au format français. */
+export function useCount(to: number, delay: number, duration = 24, decimals = 2) {
+  const p = useProgress(delay, duration)
+  return (to * p).toLocaleString('fr-FR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
 /** Grain de pellicule et vignettage : enlèvent l'aspect « trop propre » d'une image de synthèse. */

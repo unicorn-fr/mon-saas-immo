@@ -11,6 +11,13 @@ française et des sous-titres intégrés. Tout est fabriqué par du code : aucun
 - **Montage** : transitions fouettées, zoom traversant et cercle (`src/transitions.tsx`), textes révélés par masque,
   caméra qui pousse, grain et vignettage (`src/fx.tsx`), bruitages (`public/sfx/`), sous-titres façon réseaux sociaux
   (`src/captions.tsx`). `node scripts/apercu.mjs <id> 30 90 150` : planche d'images sans tout fabriquer.
+- **Flèche guide** (`src/guide.tsx`) : un seul curseur pour toute la vidéo ; il se pose sur l'élément important de
+  chaque scène, clique, puis file en arc vers la scène suivante pendant la transition (point d'arrivée :
+  `guideStop`, `src/scenes/Scenes.tsx`).
+- **Cartes flottantes** (verre dépoli) : `notifs` (emails qui descendent sur le téléphone) et `carte` (montant qui
+  défile ou barre d'étapes) dans une scène `ecran`.
+- **Son** : bruitages ElevenLabs dans `public/sfx/` (souffles, clic, notification), nappe en boucle `musique` dans
+  `public/musique/`, son final normalisé à -14 LUFS par `rendu.mjs`.
 - **Une vidéo = un fichier** `src/videos/<id>.json` : la liste des scènes, le texte de la voix off et la légende à
   publier.
 
@@ -38,7 +45,7 @@ Sans accès à l'API : collez le texte des scènes (une phrase par paragraphe, u
 elevenlabs.io, téléchargez le MP3, puis :
 
 ```bash
-node videos/scripts/import-voix.mjs presentation voix.mp3 [mots.json]   # une piste par scène
+node videos/scripts/import-voix.mjs presentation voix.mp3 [mots.json] [--scene N]   # une piste par scène
 node videos/scripts/rendu.mjs presentation
 ```
 
