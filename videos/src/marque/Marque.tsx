@@ -326,3 +326,186 @@ export function Charte() {
     </Page>
   )
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+
+/** Une story par « à la une » : le sujet, une promesse, trois points, le lien. */
+export interface StoryDef {
+  icone: IconeMarque
+  kicker: string
+  titre: string
+  intro?: string
+  /** Réponse courte en très grand (FAQ). */
+  reponse?: string
+  /** Deux chiffres côte à côte (guide). */
+  chiffres?: Array<[string, string]>
+  points: Array<[string, string]>
+  fin: string
+}
+
+export const STORIES: Record<string, StoryDef> = {
+  '1-a-propos': {
+    icone: 'a-propos',
+    kicker: 'À propos',
+    titre: 'Le bail et le suivi de votre location.',
+    intro: 'Pour les propriétaires qui louent eux-mêmes, sans agence.',
+    points: [
+      ['Un bail conforme', 'vide, meublé ou garage, en quelques minutes'],
+      ['Signé en ligne', 'par le locataire, le garant et vous'],
+      ['Le suivi au quotidien', 'quittances, rappels et courriers prêts'],
+    ],
+    fin: 'Créez votre bail sur bailio.fr',
+  },
+  '2-le-bail': {
+    icone: 'le-bail',
+    kicker: 'Le bail',
+    titre: 'Un bail conforme, sans y passer la soirée.',
+    intro: 'Le contrat type officiel, à jour du décret du 6 juillet 2026.',
+    points: [
+      ['Une question à la fois', 'le logement, le locataire, le loyer'],
+      ['Les règles vérifiées', 'durée, dépôt maximum, DPE, plafonds de loyer'],
+      ['Prêt à signer', 'avec la notice d’information jointe'],
+    ],
+    fin: 'Votre bail sur bailio.fr',
+  },
+  '3-signature': {
+    icone: 'signature',
+    kicker: 'Signature',
+    titre: 'Tout le monde signe en ligne.',
+    intro: 'Sans imprimer une seule page, depuis un téléphone.',
+    points: [
+      ['Chacun son lien', 'le locataire, le garant et vous'],
+      ['Un code par email', 'pour confirmer qui signe'],
+      ['Un certificat', 'horodaté, joint au bail signé'],
+    ],
+    fin: 'Faites signer sur bailio.fr',
+  },
+  '4-quittances': {
+    icone: 'quittances',
+    kicker: 'Quittances',
+    titre: 'Les quittances partent toutes seules.',
+    intro: 'Vous n’agissez que si le loyer n’arrive pas.',
+    points: [
+      ['7 jours après l’échéance', 'la quittance part par email'],
+      ['Prévenu 3 jours avant', 'un clic si le loyer n’est pas arrivé'],
+      ['Toujours gratuite', 'la loi interdit de la faire payer'],
+    ],
+    fin: 'Plus d’oubli sur bailio.fr',
+  },
+  '5-etat-des-lieux': {
+    icone: 'etat-des-lieux',
+    kicker: 'État des lieux',
+    titre: 'L’état des lieux sur votre téléphone.',
+    intro: 'Pièce par pièce, avec des photos datées.',
+    points: [
+      ['Signé sur place', 'par vous et le locataire'],
+      ['La sortie comparée à l’entrée', 'élément par élément'],
+      ['Les retenues justifiées', 'usure normale ou dégradation'],
+    ],
+    fin: 'À essayer sur bailio.fr',
+  },
+  '6-guide': {
+    icone: 'guide',
+    kicker: 'Guide',
+    titre: 'Dépôt de garantie : combien au maximum ?',
+    chiffres: [
+      ['1 mois', 'location vide'],
+      ['2 mois', 'location meublée'],
+    ],
+    intro: 'De loyer hors charges (loi du 6 juillet 1989).',
+    points: [
+      ['Rendu sous 1 mois', 'si l’état des lieux de sortie est conforme'],
+      ['Sinon sous 2 mois', 'avec les retenues justifiées'],
+    ],
+    fin: 'Un conseil par semaine sur bailio.fr',
+  },
+  '7-faq': {
+    icone: 'faq',
+    kicker: 'FAQ',
+    titre: 'Mon locataire doit-il créer un compte ?',
+    reponse: 'Non.',
+    points: [
+      ['Son dossier', 'il le complète depuis un lien reçu par email'],
+      ['Sa signature', 'depuis son téléphone'],
+      ['Son assurance', 'il l’envoie depuis le même lien'],
+    ],
+    fin: 'Vos questions en message privé',
+  },
+  '8-actu': {
+    icone: 'actu',
+    kicker: 'Actu',
+    titre: 'Nouveau bail type depuis le 1er octobre 2026.',
+    intro: 'Décret n° 2026-596 du 6 juillet 2026.',
+    points: [
+      ['Clause résolutoire', 'six semaines après le commandement de payer'],
+      ['Téléphone portable', 'facultatif pour les deux parties'],
+      ['Résidence principale', 'la servitude d’urbanisme, quand elle existe'],
+    ],
+    fin: 'Les baux Bailio sont déjà à jour',
+  },
+  '9-avis': {
+    icone: 'avis',
+    kicker: 'Avis',
+    titre: 'Votre avis compte.',
+    intro: 'Bailio se construit avec les propriétaires qui l’utilisent.',
+    points: [
+      ['Une idée ?', 'dites-la-nous en message privé'],
+      ['Un souci ?', 'écrivez-nous, on regarde tout'],
+      ['Contents de Bailio ?', 'vos avis seront partagés ici'],
+    ],
+    fin: 'Répondez à cette story',
+  },
+}
+
+/**
+ * Story (1080 × 1920) à publier dans chaque « à la une ». Le texte reste entre 250 et 1 620 px de haut :
+ * Instagram pose le nom du compte en haut et le champ de réponse en bas.
+ */
+export function Story({ s }: { s: StoryDef }) {
+  return (
+    <Page fond={M.blanc}>
+      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, opacity: 0.85 }}>
+        <Rue width={1080} height={300} seed={s.kicker} />
+      </div>
+      <AbsoluteFill style={{ padding: '250px 90px 300px', flexDirection: 'column', gap: 44 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Logo height={64} />
+          <span style={{ ...capitales(24) }}>{s.kicker}</span>
+        </div>
+        <Filet w={110} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 40 }}>
+          <div style={{ width: 190, height: 190, borderRadius: 95, background: M.creme, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <IconeMarque nom={s.icone} size={120} />
+          </div>
+          {s.reponse ? <div style={{ ...serif(190, M.bleu, 700), lineHeight: 1 }}>{s.reponse}</div> : null}
+        </div>
+        <div style={{ ...serif(88, M.encre, 700), lineHeight: 1.04 }}>{s.titre}</div>
+        {s.intro ? <div style={{ ...sans(38, M.gris), lineHeight: 1.35 }}>{s.intro}</div> : null}
+        {s.chiffres ? (
+          <div style={{ display: 'flex', gap: 28 }}>
+            {s.chiffres.map(([v, l], k) => (
+              <div key={v} style={{ flex: 1, borderRadius: 30, padding: '34px 30px', background: k ? M.caramel : M.bleu, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ ...serif(96, k ? M.encre : M.blanc, 700), lineHeight: 1 }}>{v}</span>
+                <span style={{ ...sans(30, k ? M.encre : M.blanc, 500) }}>{l}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+          {s.points.map(([t, d]) => (
+            <div key={t} style={{ display: 'flex', gap: 26, alignItems: 'flex-start', background: M.creme, borderRadius: 26, padding: '26px 30px' }}>
+              <span style={{ width: 18, height: 18, borderRadius: 9, background: M.caramel, flexShrink: 0, marginTop: 16 }} />
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ ...sans(38, M.encre, 700), lineHeight: 1.25 }}>{t}</span>
+                <span style={{ ...sans(32, M.gris), lineHeight: 1.3 }}>{d}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 'auto', ...sans(34, M.encre, 500) }}>
+          <span style={{ borderBottom: `3px solid ${M.caramel}`, paddingBottom: 6 }}>{s.fin}</span>
+        </div>
+      </AbsoluteFill>
+    </Page>
+  )
+}

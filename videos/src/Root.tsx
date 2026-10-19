@@ -1,5 +1,5 @@
 import { Composition, Still } from 'remotion'
-import { ALaUne, Banniere, Bienvenue, Charte, Profil } from './marque/Marque'
+import { ALaUne, Banniere, Bienvenue, Charte, Profil, STORIES, Story } from './marque/Marque'
 
 /** Stories à la une, dans l'ordre conseillé sur Instagram. */
 const A_LA_UNE = [
@@ -77,6 +77,7 @@ export function Root() {
       <Still id="banniere-x" component={() => <Banniere width={1500} height={500} zone={{ left: 360, right: 60, top: 50, bottom: 60 }} />} width={1500} height={500} />
       <Still id="banniere-youtube" component={() => <Banniere width={2560} height={1440} zone={{ left: 507, right: 507, top: 508, bottom: 509 }} />} width={2560} height={1440} />
       {A_LA_UNE.map(([id, icone]) => <Still key={id} id={`a-la-une-${id}`} component={() => <ALaUne icone={icone} />} width={1080} height={1920} />)}
+      {Object.entries(STORIES).map(([id, s]) => <Still key={id} id={`story-${id}`} component={() => <Story s={s} />} width={1080} height={1920} />)}
       <Still id="post-bienvenue" component={Bienvenue} width={1080} height={1350} />
       <Still id="charte" component={Charte} width={2400} height={1500} />
     </>

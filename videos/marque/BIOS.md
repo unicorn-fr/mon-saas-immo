@@ -39,6 +39,10 @@ posée par-dessus) : rien d'important n'est coupé.
 - **Stories à la une** (dans cet ordre, le numéro est dans le nom du fichier) : À PROPOS, LE BAIL, SIGNATURE,
   QUITTANCES, ÉTAT DES LIEUX, GUIDE, FAQ, ACTU, AVIS. Les titres se saisissent dans l'application, en capitales
   comme aujourd'hui ; l'image ne porte que l'icône (Instagram n'en garde que le cercle central).
+- **Une story par « à la une »** : `story-1-a-propos.png` à `story-9-avis.png` (1080 × 1920, texte loin des bords
+  pour laisser la place au nom du compte et au champ de réponse). Publiez-la en story, puis « Ajouter à la une »
+  dans la bonne catégorie. Ajoutez dans l'application le sticker « Lien » vers https://bailio.fr (à propos, bail,
+  signature, quittances, état des lieux), un sticker « Questions » sur la FAQ et un sondage sur Avis.
 
 ## TikTok
 
