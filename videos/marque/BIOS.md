@@ -2,6 +2,7 @@
 
 Images dans ce dossier (refaites avec `node videos/scripts/marque.mjs`, modèles dans `videos/src/marque/Marque.tsx`).
 Charte graphique (logo, couleurs, polices, icônes) : `CHARTE.md` et `charte.png` ; logos vectoriels dans `logo/`.
+Le style reprend celui du compte Instagram et de la page LinkedIn existants (« Bailio. », façades, icônes bleu et caramel).
 Lien à mettre partout : **https://bailio.fr**. Nom de compte conseillé : **@bailio.fr**, sinon **@bailio_fr**
 (même nom sur tous les réseaux : vérifiez qu'il est libre partout avant de créer le premier compte).
 
@@ -9,7 +10,7 @@ Lien à mettre partout : **https://bailio.fr**. Nom de compte conseillé : **@ba
 
 | Réseau | Photo de profil | Bannière / couverture | Autres |
 |---|---|---|---|
-| Instagram | `profil.png` | — | `a-la-une-1-…` à `a-la-une-10-…` (stories à la une), `post-bienvenue.png` (1er post, à épingler) |
+| Instagram | `profil.png` | — | `a-la-une-1-…` à `a-la-une-9-…` (stories à la une), `post-bienvenue.png` (1er post, à épingler) |
 | TikTok | `profil.png` | — | — |
 | Facebook (page) | `profil.png` | `banniere-facebook.png` (1640 × 624) | `post-bienvenue.png` |
 | LinkedIn (page entreprise) | `profil.png` | `banniere-linkedin-page.png` (1128 × 191) | `post-bienvenue.png` |
@@ -17,7 +18,7 @@ Lien à mettre partout : **https://bailio.fr**. Nom de compte conseillé : **@ba
 | YouTube | `profil.png` | `banniere-youtube.png` (2560 × 1440) | — |
 | X (Twitter) | `profil.png` | `banniere-x.png` (1500 × 500) | — |
 
-`profil-clair.png` : variante sur fond crème, si un fond sombre ne convient pas quelque part.
+`profil-sombre.png` : variante sur fond encre, si un fond blanc ne convient pas quelque part.
 Les bannières gardent le texte dans la zone que chaque réseau affiche toujours (recadrage mobile, photo de profil
 posée par-dessus) : rien d'important n'est coupé.
 
@@ -35,9 +36,9 @@ posée par-dessus) : rien d'important n'est coupé.
 ```
 
 - **Lien** : https://bailio.fr
-- **Stories à la une** (dans cet ordre, le numéro est dans le nom du fichier) : Bienvenue, Le bail, Signature,
-  Quittances, État des lieux, Conseils, Tutos, Nouveautés, Avis, Questions. Le titre se saisit dans l'application,
-  l'image ne porte que l'icône (Instagram n'en garde que le cercle central).
+- **Stories à la une** (dans cet ordre, le numéro est dans le nom du fichier) : À PROPOS, LE BAIL, SIGNATURE,
+  QUITTANCES, ÉTAT DES LIEUX, GUIDE, FAQ, ACTU, AVIS. Les titres se saisissent dans l'application, en capitales
+  comme aujourd'hui ; l'image ne porte que l'icône (Instagram n'en garde que le cercle central).
 
 ## TikTok
 

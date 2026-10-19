@@ -3,16 +3,15 @@ import { ALaUne, Banniere, Bienvenue, Charte, Profil } from './marque/Marque'
 
 /** Stories à la une, dans l'ordre conseillé sur Instagram. */
 const A_LA_UNE = [
-  ['1-bienvenue', 'logo'],
-  ['2-le-bail', 'file-text'],
-  ['3-signature', 'pen-line'],
-  ['4-quittances', 'receipt-euro'],
-  ['5-etat-des-lieux', 'clipboard-check'],
-  ['6-conseils', 'lightbulb'],
-  ['7-tutos', 'circle-play'],
-  ['8-nouveautes', 'sparkles'],
-  ['9-avis', 'star'],
-  ['10-questions', 'circle-help'],
+  ['1-a-propos', 'a-propos'],
+  ['2-le-bail', 'le-bail'],
+  ['3-signature', 'signature'],
+  ['4-quittances', 'quittances'],
+  ['5-etat-des-lieux', 'etat-des-lieux'],
+  ['6-guide', 'guide'],
+  ['7-faq', 'faq'],
+  ['8-actu', 'actu'],
+  ['9-avis', 'avis'],
 ] as const
 import { FPS, H, W } from './theme'
 import { BailioVideo, totalFrames, type VideoDef, type Voix } from './Video'
@@ -50,9 +49,9 @@ export function Root() {
       ))}
       {/* Kit des réseaux sociaux (scripts/marque.mjs → marque/). */}
       <Still id="profil" component={Profil} width={1080} height={1080} />
-      <Still id="profil-clair" component={() => <Profil clair />} width={1080} height={1080} />
+      <Still id="profil-sombre" component={() => <Profil clair={false} />} width={1080} height={1080} />
       <Still id="banniere-facebook" component={() => <Banniere width={1640} height={624} zone={{ left: 274, right: 274, top: 50, bottom: 70 }} />} width={1640} height={624} />
-      <Still id="banniere-linkedin-page" component={() => <Banniere width={1128} height={191} zone={{ left: 230, right: 40, top: 26, bottom: 26 }} points={0} telephone={false} />} width={1128} height={191} />
+      <Still id="banniere-linkedin-page" component={() => <Banniere width={1128} height={191} zone={{ left: 230, right: 40, top: 26, bottom: 26 }} rue={false} />} width={1128} height={191} />
       <Still id="banniere-linkedin-profil" component={() => <Banniere width={1584} height={396} zone={{ left: 440, right: 60, top: 40, bottom: 40 }} />} width={1584} height={396} />
       <Still id="banniere-x" component={() => <Banniere width={1500} height={500} zone={{ left: 360, right: 60, top: 50, bottom: 60 }} />} width={1500} height={500} />
       <Still id="banniere-youtube" component={() => <Banniere width={2560} height={1440} zone={{ left: 507, right: 507, top: 508, bottom: 509 }} />} width={2560} height={1440} />

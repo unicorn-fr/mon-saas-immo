@@ -1,59 +1,48 @@
 # Charte graphique de Bailio
 
-Planche complète : `charte.png`. Logos en vecteurs (SVG, utilisables à toute taille, pour l'imprimeur comme pour le
-web) : dossier `logo/`. Tout se régénère : `node videos/scripts/logo.mjs` puis `node videos/scripts/marque.mjs`.
-
-## L'idée : le toit
-
-Le « b » de Bailio est une maison : un toit caramel se pose sur sa panse, le fût de la lettre fait cheminée.
-Dans le mot « bailio », les points des deux i sont deux petits toits. Le toit (un chevron) est la signature de la
-marque : on le retrouve en puce, en accent au-dessus d'une icône et en trame de fond.
+Reprise et mise au propre de l'identité du compte Instagram @bailio.fr et de la page LinkedIn. Planche complète :
+`charte.png`. Logos en vecteurs (SVG, nets à toute taille, pour l'imprimeur comme pour le web) : dossier `logo/`.
+Tout se régénère : `node videos/scripts/logo.mjs` puis `node videos/scripts/marque.mjs`.
 
 ## Logo
 
+« Bailio. » en Cormorant Garamond italique gras (la police du site), couleur encre, le point final en caramel.
+
 | Fichier | Usage |
 |---|---|
-| `logo/bailio-logo.svg` | Logo principal (monogramme + nom), sur fond clair |
-| `logo/bailio-logo-blanc.svg` | Sur fond bleu ou photo sombre |
-| `logo/bailio-monogramme.svg` | Seul, dans un carré bleu : photo de profil, icône d'application, favicon |
-| `logo/bailio-monogramme-creme.svg` | Variante sur fond crème |
-| `logo/bailio-monogramme-nu.svg` | Sans fond, pour poser sur un visuel |
-| `logo/bailio-logotype*.svg` | Le nom seul (bleu, blanc, encre) |
+| `logo/bailio-logo.svg` | Logo principal, sur fond blanc ou crème |
+| `logo/bailio-logo-bleu.svg` | Variante bleu nuit |
+| `logo/bailio-logo-blanc.svg` | Sur fond encre, bleu ou photo sombre |
+| `logo/bailio-pastille.svg` | « B. » dans un carré : favicon, icône d'application, très petites tailles |
+| `logo/bailio-pastille-claire.svg` | Même chose sur fond crème |
 
-- Zone de protection : autour du logo, laissez au moins la hauteur du « b » libre.
-- Taille minimale : 24 px de haut pour le monogramme, 80 px de large pour le logo complet.
-- Ne pas : changer les couleurs, déformer, ajouter une ombre, poser le logo bleu sur un fond foncé.
+- Espace libre autour du logo : au moins la hauteur du « B ».
+- Taille minimale : 80 px de large pour « Bailio. », en dessous utiliser la pastille.
+- Le point reste toujours caramel. Ne pas déformer, ne pas ajouter d'ombre ni de contour.
 
 ## Couleurs
 
 | Nom | Code | Rôle |
 |---|---|---|
-| Bleu Bailio | #1A3270 | Couleur principale : logo, boutons, grands aplats |
-| Encre | #1A1A2E | Titres et texte |
-| Caramel | #C4976A | Le toit et les accents (jamais pour un texte sur fond clair : prendre #8A5F36) |
-| Crème | #FAF7F2 | Fond des visuels |
-| Bleu clair | #EEF1F8 | Pastilles d'icônes, encarts |
-| Blanc | #FFFFFF | Cartes, texte sur bleu |
-
-Ce sont les couleurs du site (client/src/constants/bailio-tokens.ts) : la marque et le produit se ressemblent.
+| Encre | #1A1A2E | Logo, titres, texte |
+| Caramel | #C4976A | Le point du logo, les filets, un seul détail par icône (texte caramel sur fond clair : #8A5F36) |
+| Bleu nuit | #1A3270 | Icônes, boutons |
+| Crème | #F8F5EF | Fonds |
+| Pierre | #F2EDE4 | Façades, décors |
+| Blanc | #FFFFFF | Fonds, cartes |
 
 ## Typographie
 
-- **Outfit Bold** pour les titres : courts, affirmatifs, sans point d'exclamation (licence OFL, `public/fonts`).
-- **DM Sans** pour le texte, les chiffres, les boutons et les mentions (police du site).
+- **Cormorant Garamond italique** : logo, titres et phrases d'accroche.
+- **DM Sans** : texte, chiffres, boutons ; mentions en petites capitales espacées, en caramel foncé.
+- Polices libres (licence OFL), déjà utilisées par le site.
 
 ## Icônes
 
-Lucide (lucide.dev, licence ISC) : trait arrondi, en bleu sur une pastille bleu clair, ou en blanc sur un disque
-bleu. Une icône par idée, jamais de couleurs multiples.
+Formes pleines bleu nuit, un seul détail caramel (porte, point, battant, culot…), dessinées sur la même grille :
+à propos, le bail, signature, quittances, état des lieux, guide, FAQ, actu, avis. Toujours sur fond blanc ou crème.
 
-## Visuels
+## Décor
 
-- Fond crème, beaucoup d'air, un seul message par visuel, le bleu en aplat pour l'élément principal.
-- Un seul toit caramel par élément (accent ou puce), la trame de toits en fond très discret.
-- Captures du site dans un téléphone sombre, jamais déformées.
-
-## Sur le site
-
-Le site utilise encore l'ancien favicon (« B » italique). Passer au nouveau monogramme (favicon, icône de
-l'application, en-tête) change le design du site : à faire après votre accord.
+Façades haussmanniennes ton pierre, très pâles, en bas des bannières et des posts. Toujours en arrière-plan,
+jamais plus foncées que le texte. Beaucoup de blanc, un filet caramel au-dessus du logo, un seul message par visuel.
