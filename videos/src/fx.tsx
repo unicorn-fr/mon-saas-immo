@@ -124,3 +124,47 @@ export function FilmLook() {
     </AbsoluteFill>
   )
 }
+
+/**
+ * Texte cinétique : chaque mot monte de derrière une limite, avec un flou de mouvement, l'un après l'autre
+ * (l'« animator » de texte d'After Effects).
+ */
+export function KineticText({ text, delay = 0, stagger = 3, style }: { text: string; delay?: number; stagger?: number; style?: CSSProperties }) {
+  const frame = useCurrentFrame()
+  const words = text.split(' ')
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 0.25em', ...style }}>
+      {words.map((w, i) => {
+        const p = interpolate(frame, [delay + i * stagger, delay + i * stagger + 14], [0, 1], { ...clamp, easing: easeOut })
+        return (
+          <span key={i} style={{ display: 'inline-block', overflow: 'hidden', paddingBottom: '0.12em', marginBottom: '-0.12em' }}>
+            <span style={{ display: 'inline-block', transform: `translateY(${(1 - p) * 100}%) rotate(${(1 - p) * 4}deg)`, filter: `blur(${(1 - p) * 10}px)`, opacity: Math.min(1, p * 1.5) }}>{w}</span>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Mot dont les lettres tombent une à une avec un rebond (accroche, logo). */
+export function Letters({ text, delay = 0, stagger = 1.4, style }: { text: string; delay?: number; stagger?: number; style?: CSSProperties }) {
+  const frame = useCurrentFrame()
+  const { fps } = useVideoConfig()
+  return (
+    <div style={{ display: 'inline-flex', whiteSpace: 'pre', ...style }}>
+      {[...text].map((ch, i) => {
+        const s = spring({ frame: frame - delay - i * stagger, fps, config: { stiffness: 260, damping: 14, mass: 0.5 } })
+        const local = frame - delay - i * stagger
+        return (
+          <span key={i} style={{ display: 'inline-block', transform: `translateY(${(1 - s) * 60}px) scale(${interpolate(s, [0, 1], [1.8, 1])})`, opacity: local < 0 ? 0 : Math.min(1, s * 2), filter: `blur(${Math.max(0, (1 - s) * 14)}px)` }}>{ch}</span>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Sortie de plan : 0 pendant la scène, 1 juste avant la transition (le titre et les cartes partent avant la coupe). */
+export function useExit(frames: number, transition: number) {
+  const frame = useCurrentFrame()
+  return interpolate(frame, [frames - transition - 8, frames - transition + 2], [0, 1], { ...clamp, easing: easeIn })
+}

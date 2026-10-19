@@ -6,17 +6,19 @@
   "scenes": [
     {
       "type": "mots",
-      "voix": "Vous êtes propriétaire ? Alors vous connaissez ça… Rédiger le bail. Envoyer les quittances. Relancer quand le loyer n'arrive pas… Et au final ? Des heures perdues, chaque mois.",
+      "voix": "Vous êtes propriétaire ? Alors vous connaissez ça… Le bail. Les quittances. Les relances. L'état des lieux… Et au final ? Des heures perdues, chaque mois.",
       "mots": [
         "Le bail",
         "Les quittances",
-        "Les relances"
+        "Les relances",
+        "L'état des lieux"
       ],
       "chute": "Des heures perdues.",
       "reperes": [
-        "rediger",
-        "envoyer",
-        "relancer",
+        "bail",
+        "quittances",
+        "relances",
+        "letat",
         "heures"
       ],
       "relance": {
@@ -42,18 +44,12 @@
       "accent": "en 3 minutes",
       "image": "ecrans/tunnel-type.png",
       "cote": "droite",
-      "tap": [
-        50,
-        32
-      ],
-      "carte": {
-        "titre": "Votre bail",
-        "etape": [
-          5,
-          7
-        ],
-        "sous": "Conforme à la loi ✓"
-      }
+      "focus": [
+        5,
+        40.6,
+        95,
+        56.2
+      ]
     },
     {
       "type": "ecran",
@@ -63,9 +59,11 @@
       "image": "ecrans/bail.png",
       "cote": "gauche",
       "badge": "Signé ✓",
-      "tap": [
-        78,
-        62
+      "focus": [
+        3,
+        14,
+        97,
+        32.5
       ]
     },
     {
@@ -116,9 +114,21 @@
         19
       ],
       "carte": {
-        "titre": "Quittance envoyée",
-        "montant": 850,
-        "sous": "Octobre · payé ✓"
+        "titre": "Loyers reçus en 2026",
+        "montant": 8500,
+        "courbe": [
+          850,
+          1700,
+          2550,
+          3400,
+          4250,
+          5100,
+          5950,
+          6800,
+          7650,
+          8500
+        ],
+        "sous": "10 quittances envoyées ✓"
       }
     },
     {
@@ -128,14 +138,12 @@
       "accent": "en un clic",
       "image": "ecrans/courriers.png",
       "cote": "droite",
-      "tap": [
-        50,
-        30
-      ],
-      "carte": {
-        "titre": "Révision du loyer",
-        "sous": "Prête à envoyer ✓"
-      }
+      "focus": [
+        4,
+        25,
+        96,
+        50
+      ]
     },
     {
       "type": "ecran",
@@ -144,12 +152,17 @@
       "accent": "déjà calculés",
       "image": "ecrans/argent.png",
       "cote": "gauche",
-      "zoom": true,
       "carte": {
         "titre": "Revenus fonciers · 4BE",
         "montant": 10200,
         "sous": "Micro-foncier ✓"
-      }
+      },
+      "focus": [
+        52,
+        87.6,
+        96,
+        97.4
+      ]
     },
     {
       "type": "liste",

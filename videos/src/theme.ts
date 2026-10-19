@@ -16,6 +16,8 @@ export const C = {
 }
 
 export const FPS = 30
+/** Durée d'une transition, en images : courte, c'est ce qui donne le rythme. */
+export const T = 12
 export const W = 1080
 export const H = 1920
 

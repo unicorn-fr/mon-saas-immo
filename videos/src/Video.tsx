@@ -4,7 +4,7 @@ import { Captions, estimateWords, type Word } from './captions'
 import { FilmLook, easeInOut } from './fx'
 import { Guide } from './guide'
 import { guideStop, SceneView, type Scene } from './scenes/Scenes'
-import { C, FPS, fontFaces } from './theme'
+import { C, FPS, T, fontFaces } from './theme'
 import { circleReveal, whip, zoomThrough } from './transitions'
 
 export interface VideoDef {
@@ -25,8 +25,7 @@ export interface Voix {
   ext?: string
 }
 
-/** Durée d'une transition, en images : courte, c'est ce qui donne le rythme. */
-export const T = 12
+export { T }
 /** Marge après chaque phrase. */
 const PAD = 0.25
 

@@ -1,20 +1,22 @@
 import { AbsoluteFill, Audio, Img, Sequence, interpolate, staticFile, useCurrentFrame } from 'remotion'
-import { Backdrop, Camera, Highlight, MaskLine, Slam, clamp, easeInOut, easeOut, glass, label, title, useBounce, useCount, useProgress } from '../fx'
+import { Backdrop, Camera, Highlight, KineticText, Letters, MaskLine, Slam, clamp, easeInOut, easeOut, glass, label, title, useBounce, useCount, useExit, useProgress } from '../fx'
 import type { Word } from '../captions'
 import type { GuideStop } from '../guide'
-import { C, serif } from '../theme'
+import { C, T, serif } from '../theme'
 
 /** Notification (email) qui descend sur l'écran du téléphone. */
 export type Notif = { titre: string; texte: string }
 /** Carte flottante à côté du téléphone : montant qui défile, ou progression d'étapes. */
-export type Carte = { titre: string; sous?: string; montant?: number; etape?: [number, number] }
+export type Carte = { titre: string; sous?: string; montant?: number; etape?: [number, number]; courbe?: number[] }
+/** Zone de l'écran du téléphone, en % (gauche, haut, droite, bas) : elle se soulève quand la flèche clique. */
+export type Focus = [number, number, number, number]
 
 /** sousTitre : texte affiché à la place de la voix off quand elle s'écrit autrement (« bailio point f r »). */
 export type Scene = { sousTitre?: string } & (
   | { type: 'mots'; voix: string; mots: string[]; chute: string; reperes?: string[]; relance?: { repere: string; texte: string } }
   | { type: 'grand'; voix: string; texte: string; accent: string }
   | { type: 'logo'; voix: string; sous: string }
-  | { type: 'ecran'; voix: string; titre: string; accent: string; image: string; cote?: 'droite' | 'gauche'; badge?: string; zoom?: boolean; tap?: [number, number]; notifs?: Notif[]; carte?: Carte }
+  | { type: 'ecran'; voix: string; titre: string; accent: string; image: string; cote?: 'droite' | 'gauche'; badge?: string; zoom?: boolean; tap?: [number, number]; focus?: Focus; notifs?: Notif[]; carte?: Carte }
   | { type: 'liste'; voix: string; titre: string; items: string[]; images: string[] }
   | { type: 'fin'; voix: string; texte: string; accent: string; url: string }
 )
@@ -56,7 +58,7 @@ function Mots({ s, frames, words, voiceAt = 0 }: { s: Extract<Scene, { type: 'mo
             ) : (
               <>
                 <div style={{ ...label(46, C.onDark, 500), opacity: 0.8 }}>{`${idx + 1} / ${s.mots.length}`}</div>
-                <Slam key={idx} delay={starts[idx]} style={title(170, C.surface)}>{s.mots[idx]}</Slam>
+                <Letters key={idx} text={s.mots[idx]} delay={starts[idx]} style={title(170, C.surface)} />
               </>
             )}
           </AbsoluteFill>
@@ -90,7 +92,7 @@ function Grand({ s, frames }: { s: Extract<Scene, { type: 'grand' }>; frames: nu
             else lines.push([w])
             return lines
           }, []).map((l, i) => (
-            <MaskLine key={i} delay={i * 4} style={title(size)}>{l.join(' ')}</MaskLine>
+            <KineticText key={i} text={l.join(' ')} delay={i * 5} style={{ ...title(size), justifyContent: 'flex-start' }} />
           ))}
           <MaskLine delay={14} style={{ ...title(175, C.owner), marginTop: 10 }}>
             <Highlight delay={26} color={C.caramel} style={{ color: C.night }}>{s.accent}</Highlight>
@@ -113,11 +115,15 @@ function Logo({ s, frames }: { s: Extract<Scene, { type: 'logo' }>; frames: numb
       <Backdrop dark />
       <Camera frames={frames} push={0.1}>
         <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 34 }}>
-          <div style={{ ...title(300, C.caramel), letterSpacing: interpolate(p, [0, 1], [60, -4]), opacity: p, filter: `blur(${(1 - p) * 20}px)` }}>Bailio</div>
+          <Letters text="Bailio" delay={1} stagger={2} style={{ ...title(300, C.caramel), opacity: Math.min(1, p * 3) }} />
           <div style={{ width: 520 * line, height: 8, background: C.caramel, borderRadius: 4 }} />
           <div style={{ ...label(52, C.onDark, 500), opacity: sub, transform: `translateY(${(1 - sub) * 24}px)`, textAlign: 'center', padding: '0 90px' }}>{s.sous}</div>
         </AbsoluteFill>
       </Camera>
+      {/* Anneau lumineux qui s'ouvre derrière le logo. */}
+      <AbsoluteFill style={{ alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ width: 400, height: 400, borderRadius: 200, border: `6px solid ${C.caramel}`, transform: `scale(${interpolate(frame, [0, 22], [0.3, 3.2], { ...clamp, easing: easeOut })})`, opacity: interpolate(frame, [0, 4, 22], [0, 0.8, 0], clamp) }} />
+      </AbsoluteFill>
       <AbsoluteFill style={{ background: C.surface, opacity: flash }} />
       <Sequence from={0} durationInFrames={20}>{sfx('impact', 0.4)}</Sequence>
     </AbsoluteFill>
@@ -140,17 +146,21 @@ const tapPoint = (tap: [number, number], side: 'droite' | 'gauche' = 'droite') =
  * Téléphone : il glisse et pivote vers nous puis se pose presque de face, flotte, l'écran défile.
  * Le clic est donné par la flèche guide ; ici, seulement l'onde sous le doigt.
  */
-function Phone({ src, side = 'droite', frames, zoom, badge, tap }: { src: string; side?: 'droite' | 'gauche'; frames: number; zoom?: boolean; badge?: string; tap?: [number, number] }) {
+function Phone({ src, side = 'droite', frames, zoom, badge, tap, focus }: { src: string; side?: 'droite' | 'gauche'; frames: number; zoom?: boolean; badge?: string; tap?: [number, number]; focus?: Focus }) {
   const frame = useCurrentFrame()
   const enter = useBounce(2, 120, 18)
   const dir = side === 'droite' ? 1 : -1
   const rotY = interpolate(enter, [0, 1], [dir * -38, dir * -6]) + Math.sin(frame / 30) * 1.5
   const rotX = interpolate(enter, [0, 1], [14, 3]) + Math.cos(frame / 34) * 1
   const lift = Math.sin(frame / 22) * 8
-  const scroll = interpolate(frame, [16, frames - 6], [0, zoom ? -260 : -140], { ...clamp, easing: easeInOut })
+  // Avec une zone à soulever, l'écran reste en place (la zone doit correspondre à l'image).
+  const scroll = focus ? 0 : interpolate(frame, [16, frames - 6], [0, zoom ? -260 : -140], { ...clamp, easing: easeInOut })
   const tapAt = tapFrame(frames)
   const ripple = interpolate(frame, [tapAt, tapAt + 16], [0, 1], clamp)
-  const t = tap ?? [50, 30]
+  const t: [number, number] = focus ? [(focus[0] + focus[2]) / 2, (focus[1] + focus[3]) / 2] : (tap ?? [50, 30])
+  const pop = focus ? interpolate(frame, [tapAt + 2, tapAt + 16], [0, 1], { ...clamp, easing: easeOut }) : 0
+  const screenW = PHONE.w - 2 * PHONE.inset
+  const screenH = PHONE.h - 2 * PHONE.inset
   const dive = zoom ? interpolate(frame, [tapAt + 2, frames], [1, 1.3], { ...clamp, easing: easeOut }) : 1
   const shine = interpolate(frame, [6, 30], [-120, 220], clamp)
   const b = useBounce(16, 300, 12)
@@ -161,11 +171,18 @@ function Phone({ src, side = 'droite', frames, zoom, badge, tap }: { src: string
           <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 66, overflow: 'hidden', background: C.bg }}>
             <Img src={staticFile(src)} style={{ width: '100%', transform: `translateY(${scroll}px)` }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%)', transform: `translateX(${shine}%)` }} />
-            {tap && ripple > 0 && ripple < 1 ? (
+            {focus ? <div style={{ position: 'absolute', inset: 0, background: C.night, opacity: pop * 0.45 }} /> : null}
+            {(tap || focus) && ripple > 0 && ripple < 1 ? (
               <div style={{ position: 'absolute', left: `${t[0]}%`, top: `${t[1]}%`, width: 170, height: 170, marginLeft: -85, marginTop: -85, borderRadius: 85, background: 'rgba(26,50,112,0.16)', border: `6px solid ${C.owner}`, transform: `scale(${0.3 + ripple})`, opacity: 1 - ripple }} />
             ) : null}
           </div>
         </div>
+        {focus && pop > 0 ? (
+          // La zone touchée se soulève hors de l'écran : agrandie, ombrée, au-dessus du voile.
+          <div style={{ position: 'absolute', left: PHONE.inset + (screenW * focus[0]) / 100, top: PHONE.inset + (screenH * focus[1]) / 100, width: (screenW * (focus[2] - focus[0])) / 100, height: (screenH * (focus[3] - focus[1])) / 100, overflow: 'hidden', borderRadius: 26, transform: `translateZ(60px) translateY(${-pop * 14}px) scale(${1 + pop * 0.1})`, boxShadow: `0 ${30 * pop}px ${70 * pop}px rgba(10,10,30,${0.45 * pop})`, outline: `4px solid rgba(196,151,106,${pop})` }}>
+            <Img src={staticFile(src)} style={{ width: screenW, marginLeft: (-screenW * focus[0]) / 100, marginTop: (-screenH * focus[1]) / 100 }} />
+          </div>
+        ) : null}
         {badge ? (
           <div style={{ position: 'absolute', top: 150, [side === 'droite' ? 'left' : 'right']: -90, transform: `translateZ(80px) scale(${b}) rotate(${-dir * 6}deg)`, background: C.green, ...label(56, C.surface), padding: '24px 44px', borderRadius: 999, boxShadow: '0 24px 50px rgba(27,94,59,0.45)' }}>{badge}</div>
         ) : null}
@@ -209,8 +226,36 @@ function Notifs({ items, frames, pressAt }: { items: Notif[]; frames: number; pr
   )
 }
 
+/** Courbe qui se dessine de gauche à droite, avec un dégradé dessous qui apparaît (graphique façon appli de finance). */
+function Courbe({ points, delay }: { points: number[]; delay: number }) {
+  const p = useProgress(delay, 34, easeInOut)
+  const w = 448
+  const h = 130
+  const max = Math.max(...points)
+  const min = Math.min(...points)
+  const xy = points.map((v, i) => [(i / (points.length - 1)) * w, h - 10 - ((v - min) / (max - min || 1)) * (h - 24)])
+  const d = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ')
+  const len = xy.reduce((a, [x, y], i) => (i ? a + Math.hypot(x - xy[i - 1][0], y - xy[i - 1][1]) : 0), 0)
+  const [ex, ey] = xy[Math.min(xy.length - 1, Math.floor(p * (xy.length - 1)))]
+  return (
+    <svg width={w} height={h} style={{ display: 'block', marginTop: 14, overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="aire" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={C.owner} stopOpacity={0.28} />
+          <stop offset="100%" stopColor={C.owner} stopOpacity={0} />
+        </linearGradient>
+        <clipPath id="revele"><rect x={0} y={-20} width={w * p} height={h + 40} /></clipPath>
+      </defs>
+      <path d={`${d} L${w} ${h} L0 ${h} Z`} fill="url(#aire)" clipPath="url(#revele)" />
+      <path d={d} fill="none" stroke={C.owner} strokeWidth={6} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={len} strokeDashoffset={len * (1 - p)} />
+      {p > 0.02 ? <circle cx={ex} cy={ey} r={10} fill={C.caramel} stroke={C.surface} strokeWidth={4} /> : null}
+    </svg>
+  )
+}
+
 /** Carte flottante à côté du téléphone : chiffre qui défile ou barre d'étapes qui se remplit. */
 function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauche'; frames: number }) {
+  const exit = useExit(frames, T)
   const frame = useCurrentFrame()
   const at = Math.floor(frames * 0.28)
   const b = useBounce(at, 180, 15)
@@ -219,7 +264,7 @@ function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauch
   const dir = side === 'droite' ? 1 : -1
   return (
     <>
-      <div style={{ position: 'absolute', top: 1090 + Math.sin(frame / 18) * 8, [side === 'droite' ? 'right' : 'left']: 40, width: 520, transform: `translateX(${(1 - b) * dir * 220}px) scale(${0.8 + b * 0.2}) rotate(${-dir * 3}deg)`, opacity: Math.min(1, b * 1.5), ...glass(), padding: '30px 36px' }}>
+      <div style={{ position: 'absolute', top: 1090 + Math.sin(frame / 18) * 8, [side === 'droite' ? 'right' : 'left']: 40, width: 520, transform: `translateX(${(1 - b) * dir * 220 + exit * dir * 260}px) scale(${0.8 + b * 0.2}) rotate(${-dir * 3}deg)`, opacity: Math.min(1, b * 1.5) * (1 - exit), filter: `blur(${exit * 8}px)`, ...glass(), padding: '30px 36px' }}>
         <div style={{ ...label(28, C.inkMid, 500), letterSpacing: 1.5, textTransform: 'uppercase' }}>{c.titre}</div>
         {c.montant !== undefined ? <div style={{ ...label(84, C.ink), letterSpacing: -2, marginTop: 6, fontVariantNumeric: 'tabular-nums' }}>{amount} €</div> : null}
         {c.etape ? (
@@ -230,6 +275,7 @@ function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauch
             </div>
           </>
         ) : null}
+        {c.courbe ? <Courbe points={c.courbe} delay={at + 6} /> : null}
         {c.sous ? <div style={{ ...label(32, C.green), marginTop: 12 }}>{c.sous}</div> : null}
       </div>
       <Sequence from={at} durationInFrames={10}>{sfx('pop', 0.18)}</Sequence>
@@ -238,17 +284,19 @@ function CarteFlottante({ c, side, frames }: { c: Carte; side: 'droite' | 'gauch
 }
 
 function Ecran({ s, frames }: { s: Extract<Scene, { type: 'ecran' }>; frames: number }) {
+  const exit = useExit(frames, T)
   return (
     <AbsoluteFill>
       <Backdrop />
       <Camera frames={frames} push={0.04}>
-        <div style={{ position: 'absolute', top: 150, left: 70, right: 70, textAlign: 'center' }}>
-          <MaskLine style={title(128)}>{s.titre}</MaskLine>
-          <MaskLine delay={5} style={{ ...title(140, C.owner), marginTop: 8 }}>
-            <Highlight delay={14} color={C.caramel} style={{ color: C.night }}>{s.accent}</Highlight>
+        {/* Titre : mots qui montent un à un, accent surligné ; il sort vers le haut avant la transition. */}
+        <div style={{ position: 'absolute', top: 150, left: 70, right: 70, textAlign: 'center', transform: `translateY(${-exit * 90}px)`, opacity: 1 - exit, filter: `blur(${exit * 10}px)` }}>
+          <KineticText text={s.titre} style={title(128)} />
+          <MaskLine delay={8} style={{ ...title(140, C.owner), marginTop: 8 }}>
+            <Highlight delay={16} color={C.caramel} style={{ color: C.night }}>{s.accent}</Highlight>
           </MaskLine>
         </div>
-        <Phone src={s.image} side={s.cote} frames={frames} zoom={s.zoom} badge={s.badge} tap={s.notifs ? undefined : s.tap} />
+        <Phone src={s.image} side={s.cote} frames={frames} zoom={s.zoom} badge={s.badge} tap={s.notifs ? undefined : s.tap} focus={s.notifs ? undefined : s.focus} />
         {s.notifs ? <Notifs items={s.notifs} frames={frames} pressAt={tapFrame(frames)} /> : null}
         {s.carte ? <CarteFlottante c={s.carte} side={s.cote === 'gauche' ? 'droite' : 'gauche'} frames={frames} /> : null}
       </Camera>
@@ -344,6 +392,10 @@ export function guideStop(scene: Scene, frames: number): GuideStop {
       return { x: 830, y: 1010, dir: -160 }
     case 'ecran':
       if (scene.notifs) return { x: 820, y: NOTIF_TOP + 120, dir: -125, click: tapFrame(frames) }
+      if (scene.focus) {
+        const f = scene.focus
+        return { ...tapPoint([(f[0] + f[2]) / 2 + 12, (f[1] + f[3]) / 2], scene.cote), dir: -125, click: tapFrame(frames) }
+      }
       return { ...tapPoint(scene.tap ?? [50, 30], scene.cote), dir: -125, click: scene.tap ? tapFrame(frames) : undefined }
     case 'liste':
       return { x: 760, y: 430, dir: -140 }
