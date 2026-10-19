@@ -23,6 +23,7 @@ import revision from './videos/revision.json'
 import revisionVoix from './videos/revision.voix.json'
 import impaye from './videos/impaye.json'
 import impayeVoix from './videos/impaye.voix.json'
+import { Miniature } from './yt/Miniature'
 import { BailioYT, totalYT, YT_H, YT_W, type VideoYTDef } from './yt/VideoYT'
 import ytPresentation from './videos/yt-presentation.json'
 import ytPresentationVoix from './videos/yt-presentation.voix.json'
@@ -64,6 +65,9 @@ export function Root() {
       {VIDEOS_YT.map(({ video, voix }) => (
         <Composition key={video.id} id={video.id} component={BailioYT} durationInFrames={totalYT(voix.durees)} fps={FPS} width={YT_W} height={YT_H} defaultProps={{ video, voix }} />
       ))}
+      <Still id="miniature-yt-presentation" component={() => <Miniature kicker="Propriétaires" ligne1="Votre bail," accent="sans stress." visuel="telephone" />} width={1280} height={720} />
+      <Still id="miniature-yt-vide-meuble" component={() => <Miniature kicker="Le match" ligne1="Vide ou" accent="meublé ?" visuel="match" />} width={1280} height={720} />
+      <Still id="miniature-yt-calendrier" component={() => <Miniature kicker="Propriétaires" ligne1="Les dates" accent="à ne pas rater" visuel="calendrier" />} width={1280} height={720} />
       {/* Kit des réseaux sociaux (scripts/marque.mjs → marque/). */}
       <Still id="profil" component={Profil} width={1080} height={1080} />
       <Still id="profil-sombre" component={() => <Profil clair={false} />} width={1080} height={1080} />
