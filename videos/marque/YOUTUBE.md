@@ -5,7 +5,7 @@ Scripts : `src/videos/yt-*.json` ; scènes 16:9 : `src/yt/`. Les chapitres ci-de
 
 ## Bailio : votre bail et votre location, sans y passer vos soirées
 
-Durée : 1:48
+Durée : 1:31
 
 ```
 Présentation de Bailio en 2 minutes : le bail conforme, la signature en ligne, les quittances automatiques.
@@ -14,17 +14,17 @@ Créez votre bail gratuitement : https://bailio.fr
 
 Chapitres :
 0:00 Introduction
-0:11 Le problème
-0:32 Votre bail en 4 étapes
-0:59 Au quotidien
-1:22 Tout au même endroit
+0:09 Le problème
+0:28 Votre bail en 4 étapes
+0:50 Au quotidien
+1:09 Tout au même endroit
 
 #proprietaire #location #bailleur #immobilier
 ```
 
 ## Location vide ou meublée : le match (durée, dépôt, impôts)
 
-Durée : 2:05
+Durée : 1:44
 
 ```
 Vide ou meublé ? Durée du bail, préavis, dépôt de garantie, mobilier obligatoire et impôts : la comparaison point par point.
@@ -33,18 +33,18 @@ Créez votre bail gratuitement : https://bailio.fr
 
 Chapitres :
 0:00 Introduction
-0:13 La durée
-0:31 Le dépôt de garantie
-0:49 Le mobilier
-1:07 Les impôts
-1:37 Le verdict
+0:11 La durée
+0:27 Le dépôt de garantie
+0:41 Le mobilier
+0:56 Les impôts
+1:21 Le verdict
 
 #proprietaire #location #bailleur #immobilier
 ```
 
 ## Propriétaires : les 6 dates à ne pas rater dans l'année
 
-Durée : 1:49
+Durée : 1:36
 
 ```
 Trêve hivernale, déclaration de revenus, déclaration d'occupation, révision du loyer, taxe foncière, CFE : le calendrier du propriétaire bailleur.
@@ -53,13 +53,13 @@ Créez votre bail gratuitement : https://bailio.fr
 
 Chapitres :
 0:00 Introduction
-0:14 31 mars : Impayés
-0:27 Fin mai : Déclaration de revenus
-0:40 1er juillet : Déclaration d'occupation
-0:52 Chaque année : Révision du loyer
-1:05 Mi-octobre : Charges récupérables
-1:14 15 déc. : CFE
-1:26 Le récapitulatif
+0:11 31 mars : Impayés
+0:23 Fin mai : Déclaration de revenus
+0:35 1er juillet : Déclaration d'occupation
+0:45 Chaque année : Révision du loyer
+0:56 Mi-octobre : Charges récupérables
+1:05 15 déc. : CFE
+1:15 Le récapitulatif
 
 #proprietaire #location #bailleur #immobilier
 ```
