@@ -133,7 +133,7 @@ export function BailioYT({ video, voix }: { video: VideoYTDef; voix: Voix }) {
       </TransitionSeries>
       <Chapitres chapitres={chapitres} total={total} cacher={cacher} />
       {video.musique ? (
-        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 15, total - 30, total], [0, 0.07, 0.07, 0], clamp)} />
+        <Audio src={staticFile(video.musique)} loop volume={(f) => interpolate(f, [0, 15, total - 30, total], [0, 0.14, 0.14, 0], clamp)} />
       ) : null}
       <FilmLook />
       {video.scenes.map((scene, i) => {
@@ -149,7 +149,7 @@ export function BailioYT({ video, voix }: { video: VideoYTDef; voix: Voix }) {
       })}
       {starts.slice(1).map((s, i) => (
         <Sequence key={`w${i}`} from={s - 4} durationInFrames={28}>
-          <Audio src={staticFile(i % 2 ? 'sfx/whoosh2.wav' : 'sfx/whoosh.wav')} volume={0.15} />
+          <Audio src={staticFile(i % 2 ? 'sfx/whoosh2.wav' : 'sfx/whoosh.wav')} volume={0.09} />
         </Sequence>
       ))}
     </AbsoluteFill>

@@ -28,7 +28,8 @@ export type SceneYT = Base &
     | { type: 'fin'; texte: string; url: string }
   )
 
-const sfx = (name: string, volume = 0.2) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume} />
+// Bruitages discrets : moitié du volume demandé, la voix reste devant.
+const sfx = (name: string, volume = 0.2) => <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume * 0.5} />
 const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '')
 
 /** Instants (images de la scène) où la voix prononce chaque repère ; sinon répartis sur la scène. */

@@ -26,5 +26,5 @@ for (const id of ids) {
   fs.rmSync(raw)
   const video = JSON.parse(fs.readFileSync(path.join(ROOT, `src/videos/${id}.json`), 'utf8'))
   fs.writeFileSync(path.join(ROOT, `out/${id}.txt`), `${video.titre}\n\n${video.legende}\n`)
-  console.log(`\n→ out/${id}.mp4`)
+  console.log(`\n→ ${path.relative(ROOT, outputLocation)}`)
 }
