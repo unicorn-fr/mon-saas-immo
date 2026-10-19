@@ -6,7 +6,7 @@
   "scenes": [
     {
       "type": "mots",
-      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… Vous y passez des heures.",
+      "voix": "Propriétaire ? Bail, quittances, relances, état des lieux… vous y passez des heures.",
       "mots": [
         "Bail",
         "Quittances",
@@ -17,13 +17,13 @@
     },
     {
       "type": "grand",
-      "voix": "Et si tout se faisait presque tout seul ?",
+      "voix": "Et si tout se faisait… presque tout seul ?",
       "texte": "Et si tout se faisait",
       "accent": "presque tout seul ?"
     },
     {
       "type": "logo",
-      "voix": "Voici Bailio.",
+      "voix": "Voici Bailio !",
       "sous": "Le bail et le suivi de votre location"
     },
     {
@@ -48,7 +48,7 @@
     },
     {
       "type": "ecran",
-      "voix": "Faites-le signer en ligne, par le locataire et le garant, sans imprimer une seule page.",
+      "voix": "Faites-le signer en ligne, par le locataire et le garant. Zéro papier !",
       "titre": "Signé en ligne",
       "accent": "sans papier",
       "image": "ecrans/bail.png",
@@ -83,7 +83,7 @@
     },
     {
       "type": "ecran",
-      "voix": "Les quittances partent toutes seules, chaque mois.",
+      "voix": "Et les quittances ? Elles partent toutes seules, chaque mois !",
       "titre": "Quittances",
       "accent": "automatiques",
       "image": "ecrans/argent.png",
@@ -116,11 +116,11 @@
     },
     {
       "type": "fin",
-      "voix": "Créez votre bail gratuitement sur bailio point f r.",
+      "voix": "Créez votre bail gratuitement sur bailio point f r !",
       "texte": "Créez votre bail",
       "accent": "gratuitement",
       "url": "bailio.fr",
-      "sousTitre": "Créez votre bail gratuitement sur bailio.fr"
+      "sousTitre": "Créez votre bail gratuitement sur bailio.fr !"
     }
   ]
 }

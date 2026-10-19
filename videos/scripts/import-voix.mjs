@@ -60,8 +60,20 @@ if (wordsFile) {
   const cands = []
   for (let i = 0; i < words.length - 1; i++) if (/[.?!…]$/.test(words[i].text)) cands.push({ i, at: (words[i].end + words[i + 1].start) / 2, gap: words[i + 1].start - words[i].end })
   if (cands.length < n - 1) throw new Error(`Seulement ${cands.length} fins de phrase reconnues pour ${n} scènes.`)
-  const spoken = words[words.length - 1].end
-  const cuts = n < 2 ? [] : pick(cands, share.map((x) => x * spoken), (c) => 3 * c.gap)
+  // Fin attendue de chaque phrase : d'après son nombre de mots dans le script (une voix expressive marque aussi
+  // des pauses au milieu des phrases), puis calée sur la fin de phrase reconnue la plus proche.
+  const counts = video.scenes.map((sc) => sc.voix.split(/\s+/).filter((t) => /[\p{L}\p{N}]/u.test(t)).length)
+  const cuts = []
+  let acc = 0
+  let last = -1
+  for (let k = 0; k < n - 1; k++) {
+    acc += counts[k]
+    const target = acc - 1
+    const near = cands.filter((c) => c.i > last && Math.abs(c.i - target) <= 2).sort((a, b) => Math.abs(a.i - target) - Math.abs(b.i - target) || b.gap - a.gap)[0]
+    const i = near ? near.i : Math.max(last + 1, Math.min(words.length - 2, target))
+    cuts.push(near ?? { i, at: (words[i].end + words[i + 1].start) / 2, gap: 0 })
+    last = i
+  }
   const groups = []
   let from = 0
   for (const c of [...cuts, { i: words.length - 1 }]) {
