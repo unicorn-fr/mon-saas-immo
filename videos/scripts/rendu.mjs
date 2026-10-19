@@ -13,11 +13,14 @@ const browserExecutable = process.env.CHROMIUM_PATH || null
 fs.mkdirSync(path.join(ROOT, 'out'), { recursive: true })
 for (const id of ids) {
   const composition = await selectComposition({ serveUrl, id, browserExecutable })
-  const outputLocation = path.join(ROOT, `out/${id}.mp4`)
+  // ECHELLE=3 : rendu natif en 3 fois plus grand (3240 × 5760 pour une vidéo verticale). Textes, formes et icônes sont
+  // dessinés à cette taille, pas agrandis après coup : tout reste net.
+  const scale = Number(process.env.ECHELLE ?? 1)
+  const outputLocation = path.join(ROOT, `out/${id}${scale > 1 ? `-x${scale}` : ''}.mp4`)
   const raw = outputLocation.replace(/\.mp4$/, '.brut.mp4')
   // Qualité haute pour les réseaux : images capturées sans perte de JPEG, peu de compression (le grain du film en a
   // besoin), réglage lent d'x264. Les plateformes recompressent : mieux vaut leur donner une source très propre.
-  await renderMedia({ composition, serveUrl, codec: 'h264', outputLocation: raw, browserExecutable, videoBitrate: '14M', x264Preset: 'slow', imageFormat: 'png', pixelFormat: 'yuv420p', onProgress: ({ progress }) => process.stdout.write(`\r${id} ${Math.round(progress * 100)} %`) })
+  await renderMedia({ composition, serveUrl, codec: 'h264', outputLocation: raw, browserExecutable, scale, ...(scale > 1 ? { crf: 16 } : { videoBitrate: '14M' }), x264Preset: 'slow', imageFormat: 'png', pixelFormat: 'yuv420p', onProgress: ({ progress }) => process.stdout.write(`\r${id} ${Math.round(progress * 100)} %`) })
   // Son au niveau des réseaux sociaux (-14 LUFS, crêtes à -1,5 dB) : sinon la vidéo paraît bien plus faible que les autres.
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-i', raw, '-c:v', 'copy', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11', '-ar', '48000', '-c:a', 'aac', '-b:a', '320k', outputLocation])
   fs.rmSync(raw)
