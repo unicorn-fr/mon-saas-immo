@@ -50,3 +50,42 @@ export function Miniature({ kicker, ligne1, accent, visuel }: Props) {
     </AbsoluteFill>
   )
 }
+
+/**
+ * Variante B pour le test A/B de YouTube : fond encre (contraste fort dans une page blanche de suggestions),
+ * promesse émotionnelle, et trois notifications Bailio cochées à droite.
+ */
+export function MiniatureB() {
+  const notifs: Array<[string, string]> = [
+    ['Bail signé', 'En ligne, sans papier'],
+    ['Quittance envoyée', 'Partie toute seule'],
+    ['Révision prête', 'Nouveau loyer calculé'],
+  ]
+  return (
+    <AbsoluteFill style={{ background: M.encre, overflow: 'hidden' }}>
+      <style>{polices}</style>
+      <div style={{ position: 'absolute', width: 1100, height: 1100, left: 520, top: -380, borderRadius: '50%', background: `radial-gradient(circle, ${M.caramel} 0%, transparent 62%)`, opacity: 0.28 }} />
+      <div style={{ position: 'absolute', left: 70, top: 78, width: 640, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <span style={{ alignSelf: 'flex-start', background: M.caramel, borderRadius: 999, padding: '10px 26px', ...capitales(24, M.encre) }}>Propriétaires</span>
+        <div style={{ ...serif(112, M.blanc, 700), lineHeight: 0.98 }}>Fini les soirées</div>
+        <div style={{ ...serif(112, M.caramel, 700), lineHeight: 0.98 }}>paperasse.</div>
+      </div>
+      <div style={{ position: 'absolute', left: 70, bottom: 46 }}>
+        <Logo height={58} color={M.blanc} />
+      </div>
+      <div style={{ position: 'absolute', right: 56, top: 118, width: 540, display: 'flex', flexDirection: 'column', gap: 22 }}>
+        {notifs.map(([t, d], k) => (
+          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 20, background: M.blanc, borderRadius: 26, padding: '22px 26px', boxShadow: '0 24px 50px rgba(0,0,0,0.35)', transform: `rotate(${k === 1 ? 0 : k ? 2 : -2}deg) translateX(${k === 1 ? -36 : 0}px)` }}>
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: M.encre, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, ...serif(44, M.caramel, 700) }}>B</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+              <span style={{ ...capitales(14, M.gris) }}>Bailio · e-mail</span>
+              <span style={{ ...sans(32, M.encre, 700), lineHeight: 1.15, whiteSpace: 'nowrap' }}>{t}</span>
+              <span style={{ ...sans(22, M.gris), lineHeight: 1.2 }}>{d}</span>
+            </div>
+            <div style={{ width: 46, height: 46, borderRadius: 23, background: M.bleu, display: 'flex', alignItems: 'center', justifyContent: 'center', ...sans(28, M.blanc, 700), flexShrink: 0 }}>✓</div>
+          </div>
+        ))}
+      </div>
+    </AbsoluteFill>
+  )
+}
