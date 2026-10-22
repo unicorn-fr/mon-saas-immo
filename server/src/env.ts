@@ -19,7 +19,8 @@ const schema = z.object({
   // Pilotage (/espace/pilotage) : adresses email autorisées, séparées par des virgules. Vide : personne.
   ADMIN_EMAILS: z.string().default(''),
   // Destinataire des avis envoyés depuis l'espace (« Votre avis »).
-  FEEDBACK_TO: z.string().email().default('contact@bailio.fr'),
+  // Vide dans .env (ligne recopiée de l'exemple) : l'adresse par défaut, jamais un arrêt du serveur.
+  FEEDBACK_TO: z.preprocess((v) => (v === '' ? undefined : v), z.string().email().default('contact@bailio.fr')),
 })
 
 const parsed = schema.parse(process.env)
