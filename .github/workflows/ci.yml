@@ -41,7 +41,8 @@ jobs:
 
   e2e:
     name: Parcours complets (navigateur)
-    runs-on: ubuntu-latest
+    # Playwright ne prend pas encore en charge Ubuntu 26.04 (« ubuntu-latest » depuis octobre 2026) : version figée.
+    runs-on: ubuntu-24.04
     needs: checks
     timeout-minutes: 25
     services:
