@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '20 octobre 2026'
+const UPDATED = '22 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -514,6 +514,11 @@ export function Contact() {
         Une question, un souci avec un document ? Écrivez-nous à <Mail />.
         Nous répondons sous deux jours ouvrés.
       </p>
+      {EDITOR.phone ? (
+        <p>
+          Par téléphone : <a href={`tel:${EDITOR.phone.replace(/[^\d+]/g, '')}`}>{EDITOR.phone}</a> (laissez un message, nous vous rappelons). L’email reste le plus rapide.
+        </p>
+      ) : null}
       <p>
         Bailio a été fondé à Montpellier par{' '}
         <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">
