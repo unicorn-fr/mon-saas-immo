@@ -78,7 +78,7 @@ export function MentionsLegales() {
             {EDITOR.address ? `, ${EDITOR.address}` : ', à Montpellier'}.
           </>
         )}{' '}
-        {EDITOR.phone ? <>Téléphone : {EDITOR.phone}. </> : null}
+        {EDITOR.phone ? <>Téléphone : <a href={`tel:${EDITOR.phone.replace(/[^\d+]/g, '')}`}>{EDITOR.phone}</a>. </> : null}
         Email : <Mail />. Profil professionnel : <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">linkedin.com/in/enzo-mercier</a>.
       </p>
       {EDITOR.vat ? <p>Numéro de TVA intracommunautaire : {EDITOR.vat}.</p> : null}
