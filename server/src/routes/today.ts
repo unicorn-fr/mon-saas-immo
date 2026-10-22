@@ -233,17 +233,17 @@ router.get('/today', async (req, res) => {
   for (const e of toVerify) {
     tasks.push({ id: `exp-${e.id}`, type: 'INVOICE', tag: 'Facture à vérifier', tone: 'green', place: e.property ? propertyName(e.property) : 'Sans logement', title: `${e.vendor}, ${formatEuros(e.amountCents)}${e.property ? `, rangée dans ${propertyName(e.property)}` : ''}`, expenseId: e.id })
   }
-  // Mise en location : la prochaine étape de chaque logement (fiche, annonce, locataire, bail, signature…), comme sur
-  // sa page. La même étape pour 3 logements ou plus devient une seule tâche : la liste reste lisible avec 8 logements.
+  // Mise en location : chaque étape à faire, dans l'ordre, pour chaque logement (fiche, annonce, locataire, bail,
+  // signature…). La même étape pour 3 logements ou plus devient une seule tâche : la liste reste lisible avec 8 logements.
   const journeys = await rentalJourneys(user)
   const nextSteps: Array<{ p: (typeof properties)[number]; st: NonNullable<ReturnType<typeof journeys.get>>[number] }> = []
   for (const p of properties) {
-    const st = (journeys.get(p.id) ?? []).find((x) => {
-      if (x.state !== 'TODO' || !x.action || x.key === 'RENT') return false
+    for (const st of journeys.get(p.id) ?? []) {
+      if (st.state !== 'TODO' || !st.action || st.key === 'RENT') continue
       // Déjà signalé par un rappel (état des lieux, assurance) : pas de doublon.
-      return !((x.key === 'INVENTORY' || x.key === 'INSURANCE') && tasks.some((t) => t.type === x.key && leases.some((l) => l.id === t.leaseId && l.propertyId === p.id)))
-    })
-    if (st) nextSteps.push({ p, st })
+      if ((st.key === 'INVENTORY' || st.key === 'INSURANCE') && tasks.some((t) => t.type === st.key && leases.some((l) => l.id === t.leaseId && l.propertyId === p.id))) continue
+      nextSteps.push({ p, st })
+    }
   }
   for (const key of [...new Set(nextSteps.map((x) => x.st.key))]) {
     const same = nextSteps.filter((x) => x.st.key === key)

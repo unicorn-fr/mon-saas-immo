@@ -33,7 +33,7 @@
 | Promesse « 5 minutes » | Corrigé : « Cinq minutes pour le préparer, Bailio vous dit ensuite ce qu'il manque » ; FAQ « valable une fois complet et signé ». |
 | Garde-fous du tunnel (B6) | Corrigé : loyer de 10 à 20 000 €, date d'entrée d'un an avant à deux ans après. |
 | Export comptable | Corrigé : structure, locataire, période, loyer et charges séparés. |
-| Aujourd'hui avec beaucoup de logements | Corrigé : une étape par logement, regroupée à partir de 3 logements. |
+| Aujourd'hui avec beaucoup de logements | Corrigé : la même étape pour 3 logements ou plus devient une seule tâche (31 tâches → 7 sur le cas de Marc). |
 | Accueil sur tablette, public visé | Corrigé : photo moins haute, « Pour les propriétaires qui louent eux-mêmes », question « Je suis locataire ? » (DossierFacile). |
 | Page sécurité | Ajoutée : `/securite`, liée dans le pied de page. |
 | B5 fichier trop gros (500) | Corrigé : message clair (413). |
