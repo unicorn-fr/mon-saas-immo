@@ -8,6 +8,7 @@ import type { TodayView } from '../lib/space'
 import { ROLE_LABEL, ROLE_RIGHTS, getSpace, switchSpace } from '../lib/shared'
 import { Euro, Home, Page, People, Plus, Sun, Signpost, Book } from './Icons'
 import { Modal } from './kit'
+import { FeedbackModal } from './Feedback'
 
 /**
  * Espace propriétaire : menu latéral sombre sur ordinateur (maquette « Aujourd'hui »),
@@ -40,6 +41,7 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const [taskCount, setTaskCount] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+  const [feedback, setFeedback] = useState(false)
   const { pathname } = useLocation()
 
   // Le nombre d'actions du jour s'affiche dans le menu ; la page « Aujourd'hui » le met à jour elle-même.
@@ -59,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SpaceContext.Provider value={value}>
       <div className="shell" style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }}>
-        <Sidebar taskCount={taskCount} onAdd={openAdd} />
+        <Sidebar taskCount={taskCount} onAdd={openAdd} onFeedback={() => setFeedback(true)} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <MobileHeader />
           {space ? (
@@ -78,12 +80,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <BottomNav onAdd={openAdd} />
         <AddMenu open={addOpen} onClose={() => setAddOpen(false)} />
+        {/* Hors de la barre latérale : sa position collante l'enfermerait sous le contenu de la page. */}
+        <FeedbackModal open={feedback} onClose={() => setFeedback(false)} />
       </div>
     </SpaceContext.Provider>
   )
 }
 
-function Sidebar({ taskCount, onAdd }: { taskCount: number | null; onAdd: () => void }) {
+function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; onAdd: () => void; onFeedback: () => void }) {
   const { user } = useAuth()
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || ''
   return (
@@ -109,6 +113,9 @@ function Sidebar({ taskCount, onAdd }: { taskCount: number | null; onAdd: () => 
         ))}
       </div>
       <div style={{ flexGrow: 1 }} />
+      <button type="button" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BAI.nightSoft}`, color: BAI.onDarkNav, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
+        Votre avis
+      </button>
       <Link to="/espace/compte" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 10px 0', borderTop: `1px solid ${BAI.nightSoft}`, textDecoration: 'none' }}>
         <span style={{ width: 40, height: 40, borderRadius: 20, background: BAI.nightSoft, color: BAI.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>

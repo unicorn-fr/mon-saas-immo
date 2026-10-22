@@ -11,6 +11,7 @@ import { createSession, deleteSession, optionalUser, requireUser, sessionToken }
 import { createLeaseFromDraft, draftToLeaseInput } from '../services/leases.js'
 import { draftFromRequest } from './drafts.js'
 import { acceptAccess, invitationEmailFor, ownerLabel } from './access.js'
+import { isAdmin } from '../services/admin.js'
 
 const router = Router()
 const limiter = limitPerVisitor(15, 20)
@@ -28,6 +29,8 @@ export function publicUser(u: User) {
     followUpActive: Boolean(u.followUpSince),
     notifyWeekly: u.notifyWeekly,
     notifyUrgent: u.notifyUrgent,
+    // Pilotage réservé aux adresses de ADMIN_EMAILS (lien affiché dans « Mon compte »).
+    admin: isAdmin(u.email),
   }
 }
 

@@ -13,6 +13,7 @@ import type { LandlordProfile } from '../../lib/contract'
 import { useFiche } from '../../lib/fiche'
 import type { ProfileView } from '../../lib/space'
 import type { User } from '../../lib/types'
+import { FeedbackModal } from '../../components/Feedback'
 
 /** Mon compte. Maquette « Mon compte ». */
 export default function Compte() {
@@ -20,6 +21,7 @@ export default function Compte() {
   const navigate = useNavigate()
   const toast = useToast()
   const [action, setAction] = useState<Purpose | null>(null)
+  const [feedback, setFeedback] = useState(false)
   const { file: p, set, completion, loadError, reload } = useFiche<LandlordProfile>(
     () => api<ProfileView>('/profile').then((v) => ({ file: v.profile, completion: v.completion })),
     async (f) => {
@@ -98,6 +100,14 @@ export default function Compte() {
                 <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Artisans, syndic, assureur : vos contacts, saisis une fois, repris dans les interventions.</span>
               </Card>
             </div>
+            <Card title="Votre avis" action={<TextLink onClick={() => setFeedback(true)} style={{ fontSize: 14 }}>Donner mon avis</TextLink>}>
+              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Ce qui vous aide, ce qui vous manque : deux questions, et nous lisons chaque réponse.</span>
+            </Card>
+            {user.admin ? (
+              <Card title="Pilotage de Bailio" action={<TextLink to="/espace/pilotage" style={{ fontSize: 14 }}>Ouvrir</TextLink>}>
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Comptes, baux, utilisateurs actifs et entonnoir : les chiffres de Bailio, réservés à vous.</span>
+              </Card>
+            ) : null}
             <Card title="Accès partagés" action={<TextLink to="/espace/compte/acces" style={{ fontSize: 14 }}>Gérer</TextLink>}>
               <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Invitez un associé, votre comptable ou un artisan sur certains logements, ou ouvrez un espace partagé avec vous.</span>
             </Card>
@@ -116,6 +126,7 @@ export default function Compte() {
           </aside>
         </div>
       )}
+      <FeedbackModal open={feedback} onClose={() => setFeedback(false)} />
       {action && (
         <ConfirmByCode
           purpose={action}

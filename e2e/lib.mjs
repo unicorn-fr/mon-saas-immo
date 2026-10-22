@@ -54,8 +54,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
 }
 
 /** Nouveau compte : lien magique demandé, relu dans le journal, vérifié. Renvoie le jeton de session. */
-export async function newAccount() {
-  const email = `e2e+${Date.now()}${Math.floor(Math.random() * 1000)}@example.fr`
+export async function newAccount(email = `e2e+${Date.now()}${Math.floor(Math.random() * 1000)}@example.fr`) {
   const before = logSize()
   await api('/auth/magic-link', { method: 'POST', body: { email, signup: true } })
   const [m] = await fromLog(/connexion\/lien\?jeton=([^\s)&]+)/g, before)
