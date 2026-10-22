@@ -222,7 +222,7 @@ export default function RelectureStep() {
         </div>
 
         {!imported ? (
-          <aside className="stack full-md" style={{ width: 420, flexShrink: 0, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, boxShadow: '0 16px 40px rgba(26,26,46,0.10)' }} aria-label="Aperçu du bail">
+          <aside className="stack full-md" style={{ width: 420, flexShrink: 0, minWidth: 0, overflowWrap: 'anywhere', background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, boxShadow: '0 16px 40px rgba(26,26,46,0.10)' }} aria-label="Aperçu du bail">
             <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>Contrat de location</div>
             <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>
               Logement {type === 'FURNISHED' ? 'meublé' : 'vide'} à usage de résidence principale

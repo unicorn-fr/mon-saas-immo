@@ -1,3 +1,4 @@
+import { EmailSuggestion } from '../components/EmailSuggestion'
 import { AccountNotice } from '../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { safePath } from '../lib/safePath'
@@ -77,7 +78,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
           {signup ? `Un lien pour ouvrir votre espace vient de partir vers ${email}.` : `Si un espace Bailio existe avec ${email}, un lien de connexion vient de partir.`} Il est valable 30 minutes.
         </p>
         <MailLinks email={email} />
-        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Rien reçu ? Regardez dans les indésirables, ou <button type="button" onClick={() => setSent(false)} style={{ background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>recommencez</button>.</span>
+        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Rien reçu ? Regardez dans les indésirables, ou <button type="button" onClick={() => setSent(false)} className="tap" style={{ background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>recommencez</button>.</span>
       </>
     )
   }
@@ -88,6 +89,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
       <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid }}>{signup ? 'Gratuit, sans carte bancaire, sans mot de passe.' : 'Pas de mot de passe : nous vous envoyons un lien de connexion par email.'}</p>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
         <Input big label="Email" type="email" autoComplete="email" inputMode="email" value={email} onChange={setEmail} autoFocus />
+        <EmailSuggestion email={email} onPick={setEmail} />
         {error ? <Callout tone="warn">{error}</Callout> : null}
         <Button type="submit" full loading={loading} height={58}>
           {signup ? 'Créer mon espace' : 'Recevoir mon lien de connexion'}

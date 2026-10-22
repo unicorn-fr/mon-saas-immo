@@ -23,7 +23,8 @@ async function inspect(page, label, { mobile = false, axe = true } = {}) {
         const b = e.getBoundingClientRect()
         if (b.width < 2 || b.height < 2) return // champ masqué (fichier)
         if (e.closest('p, li') && e.tagName === 'A') return // lien dans une phrase : exempté (WCAG 2.5.8)
-        if (b.height < 24 || b.width < 24) small.push(`${(e.innerText || e.getAttribute('aria-label') || e.tagName).trim().slice(0, 30)} (${Math.round(b.width)}×${Math.round(b.height)})`)
+        const h = b.height + (e.classList.contains('tap') ? 14 : 0) // .tap : +14 px sur écran tactile (styles.css)
+        if (h < 24 || b.width < 24) small.push(`${(e.innerText || e.getAttribute('aria-label') || e.tagName).trim().slice(0, 30)} (${Math.round(b.width)}×${Math.round(b.height)})`)
       })
     }
     return { overflow, small: small.slice(0, 6), title: document.title, lang: document.documentElement.lang }

@@ -596,7 +596,7 @@ export function Toggle({ checked, onChange, label, sub, disabled, border = true 
 export function Check({ checked, onChange, label, sub }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode }) {
   return (
     <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, cursor: 'pointer', lineHeight: 1.4, minHeight: 24 }}>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, accentColor: BAI.owner }} />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 24, height: 24, flexShrink: 0, margin: 0, accentColor: BAI.owner }} />
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span>{label}</span>
         {sub ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>{sub}</span> : null}

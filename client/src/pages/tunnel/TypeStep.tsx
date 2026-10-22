@@ -6,6 +6,7 @@ import { TunnelLayout } from '../../components/TunnelLayout'
 import { display } from '../../components/ui'
 import { useDraft } from '../../lib/draft'
 import type { LeaseType } from '../../lib/types'
+import { ADD_PARKING_PATH } from '../../lib/contract'
 
 const OPTIONS: Array<{ type: LeaseType; title: string; text: string; icon: ReactNode }> = [
   { type: 'UNFURNISHED', title: 'Vide', text: 'Sans meubles · bail de 3 ans', icon: <House /> },
@@ -53,9 +54,14 @@ export default function TypeStep() {
       <p style={{ margin: 0, fontSize: 15, color: BAI.inkSoft, textAlign: 'center' }}>
         Un logement est meublé si on peut y dormir, cuisiner et vivre sans rien apporter.
       </p>
-      <Link to="/importer" style={{ alignSelf: 'center', fontSize: 15, fontWeight: 600, textDecoration: 'none', padding: 12 }}>
-        J'ai déjà un bail signé
-      </Link>
+      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', columnGap: 8 }}>
+        <Link to="/importer" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none', padding: 12 }}>
+          J'ai déjà un bail signé
+        </Link>
+        <Link to="/inscription" state={{ from: ADD_PARKING_PATH }} style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none', padding: 12 }}>
+          Je loue un garage, un box ou une place
+        </Link>
+      </div>
     </TunnelLayout>
   )
 }

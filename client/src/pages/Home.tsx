@@ -1,3 +1,4 @@
+import { ADD_PARKING_PATH } from '../lib/contract'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '@fontsource/young-serif/latin-400.css'
@@ -52,7 +53,7 @@ function termsFor(kind: Kind, rent: number): Array<[string, string]> {
 const ROWS = [
   { title: 'L’annonce', mock: 'ad', items: ['Texte prêt à coller', 'Leboncoin, SeLoger, PAP', 'Mentions obligatoires incluses', 'Un lien pour les candidatures'] },
   { title: 'Le bail signé', mock: 'lease', items: ['Contrat type d’octobre 2026', 'Vide, meublé ou garage', 'Signature en ligne, sans compte', 'Locataire et garant'] },
-  { title: 'Chaque mois', mock: 'month', items: ['Quittance envoyée seule', 'Loyer révisé à l’IRL', 'Rappel d’assurance', 'Relance si le loyer manque'] },
+  { title: 'Chaque mois', mock: 'month', items: ['Quittance (le reçu du loyer) envoyée seule', 'Loyer révisé chaque année selon l’indice officiel (IRL)', 'Rappel d’assurance', 'Relance si le loyer manque'] },
 ] as const
 
 const FAQ: Array<[string, string]> = [
@@ -253,8 +254,12 @@ export default function Home() {
                   </div>
                 ))}
               </dl>
+              <p className="terms-note" data-in style={{ ['--i' as string]: 3 }}>
+                Dépôt de garantie : somme versée à l’entrée, rendue à la sortie. Préavis : délai pour prévenir avant la fin du bail.
+                {kind === 'VIDE' ? ' Zone tendue : grande ville où les logements manquent.' : ''}
+              </p>
               <div className="live-actions">
-                <Link to="/commencer" className="btn btn--ink">
+                <Link to={kind === 'GARAGE' ? '/inscription' : '/commencer'} state={kind === 'GARAGE' ? { from: ADD_PARKING_PATH } : undefined} className="btn btn--ink">
                   Créer ce bail
                 </Link>
                 <Link to="/importer" className="btn btn--paper">

@@ -52,23 +52,23 @@ Chaque constat a été **revérifié à la main** ; les fausses alertes du premi
 
 1. **Lien de connexion abîmé** (copié à moitié depuis l'email) : le message technique « Trop petit : chaîne de caractères doit avoir >=10 caractères » s'affichait. Il reçoit maintenant le message d'un lien expiré, déjà existant (`server/src/routes/auth.ts`).
 
-## À valider avant de corriger
+## Corrigé après validation (22 octobre 2026)
 
-Ces points touchent au design, à une fonctionnalité ou à un texte : rien n'est modifié sans votre accord.
+Tous les points ont été validés puis corrigés. Test : `e2e/tests/35-corrections-audit.test.mjs`.
 
-| # | Gravité | Constat (persona) | Proposition |
-|---|---|---|---|
-| A | Majeur | **Email mal tapé, impossible à corriger** (Paul) : après « Continuer mon bail », l'adresse s'affiche mais il n'y a ni champ ni bouton pour la changer. Seul un rechargement fait revenir le champ, et personne ne le devine. Le bail attend dans un brouillon que le propriétaire ne retrouvera pas. | Ajouter sous le message « Ce n'est pas la bonne adresse ? Modifier », comme le « recommencez » de la page de connexion. |
-| B | Majeur | **Garage absent du tunnel** (Lucas) : l'accueil propose l'onglet « Garage » puis « Créer ce bail », qui mène à « Vide / Meublé » sans choix garage. | Soit un 3e choix « Un garage, un box ou une place » dans le tunnel, soit envoyer ce bouton vers la création de compte, puis « Ajouter un logement ». |
-| C | Mineur | **Faute de frappe dans l'email** (Paul) : « @gmial.com », « @hotmial.fr »… acceptés sans remarque. | Suggestion « Vouliez-vous dire gmail.com ? » pour les grands fournisseurs (liste fixe, rien d'envoyé à un tiers). |
-| D | Mineur | **Surface de 4,5 m²** acceptée jusqu'au bail sans alerte (Paul). Un logement décent fait au moins 9 m² et 20 m³ (décret n° 2002-120). | Alerte, sans blocage : « En dessous de 9 m², le logement n'est pas décent : il ne peut pas être loué comme résidence principale. » |
-| E | Mineur | **Erreur corrigée encore affichée** (Paul) : le message rouge reste tant qu'on n'a pas recliqué sur « Continuer ». | Effacer le message d'un champ dès qu'on le modifie. |
-| F | Mineur | **Erreurs des questions à choix** (Sophie) : annoncées toutes ensemble à l'envoi (7 alertes d'un coup), puis le focus reste sur « Continuer ». | Placer le focus sur la première question en erreur et relier chaque message à sa question (`aria-describedby`). |
-| G | Mineur | **Petits liens au téléphone** (Karim) : « Modifier », « Voir toutes les étapes », « Tout voir », « Gérer », « Ouvrir », « Donner mon avis » font 17 à 20 px de haut (WCAG 2.5.8 conseille 24 px). | Un peu de marge intérieure sur `TextLink` seul (pas dans une phrase). |
-| H | Mineur | **Cases à cocher de 18 px** sur le lien du locataire (Emma). | Agrandir la zone cliquable à 24 px (la case peut rester visuellement de 18 px). |
-| I | Mineur | **Nom très long** (Bruno) : un prénom de 500 lettres sans espace fait déborder l'aperçu du bail sur la relecture. Les champs n'ont pas de longueur maximale. | Limiter les noms à 100 caractères et couper les mots trop longs dans l'aperçu. |
-| J | Mineur | **Page d'import sans lecture automatique** (Jean-Pierre) : quand la lecture n'est pas disponible, l'introduction dit toujours « Bailio lit le bail et remplit tout ». | Adapter l'introduction quand seule la saisie est proposée. |
-| K | Info | **Jargon** (Aïcha) : IRL, DPE, dépôt de garantie, préavis, quittance, zone tendue apparaissent sur l'accueil. | Vérifier que chacun est expliqué en une ligne (règle « Rédaction » de CLAUDE.md). |
+| # | Constat (persona) | Correction |
+|---|---|---|
+| A | Email mal tapé impossible à corriger après l'envoi (Paul) | « Ce n'est pas la bonne adresse ? Modifier mon adresse » sous le message du tunnel (`RecevoirStep.tsx`) |
+| B | Garage absent du tunnel (Lucas) | Onglet « Garage » de l'accueil et lien « Je loue un garage, un box ou une place » du tunnel → création de l'espace, puis « Ajouter un logement » avec le garage déjà choisi (`ADD_PARKING_PATH`, `?nature=parking`) |
+| C | Faute de frappe dans l'email (Paul) | « Vouliez-vous dire …@gmail.com ? » sous le champ, calculé sur l'appareil (`suggestEmail`, `lib/mail.ts`, testé ; `EmailSuggestion`), dans le tunnel et la connexion |
+| D | Surface de 4,5 m² sans alerte (Paul) | Alerte sans blocage sous 9 m² : décent seulement si le volume atteint 20 m³ (`smallSurfaceWarning`, `lib/lease.ts`, testé), dans le tunnel et « Ajouter un logement » |
+| E | Erreur corrigée encore affichée (Paul) | L'erreur d'une réponse disparaît dès qu'elle est corrigée (logement, personnes, loyer) |
+| F | Erreurs des questions à choix non reliées (Sophie) | Curseur sur la première réponse à donner (`focusFirstError`), message relié à sa question (`aria-describedby`) |
+| G | Petits liens au téléphone (Karim) | Ils avaient déjà la zone de toucher agrandie sur écran tactile (`.tap`), que le navigateur simulé ignorait ; ajoutée aux trois boutons « Modifier » du loyer et à « recommencez » ; le script d'audit en tient compte |
+| H | Cases à cocher de 18 px (Emma) | Cases de 24 px (`Check`, `kit.tsx`) |
+| I | Nom très long (Bruno) | Les noms étaient déjà limités à 80 caractères (champ et serveur) ; les aperçus du bail coupent maintenant les mots trop longs |
+| J | Page d'import sans lecture automatique (Jean-Pierre) | L'introduction ne promet plus la lecture quand seule la saisie est proposée |
+| K | Jargon sur l'accueil (Aïcha) | Une ligne sous le calcul : dépôt de garantie, préavis, zone tendue ; « quittance (le reçu du loyer) » et « indice officiel (IRL) » dans « Tout le dossier » |
 
 ## Non testé ici (limites de l'environnement)
 

@@ -37,3 +37,31 @@ export function providersFor(email: string): MailProvider[] {
 
 /** iPhone, iPad ou Mac : l'application Mail s'ouvre avec « message:// ». */
 export const isApple = (ua: string) => /iPhone|iPad|iPod|Macintosh/.test(ua)
+
+/** Distance d'édition (insertion, suppression, remplacement, inversion de deux lettres voisines). */
+function distance(a: string, b: string): number {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)))
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+    }
+  return d[a.length][b.length]
+}
+
+/**
+ * Faute de frappe probable dans le domaine d'une messagerie connue (« gmial.com », « hotmail.fe ») :
+ * l'adresse corrigée, ou null. Calculé sur l'appareil, rien n'est envoyé.
+ */
+export function suggestEmail(email: string): string | null {
+  const [local, domain] = email.trim().toLowerCase().split('@')
+  if (!local || !domain || domain.length < 5) return null
+  const known = MAIL_PROVIDERS.flatMap((p) => p.domains)
+  if (known.includes(domain)) return null
+  let best: { d: string; n: number } | null = null
+  for (const k of known) {
+    const n = distance(domain, k)
+    if (n <= (domain.length < 8 ? 1 : 2) && (!best || n < best.n)) best = { d: k, n }
+  }
+  return best ? `${local}@${best.d}` : null
+}

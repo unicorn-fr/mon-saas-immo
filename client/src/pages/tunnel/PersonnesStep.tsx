@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AddressField } from '../../components/AddressField'
-import { StepNav, TunnelLayout } from '../../components/TunnelLayout'
+import { StepNav, TunnelLayout, focusFirstError } from '../../components/TunnelLayout'
 import { TextField, display, overline } from '../../components/ui'
 import { useDraft } from '../../lib/draft'
 import type { DraftData } from '../../lib/types'
@@ -40,7 +40,7 @@ export default function PersonnesStep() {
 
   const setTenant = (i: number, patch: Partial<Tenant>) => save({ tenants: tenants.map((t, j) => (j === i ? { ...t, ...patch } : t)) })
 
-  async function next() {
+  function validate() {
     const e: Record<string, string> = {}
     if (!landlord.firstName?.trim()) e['l.firstName'] = 'Votre prénom est obligatoire.'
     if (!landlord.lastName?.trim()) e['l.lastName'] = 'Votre nom est obligatoire.'
@@ -55,8 +55,20 @@ export default function PersonnesStep() {
       if (!guarantor.lastName?.trim()) e['g.lastName'] = 'Le nom est obligatoire.'
       if ((guarantor.address ?? '').trim().length < 5) e['g.address'] = "L'adresse du garant est obligatoire."
     }
+    return e
+  }
+
+  // Une erreur affichée disparaît dès que la réponse est corrigée ; aucune nouvelle n'apparaît pendant la saisie.
+  useEffect(() => {
+    const now = validate()
+    setErrors((prev) => (Object.keys(prev).some((k) => !now[k]) ? Object.fromEntries(Object.entries(prev).filter(([k]) => now[k])) : prev))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [landlord, tenants, guarantor])
+
+  async function next() {
+    const e = validate()
     setErrors(e)
-    if (Object.keys(e).length) return
+    if (Object.keys(e).length) return focusFirstError()
     update({ landlord, tenants: tenants.map((t) => ({ ...t, email: t.email?.trim() || undefined })), guarantor }, 'loyer')
     await flush()
     navigate('/commencer/loyer')
