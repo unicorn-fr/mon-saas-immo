@@ -147,9 +147,10 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   await me.getByLabel('Adresse actuelle').fill('9 rue Saint-Guilhem, 34000 Montpellier')
   await me.getByRole('button', { name: 'Enregistrer' }).click()
   await tp.getByText('Enregistré.').first().waitFor()
-  await tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))
-  await tp.getByText('Justificatif reçu.').first().waitFor()
-  await tp.getByLabel('Dernier avis d’imposition (garant)').setInputFiles(pdf('avis.pdf'))
+  // Attendre la réponse de chaque envoi : le message « Justificatif reçu. » du premier est encore affiché pendant le second.
+  const uploaded = () => tp.waitForResponse((r) => r.url().includes('/document') && r.request().method() === 'POST' && r.ok())
+  await Promise.all([uploaded(), tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))])
+  await Promise.all([uploaded(), tp.getByLabel('Dernier avis d’imposition (garant)').setInputFiles(pdf('avis.pdf'))])
   await tp.getByText('Justificatif reçu.').first().waitFor()
   await shot(tp, 'dossier-locataire')
   await tp.getByRole('button', { name: 'J’ai terminé' }).click()
