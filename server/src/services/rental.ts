@@ -23,7 +23,12 @@ export async function rentalJourneys(user: User, propertyIds?: string[]): Promis
   for (const p of properties) {
     const file = readProperty(p)
     // Bail en cours ou en préparation : le plus récent qui n'est pas terminé.
-    const lease = p.leases.find((l) => l.status !== 'ENDED') ?? null
+    // Bail suivi : le bail signé tant que son entrée n'est pas réglée (60 jours), puis le bail en préparation (locataire
+    // suivant, ou deuxième chambre d'une colocation) ; jamais un brouillon à la place d'un bail signé en cours d'entrée.
+    const signed = p.leases.find((l) => l.status === 'ACTIVE' || l.status === 'IMPORTED')
+    const draft = p.leases.find((l) => l.status === 'DRAFT')
+    const signedSettled = Boolean(signed && (signed.status === 'IMPORTED' || Date.now() - signed.startDate.getTime() > 60 * 86_400_000))
+    const lease = (signed && !signedSettled ? signed : (draft ?? signed)) ?? null
     const endedTenants = new Set(p.leases.filter((l) => l.status === 'ENDED').flatMap((l) => l.tenantIds))
     const tenantRow = lease?.tenantIds[0] ? tenants.find((t) => t.id === lease.tenantIds[0]) : tenants.filter((t) => t.propertyId === p.id && !endedTenants.has(t.id)).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0]
     const tf = tenantRow ? readTenant(tenantRow) : null

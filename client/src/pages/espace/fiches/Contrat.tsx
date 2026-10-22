@@ -277,7 +277,7 @@ export default function Contrat() {
                 value={t.revision?.irlQuarter?.slice(5) ?? ''}
                 onChange={(q) => set({ revision: { ...t.revision, irlQuarter: q ? `${t.revision?.irlQuarter?.slice(0, 4) ?? new Date().getFullYear()}-${q}` : null } })}
                 options={[{ value: 'Q1', label: 'IRL du 1er trimestre' }, { value: 'Q2', label: 'IRL du 2e trimestre' }, { value: 'Q3', label: 'IRL du 3e trimestre' }, { value: 'Q4', label: 'IRL du 4e trimestre' }]}
-                hint={t.revision?.irlValue ? `Valeur de référence : ${String(t.revision.irlValue).replace('.', ',')} (${t.revision.irlQuarter}).` : undefined}
+                hint={t.revision?.irlValue ? `Valeur de référence : ${String(t.revision.irlValue).replace('.', ',')} (${t.revision.irlQuarter}).` : 'IRL : indice de référence des loyers, publié chaque trimestre par l’Insee. Par défaut, le dernier publié à la signature du bail.'}
               />
             </Fields>
           ) : null}

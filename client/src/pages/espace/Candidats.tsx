@@ -211,7 +211,7 @@ export default function Candidats() {
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un formulaire simple, sans compte : identité, situation, revenus, garantie et lien DossierFacile. Aucune pièce jointe ne circule.</span>
+                    <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un formulaire simple, sans compte : identité, situation, revenus, garantie et lien DossierFacile. Les pièces que vous demandez ci-dessous se déposent juste après.</span>
                     <div>
                       <Btn size="sm" onClick={() => void toggleLink(true)}>
                         Créer le lien

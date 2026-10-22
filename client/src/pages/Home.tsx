@@ -57,7 +57,7 @@ const ROWS = [
 ] as const
 
 const FAQ: Array<[string, string]> = [
-  ['Le bail est-il valable ?', 'Oui. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026.'],
+  ['Le bail est-il valable ?', 'Oui, une fois complet et signé. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026, et Bailio vous dit ce qu’il manque avant la signature.'],
   ['J’ai déjà un locataire.', 'Prenez votre bail signé en photo : Bailio le lit, vous vérifiez, et le suivi démarre.'],
   ['Mon locataire doit-il s’inscrire ?', 'Non. Il reçoit ses quittances par email et un lien pour envoyer son attestation d’assurance.'],
   ['Et la signature ?', 'En ligne, avec un code envoyé par email, ou sur papier si vous préférez. Le PDF signé garde sa preuve.'],
@@ -65,6 +65,7 @@ const FAQ: Array<[string, string]> = [
   ['Qui touche le loyer ?', 'Vous, directement. Bailio ne passe jamais par votre argent ni par le dépôt de garantie.'],
   ['Où sont mes données ?', 'Sur un serveur en Suisse. Elles ne sont ni revendues, ni confiées à une intelligence artificielle.'],
   ['Et si j’arrête ?', 'Vous exportez tout en un clic, puis vous supprimez votre compte. Sans engagement.'],
+  ['Je suis locataire, c’est pour moi ?', 'Bailio sert aux propriétaires. Pour monter votre dossier, utilisez DossierFacile (dossierfacile.logement.gouv.fr), le service gratuit de l’État. Si votre propriétaire utilise Bailio, il vous envoie un lien : rien à créer.'],
 ]
 
 const LEGAL = [
@@ -74,6 +75,7 @@ const LEGAL = [
   { to: '/cookies', label: 'Cookies' },
   { to: '/prix-et-remboursement', label: 'Prix et remboursement' },
   { to: '/accessibilite', label: 'Accessibilité' },
+  { to: '/securite', label: 'Sécurité' },
 ]
 
 /** Aperçus de l'application, dessinés en HTML : ce que le propriétaire verra vraiment. */
@@ -209,7 +211,7 @@ export default function Home() {
                   Le bail <span className="hl">juste</span>, du premier coup.
                 </h1>
                 <p className="card-lead" data-in style={{ ['--i' as string]: 2 }}>
-                  Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
+                  Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
                 </p>
                 <span>
                   <Link to="/commencer" className="btn">
@@ -390,7 +392,7 @@ export default function Home() {
               Votre premier bail est offert.
             </h2>
             <p data-in style={{ ['--i' as string]: 1 }}>
-              Cinq minutes de questions, et vous repartez avec un bail prêt à signer.
+              Cinq minutes de questions pour le préparer. Bailio vous dit ensuite ce qu’il manque (diagnostics, équipements) avant de le faire signer.
             </p>
             <span>
               <Link to="/commencer" className="btn btn--paper">

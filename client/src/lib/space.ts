@@ -3,11 +3,14 @@ import type { User } from './types'
 
 /** Réponses de l'API de l'espace propriétaire (server/src/routes). */
 
-export type RentKey = 'DRAFT' | 'UPCOMING' | 'PAID' | 'PARTIAL' | 'LATE' | 'EXPECTED'
+export type RentKey = 'DRAFT' | 'UPCOMING' | 'PAID' | 'PARTIAL' | 'LATE' | 'EXPECTED' | 'FIRST'
 export interface RentStatus {
   key: RentKey
   label: string
   lateDays: number
+  /** Toute la dette du bail (mois non réglés depuis l'entrée), même calcul que le tableau de bord. */
+  unpaidCents?: number
+  unpaidPeriods?: string[]
 }
 
 export type LeaseStatus = 'DRAFT' | 'ACTIVE' | 'ENDED' | 'IMPORTED'
@@ -216,7 +219,7 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
-  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null }
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; receiptAssume?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null }
 }
 
 export interface Task {

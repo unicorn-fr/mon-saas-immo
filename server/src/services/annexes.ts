@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'
 import sharp from 'sharp'
 import { prisma } from '../db.js'
 import type { ContractInput } from '../domain/contract.js'
@@ -72,4 +72,18 @@ export async function appendAnnexes(base: Buffer, annexes: Annex[]): Promise<Buf
 /** PDF du bail avec ses diagnostics. */
 export async function renderLeasePdf(c: ContractInput, propertyId: string | null | undefined, signed?: SignedLease): Promise<Buffer> {
   return appendAnnexes(await renderContractPdf(c, signed), await diagnosticAnnexes(c.property, propertyId))
+}
+
+/**
+ * Bail incomplet (mentions indispensables manquantes) : « PROJET : NE PAS SIGNER » en travers de chaque page, pour
+ * qu'un brouillon à trous ne soit jamais imprimé et signé tel quel.
+ */
+export async function stampDraft(pdf: Buffer): Promise<Buffer> {
+  const doc = await PDFDocument.load(pdf)
+  const font = await doc.embedFont(StandardFonts.HelveticaBold)
+  for (const page of doc.getPages()) {
+    const { width, height } = page.getSize()
+    page.drawText('PROJET : NE PAS SIGNER', { x: width * 0.12, y: height * 0.24, size: 42, font, color: rgb(0.7, 0.15, 0.15), opacity: 0.16, rotate: degrees(45) })
+  }
+  return Buffer.from(await doc.save())
 }

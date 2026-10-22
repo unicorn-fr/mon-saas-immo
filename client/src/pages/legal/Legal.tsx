@@ -469,6 +469,44 @@ export function Accessibilite() {
   )
 }
 
+/** Ce qui protège vos données, sans jargon : seulement ce qui est réellement en place. */
+export function Securite() {
+  return (
+    <SimplePage title="Sécurité de vos données">
+      <Updated />
+      <p>Vos baux et les informations de vos locataires sont sensibles. Voici, simplement, comment Bailio les protège.</p>
+      <H2>Où sont vos données</H2>
+      <ul>
+        <li>Sur un serveur loué à Infomaniak, à Genève, en Suisse (voir les <Link to="/mentions-legales">mentions légales</Link>). La Suisse est reconnue par l'Union européenne comme offrant un niveau de protection adéquat ;</li>
+        <li>La base de données n'est pas accessible depuis Internet : seule l'application y a accès ;</li>
+        <li>Elle est sauvegardée chaque nuit ; chaque sauvegarde est gardée 14 jours.</li>
+      </ul>
+      <H2>Comment on accède à votre espace</H2>
+      <ul>
+        <li>Pas de mot de passe à voler : vous recevez un lien de connexion par email, valable 30 minutes et utilisable une seule fois ;</li>
+        <li>Chaque connexion est un appareil, visible dans « Mon compte » : vous pouvez en déconnecter un à tout moment. Un appareil inutilisé pendant 30 jours est déconnecté tout seul ;</li>
+        <li>L'export de vos données et la suppression du compte demandent en plus un code à 6 chiffres envoyé par email ;</li>
+        <li>Toutes les pages passent par une connexion chiffrée (HTTPS), imposée par le navigateur.</li>
+      </ul>
+      <H2>Ce que nous ne faisons pas</H2>
+      <ul>
+        <li>Aucune publicité, aucun cookie, aucun outil de mesure d'audience ;</li>
+        <li>Aucune donnée vendue ni confiée à un service d'intelligence artificielle : même la lecture des baux importés se fait sur notre serveur ;</li>
+        <li>Bailio ne touche jamais à votre argent : les loyers vont directement de votre locataire à vous.</li>
+      </ul>
+      <H2>Vos locataires</H2>
+      <p>
+        Leurs pièces sont gardées le temps du bail, puis effacées 30 jours après sa fin ; les candidats non retenus, 3 mois après leur
+        candidature. Tout le détail est dans la page <Link to="/confidentialite">Confidentialité</Link>.
+      </p>
+      <H2>Un doute, un incident ?</H2>
+      <p>
+        Écrivez à <Mail />. En cas de violation de données, vous seriez prévenu comme le prévoit le RGPD (articles 33 et 34).
+      </p>
+    </SimplePage>
+  )
+}
+
 export function Contact() {
   return (
     <SimplePage title="Contact">

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
-import { BASE, fromLog, launch, logSize, watch } from '../lib.mjs'
+import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, watch } from '../lib.mjs'
 
 /**
  * Corrections de l'audit par personas (docs/audit/audit-personas-2026-10.md) : email mal tapé (suggestion et
@@ -104,4 +104,37 @@ test('garage : de l’accueil à « Ajouter un logement » avec le garage déjà
   await page.getByRole('link', { name: 'Je loue un garage, un box ou une place' }).waitFor()
   await ctx.close()
   assert.deepEqual(errors, [])
+})
+
+test('retards de loyer : le même calcul pour Aujourd’hui, Logements, le bail et le tableau de bord', async () => {
+  // Bail commencé en juillet, rien encaissé : toute la dette partout.
+  const a = await newAccount()
+  const A = await completeLease(a.token, { furnished: false })
+  await api(`/leases/${A.leaseId}/terms`, { method: 'PUT', token: a.token, body: { startDate: '2026-07-04' } })
+  await api(`/leases/${A.leaseId}/sign`, { method: 'POST', token: a.token })
+  const lease = await api(`/leases/${A.leaseId}`, { token: a.token })
+  const months = lease.rent.unpaidPeriods.length
+  assert.ok(months >= 4, `${months} mois dus`)
+  assert.equal(lease.rent.key, 'LATE')
+  assert.match(lease.rent.label, new RegExp(`^${months} loyers en retard`))
+  const today = await api('/today', { token: a.token })
+  const late = today.tasks.find((t) => t.type === 'LATE_RENT')
+  assert.equal(late.amountCents, lease.rent.unpaidCents)
+  assert.match(late.title, new RegExp(`${months} loyers non réglés depuis juillet 2026`))
+  const portfolio = await api('/portfolio', { token: a.token })
+  assert.ok(portfolio.alerts.some((w) => w.kind === 'UNPAID'), 'le tableau de bord signale aussi le retard')
+
+  // Bail du 6 octobre, loyer payable le 4 : le premier mois au prorata n'est en retard nulle part.
+  const b = await newAccount()
+  const B = await completeLease(b.token, { furnished: false })
+  await api(`/leases/${B.leaseId}/sign`, { method: 'POST', token: b.token })
+  const lb = await api(`/leases/${B.leaseId}`, { token: b.token })
+  assert.notEqual(lb.rent.key, 'LATE', lb.rent.label)
+  assert.equal((await api('/today', { token: b.token })).tasks.filter((t) => t.type === 'LATE_RENT').length, 0)
+  assert.equal((await api("/portfolio", { token: b.token })).alerts.filter((w) => w.kind === 'UNPAID').length, 0)
+  // Brouillon : jamais « Bail en cours ».
+  const c = await newAccount()
+  await completeLease(c.token, { furnished: false })
+  const props = (await api('/today', { token: c.token })).properties
+  assert.ok(props.every((p) => p.status.label !== 'Bail en cours'))
 })

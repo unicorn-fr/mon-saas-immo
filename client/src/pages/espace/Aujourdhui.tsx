@@ -54,7 +54,7 @@ function TodayContent() {
         </Btn>
         {data.stats.rentsExpected ? (
           <div className="hide-md" style={{ display: 'flex', gap: 12 }}>
-            <MiniStat label={`Loyers de ${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
+            <MiniStat label={`Loyers ${/^[aeiouyhâàéèê]/i.test(month) ? 'd’' : 'de '}${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
             <MiniStat label="Encaissé ce mois" value={eurosCents(data.stats.cashedCents)} />
           </div>
         ) : null}
@@ -145,6 +145,15 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
   let actions: Array<{ label: string; onClick: () => unknown; variant?: 'primary' | 'outline' | 'ghost' }> = []
   switch (t.type) {
     case 'LATE_RENT':
+      // Plusieurs mois dus : le parcours d'impayé d'abord (relance, mise en demeure, caution).
+      if (t.tag === 'Loyers en retard') {
+        actions = [
+          { label: 'Voir les étapes', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/UNPAID`) },
+          { label: 'Relire la relance', variant: 'outline', onClick: () => letters('REMINDER') },
+          { label: 'Noter un paiement reçu', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}#paiements`) },
+        ]
+        break
+      }
       actions = [
         { label: 'Relire la relance', onClick: () => letters('REMINDER') },
         { label: 'Que faire en cas d’impayé ?', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/UNPAID`) },
@@ -230,7 +239,7 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
         const step = t.step
         actions = [{ label: step.label, onClick: () => navigate(step.to) }]
         if (step.optional) actions.push({ label: 'Je n’en ai pas besoin', variant: 'ghost', onClick: () => run(() => api(`/properties/${t.propertyId}/steps/${step.key}`, { method: 'POST', body: { skip: true } }), 'C’est noté. Vous pourrez changer d’avis sur la page du logement.') })
-        actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
+        if (t.propertyId) actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
       }
       break
     case 'INVENTORY_COMPLEMENT':

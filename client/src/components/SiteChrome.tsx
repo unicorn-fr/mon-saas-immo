@@ -38,6 +38,7 @@ export function SiteFooter() {
     { to: '/cookies', label: 'Cookies' },
     { to: '/prix-et-remboursement', label: 'Prix et remboursement' },
     { to: '/accessibilite', label: 'Accessibilité' },
+    { to: '/securite', label: 'Sécurité' },
     { to: '/contact', label: 'Contact' },
   ]
   return (

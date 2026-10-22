@@ -21,7 +21,7 @@ async function audit(page, path) {
   return result.violations.map((v) => `${path} · ${v.id} (${v.impact}) : ${v.help}\n    ${v.nodes.slice(0, 4).map((n) => n.target.join(' ') + ' → ' + (n.failureSummary ?? '').split('\n').slice(1).join(' ')).join('\n    ')}`)
 }
 
-const PUBLIC = ['/', '/connexion', '/commencer', '/commencer/logement', '/commencer/personnes', '/commencer/loyer', '/commencer/relecture', '/commencer/recevoir', '/importer', '/mentions-legales', '/conditions', '/confidentialite', '/cookies', '/prix-et-remboursement', '/contact', '/accessibilite', '/page-inexistante']
+const PUBLIC = ['/', '/connexion', '/commencer', '/commencer/logement', '/commencer/personnes', '/commencer/loyer', '/commencer/relecture', '/commencer/recevoir', '/importer', '/mentions-legales', '/conditions', '/confidentialite', '/cookies', '/prix-et-remboursement', '/contact', '/accessibilite', '/securite', '/page-inexistante']
 
 test('pages publiques : aucune violation WCAG 2.1 AA', async () => {
   const browser = await launch()

@@ -207,17 +207,17 @@ export default function FicheLogement() {
 
       <FicheSection id="diagnostics" guides={['diagnostics', 'dpe']} n={++n} title="Diagnostics" intro="Ils forment le dossier de diagnostic technique, annexé au bail." reference="loi n° 89-462 du 6 juillet 1989, art. 3-3" done={done('diagnostics')}>
         <Fields>
-          <Select label="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
-          <Select label="Classe climat (GES)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
+          <Select label="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="La lettre de A à G de la première étiquette du diagnostic de performance énergétique (DPE)." />
+          <Select label="Classe climat (GES)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="La seconde étiquette du DPE : les gaz à effet de serre." />
         </Fields>
         <Fields>
-          <Input label="Date du DPE" type="date" value={d.dpe?.date} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, date: v || null } } })} />
-          <Input label="Numéro ADEME du DPE" value={d.dpe?.number} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} />
+          <Input label="Date du DPE" type="date" value={d.dpe?.date} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, date: v || null } } })} hint="Date d’établissement, sur la première page." />
+          <Input label="Numéro ADEME du DPE" value={d.dpe?.number} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} hint="13 caractères, en haut de la première page du DPE. Facultatif." />
         </Fields>
         <Fields>
           <NumberField label="Dépenses d’énergie estimées, minimum (€ par an)" value={d.dpe?.costMin ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMin: v } } })} />
           <NumberField label="Maximum (€ par an)" value={d.dpe?.costMax ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMax: v } } })} hint="Fourchette indiquée sur le DPE. Obligatoire dans l’annonce." />
-          <NumberField label="Année des prix" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} />
+          <NumberField label="Année des prix" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} hint="Écrite à côté de la fourchette : « prix moyens des énergies indexés au 1er janvier… »." />
         </Fields>
         <Fields>
           <Chips legend="Installation de gaz" value={d.gas?.hasGas ?? null} onChange={(v) => set({ diagnostics: { ...d, gas: { ...d.gas, hasGas: v } } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />

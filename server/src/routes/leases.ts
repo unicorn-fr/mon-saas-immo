@@ -37,10 +37,10 @@ import {
   isFurnished,
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
-import { receiptAutoOn, upcomingAutoReceipt } from '../domain/autoReceipt.js'
+import { assumePaymentOn, receiptAutoOn, upcomingAutoReceipt } from '../domain/autoReceipt.js'
 import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterAllowed, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
-import { renderLeasePdf } from '../services/annexes.js'
+import { renderLeasePdf, stampDraft } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
 import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf } from '../pdf/letter.js'
@@ -187,9 +187,9 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data),
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data), receiptAssume: assumePaymentOn(lease.data),
       autoReceipt:
-        receiptAutoOn(lease.data) && (lease.status === 'ACTIVE' || lease.status === 'IMPORTED')
+        assumePaymentOn(lease.data) && (lease.status === 'ACTIVE' || lease.status === 'IMPORTED')
           ? upcomingAutoReceipt({ today: new Date().toISOString().slice(0, 10), paymentDay: lease.paymentDay, startDate: lease.startDate.toISOString().slice(0, 10), paid: new Set(payments.map((p) => p.period)), held: (lease.data as { receiptHold?: Record<string, string> }).receiptHold ?? {} })
           : null },
     checklist,
@@ -429,7 +429,8 @@ router.get('/leases/:id/lease.pdf', async (req, res) => {
     if (signedDoc?.file) return sendPdf(res, Buffer.from(signedDoc.file), `bail-signe.pdf`, download)
   }
   const c = await currentContract(user, lease)
-  const pdf = await renderLeasePdf(c, lease.propertyId)
+  const rendered = await renderLeasePdf(c, lease.propertyId)
+  const pdf = lease.status === 'DRAFT' && essential(leaseMissing(c)).length ? await stampDraft(rendered) : rendered
   sendPdf(res, pdf, `bail-${fileSlug(c.tenants.map((t) => t.lastName).join('-'))}.pdf`, download)
 })
 
@@ -525,7 +526,8 @@ router.post('/leases/:id/send', async (req, res) => {
   const c = await currentContract(user, lease)
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
   if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le bail.')
-  const pdf = await renderLeasePdf(c, lease.propertyId)
+  const rendered = await renderLeasePdf(c, lease.propertyId)
+  const pdf = lease.status === 'DRAFT' && essential(leaseMissing(c)).length ? await stampDraft(rendered) : rendered
   const landlord = personName({ firstNames: c.landlord.firstNames, lastName: c.landlord.lastName }, false) || 'Votre bailleur'
   const mail = layout({
     title: 'Votre bail de location.',

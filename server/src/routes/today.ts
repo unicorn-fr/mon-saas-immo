@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { receiptAutoOn, upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
+import { assumePaymentOn, upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
@@ -89,17 +89,20 @@ router.get('/today', async (req, res) => {
   for (const l of running) {
     const st = rentStatus(l, l.payments, now)
     const who = leaseTenantLabel(l, names) || 'votre locataire'
-    const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), l.paymentDay))
     // Quittance automatique prévue : le propriétaire confirme que le loyer est arrivé, ou annule l'envoi.
     const facts = (l.data ?? {}) as { receiptAuto?: boolean; receiptHold?: Record<string, string> }
-    const auto = receiptAutoOn(l.data) ? upcomingAutoReceipt({ today: now.toISOString().slice(0, 10), paymentDay: l.paymentDay, startDate: l.startDate.toISOString().slice(0, 10), paid: new Set(l.payments.map((p) => p.period)), held: facts.receiptHold ?? {} }) : null
+    const auto = assumePaymentOn(l.data) ? upcomingAutoReceipt({ today: now.toISOString().slice(0, 10), paymentDay: l.paymentDay, startDate: l.startDate.toISOString().slice(0, 10), paid: new Set(l.payments.map((p) => p.period)), held: facts.receiptHold ?? {} }) : null
     if (auto && !auto.held && now.toISOString().slice(0, 10) >= warnDateOf(auto.period, l.paymentDay)) {
       const [ay, am] = auto.period.split('-').map(Number)
       tasks.push({ id: `auto-${l.id}-${auto.period}`, type: 'AUTO_RECEIPT', tag: 'Quittance automatique', tone: 'owner', place: propertyName(l.property), title: `La quittance de ${monthYearFr(ay, am)} partira seule le ${short(new Date(`${auto.sendOn}T00:00:00Z`))}`, text: `Rien à faire si le loyer de ${who} est arrivé. S’il n’est pas arrivé, dites-le avant cette date : la quittance ne partira pas.`, leaseId: l.id, period: auto.period })
       if (auto.period === period) continue
     }
     if (st.key === 'LATE') {
-      tasks.push({ id: `late-${l.id}`, type: 'LATE_RENT', tag: 'Loyer en retard', tone: 'error', place: propertyName(l.property), title: `Le loyer de ${who} n’est pas arrivé (attendu le ${short(dueDate)})`, text: 'Une relance amiable, polie et courte, est rédigée. Vous pouvez la relire avant l’envoi.', leaseId: l.id, amountCents: l.rentCents + l.chargesCents, period })
+      // Toute la dette, pas seulement le mois en cours : le même calcul que le tableau de bord et le parcours d'impayé.
+      const [oy, om] = st.unpaidPeriods[0].split('-').map(Number)
+      const oldestDue = new Date(Date.UTC(oy, om - 1, l.paymentDay))
+      const many = st.unpaidPeriods.length > 1
+      tasks.push({ id: `late-${l.id}`, type: 'LATE_RENT', tag: many ? 'Loyers en retard' : 'Loyer en retard', tone: 'error', place: propertyName(l.property), title: many ? `${who} doit ${formatEuros(st.unpaidCents)} : ${st.unpaidPeriods.length} loyers non réglés depuis ${monthYearFr(oy, om)}` : `Le loyer de ${who} n’est pas arrivé (attendu le ${short(oldestDue)})`, text: many ? 'Suivez les étapes dans l’ordre : relance, mise en demeure, caution. Chaque courrier est déjà rempli.' : 'Une relance amiable, polie et courte, est rédigée. Vous pouvez la relire avant l’envoi.', leaseId: l.id, amountCents: st.unpaidCents, period: st.unpaidPeriods[0] })
     } else if (st.key === 'PARTIAL') {
       const paid = l.payments.find((p) => p.period === period)?.amountCents ?? 0
       tasks.push({ id: `partial-${l.id}`, type: 'PARTIAL_RENT', tag: 'Paiement partiel', tone: 'caramel', place: propertyName(l.property), title: `${who} a payé ${formatEuros(paid)} sur ${formatEuros(l.rentCents + l.chargesCents)}`, text: 'Un reçu a été établi. Il reste à recevoir le solde.', leaseId: l.id, period })
@@ -230,15 +233,27 @@ router.get('/today', async (req, res) => {
   for (const e of toVerify) {
     tasks.push({ id: `exp-${e.id}`, type: 'INVOICE', tag: 'Facture à vérifier', tone: 'green', place: e.property ? propertyName(e.property) : 'Sans logement', title: `${e.vendor}, ${formatEuros(e.amountCents)}${e.property ? `, rangée dans ${propertyName(e.property)}` : ''}`, expenseId: e.id })
   }
-  // Mise en location : chaque étape à faire, dans l'ordre, pour chaque logement (fiche, annonce, locataire, bail, signature…).
+  // Mise en location : la prochaine étape de chaque logement (fiche, annonce, locataire, bail, signature…), comme sur
+  // sa page. La même étape pour 3 logements ou plus devient une seule tâche : la liste reste lisible avec 8 logements.
   const journeys = await rentalJourneys(user)
+  const nextSteps: Array<{ p: (typeof properties)[number]; st: NonNullable<ReturnType<typeof journeys.get>>[number] }> = []
   for (const p of properties) {
-    const steps = journeys.get(p.id) ?? []
-    for (const st of steps) {
-      if (st.state !== 'TODO' || !st.action || st.key === 'RENT') continue
+    const st = (journeys.get(p.id) ?? []).find((x) => {
+      if (x.state !== 'TODO' || !x.action || x.key === 'RENT') return false
       // Déjà signalé par un rappel (état des lieux, assurance) : pas de doublon.
-      if ((st.key === 'INVENTORY' || st.key === 'INSURANCE') && tasks.some((t) => t.type === st.key && leases.some((l) => l.id === t.leaseId && l.propertyId === p.id))) continue
-      tasks.push({ id: `step-${p.id}-${st.key}`, type: 'STEP', tag: st.optional ? 'Mise en location, facultatif' : 'Mise en location', tone: st.key === 'PROPERTY' || st.key === 'TENANT' ? 'caramel' : 'owner', place: propertyName(p), title: st.title, text: st.text, propertyId: p.id, step: { key: st.key, label: st.action.label, to: st.action.to, optional: Boolean(st.optional) } })
+      return !((x.key === 'INVENTORY' || x.key === 'INSURANCE') && tasks.some((t) => t.type === x.key && leases.some((l) => l.id === t.leaseId && l.propertyId === p.id)))
+    })
+    if (st) nextSteps.push({ p, st })
+  }
+  for (const key of [...new Set(nextSteps.map((x) => x.st.key))]) {
+    const same = nextSteps.filter((x) => x.st.key === key)
+    if (same.length >= 3) {
+      const { st } = same[0]
+      tasks.push({ id: `step-many-${key}`, type: 'STEP', tag: 'Mise en location', tone: key === 'PROPERTY' || key === 'TENANT' ? 'caramel' : 'owner', place: `${same.length} logements`, title: `${st.title} : ${same.length} logements`, text: same.map((x) => propertyName(x.p)).join(', '), step: { key: st.key, label: 'Voir les logements', to: '/espace/logements', optional: false } })
+      continue
+    }
+    for (const { p, st } of same) {
+      tasks.push({ id: `step-${p.id}-${st.key}`, type: 'STEP', tag: st.optional ? 'Mise en location, facultatif' : 'Mise en location', tone: st.key === 'PROPERTY' || st.key === 'TENANT' ? 'caramel' : 'owner', place: propertyName(p), title: st.title, text: st.text, propertyId: p.id, step: { key: st.key, label: st.action!.label, to: st.action!.to, optional: Boolean(st.optional) } })
     }
   }
 
@@ -293,7 +308,7 @@ router.get('/today', async (req, res) => {
         const current = ls.find((l) => (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now) ?? ls.find((l) => l.status === 'ACTIVE' && l.startDate > now)
         const draft = ls.find((l) => l.status === 'DRAFT')
         const st = current ? rentStatus(current, current.payments, now) : null
-        const status = current ? (st!.key === 'PAID' ? { label: 'Payé', tone: 'green' } : st!.key === 'LATE' ? { label: 'En retard', tone: 'error' } : st!.key === 'UPCOMING' ? { label: 'Entrée à venir', tone: 'owner' } : { label: st!.label, tone: 'muted' }) : draft ? { label: 'Bail en cours', tone: 'caramel' } : { label: 'Disponible', tone: 'muted' }
+        const status = current ? (st!.key === 'PAID' ? { label: 'Payé', tone: 'green' } : st!.key === 'LATE' ? { label: 'En retard', tone: 'error' } : st!.key === 'UPCOMING' ? { label: 'Entrée à venir', tone: 'owner' } : { label: st!.label, tone: 'muted' }) : draft ? { label: 'Bail en préparation', tone: 'caramel' } : { label: 'Disponible', tone: 'muted' }
         return { id: p.id, name: propertyName(p), status }
       }),
       counts: { properties: properties.length, tenants: tenants.length, leases: leases.length, signedLeases: leases.filter((l) => l.status !== 'DRAFT').length },

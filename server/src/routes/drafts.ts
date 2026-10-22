@@ -12,6 +12,7 @@ import { allowEmailTo, limitPerVisitor } from '../lib/rateLimit.js'
 import { optionalUser } from '../services/session.js'
 import { draftToLeaseInput } from '../services/leases.js'
 import { renderLeasePdf } from '../pdf/lease.js'
+import { stampDraft } from '../services/annexes.js'
 import { extractLease, extractionToDraft, importAvailable, toArchivedFile, validateFiles } from '../services/importLease.js'
 
 const DRAFT_DAYS = 30
@@ -88,7 +89,8 @@ router.post('/current/resume-link', emailLimiter, optionalUser, async (req, res)
 // Aperçu du bail complet, avant la création du compte.
 router.get('/current/preview.pdf', optionalUser, async (req, res) => {
   const draft = await draftFromRequest(req)
-  const pdf = await renderLeasePdf(draftToLeaseInput(draft))
+  // Aperçu du tunnel : toujours incomplet (diagnostics, équipements…), jamais à signer tel quel.
+  const pdf = await stampDraft(await renderLeasePdf(draftToLeaseInput(draft)))
   res.setHeader('Content-Type', 'application/pdf')
   res.setHeader('Content-Disposition', 'inline; filename="apercu-bail.pdf"')
   res.setHeader('Cache-Control', 'no-store')

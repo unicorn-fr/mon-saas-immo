@@ -284,6 +284,15 @@ function Issues({ code, info, onDone, open, setOpen }: { code: string; info: Lin
                   <Input label="Où ? (facultatif)" value={where} onChange={setWhere} placeholder="Salle de bain, cuisine…" maxLength={80} />
                   <TextArea label="Ce qui se passe" value={description} onChange={setDescription} placeholder="Depuis quand, ce que vous avez constaté…" maxLength={2000} rows={4} />
                   {choice?.alwaysUrgent ? null : <Check checked={urgent} onChange={setUrgent} label="C’est urgent" sub="Le logement est inutilisable, ou le problème s’aggrave vite." />}
+                  {/* La question que se pose chaque locataire (loi du 6 juillet 1989, art. 7 d ; décret n° 87-712). */}
+                  <Callout tone="info" title="Qui paie la réparation ?">
+                    L’entretien courant et les petites réparations sont à votre charge (joints, robinets, débouchage…). Ce qui vient de
+                    l’usure normale, de la vieillesse de l’équipement, d’un défaut de construction ou d’un événement imprévu est à la charge
+                    de votre bailleur. Dans le doute, signalez : il étudie et vous répond.{' '}
+                    <a href="/api/reparations-locatives.pdf" target="_blank" rel="noopener" className="tap">
+                      La liste officielle des réparations locatives
+                    </a>
+                  </Callout>
                 </>
               ),
               validate: () => (description.trim().length >= 5 ? null : 'Décrivez le problème en quelques mots.'),

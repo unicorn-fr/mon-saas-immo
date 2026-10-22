@@ -181,7 +181,7 @@
 @media (max-width: 1023px) {
   .stage-place { display: none; }
   .stage { grid-template-columns: minmax(0, 1fr); }
-  .stage-photo { order: -1; position: relative; top: 0; height: 56svh; }
+  .stage-photo { order: -1; position: relative; top: 0; height: 40svh; }
   .card { min-height: 0; margin-top: -24px; position: relative; margin-left: 12px; margin-right: 12px; }
   .live { min-height: 0; }
   .dossier h2 { grid-column: 1 / -1; position: static; margin-bottom: 64px; }

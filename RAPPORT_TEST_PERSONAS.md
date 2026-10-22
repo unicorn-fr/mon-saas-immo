@@ -20,6 +20,31 @@
 
 ---
 
+## Suivi des corrections (22 octobre 2026, après feu vert)
+
+| Point | État |
+|---|---|
+| P0 · Quittance automatique | **Corrigé.** La quittance part dès qu'un loyer est noté reçu (à la main ou depuis le relevé). « Noter le loyer reçu 7 jours après l'échéance » devient une option séparée, coupée par défaut, avec avertissement (`receiptAssume`). |
+| P0 · Mentions légales | **En attente** de l'adresse (ou d'une domiciliation) et du téléphone de l'éditeur : rien n'est inventé. |
+| P0 · Calculs de retard (B2, B3, B4) | **Corrigé.** Un seul calcul (`unpaidPeriods`) pour Aujourd'hui, Logements, le bail et le tableau de bord ; toute la dette affichée ; premier mois au prorata jamais « en retard ». |
+| B1 « Bail en cours » pour un brouillon | Corrigé : « Bail en préparation ». |
+| Filigrane du brouillon | Corrigé : « PROJET : NE PAS SIGNER » sur chaque page tant qu'il manque une mention indispensable (aussi dans l'aperçu du tunnel et l'envoi par email). |
+| Compteur et jargon | Corrigé : « Il reste N informations, dont M indispensables » ; « à fournir » au lieu de « à refaire » (B8) ; aides sous DPE, GES, numéro ADEME, année des prix, IRL. |
+| Promesse « 5 minutes » | Corrigé : « Cinq minutes pour le préparer, Bailio vous dit ensuite ce qu'il manque » ; FAQ « valable une fois complet et signé ». |
+| Garde-fous du tunnel (B6) | Corrigé : loyer de 10 à 20 000 €, date d'entrée d'un an avant à deux ans après. |
+| Export comptable | Corrigé : structure, locataire, période, loyer et charges séparés. |
+| Aujourd'hui avec beaucoup de logements | Corrigé : une étape par logement, regroupée à partir de 3 logements. |
+| Accueil sur tablette, public visé | Corrigé : photo moins haute, « Pour les propriétaires qui louent eux-mêmes », question « Je suis locataire ? » (DossierFacile). |
+| Page sécurité | Ajoutée : `/securite`, liée dans le pied de page. |
+| B5 fichier trop gros (500) | Corrigé : message clair (413). |
+| B7 « Loyers de octobre » | Corrigé : « Loyers d'octobre ». |
+| B9 deux baux sur un logement | Corrigé pour le parcours : le bail signé reste suivi pendant son entrée. La colocation par chambre (chambres, loyers par chambre) n'est pas modélisée. |
+| B10 « Voir le brouillon » | Corrigé : ouvre le PDF dans un onglet. |
+| « Qui paie ? » | Ajouté dans le signalement du locataire. |
+| Impayé, la suite | Ajouté : annuaire des commissaires de justice, rôle du juge, trêve hivernale. |
+| Quick wins | Faits : « Aucune pièce jointe ne circule » retiré, « le propriétaire », lien « aucun rappel » sur la page de bienvenue. |
+| Non faits, décision nécessaire | Prix « par compte ou par logement » ; identité visuelle unique entre l'accueil et l'espace (refonte graphique) ; messages techniques de l'API non visibles dans l'interface (B11). |
+
 ## 2. Les personas
 
 ### 2.1 Jeanne, 72 ans, retraitée, tablette

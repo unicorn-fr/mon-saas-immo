@@ -17,6 +17,7 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/cookies', 'yearly', '0.2'],
   ['/prix-et-remboursement', 'yearly', '0.3'],
   ['/accessibilite', 'yearly', '0.2'],
+  ['/securite', 'yearly', '0.3'],
 ]
 
 // Description du service pour les assistants et agents d'IA (format llms.txt) : informations publiques seulement.
@@ -40,6 +41,7 @@ const LLMS_TXT = `# Bailio
 - [Cookies](${SITE_URL}/cookies)
 - [Prix et remboursement](${SITE_URL}/prix-et-remboursement)
 - [Accessibilité](${SITE_URL}/accessibilite)
+- [Sécurité des données](${SITE_URL}/securite)
 - [Mentions légales](${SITE_URL}/mentions-legales)
 - [Contact](${SITE_URL}/contact)
 

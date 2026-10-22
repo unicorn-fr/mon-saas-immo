@@ -226,25 +226,42 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
 
           {l.status !== 'DRAFT' ? (
             <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
-              <Line label="Ce mois-ci" value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
+              <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
               {l.status !== 'ENDED' ? (
-                <Toggle
-                  checked={Boolean(l.facts?.receiptAuto)}
-                  onChange={(v) =>
-                    void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
-                      .then(() => {
-                        toast.show(v ? 'Les quittances partiront automatiquement.' : 'Envoi automatique arrêté.')
-                        reload()
-                      })
-                      .catch(toast.error)
-                  }
-                  label="Quittance automatique, 7 jours après l’échéance"
-                  sub={
-                    l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                      ? 'Rien à faire : la quittance part seule par email. Si le loyer n’arrive pas, vous êtes prévenu avant et vous l’arrêtez en un clic.'
-                      : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
-                  }
-                />
+                <>
+                  <Toggle
+                    checked={Boolean(l.facts?.receiptAuto)}
+                    onChange={(v) =>
+                      void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
+                        .then(() => {
+                          toast.show(v ? 'La quittance partira dès que vous notez le loyer reçu.' : 'Envoi des quittances par email arrêté.')
+                          reload()
+                        })
+                        .catch(toast.error)
+                    }
+                    label="Quittance par email dès que le loyer est noté reçu"
+                    sub={
+                      l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
+                        ? 'Vous notez le loyer reçu (ou Bailio le retrouve sur votre relevé) : la quittance part tout de suite au locataire.'
+                        : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
+                    }
+                  />
+                  {l.facts?.receiptAuto ? (
+                    <Toggle
+                      checked={Boolean(l.facts?.receiptAssume)}
+                      onChange={(v) =>
+                        void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { assume: v } })
+                          .then(() => {
+                            toast.show(v ? 'Sans nouvelle de votre part, le loyer sera noté reçu 7 jours après l’échéance.' : 'Bailio attendra que vous notiez le loyer reçu.')
+                            reload()
+                          })
+                          .catch(toast.error)
+                      }
+                      label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
+                      sub="Facultatif. La quittance prouve que le loyer est payé : ne l’activez que si votre locataire paie toujours à l’heure. Vous êtes prévenu par email 3 jours avant, et un clic suffit pour l’arrêter."
+                    />
+                  ) : null}
+                </>
               ) : null}
               {l.facts?.autoReceipt ? (
                 l.facts.autoReceipt.held ? (

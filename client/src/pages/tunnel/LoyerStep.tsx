@@ -21,6 +21,13 @@ function CalcRow({ label, value, note }: { label: string; value: ReactNode; note
 const small = { ...inputStyle(), height: 44, fontSize: 16, width: 120, padding: '0 12px' }
 const editLink = { background: 'none', border: 'none', padding: 0, color: BAI.caramel, fontWeight: 600, fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 3 } as const
 
+/** Date du jour décalée de quelques années, AAAA-MM-JJ. */
+const shiftYears = (n: number) => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() + n)
+  return d.toISOString().slice(0, 10)
+}
+
 export default function LoyerStep() {
   const { data, update, flush } = useDraft()
   const navigate = useNavigate()
@@ -61,8 +68,13 @@ export default function LoyerStep() {
   function validate() {
     const e: Record<string, string> = {}
     if (!rentCents) e.rent = 'Indiquez le loyer hors charges.'
+    // Garde-fous : une faute de frappe ne doit pas produire un bail absurde (0,01 € ou 99 999 € par mois).
+    else if (rentCents < 1000) e.rent = 'Ce loyer paraît trop bas : indiquez le montant en euros par mois.'
+    else if (rentCents > 2_000_000) e.rent = 'Ce loyer paraît très élevé : vérifiez le montant en euros par mois.'
     if (parseEuros(charges) === undefined && charges.trim()) e.charges = 'Montant invalide.'
     if (!startDate) e.startDate = "Indiquez la date d'entrée du locataire."
+    else if (data.source !== 'import' && startDate < shiftYears(-1)) e.startDate = 'Cette date est passée depuis plus d’un an. Pour un bail déjà signé, choisissez « J’ai déjà un bail » sur l’accueil.'
+    else if (startDate > shiftYears(2)) e.startDate = 'Cette date est dans plus de deux ans : vérifiez-la.'
     if (depositTooHigh) e.deposit = `Le dépôt de garantie ne peut pas dépasser ${euros(maxDeposit)}.`
     return e
   }

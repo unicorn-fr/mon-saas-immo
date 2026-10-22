@@ -12,7 +12,7 @@ import { HttpError } from '../lib/http.js'
 import { requireUser } from '../services/session.js'
 import { documentText, ocrAvailable } from '../services/import/ocr.js'
 import { matchProperty, parseInvoice } from '../services/import/invoice.js'
-import { contractFor, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readStructure } from '../services/contract.js'
+import { contractFor, leaseKindOf, leaseOwned, propertyName, readProfile, readProperty, readStructure, readTenant, tenantName } from '../services/contract.js'
 import { sheetKind, structureTaxSheet } from '../domain/structureTax.js'
 import { CONTACTS, filingGuides } from '../domain/taxFiling.js'
 import { occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
@@ -246,18 +246,28 @@ router.get('/money', async (req, res) => {
 router.get('/money/export', async (req, res) => {
   const userId = req.user!.id
   const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear()).parse(req.query.year)
-  const [payments, expenses] = await Promise.all([
+  const [payments, expenses, structures, tenants] = await Promise.all([
     prisma.payment.findMany({ where: { userId, period: { startsWith: String(year) } }, include: { lease: { include: { property: true } } }, orderBy: { receivedAt: 'asc' } }),
     prisma.expense.findMany({ where: { userId, date: { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) } }, include: { property: true }, orderBy: { date: 'asc' } }),
+    prisma.structure.findMany({ where: { userId } }),
+    prisma.tenant.findMany({ where: { userId } }),
   ])
+  // Pour le comptable : la structure (nom propre, SCI…), le locataire, et le loyer séparé des charges (lignes 211 et 230 de la 2044).
+  const structureOf = new Map(structures.map((x) => [x.id, structureName(readStructure(x))]))
+  const firstStructure = structures[0] ? structureName(readStructure(structures[0])) : ''
+  const owner = (p: { structureId: string | null } | null) => (p ? (p.structureId ? structureOf.get(p.structureId) : null) ?? firstStructure : '')
+  const tenantOf = new Map(tenants.map((t) => [t.id, tenantName(readTenant(t))]))
   const eur = (c: number) => (c / 100).toFixed(2).replace('.', ',')
   const cell = (s: string | null | undefined) => `"${(s ?? '').replace(/"/g, '""')}"`
   // Texte saisi (fournisseur, logement) : une formule de tableur (=, +, -, @) n'est jamais exécutée à l'ouverture.
   const text = (s: string | null | undefined) => cell(/^[=+\-@\t\r]/.test(s ?? '') ? `'${s}` : s)
   const rows = [
-    ['Date', 'Type', 'Logement', 'Libellé', 'Catégorie', 'Montant (€)', 'Dont récupérable (€)'].map(cell).join(';'),
-    ...payments.map((p) => [cell(iso(p.receivedAt)), cell('Loyer'), text(propertyName(p.lease.property)), cell(`Loyer ${p.period}`), cell('loyer'), cell(eur(p.amountCents)), cell('')].join(';')),
-    ...expenses.map((e) => [cell(iso(e.date)), cell('Dépense'), text(e.property ? propertyName(e.property) : ''), text(`${e.vendor}${e.description ? `, ${e.description}` : ''}`), cell(CATEGORY_LABEL[e.category] ?? ''), cell(`-${eur(e.amountCents)}`), cell(eur(e.recoverableCents))].join(';')),
+    ['Date', 'Type', 'Structure', 'Logement', 'Locataire', 'Période', 'Libellé', 'Catégorie', 'Loyer hors charges (€)', 'Charges (€)', 'Montant (€)', 'Dont récupérable (€)'].map(cell).join(';'),
+    ...payments.map((p) => {
+      const part = splitPayment(p.amountCents, amountsForPeriod(p.lease, p.period).rentCents)
+      return [cell(iso(p.receivedAt)), cell('Loyer'), text(owner(p.lease.property)), text(propertyName(p.lease.property)), text(p.lease.tenantIds.map((id) => tenantOf.get(id)).filter(Boolean).join(', ')), cell(p.period), cell(`Loyer ${p.period}`), cell('loyer'), cell(eur(part.rentCents)), cell(eur(part.chargesCents)), cell(eur(p.amountCents)), cell('')].join(';')
+    }),
+    ...expenses.map((e) => [cell(iso(e.date)), cell('Dépense'), text(owner(e.property)), text(e.property ? propertyName(e.property) : ''), cell(''), cell((iso(e.date) ?? '').slice(0, 7)), text(`${e.vendor}${e.description ? `, ${e.description}` : ''}`), cell(CATEGORY_LABEL[e.category] ?? ''), cell(''), cell(''), cell(`-${eur(e.amountCents)}`), cell(eur(e.recoverableCents))].join(';')),
   ]
   res.setHeader('Content-Type', 'text/csv; charset=utf-8')
   res.setHeader('Content-Disposition', `attachment; filename="bailio-${year}.csv"`)
