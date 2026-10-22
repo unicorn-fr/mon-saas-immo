@@ -126,8 +126,9 @@ router.post('/invitation-link', limiter, async (req, res) => {
 })
 
 router.post('/magic-link/verify', limiter, async (req, res) => {
-  const { token } = z.object({ token: z.string().min(10).max(200) }).parse(req.body)
-  const row = await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } })
+  // Un lien tronqué (copié à moitié depuis l'email) reçoit le même message qu'un lien expiré.
+  const token = z.object({ token: z.string().min(10).max(200) }).safeParse(req.body).data?.token
+  const row = token ? await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } }) : null
   // Le lien est consommé en une seule écriture conditionnelle : deux clics simultanés n'ouvrent pas deux sessions.
   const used = row ? await prisma.loginToken.updateMany({ where: { id: row.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } }) : null
   if (!row || !used?.count) {
