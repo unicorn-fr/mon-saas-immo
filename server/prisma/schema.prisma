@@ -535,3 +535,17 @@ model IrlPoint {
   publishedAt String?
   updatedAt   DateTime @updatedAt
 }
+
+/// Mesure d'audience sans cookie (domain/visits.ts) : compteurs par jour, page publique et provenance.
+/// Aucune adresse IP, aucun identifiant, aucun navigateur. Gardés 13 mois.
+model PageVisit {
+  day     DateTime @db.Date
+  path    String
+  /// Provenance de la visite (« Google », « Leboncoin », « Accès direct »…), « Dans le site » pour une page vue en naviguant.
+  source  String
+  views   Int      @default(0)
+  /// Premières pages d'une visite.
+  entries Int      @default(0)
+
+  @@id([day, path, source])
+}

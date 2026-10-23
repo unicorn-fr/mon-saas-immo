@@ -3,6 +3,7 @@ import { createApp } from './app.js'
 import { env } from './env.js'
 import { runDailyReminders } from './jobs/reminderEmails.js'
 import { purgeOldCandidates } from './routes/candidates.js'
+import { purgeOldVisits } from './routes/visits.js'
 import { purgeTrash } from './services/trash.js'
 import { runAutoReceipts } from './services/autoReceipts.js'
 import { purgeAfterLease, purgeDocsAfterLease, purgeWithoutLease } from './services/retention.js'
@@ -23,4 +24,6 @@ cron.schedule('0 8 * * *', () => {
   purgeAfterLease().catch((err) => console.error('[conservation]', err))
   purgeWithoutLease().catch((err) => console.error('[conservation sans bail]', err))
   purgeDocsAfterLease().catch((err) => console.error('[justificatifs après le bail]', err))
+  // Mesure d'audience : compteurs de plus de 13 mois effacés.
+  purgeOldVisits().catch((err) => console.error('[audience]', err))
 }, { timezone: 'Europe/Paris' })

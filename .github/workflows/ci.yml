@@ -59,6 +59,9 @@ jobs:
       DATABASE_URL: postgresql://bailio:bailio@localhost:5432/bailio
       E2E_API_LOG: /tmp/bailio-api.log
       RATE_LIMIT_SCALE: 20
+      # Pilotage et mesure d'audience (e2e/tests/34-pilotage-avis.test.mjs) : l'API reconnaît cette adresse.
+      ADMIN_EMAILS: pilotage-e2e@example.fr
+      E2E_ADMIN_EMAIL: pilotage-e2e@example.fr
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
