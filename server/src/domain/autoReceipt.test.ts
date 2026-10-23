@@ -17,11 +17,20 @@ test('quittance automatique : 7 jours après l’échéance, propriétaire prév
   assert.equal(autoReceiptStep(s({ today: '2026-11-22' })), null, 'pas de rattrapage au-delà de 10 jours')
 })
 
-test('active par défaut, coupée seulement si le propriétaire le choisit', async () => {
+test('quittance dès le loyer enregistré : active par défaut, coupée seulement si le propriétaire le choisit', async () => {
   const { receiptAutoOn } = await import('./autoReceipt.js')
   assert.equal(receiptAutoOn({}), true)
   assert.equal(receiptAutoOn(null), true)
   assert.equal(receiptAutoOn({ receiptAuto: false }), false)
+})
+
+test('loyer supposé reçu après 7 jours : jamais par défaut, seulement sur choix exprès', async () => {
+  const { assumePaymentOn } = await import('./autoReceipt.js')
+  assert.equal(assumePaymentOn({}), false, 'une quittance prouve le paiement : rien ne part sans accord')
+  assert.equal(assumePaymentOn(null), false)
+  assert.equal(assumePaymentOn({ receiptAuto: true }), false)
+  assert.equal(assumePaymentOn({ receiptAssume: true }), true)
+  assert.equal(assumePaymentOn({ receiptAssume: true, receiptAuto: false }), false, 'sans envoi par email, rien à supposer')
 })
 
 test('rien ne part si le loyer est déjà enregistré, si l’envoi est annulé, avant l’entrée ou après la fin du bail', () => {

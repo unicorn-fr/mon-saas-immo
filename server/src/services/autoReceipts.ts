@@ -1,7 +1,7 @@
 import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { layout, sendEmail } from '../lib/email.js'
-import { autoReceiptStep, dueDateOf, periodsToCheck, receiptAutoOn, sendDateOf } from '../domain/autoReceipt.js'
+import { assumePaymentOn, autoReceiptStep, dueDateOf, periodsToCheck, sendDateOf } from '../domain/autoReceipt.js'
 import { monthYearFr } from '../domain/lease.js'
 import { propertyName } from './contract.js'
 import { patchLeaseData, recordPayment } from '../routes/leases.js'
@@ -10,7 +10,7 @@ type Facts = { receiptAuto?: boolean; receiptHold?: Record<string, string>; rece
 const fr = (d: string) => d.split('-').reverse().join('/')
 
 /**
- * Tâche quotidienne : pour chaque bail où la quittance automatique est active (par défaut), prévient le propriétaire
+ * Tâche quotidienne : pour chaque bail où le propriétaire a choisi le loyer supposé reçu (`receiptAssume`), prévient le propriétaire
  * 3 jours avant l'envoi, puis, 7 jours après l'échéance, enregistre le loyer comme reçu et envoie la quittance —
  * sauf si le loyer est déjà enregistré ou si le propriétaire a annulé l'envoi.
  */
@@ -21,7 +21,7 @@ export async function runAutoReceipts(now = new Date(), only?: string[]): Promis
   let sent = 0
   for (const l of leases) {
     const f = (l.data ?? {}) as Facts
-    if (!receiptAutoOn(l.data)) continue
+    if (!assumePaymentOn(l.data)) continue
     const day = l.paymentDay
     const paid = new Set(l.payments.map((p) => p.period))
     for (const period of periodsToCheck(today)) {

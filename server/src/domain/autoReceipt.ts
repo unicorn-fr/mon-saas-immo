@@ -1,15 +1,19 @@
 /**
- * Quittance automatique, active par défaut : 7 jours après l'échéance du loyer (jour de paiement du bail), la
- * quittance du mois part seule par email et le loyer est enregistré comme reçu à l'échéance. Le propriétaire n'a rien
- * à faire quand le loyer arrive ; il est prévenu 3 jours avant l'envoi et, si le loyer n'est pas arrivé, il le dit
- * (l'envoi est annulé) et peut adresser une relance. Une quittance prouve le paiement : elle ne doit jamais
- * partir pour un loyer non reçu (loi du 6 juillet 1989, art. 21).
+ * Quittances par email. Deux réglages distincts :
+ * - `receiptAuto` (actif par défaut) : la quittance part dès que le loyer est enregistré (à la main ou depuis le relevé) ;
+ * - `receiptAssume` (coupé par défaut, choix exprès du propriétaire) : 7 jours après l'échéance, sans nouvelle du
+ *   propriétaire, le loyer est noté reçu et la quittance part. Le propriétaire est prévenu 3 jours avant et peut dire
+ *   « le loyer n'est pas arrivé ». Une quittance prouve le paiement (loi du 6 juillet 1989, art. 21) : la supposer
+ *   reçue sans paiement constaté peut se retourner contre le bailleur, d'où l'accord exprès.
  */
 export const AUTO_RECEIPT_DELAY_DAYS = 7
 export const AUTO_RECEIPT_WARN_DAYS = 3
 
-/** Active sauf si le propriétaire l'a coupée sur la page du bail. */
+/** Quittance envoyée dès que le loyer est enregistré : active sauf si le propriétaire l'a coupée sur la page du bail. */
 export const receiptAutoOn = (data: unknown) => (data as { receiptAuto?: boolean } | null)?.receiptAuto !== false
+
+/** Loyer supposé reçu 7 jours après l'échéance : seulement si le propriétaire l'a choisi expressément. */
+export const assumePaymentOn = (data: unknown) => receiptAutoOn(data) && (data as { receiptAssume?: boolean } | null)?.receiptAssume === true
 
 const DAY = 86_400_000
 const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10)

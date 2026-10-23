@@ -59,7 +59,8 @@ const key = (r: Row) => `${r.leaseId}:${r.period ?? ''}`
 export default function Actions() {
   const toast = useToast()
   const { data, error, reload } = useLoad(() => api<BulkView>('/bulk'))
-  const [open, setOpen] = useState<Kind | null>(null)
+  // undefined : premier groupe ouvert par défaut ; null : tout est replié.
+  const [open, setOpen] = useState<Kind | null | undefined>(undefined)
   const [skipped, setSkipped] = useState<Record<string, boolean>>({})
   const [results, setResults] = useState<Record<string, { ok: boolean; text: string }>>({})
   const [busy, setBusy] = useState(false)
@@ -67,7 +68,7 @@ export default function Actions() {
   if (!data) return <AppShell><Loader /></AppShell>
 
   const available = ORDER.filter((k) => data.groups[k].length)
-  const current = open ?? available[0] ?? null
+  const current = open === undefined ? (available[0] ?? null) : open
 
   const letterFor = async (kind: Kind, r: Row): Promise<Record<string, unknown>> => {
     const d = await api<Defaults>(`/leases/${r.leaseId}/letters/defaults/${GROUPS[kind].letter}`)

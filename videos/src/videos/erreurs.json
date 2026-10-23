@@ -1,0 +1,82 @@
+{
+  "id": "erreurs",
+  "titre": "3 erreurs qui coûtent cher aux propriétaires",
+  "legende": "Propriétaire ? Ces 3 erreurs peuvent vous coûter très cher 😬 Dépôt de garantie, délai de restitution, DPE : on fait le point. Abonnez-vous pour une astuce chaque semaine 🏠 #proprietaire #immobilier #location #bailleur #investissementlocatif #conseilimmo",
+  "musique": "musique/boucle-1.mp3",
+  "scenes": [
+    {
+      "type": "grand",
+      "voix": "Propriétaire ? Voici trois erreurs que font beaucoup de bailleurs… et qui peuvent coûter très cher. Surtout la dernière.",
+      "texte": "3 erreurs qui coûtent",
+      "accent": "très cher."
+    },
+    {
+      "type": "chiffre",
+      "voix": "Erreur numéro un : demander un dépôt de garantie trop élevé. En location vide, c'est un mois de loyer hors charges, maximum. Deux mois en meublé.",
+      "kicker": "Erreur n°1",
+      "valeur": 1,
+      "suffixe": "mois",
+      "texte": "de loyer hors charges, au maximum, pour le dépôt de garantie",
+      "note": "2 mois en meublé"
+    },
+    {
+      "type": "chiffre",
+      "voix": "Erreur numéro deux : rendre le dépôt en retard. Vous avez un mois si l'état des lieux de sortie est conforme, deux mois sinon. Après, c'est dix pour cent du loyer en plus, par mois de retard.",
+      "kicker": "Erreur n°2",
+      "valeur": 10,
+      "suffixe": "%",
+      "texte": "du loyer en plus, par mois de retard pour rendre le dépôt",
+      "note": "1 mois si la sortie est conforme, 2 sinon"
+    },
+    {
+      "type": "chiffre",
+      "voix": "Erreur numéro trois : oublier le DPE. Un logement classé G ne peut plus être mis en location depuis 2025. Et pour les logements classés F, ce sera en 2028.",
+      "kicker": "Erreur n°3",
+      "valeur": 2028,
+      "groupe": false,
+      "texte": "les logements classés F ne pourront plus être loués",
+      "note": "Classe G : déjà interdite depuis 2025"
+    },
+    {
+      "type": "chiffre",
+      "voix": "Et un petit bonus : la quittance de loyer. Si votre locataire vous la demande, vous devez la lui donner chaque mois. Et c'est gratuit, toujours.",
+      "kicker": "Bonus",
+      "valeur": 0,
+      "suffixe": "€",
+      "texte": "c'est le prix d'une quittance : elle est due si le locataire la demande",
+      "note": "Article 21 de la loi de 1989"
+    },
+    {
+      "type": "ecran",
+      "voix": "Avec Bailio, ces règles sont vérifiées pour vous : le dépôt est plafonné, les délais sont suivis, et vous êtes prévenu avant qu'il soit trop tard.",
+      "titre": "Les règles",
+      "accent": "vérifiées pour vous",
+      "image": "ecrans/aujourdhui.png",
+      "cote": "droite",
+      "notifs": [
+        {
+          "titre": "Dépôt de garantie à rendre",
+          "texte": "Encore 9 jours : le solde est déjà calculé."
+        },
+        {
+          "titre": "DPE à refaire",
+          "texte": "Votre diagnostic expire dans 3 mois."
+        }
+      ]
+    },
+    {
+      "type": "grand",
+      "voix": "Abonnez-vous : chaque semaine, une astuce pour louer sereinement.",
+      "texte": "Une astuce chaque semaine",
+      "accent": "abonnez-vous !"
+    },
+    {
+      "type": "fin",
+      "voix": "Et créez votre bail gratuitement sur bailio point f r !",
+      "texte": "Créez votre bail",
+      "accent": "gratuitement",
+      "url": "bailio.fr",
+      "sousTitre": "Et créez votre bail gratuitement sur bailio.fr !"
+    }
+  ]
+}

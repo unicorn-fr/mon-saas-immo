@@ -1,0 +1,151 @@
+{
+ "id": "yt-calendrier",
+ "titre": "Propriétaires : les 6 dates à ne pas rater dans l'année",
+ "legende": "Trêve hivernale, déclaration de revenus, déclaration d'occupation, révision du loyer, taxe foncière, CFE : le calendrier du propriétaire bailleur.",
+ "musique": "musique/boucle-1.mp3",
+ "scenes": [
+  {
+   "type": "phrase",
+   "voix": "Propriétaires : il y a six dates dans l'année qu'il ne faut surtout pas rater. En oublier une, c'est de l'argent perdu. Parfois, une amende.",
+   "texte": "6 dates à ne pas rater",
+   "accent": "dans votre année de propriétaire."
+  },
+  {
+   "type": "calendrier",
+   "voix": "Cinq dates fixes, de mars à décembre. Et une sixième, qui dépend de votre bail. On les prend dans l'ordre.",
+   "titre": "Votre année de propriétaire",
+   "marques": [
+    {
+     "mois": 2,
+     "label": "31 mars"
+    },
+    {
+     "mois": 4,
+     "label": "Fin mai"
+    },
+    {
+     "mois": 6,
+     "label": "1er juillet"
+    },
+    {
+     "mois": 9,
+     "label": "Mi-octobre"
+    },
+    {
+     "mois": 11,
+     "label": "15 décembre"
+    }
+   ]
+  },
+  {
+   "type": "date",
+   "voix": "Le trente et un mars : fin de la trêve hivernale. Du premier novembre au trente et un mars, un locataire ne peut pas être expulsé. Mais les procédures, elles, continuent. Un loyer impayé en décembre ? N'attendez pas le printemps pour agir.",
+   "quand": "31 mars",
+   "detail": "Fin de la trêve hivernale",
+   "kicker": "Impayés",
+   "texte": "Les procédures, elles, ne s'arrêtent pas l'hiver.",
+   "icone": "quittances"
+  },
+  {
+   "type": "date",
+   "voix": "Fin mai ou début juin, selon votre département : la déclaration de revenus. Vos loyers de l'année passée y figurent. Micro-foncier jusqu'à quinze mille euros en vide, micro-BIC en meublé. Et le régime réel si vous avez beaucoup de charges.",
+   "quand": "Fin mai",
+   "detail": "Selon votre département",
+   "kicker": "Déclaration de revenus",
+   "texte": "Vos loyers de l'année passée se déclarent avec vos revenus.",
+   "icone": "guide"
+  },
+  {
+   "type": "date",
+   "voix": "Avant le premier juillet : la déclaration d'occupation. Si votre locataire a changé, signalez-le sur impots point gouv, dans l'espace Gérer mes biens immobiliers. Un oubli peut coûter cent cinquante euros d'amende.",
+   "quand": "1er juillet",
+   "detail": "Gérer mes biens immobiliers",
+   "kicker": "Déclaration d'occupation",
+   "texte": "Nouveau locataire ? Signalez-le sur impots.gouv.fr.",
+   "icone": "a-propos"
+  },
+  {
+   "type": "date",
+   "voix": "Une date qui bouge : l'anniversaire du bail. C'est là que vous pouvez réviser le loyer, avec l'indice de référence des loyers, sauf si le logement est classé F ou G. Vous avez un an pour la demander. Après, l'augmentation est perdue.",
+   "quand": "Chaque année",
+   "detail": "Date prévue au bail",
+   "kicker": "Révision du loyer",
+   "texte": "Un an pour la demander. Sans effet rétroactif.",
+   "icone": "le-bail"
+  },
+  {
+   "type": "date",
+   "voix": "Mi-octobre : la taxe foncière. Elle est pour vous. Mais regardez bien l'avis : la taxe d'enlèvement des ordures ménagères, elle, se récupère sur le locataire, avec les charges.",
+   "quand": "Mi-octobre",
+   "detail": "Taxe foncière",
+   "kicker": "Charges récupérables",
+   "texte": "La taxe d'ordures ménagères se récupère sur le locataire.",
+   "icone": "quittances"
+  },
+  {
+   "type": "date",
+   "voix": "Et le quinze décembre : la CFE, la cotisation foncière des entreprises. Elle concerne aussi la location meublée. Sauf si vos recettes restent sous cinq mille euros par an : dans ce cas, vous en êtes exonéré.",
+   "quand": "15 déc.",
+   "detail": "Location meublée",
+   "kicker": "CFE",
+   "texte": "La cotisation foncière des entreprises touche aussi le meublé.",
+   "icone": "actu"
+  },
+  {
+   "type": "calendrier",
+   "voix": "On récapitule : le trente et un mars, fin mai, le premier juillet, mi-octobre, le quinze décembre. Et l'anniversaire de votre bail.",
+   "titre": "Les 6 dates, en un coup d'œil",
+   "marques": [
+    {
+     "mois": 2,
+     "label": "31 mars"
+    },
+    {
+     "mois": 4,
+     "label": "Fin mai"
+    },
+    {
+     "mois": 6,
+     "label": "1er juillet"
+    },
+    {
+     "mois": 9,
+     "label": "Mi-octobre"
+    },
+    {
+     "mois": 11,
+     "label": "15 décembre"
+    }
+   ],
+   "reperes": [
+    "mars",
+    "mai",
+    "juillet",
+    "mi-octobre",
+    "décembre"
+   ]
+  },
+  {
+   "type": "ecran",
+   "voix": "Retenir tout ça, c'est compliqué. Bailio vous prévient par email au bon moment : la révision du loyer, les déclarations, et même l'attestation d'assurance du locataire, chaque année.",
+   "titre": "Bailio vous prévient",
+   "points": [
+    "La révision du loyer",
+    "Les déclarations",
+    "L'attestation d'assurance"
+   ],
+   "image": "ecrans/aujourdhui.png",
+   "reperes": [
+    "révision",
+    "déclarations",
+    "attestation"
+   ]
+  },
+  {
+   "type": "fin",
+   "voix": "Enregistrez cette vidéo pour ne rien oublier. Et retrouvez-nous sur bailio point f r.",
+   "texte": "Enregistrez cette vidéo pour l'an prochain.",
+   "url": "bailio.fr"
+  }
+ ]
+}

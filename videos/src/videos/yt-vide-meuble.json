@@ -1,0 +1,172 @@
+{
+ "id": "yt-vide-meuble",
+ "titre": "Location vide ou meublée : le match (durée, dépôt, impôts)",
+ "legende": "Vide ou meublé ? Durée du bail, préavis, dépôt de garantie, mobilier obligatoire et impôts : la comparaison point par point.",
+ "musique": "musique/boucle-1.mp3",
+ "scenes": [
+  {
+   "type": "phrase",
+   "voix": "Vide ou meublé ? C'est la première question quand on met un logement en location. Et la réponse change tout : la durée du bail, le dépôt, et surtout vos impôts.",
+   "texte": "Vide ou meublé ?",
+   "accent": "La réponse change tout."
+  },
+  {
+   "type": "phrase",
+   "voix": "On compare les deux, point par point. Et à la fin, je vous dis comment choisir.",
+   "texte": "Le match,",
+   "accent": "point par point."
+  },
+  {
+   "type": "titre",
+   "voix": "Premier round : la durée.",
+   "numero": "01",
+   "titre": "La durée"
+  },
+  {
+   "type": "match",
+   "voix": "En vide, le bail dure trois ans quand le propriétaire est un particulier. En meublé, un an. Pour donner congé, le bailleur prévient six mois avant la fin en vide, trois mois en meublé. Et le locataire peut partir avec trois mois de préavis en vide, un mois en zone tendue, et un mois en meublé.",
+   "titre": "Durée et préavis",
+   "colonnes": [
+    "Vide",
+    "Meublé"
+   ],
+   "lignes": [
+    [
+     "Durée du bail",
+     "3 ans",
+     "1 an"
+    ],
+    [
+     "Préavis du bailleur",
+     "6 mois",
+     "3 mois"
+    ],
+    [
+     "Préavis du locataire",
+     "1 à 3 mois",
+     "1 mois"
+    ]
+   ],
+   "reperes": [
+    "dure",
+    "bailleur",
+    "locataire"
+   ]
+  },
+  {
+   "type": "titre",
+   "voix": "Deuxième round : le dépôt de garantie.",
+   "numero": "02",
+   "titre": "Le dépôt de garantie"
+  },
+  {
+   "type": "match",
+   "voix": "Le dépôt de garantie, c'est la somme versée par le locataire à l'entrée, et rendue à la fin. En vide, un mois de loyer hors charges, au maximum. En meublé, deux mois. Dans les deux cas, il se rend dans le mois si l'état des lieux de sortie est conforme, deux mois sinon.",
+   "titre": "Le dépôt de garantie",
+   "colonnes": [
+    "Vide",
+    "Meublé"
+   ],
+   "lignes": [
+    [
+     "Montant maximum",
+     "1 mois",
+     "2 mois"
+    ],
+    [
+     "Rendu, sortie conforme",
+     "1 mois",
+     "1 mois"
+    ]
+   ],
+   "reperes": [
+    "vide",
+    "cas"
+   ]
+  },
+  {
+   "type": "titre",
+   "voix": "Troisième round : le mobilier.",
+   "numero": "03",
+   "titre": "Le mobilier"
+  },
+  {
+   "type": "chiffre",
+   "voix": "Un meublé, ce n'est pas trois chaises et un matelas. Un décret fixe la liste : literie, plaques de cuisson, four ou micro-ondes, réfrigérateur, vaisselle, table et chaises, rangements, luminaires. S'il manque un élément, le bail peut être requalifié en location vide.",
+   "kicker": "Décret du 31 juillet 2015",
+   "valeur": 11,
+   "suffixe": "éléments",
+   "texte": "obligatoires pour louer meublé.",
+   "note": "Sinon : risque de requalification en location vide"
+  },
+  {
+   "type": "titre",
+   "voix": "Dernier round, le plus important : les impôts.",
+   "numero": "04",
+   "titre": "Les impôts"
+  },
+  {
+   "type": "graphique",
+   "voix": "Prenons dix mille euros de loyers par an. En vide, au micro-foncier, l'abattement est de trente pour cent : vous êtes imposé sur sept mille euros. En meublé, au micro-BIC, l'abattement est de cinquante pour cent : cinq mille euros seulement.",
+   "titre": "10 000 € de loyers par an : la part imposée",
+   "barres": [
+    {
+     "label": "Loyers",
+     "valeur": 10000
+    },
+    {
+     "label": "Vide · micro-foncier",
+     "valeur": 7000
+    },
+    {
+     "label": "Meublé · micro-BIC",
+     "valeur": 5000,
+     "accent": true
+    }
+   ],
+   "unite": "€",
+   "reperes": [
+    "Prenons",
+    "micro-foncier",
+    "micro-BIC"
+   ]
+  },
+  {
+   "type": "chiffre",
+   "voix": "Soit deux mille euros de revenus imposables en moins. Au régime réel, avec les charges et les amortissements, l'écart peut être encore plus grand. Mais attention : depuis 2025, les amortissements reviennent dans le calcul de la plus-value quand vous revendez.",
+   "kicker": "Dans cet exemple",
+   "valeur": 2000,
+   "suffixe": "€",
+   "texte": "imposables en moins en meublé.",
+   "note": "Depuis 2025 : amortissements repris dans la plus-value"
+  },
+  {
+   "type": "phrase",
+   "voix": "Alors, qui gagne ? Le vide pour la stabilité : des locataires qui restent longtemps. Le meublé pour la fiscalité et la souplesse. Avec plus d'équipement, et plus de départs.",
+   "texte": "Vide : la stabilité.",
+   "accent": "Meublé : la fiscalité."
+  },
+  {
+   "type": "ecran",
+   "voix": "Dans Bailio, vous choisissez vide ou meublé dès la première question. La durée et le dépôt s'adaptent, l'inventaire du mobilier est prévu, et l'aide à la déclaration compare le micro et le réel.",
+   "titre": "Bailio s'adapte",
+   "points": [
+    "Durée et dépôt adaptés",
+    "Inventaire du mobilier",
+    "Aide à la déclaration"
+   ],
+   "image": "ecrans/tunnel-type.png",
+   "reperes": [
+    "durée",
+    "inventaire",
+    "déclaration"
+   ]
+  },
+  {
+   "type": "fin",
+   "voix": "Et vous, vous louez vide ou meublé ? Dites-le en commentaire. Et créez votre bail gratuitement sur bailio point f r.",
+   "texte": "Vide ou meublé ? Dites-le en commentaire.",
+   "url": "bailio.fr"
+  }
+ ]
+}

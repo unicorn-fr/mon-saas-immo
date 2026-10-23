@@ -38,13 +38,14 @@ export function SiteFooter() {
     { to: '/cookies', label: 'Cookies' },
     { to: '/prix-et-remboursement', label: 'Prix et remboursement' },
     { to: '/accessibilite', label: 'Accessibilité' },
+    { to: '/securite', label: 'Sécurité' },
     { to: '/contact', label: 'Contact' },
   ]
   return (
     <footer style={{ background: BAI.night }}>
       <div className="container col-md" style={{ padding: '40px clamp(20px, 6.6vw, 96px)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20 }}>
         <Logo size={28} color={BAI.caramel} />
-        <nav aria-label="Liens légaux" className="wrap-md" style={{ display: 'flex', columnGap: 28, rowGap: 0, fontSize: 14 }}>
+        <nav aria-label="Liens légaux" className="wrap-md" style={{ display: 'flex', flexWrap: 'wrap', columnGap: 28, rowGap: 0, fontSize: 14 }}>
           {links.map((l) => (
             <Link key={l.to} to={l.to} style={{ color: BAI.onDark, textDecoration: 'none', display: 'inline-block', padding: '13px 0' }}>
               {l.label}

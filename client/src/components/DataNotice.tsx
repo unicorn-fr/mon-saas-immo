@@ -27,7 +27,7 @@ export function AccountNotice({ action }: { action: string }) {
 export function ThirdPartyNotice({ landlord, purpose, keep }: { landlord?: string | null; purpose: string; keep: ReactNode }) {
   return (
     <p style={box}>
-      Ces informations sont transmises à {landlord || 'votre propriétaire'}, responsable de leur usage, pour {purpose}. Bailio les héberge pour son
+      Ces informations sont transmises à {landlord || 'le propriétaire'}, responsable de leur usage, pour {purpose}. Bailio les héberge pour son
       compte, en Suisse, sans les utiliser à d’autres fins ni les transmettre à quiconque. {keep} Vous pouvez demander à les consulter, les
       corriger ou les effacer auprès du propriétaire ou à <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>, et saisir la CNIL. Voir la
       page <Link to="/confidentialite">Confidentialité</Link>.

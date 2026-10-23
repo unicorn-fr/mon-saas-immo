@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
 import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast } from '../../components/kit'
 import { Check, Upload } from '../../components/Icons'
+import { Onboarding } from '../../components/Onboarding'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
@@ -53,7 +54,7 @@ function TodayContent() {
         </Btn>
         {data.stats.rentsExpected ? (
           <div className="hide-md" style={{ display: 'flex', gap: 12 }}>
-            <MiniStat label={`Loyers de ${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
+            <MiniStat label={`Loyers ${/^[aeiouyhâàéèê]/i.test(month) ? 'd’' : 'de '}${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
             <MiniStat label="Encaissé ce mois" value={eurosCents(data.stats.cashedCents)} />
           </div>
         ) : null}
@@ -95,7 +96,7 @@ function TodayContent() {
           <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
             {data.properties.length ? (
               data.properties.map((p) => (
-                <Link key={p.id} to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15 }}>
+                <Link key={p.id} to={`/espace/logements/${p.id}`} className="tap" style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15 }}>
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
                   <span style={{ color: toneColor(p.status.tone), fontWeight: 600, whiteSpace: 'nowrap' }}>{p.status.label}</span>
                 </Link>
@@ -144,6 +145,15 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
   let actions: Array<{ label: string; onClick: () => unknown; variant?: 'primary' | 'outline' | 'ghost' }> = []
   switch (t.type) {
     case 'LATE_RENT':
+      // Plusieurs mois dus : le parcours d'impayé d'abord (relance, mise en demeure, caution).
+      if (t.tag === 'Loyers en retard') {
+        actions = [
+          { label: 'Voir les étapes', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/UNPAID`) },
+          { label: 'Relire la relance', variant: 'outline', onClick: () => letters('REMINDER') },
+          { label: 'Noter un paiement reçu', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}#paiements`) },
+        ]
+        break
+      }
       actions = [
         { label: 'Relire la relance', onClick: () => letters('REMINDER') },
         { label: 'Que faire en cas d’impayé ?', variant: 'ghost', onClick: () => navigate(`/espace/baux/${t.leaseId}/parcours/UNPAID`) },
@@ -229,7 +239,7 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
         const step = t.step
         actions = [{ label: step.label, onClick: () => navigate(step.to) }]
         if (step.optional) actions.push({ label: 'Je n’en ai pas besoin', variant: 'ghost', onClick: () => run(() => api(`/properties/${t.propertyId}/steps/${step.key}`, { method: 'POST', body: { skip: true } }), 'C’est noté. Vous pourrez changer d’avis sur la page du logement.') })
-        actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
+        if (t.propertyId) actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
       }
       break
     case 'INVENTORY_COMPLEMENT':
@@ -329,6 +339,9 @@ function SetupSteps({ counts }: { counts: TodayView['counts'] }) {
 
 /** Premier pas : l'espace est vide. Maquette « Premier pas, espace vide ». */
 function FirstSteps({ name, counts }: { name: string | null; counts: TodayView['counts'] }) {
+  const [later, setLater] = useState(false)
+  // Compte tout neuf (seulement un email) : on fait connaissance, puis on propose la première action.
+  if (!name && !counts.properties && !counts.tenants && !later) return <Onboarding onLater={() => setLater(true)} />
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 'clamp(8px, 3vw, 40px)' }}>

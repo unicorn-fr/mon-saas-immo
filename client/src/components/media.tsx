@@ -37,7 +37,7 @@ export function PhotoButton({ onPhotos, label = 'Photo', count = 0, dark = true 
   return (
     <label aria-label={label} title={label} style={{ position: 'relative', width: 44, height: 44, borderRadius: 10, border: `1.5px solid ${BAI.borderStrong}`, background: dark ? BAI.night : BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
       {busy ? <Spinner size={16} color={dark ? BAI.surface : BAI.owner} /> : <Camera size={20} color={dark ? BAI.surface : BAI.owner} />}
-      {count ? <span style={{ position: 'absolute', top: -6, right: -6, background: BAI.caramel, color: BAI.night, fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '1px 6px' }}>{count}</span> : null}
+      {count ? <span style={{ position: 'absolute', top: -6, right: -6, background: BAI.caramel, color: BAI.night, fontSize: 13, fontWeight: 700, borderRadius: 999, padding: '1px 6px' }}>{count}</span> : null}
       <input
         type="file"
         accept="image/*"

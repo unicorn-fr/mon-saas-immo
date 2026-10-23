@@ -94,3 +94,15 @@ img { max-width: 100%; }
 @media (max-width: 1023px) {
   .toast-wrap { bottom: calc(96px + env(safe-area-inset-bottom)); }
 }
+
+/* Écran tactile : les petits liens et boutons texte gagnent une zone de toucher plus haute, sans rien déplacer
+   (marge négative de la même hauteur). Cible d’au moins 24 px (WCAG 2.2, 2.5.8) sans chevaucher la voisine. */
+@media (pointer: coarse) {
+  .tap { padding-top: 7px !important; padding-bottom: 7px !important; margin-top: -7px !important; margin-bottom: -7px !important; }
+}
+
+/* Écran tactile : onglets et filtres d'au moins 44 px de haut. */
+@media (pointer: coarse) {
+  .tabs [role='tab'] { min-height: 44px; display: inline-flex; align-items: flex-end; }
+  .filters button { min-height: 44px; }
+}

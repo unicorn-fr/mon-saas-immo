@@ -118,7 +118,7 @@ function Flow({ inv }: { inv: InventoryView }) {
               Retour
             </button>
           ) : (
-            <Link to={`/espace/baux/${inv.lease.id}`} style={{ textDecoration: 'none', color: BAI.owner, fontSize: 15, fontWeight: 600 }}>
+            <Link to={`/espace/baux/${inv.lease.id}`} className="tap" style={{ textDecoration: 'none', color: BAI.owner, fontSize: 15, fontWeight: 600 }}>
               Quitter
             </Link>
           )}

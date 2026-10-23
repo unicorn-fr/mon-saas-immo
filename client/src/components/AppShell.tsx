@@ -8,6 +8,7 @@ import type { TodayView } from '../lib/space'
 import { ROLE_LABEL, ROLE_RIGHTS, getSpace, switchSpace } from '../lib/shared'
 import { Euro, Home, Page, People, Plus, Sun, Signpost, Book } from './Icons'
 import { Modal } from './kit'
+import { FeedbackModal } from './Feedback'
 
 /**
  * Espace propriétaire : menu latéral sombre sur ordinateur (maquette « Aujourd'hui »),
@@ -40,6 +41,7 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const [taskCount, setTaskCount] = useState<number | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+  const [feedback, setFeedback] = useState(false)
   const { pathname } = useLocation()
 
   // Le nombre d'actions du jour s'affiche dans le menu ; la page « Aujourd'hui » le met à jour elle-même.
@@ -59,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <SpaceContext.Provider value={value}>
       <div className="shell" style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }}>
-        <Sidebar taskCount={taskCount} onAdd={openAdd} />
+        <Sidebar taskCount={taskCount} onAdd={openAdd} onFeedback={() => setFeedback(true)} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <MobileHeader />
           {space ? (
@@ -78,12 +80,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <BottomNav onAdd={openAdd} />
         <AddMenu open={addOpen} onClose={() => setAddOpen(false)} />
+        {/* Hors de la barre latérale : sa position collante l'enfermerait sous le contenu de la page. */}
+        <FeedbackModal open={feedback} onClose={() => setFeedback(false)} />
       </div>
     </SpaceContext.Provider>
   )
 }
 
-function Sidebar({ taskCount, onAdd }: { taskCount: number | null; onAdd: () => void }) {
+function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; onAdd: () => void; onFeedback: () => void }) {
   const { user } = useAuth()
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || ''
   return (
@@ -104,11 +108,14 @@ function Sidebar({ taskCount, onAdd }: { taskCount: number | null; onAdd: () => 
             style={({ isActive }) => ({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.nightActive : 'transparent', color: isActive ? BAI.surface : BAI.onDarkNav })}
           >
             <span>{n.label}</span>
-            {n.end && taskCount ? <span style={{ background: BAI.caramel, color: BAI.night, fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
+            {n.end && taskCount ? <span style={{ background: BAI.caramel, color: BAI.night, fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
           </NavLink>
         ))}
       </div>
       <div style={{ flexGrow: 1 }} />
+      <button type="button" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BAI.nightSoft}`, color: BAI.onDarkNav, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
+        Votre avis
+      </button>
       <Link to="/espace/compte" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 10px 0', borderTop: `1px solid ${BAI.nightSoft}`, textDecoration: 'none' }}>
         <span style={{ width: 40, height: 40, borderRadius: 20, background: BAI.nightSoft, color: BAI.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
@@ -126,7 +133,7 @@ function MobileHeader() {
   const round = { width: 44, height: 44, borderRadius: 22, border: `1px solid ${BAI.border}`, background: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BAI.ink, textDecoration: 'none' } as const
   return (
     <header className="mobile-only" style={{ padding: '20px 22px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Link to="/espace" style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textDecoration: 'none' }}>
+      <Link to="/espace" style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textDecoration: 'none', display: 'inline-block', padding: '6px 0' }}>
         Bailio
       </Link>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -147,7 +154,7 @@ function BottomNav({ onAdd }: { onAdd: () => void }) {
     <nav aria-label="Navigation principale" className="mobile-only bottom-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40, height: 'calc(76px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxSizing: 'border-box', background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
       {items.map((n) =>
         n ? (
-          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 12, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 60 })}>
+          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 13, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
             {({ isActive }) => (
               <>
                 <n.icon color={isActive ? BAI.caramel : 'currentColor'} />

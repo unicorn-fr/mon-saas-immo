@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { StepFlow, StepNote, StepTitle, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, TextLink, errorMessage, useLoad, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, TextLink, errorMessage, useLoad, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type DocEntry, type Situation, type TenantDocKey, type TenantFile } from '../../../lib/contract'
@@ -184,7 +184,7 @@ export default function AjoutLocataire() {
           <StepTitle>Comment le joindre ?</StepTitle>
           <Input big label="Email" type="email" inputMode="email" value={f.email ?? ''} onChange={(v) => set({ email: v })} hint="Pour lui demander ce qui manque, puis pour ses quittances (avec son accord)." />
           <Input big label="Téléphone" type="tel" inputMode="tel" value={f.phone ?? ''} onChange={(v) => set({ phone: v })} />
-          <Input big label="Adresse actuelle" value={f.currentAddress ?? ''} onChange={(v) => set({ currentAddress: v })} hint="Avant son entrée dans le logement. Elle sert pour lui écrire par courrier." />
+          <AddressInput big label="Adresse actuelle" value={f.currentAddress ?? ''} onChange={(v) => set({ currentAddress: v })} hint="Avant son entrée dans le logement. Elle sert pour lui écrire par courrier." />
         </>
       ) : null}
       {current === 'situation' ? (
@@ -304,7 +304,7 @@ function GuarantorStep({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>
         <Input label="Date de naissance" type="date" value={g.birthDate ?? ''} onChange={(v) => sg({ birthDate: v || null })} />
         <Input label="Lieu de naissance" value={g.birthPlace ?? ''} onChange={(v) => sg({ birthPlace: v })} />
       </Fields>
-      <Input label="Adresse" value={g.address ?? ''} onChange={(v) => sg({ address: v })} />
+      <AddressInput label="Adresse" value={g.address ?? ''} onChange={(v) => sg({ address: v })} />
       <Fields>
         <Input label="Email" type="email" value={g.email ?? ''} onChange={(v) => sg({ email: v })} hint="Pour signer l’acte de caution en ligne." />
         <Input label="Téléphone" type="tel" value={g.phone ?? ''} onChange={(v) => sg({ phone: v })} />

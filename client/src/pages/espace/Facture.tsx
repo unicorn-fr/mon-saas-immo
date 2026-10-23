@@ -42,7 +42,7 @@ export function FactureAjout() {
 
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink }}>
-      <FlowHeader left={<button type="button" onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, cursor: 'pointer', padding: 0 }}>Retour</button>} center={<span style={{ fontSize: 16, fontWeight: 700 }}>Ajouter une facture</span>} right={<Link to="/espace/argent" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid }}>Fermer</Link>} />
+      <FlowHeader left={<button type="button" onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, cursor: 'pointer', padding: '12px 0' }}>Retour</button>} center={<span style={{ fontSize: 16, fontWeight: 700 }}>Ajouter une facture</span>} right={<Link to="/espace/argent" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid, padding: '12px 0' }}>Fermer</Link>} />
       <main style={{ maxWidth: 660, margin: '0 auto', padding: 'clamp(28px, 5vw, 56px) 16px 64px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <h1 style={display('clamp(38px, 5vw, 52px)')}>Une photo suffit.</h1>
         <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio lit la facture sur son propre serveur : fournisseur, montant, date et adresse du chantier. Vous vérifiez, puis elle est rangée dans le bon logement.</p>

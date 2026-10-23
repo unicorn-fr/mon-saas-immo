@@ -56,3 +56,12 @@ export function centsToInput(cents: number | undefined): string {
 }
 
 export const typeLabel = (t: LeaseType) => (t === 'UNFURNISHED' ? 'Location vide' : 'Location meublée')
+
+/**
+ * Décence (décret n° 2002-120, art. 4) : une pièce principale d'au moins 9 m² (et 2,20 m sous plafond)
+ * ou d'au moins 20 m³. En dessous de 9 m², on prévient sans bloquer : le volume peut suffire.
+ */
+export function smallSurfaceWarning(surface: number | null | undefined): string | null {
+  if (!surface || surface <= 0 || surface >= 9) return null
+  return 'Moins de 9 m² : le logement n’est décent que si son volume atteint 20 m³ (décret n° 2002-120). Sinon, il ne peut pas être loué comme résidence principale.'
+}

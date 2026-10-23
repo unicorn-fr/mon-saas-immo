@@ -226,25 +226,42 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
 
           {l.status !== 'DRAFT' ? (
             <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
-              <Line label="Ce mois-ci" value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
+              <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
               {l.status !== 'ENDED' ? (
-                <Toggle
-                  checked={Boolean(l.facts?.receiptAuto)}
-                  onChange={(v) =>
-                    void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
-                      .then(() => {
-                        toast.show(v ? 'Les quittances partiront automatiquement.' : 'Envoi automatique arrêté.')
-                        reload()
-                      })
-                      .catch(toast.error)
-                  }
-                  label="Quittance automatique, 7 jours après l’échéance"
-                  sub={
-                    l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                      ? 'Rien à faire : la quittance part seule par email. Si le loyer n’arrive pas, vous êtes prévenu avant et vous l’arrêtez en un clic.'
-                      : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
-                  }
-                />
+                <>
+                  <Toggle
+                    checked={Boolean(l.facts?.receiptAuto)}
+                    onChange={(v) =>
+                      void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
+                        .then(() => {
+                          toast.show(v ? 'La quittance partira dès que vous notez le loyer reçu.' : 'Envoi des quittances par email arrêté.')
+                          reload()
+                        })
+                        .catch(toast.error)
+                    }
+                    label="Quittance par email dès que le loyer est noté reçu"
+                    sub={
+                      l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
+                        ? 'Vous notez le loyer reçu (ou Bailio le retrouve sur votre relevé) : la quittance part tout de suite au locataire.'
+                        : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
+                    }
+                  />
+                  {l.facts?.receiptAuto ? (
+                    <Toggle
+                      checked={Boolean(l.facts?.receiptAssume)}
+                      onChange={(v) =>
+                        void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { assume: v } })
+                          .then(() => {
+                            toast.show(v ? 'Sans nouvelle de votre part, le loyer sera noté reçu 7 jours après l’échéance.' : 'Bailio attendra que vous notiez le loyer reçu.')
+                            reload()
+                          })
+                          .catch(toast.error)
+                      }
+                      label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
+                      sub="Facultatif. La quittance prouve que le loyer est payé : ne l’activez que si votre locataire paie toujours à l’heure. Vous êtes prévenu par email 3 jours avant, et un clic suffit pour l’arrêter."
+                    />
+                  ) : null}
+                </>
               ) : null}
               {l.facts?.autoReceipt ? (
                 l.facts.autoReceipt.held ? (
@@ -372,45 +389,45 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           </Card>
           <Card dark title="Plus tard" style={{ gap: 12 }}>
             {l.status === 'ACTIVE' ? (
-              <Link to={`/espace/baux/${l.id}/contrat`} style={darkLink}>
+              <Link to={`/espace/baux/${l.id}/contrat`} className="tap" style={darkLink}>
                 Créer un avenant
               </Link>
             ) : null}
             {l.status !== 'DRAFT' && l.status !== 'ENDED' ? (
               <>
-                <Link to={`/espace/baux/${l.id}/courriers`} style={darkLink}>
+                <Link to={`/espace/baux/${l.id}/courriers`} className="tap" style={darkLink}>
                   Quittances et courriers
                 </Link>
-                <Link to="/espace/situations" style={darkLink}>
+                <Link to="/espace/situations" className="tap" style={darkLink}>
                   Que se passe-t-il ?
                 </Link>
                 {l.computed.noticeMonths ? (
-                  <Link to={`/espace/baux/${l.id}/courriers?type=NOTICE_TO_LEAVE`} style={darkLink}>
+                  <Link to={`/espace/baux/${l.id}/courriers?type=NOTICE_TO_LEAVE`} className="tap" style={darkLink}>
                     Donner congé
                   </Link>
                 ) : null}
-                <button type="button" onClick={() => setEndOpen(true)} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+                <button type="button" className="tap" onClick={() => setEndOpen(true)} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                   Enregistrer le départ du locataire
                 </button>
               </>
             ) : null}
             {l.status === 'ENDED' ? (
-              <Link to={`/espace/baux/${l.id}/courriers?type=DEPOSIT_RETURN`} style={darkLink}>
+              <Link to={`/espace/baux/${l.id}/courriers?type=DEPOSIT_RETURN`} className="tap" style={darkLink}>
                 Restituer le dépôt de garantie
               </Link>
             ) : null}
             {l.status === 'DRAFT' ? (
-              <button type="button" onClick={removeDraft} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+              <button type="button" className="tap" onClick={removeDraft} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                 Supprimer ce bail en préparation
               </button>
             ) : null}
           </Card>
           <Card title="Personnes">
             {l.tenants.map((x) => (
-              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} style={{ textDecoration: 'none' }}>{x.name}</Link>} />
+              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} className="tap" style={{ textDecoration: 'none' }}>{x.name}</Link>} />
             ))}
             {l.guarantors.map((g) => (
-              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} style={{ textDecoration: 'none' }}>{g.name}</Link>} />
+              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} className="tap" style={{ textDecoration: 'none' }}>{g.name}</Link>} />
             ))}
           </Card>
           <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>

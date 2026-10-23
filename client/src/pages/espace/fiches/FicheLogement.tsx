@@ -4,7 +4,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { UploadModal } from '../../../components/UploadModal'
 import { AuthImage, uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast } from '../../../components/kit'
+import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, PARKING_TYPES, isParking, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
@@ -50,7 +50,7 @@ export default function FicheLogement() {
     return (
       <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du garage" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
         <FicheSection id="address" n={++n} title="Adresse" done={done('address')}>
-          <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
+          <AddressInput label="Adresse" value={f.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode })} />
           <Fields>
             <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
             <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
@@ -92,7 +92,7 @@ export default function FicheLogement() {
   return (
     <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du logement" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
       <FicheSection id="address" guides={['bail']} n={++n} title="Adresse et localisation" reference="Contrat type, décret n° 2015-587 du 29 mai 2015, rubrique II.A" done={done('address')}>
-        <Input label="Adresse" value={f.address} onChange={(v) => set({ address: v })} />
+        <AddressInput label="Adresse" value={f.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode })} />
         <Fields>
           <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
           <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
@@ -207,17 +207,17 @@ export default function FicheLogement() {
 
       <FicheSection id="diagnostics" guides={['diagnostics', 'dpe']} n={++n} title="Diagnostics" intro="Ils forment le dossier de diagnostic technique, annexé au bail." reference="loi n° 89-462 du 6 juillet 1989, art. 3-3" done={done('diagnostics')}>
         <Fields>
-          <Select label="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
-          <Select label="Classe climat (GES)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
+          <Select label="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="La lettre de A à G de la première étiquette du diagnostic de performance énergétique (DPE)." />
+          <Select label="Classe climat (GES)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v || null } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="La seconde étiquette du DPE : les gaz à effet de serre." />
         </Fields>
         <Fields>
-          <Input label="Date du DPE" type="date" value={d.dpe?.date} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, date: v || null } } })} />
-          <Input label="Numéro ADEME du DPE" value={d.dpe?.number} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} />
+          <Input label="Date du DPE" type="date" value={d.dpe?.date} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, date: v || null } } })} hint="Date d’établissement, sur la première page." />
+          <Input label="Numéro ADEME du DPE" value={d.dpe?.number} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, number: v } } })} hint="13 caractères, en haut de la première page du DPE. Facultatif." />
         </Fields>
         <Fields>
           <NumberField label="Dépenses d’énergie estimées, minimum (€ par an)" value={d.dpe?.costMin ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMin: v } } })} />
           <NumberField label="Maximum (€ par an)" value={d.dpe?.costMax ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costMax: v } } })} hint="Fourchette indiquée sur le DPE. Obligatoire dans l’annonce." />
-          <NumberField label="Année des prix" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} />
+          <NumberField label="Année des prix" value={d.dpe?.costYear ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, costYear: v } } })} hint="Écrite à côté de la fourchette : « prix moyens des énergies indexés au 1er janvier… »." />
         </Fields>
         <Fields>
           <Chips legend="Installation de gaz" value={d.gas?.hasGas ?? null} onChange={(v) => set({ diagnostics: { ...d, gas: { ...d.gas, hasGas: v } } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} />

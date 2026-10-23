@@ -12,8 +12,29 @@ export interface IrlPoint {
 
 let cache: { at: number; points: IrlPoint[] } | null = null
 
+/** Valeurs gardées en base : l'INSEE indisponible ne bloque pas la création d'un bail. */
+async function storedIrl(): Promise<IrlPoint[]> {
+  // Import différé : les PDF (et leurs tests) utilisent ce fichier sans base de données.
+  const { prisma } = await import('../db.js')
+  const rows = await prisma.irlPoint.findMany({ orderBy: { quarter: 'desc' }, take: 12 }).catch(() => [])
+  return rows.map((r) => ({ quarter: r.quarter, value: r.value, publishedAt: r.publishedAt }))
+}
+
 export async function fetchIrl(): Promise<IrlPoint[]> {
   if (cache && Date.now() - cache.at < 12 * 3600_000) return cache.points
+  try {
+    const points = await fetchFromInsee()
+    // Écriture en arrière-plan (refusée dans un espace partagé : sans conséquence, la suivante passera).
+    import('../db.js').then(({ prisma }) => Promise.all(points.map((p) => prisma.irlPoint.upsert({ where: { quarter: p.quarter }, create: p, update: { value: p.value, publishedAt: p.publishedAt } })))).catch(() => undefined)
+    return points
+  } catch (err) {
+    const stored = await storedIrl()
+    if (stored.length) return stored
+    throw err
+  }
+}
+
+async function fetchFromInsee(): Promise<IrlPoint[]> {
   const res = await fetch(URL, { signal: AbortSignal.timeout(5000) })
   if (!res.ok) throw new Error(`INSEE ${res.status}`)
   const xml = await res.text()

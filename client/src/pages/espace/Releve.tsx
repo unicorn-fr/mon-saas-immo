@@ -164,7 +164,7 @@ export default function Releve() {
       ) : null}
 
       <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>
-        Avec la « Quittance automatique » activée sur la page du bail, un loyer enregistré ici fait partir sa quittance tout de suite.{' '}
+        Avec « Quittance par email dès que le loyer est noté reçu » (page du bail, active par défaut), un loyer enregistré ici fait partir sa quittance tout de suite.{' '}
         <TextLink to="/espace/argent" style={{ fontSize: 14 }}>
           Retour à l’argent
         </TextLink>

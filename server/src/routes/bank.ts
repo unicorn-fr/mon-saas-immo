@@ -6,7 +6,7 @@ import { requireUser } from '../services/session.js'
 import { leaseOwned, propertyName, readTenant, tenantName } from '../services/contract.js'
 import { parseStatement } from '../domain/bankStatement.js'
 import { matchRents, type ExpectedRent } from '../domain/rentMatch.js'
-import { receiptAutoOn } from '../domain/autoReceipt.js'
+import { assumePaymentOn, receiptAutoOn } from '../domain/autoReceipt.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { upload } from './helpers.js'
 import { patchLeaseData, recordPayment } from './leases.js'
@@ -90,12 +90,14 @@ router.post('/bank/confirm', async (req, res) => {
   res.json({ success: true, data: { results } })
 })
 
-// Quittance envoyée seule au locataire dès que le loyer est enregistré.
+// Quittance envoyée seule au locataire dès que le loyer est enregistré (`auto`) ; loyer supposé reçu 7 jours après
+// l'échéance, sur choix exprès du propriétaire (`assume`).
 router.put('/leases/:id/receipt-auto', async (req, res) => {
   const lease = await leaseOwned(req.user!.id, String(req.params.id))
-  const { auto } = z.object({ auto: z.boolean() }).parse(req.body)
-  await patchLeaseData(lease.id, () => ({ receiptAuto: auto }))
-  res.json({ success: true, data: { receiptAuto: auto } })
+  const { auto, assume } = z.object({ auto: z.boolean().optional(), assume: z.boolean().optional() }).parse(req.body)
+  await patchLeaseData(lease.id, () => ({ ...(auto !== undefined ? { receiptAuto: auto } : {}), ...(assume !== undefined ? { receiptAssume: assume } : {}) }))
+  const after = await leaseOwned(req.user!.id, lease.id)
+  res.json({ success: true, data: { receiptAuto: receiptAutoOn(after.data), receiptAssume: assumePaymentOn(after.data) } })
 })
 
 // Loyer pas arrivé : la quittance automatique de ce mois ne part pas (et peut être rétablie).

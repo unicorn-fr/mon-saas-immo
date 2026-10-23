@@ -17,10 +17,11 @@
 	request_body /api/* {
 		max_size 160MB
 	}
+	# camera=(self) : photo du signataire prise avec la caméra de l'ordinateur (signature en ligne).
 	header {
 		X-Frame-Options "DENY"
 		Cross-Origin-Opener-Policy "same-origin-allow-popups"
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
 		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 	}
 

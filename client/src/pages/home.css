@@ -73,6 +73,7 @@
 .terms { margin: 0; display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: 14px 24px; }
 .terms dt { color: var(--muted); }
 .terms dd { margin: 0; font-weight: 600; color: var(--accent); }
+.terms-note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
 .hm .hl { color: var(--accent); }
 .live-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin-top: auto; }
 .live-actions .btn { min-height: 72px; }
@@ -180,7 +181,7 @@
 @media (max-width: 1023px) {
   .stage-place { display: none; }
   .stage { grid-template-columns: minmax(0, 1fr); }
-  .stage-photo { order: -1; position: relative; top: 0; height: 56svh; }
+  .stage-photo { order: -1; position: relative; top: 0; height: 40svh; }
   .card { min-height: 0; margin-top: -24px; position: relative; margin-left: 12px; margin-right: 12px; }
   .live { min-height: 0; }
   .dossier h2 { grid-column: 1 / -1; position: static; margin-bottom: 64px; }
@@ -228,3 +229,22 @@
   .foot-menu nav ul { gap: 20px; }
   .foot-info { grid-template-columns: 1fr; }
 }
+
+/* Écran tactile : liens légaux du pied de page assez hauts pour le doigt. */
+@media (pointer: coarse) {
+  .foot-legal a { display: inline-block; padding: 10px 0; margin: -6px 0; }
+}
+
+/* Téléphone (portrait ou paysage) : le bloc d'accueil commence en haut, plus serré, pour que « Créer mon bail » soit visible sans défiler. */
+@media (max-width: 768px), (max-height: 520px) {
+  .card-body { justify-content: flex-start; gap: 14px; padding: 16px var(--pad) 24px; }
+  .card-body h1 { font-size: 2rem; }
+}
+/* Téléphone en paysage (écran bas) : titre sur toute la largeur, sans le texte d'introduction. */
+@media (max-height: 520px) {
+  .card-body h1 { font-size: 1.75rem; max-width: none; }
+  .card-lead { display: none; }
+}
+/* La photo du haut laisse la place au bouton « Créer mon bail » sur téléphone. */
+@media (max-width: 768px) { .stage-photo { height: 46svh; } }
+@media (max-height: 520px) and (max-width: 1023px) { .stage-photo { height: 28svh; } }

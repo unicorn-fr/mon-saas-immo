@@ -4,7 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { Check } from '../components/Icons'
 import { Logo } from '../components/Logo'
 import { Button, Notice, Spinner, display, overline } from '../components/ui'
-import { api, ApiError, downloadPdf, pdfUrl, printPdf } from '../lib/api'
+import { api, ApiError, downloadPdf, openPdfFrom, pdfUrl, printPdf } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useDraft } from '../lib/draft'
 import { addMonths, dateFr, parseIso } from '../lib/lease'
@@ -43,9 +43,9 @@ export default function Bienvenue() {
   async function act(kind: 'print' | 'download') {
     setBusy(kind)
     try {
-      const u = await getPdf()
-      if (kind === 'print') printPdf(u)
-      else downloadPdf(u, 'bail.pdf')
+      // « Voir le brouillon » ouvre le PDF dans un onglet : sur tablette et téléphone, un téléchargement passe inaperçu.
+      if (kind === 'print') printPdf(await getPdf())
+      else await openPdfFrom(getPdf)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Document indisponible.')
     } finally {
@@ -83,6 +83,7 @@ export default function Bienvenue() {
   const imported = lease.status === 'IMPORTED'
   const draft = lease.status === 'DRAFT'
   const missing = lease.checklist?.length ?? 0
+  const essentialMissing = lease.checklist?.filter((m) => m.level === 'ESSENTIAL').length ?? 0
   const start = parseIso(lease.columns.startDate)
   const revision = addMonths(start, 12)
   const notice = lease.computed.noticeMonths
@@ -113,7 +114,9 @@ export default function Bienvenue() {
               ? 'Votre bail signé est rangé dans votre espace.'
               : draft
                 ? missing
-                  ? `Pour qu'il soit complet et valable, la loi impose encore ${missing} mention${missing > 1 ? 's' : ''} (diagnostics, chauffage, équipements…). Bailio vous les demande une par une, puis vous le faites signer en ligne ou sur papier.`
+                  ? essentialMissing
+                    ? `Il reste ${missing} information${missing > 1 ? 's' : ''} à ajouter, dont ${essentialMissing} indispensable${essentialMissing > 1 ? 's' : ''} pour le signer (diagnostics, équipements…). Bailio vous les demande une par une, avec où les trouver.`
+                    : `Il reste ${missing} information${missing > 1 ? 's' : ''} conseillée${missing > 1 ? 's' : ''} (équipements, diagnostics…). Le bail peut déjà être signé ; mieux vaut les ajouter avant.`
                   : 'Toutes les mentions obligatoires sont renseignées. Il ne reste qu’à le faire signer, en ligne ou sur papier.'
                 : 'Votre bail est téléchargé et envoyé par email.'}
           </p>
@@ -180,7 +183,16 @@ export default function Bienvenue() {
           ))}
           <div className="stack" style={{ marginTop: 20, background: BAI.caramel, borderRadius: 18, padding: 22, gap: 12 }}>
             {followUpActive ? (
-              <span style={{ fontSize: 17, fontWeight: 700, color: BAI.night }}>Le suivi est activé. Vous recevrez un email avant chaque échéance.</span>
+              <>
+                <span style={{ fontSize: 17, fontWeight: 700, color: BAI.night }}>Le suivi est activé. Vous recevrez un email avant chaque échéance.</span>
+                <span style={{ fontSize: 14, color: BAI.night, lineHeight: 1.5 }}>
+                  Vous préférez ne recevoir aucun rappel ?{' '}
+                  <Link to="/espace/compte" className="tap" style={{ color: BAI.night, fontWeight: 600 }}>
+                    Réglez-le dans « Mon compte »
+                  </Link>
+                  .
+                </span>
+              </>
             ) : (
               <>
                 <span style={{ fontSize: 17, fontWeight: 700, color: BAI.night }}>Votre bail est gratuit. Le suivi, c'est l'offre complète.</span>

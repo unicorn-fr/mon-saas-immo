@@ -1,3 +1,4 @@
+import { smallSurfaceWarning } from '../../../lib/lease'
 import { useEffect, useState } from 'react'
 import { Cite } from '../../../components/Sources'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -46,7 +47,8 @@ export default function AjoutLogement() {
   const navigate = useNavigate()
   const toast = useToast()
   const id = params.get('id')
-  const [f, setF] = useState<PropertyFile>({})
+  // Arrivée depuis « Garage » sur l'accueil ou le tunnel : le choix est déjà fait.
+  const [f, setF] = useState<PropertyFile>(() => (!id && params.get('nature') === 'parking' ? { nature: 'PARKING' } : {}))
   const [diagnostics, setDiagnostics] = useState<DiagnosticRule[]>([])
   const [loading, setLoading] = useState(Boolean(id))
   const [busy, setBusy] = useState(false)
@@ -364,7 +366,7 @@ function StepSize({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
         hint="Elle figure dans le bail et décide des diagnostics à fournir (plomb, amiante)."
       />
       {period === '1990_2005' ? <Chips legend="Permis de construire délivré avant le 1er juillet 1997 ?" value={f.permitBefore1997 ?? null} onChange={(v) => set({ permitBefore1997: v })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint="Il détermine si le repérage de l’amiante est exigé." /> : null}
-      <NumberField big label="Surface habitable" suffix="m²" step="decimal" value={f.surface} onChange={(v) => set({ surface: v })} hint="Sans les balcons, caves, parkings ni les parties de moins de 1,80 m de hauteur. Elle figure obligatoirement dans le bail." />
+      <NumberField big label="Surface habitable" suffix="m²" step="decimal" value={f.surface} onChange={(v) => set({ surface: v })} hint={smallSurfaceWarning(f.surface) ?? 'Sans les balcons, caves, parkings ni les parties de moins de 1,80 m de hauteur. Elle figure obligatoirement dans le bail.'} />
       <Chips
         big
         legend="Pièces principales"

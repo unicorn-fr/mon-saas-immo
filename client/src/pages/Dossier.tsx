@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast } from '../components/kit'
+import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast, AddressInput } from '../components/kit'
 import { Spinner, display } from '../components/ui'
 import { api } from '../lib/api'
 import { SITUATION_LABEL, type Situation } from '../lib/contract'
@@ -199,7 +199,7 @@ function TenantCard({ code, person, onSaved }: { code: string; person: Person; o
         <Input label="Email" type="email" inputMode="email" value={str('email')} onChange={(val) => setK('email', val)} />
         <Input label="Téléphone" type="tel" inputMode="tel" value={str('phone')} onChange={(val) => setK('phone', val)} />
       </Fields>
-      <Input label="Adresse actuelle" value={str('currentAddress')} onChange={(val) => setK('currentAddress', val)} />
+      <AddressInput label="Adresse actuelle" value={str('currentAddress')} onChange={(val) => setK('currentAddress', val)} />
       <Sub>Situation</Sub>
       <Chips legend="Situation professionnelle" value={(p.situation as Situation | null) ?? null} onChange={(val) => setK('situation', val)} options={(Object.keys(SITUATION_LABEL) as Situation[]).map((k) => ({ value: k, label: SITUATION_LABEL[k] }))} />
       <Fields>
@@ -266,7 +266,7 @@ function GuarantorCard({ code, person, onSaved }: { code: string; person: Person
         <Input label="Date de naissance" type="date" value={str('birthDate')} onChange={(val) => setK('birthDate', val || null)} />
         <Input label="Lieu de naissance" value={str('birthPlace')} onChange={(val) => setK('birthPlace', val)} />
       </Fields>
-      <Input label="Adresse" value={str('address')} onChange={(val) => setK('address', val)} />
+      <AddressInput label="Adresse" value={str('address')} onChange={(val) => setK('address', val)} />
       <Fields>
         <Input label="Email" type="email" inputMode="email" value={str('email')} onChange={(val) => setK('email', val)} hint="Pour signer l’acte de caution en ligne." />
         <Input label="Téléphone" type="tel" inputMode="tel" value={str('phone')} onChange={(val) => setK('phone', val)} />

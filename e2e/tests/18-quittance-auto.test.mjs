@@ -13,20 +13,29 @@ function runJob(day, leaseId) {
   return { ...JSON.parse(line.slice(7)), out: r.stdout }
 }
 
-/** Quittance automatique (par défaut) : prévenance, « le loyer n'est pas arrivé », puis envoi 7 jours après l'échéance. */
-test('quittance automatique par défaut, 7 jours après l’échéance, annulable', async () => {
+/**
+ * Loyer supposé reçu 7 jours après l'échéance : jamais par défaut (une quittance prouve le paiement). Le propriétaire
+ * l'active expressément ; ensuite prévenance, « le loyer n'est pas arrivé », puis envoi.
+ */
+test('loyer supposé reçu : coupé par défaut, puis 7 jours après l’échéance sur choix exprès, annulable', async () => {
   const { token } = await newAccount()
   const { leaseId } = await completeLease(token)
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
-  // Rien à activer : la quittance automatique est active par défaut.
+  // Par défaut : la quittance part quand le loyer est noté reçu, mais rien n'est supposé.
+  assert.equal(runJob('2026-11-08', leaseId).warned, 0, 'aucune prévenance sans accord')
+  assert.equal(runJob('2026-11-11', leaseId).sent, 0, 'aucune quittance pour un loyer non constaté')
 
-  // Le propriétaire voit l'envoi prévu (loyer payable le 4 : quittance de novembre le 11 novembre) et peut l'annuler.
   const browser = await launch()
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/baux/${leaseId}`)
+  const assume = page.getByText('Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance')
+  await assume.waitFor()
+  assert.equal(await page.getByText(/envoi automatique le 11 nov/).count(), 0)
+  // Le propriétaire l'active : il voit l'envoi prévu (loyer payable le 4 : quittance de novembre le 11) et peut l'annuler.
+  await assume.click()
   await page.getByText(/envoi automatique le 11 nov/).waitFor()
   await page.getByText('Le loyer n’est pas arrivé', { exact: true }).click()
   await page.getByText('envoi annulé').waitFor()

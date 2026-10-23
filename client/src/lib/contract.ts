@@ -310,3 +310,6 @@ export function initialsOf(name: string): string {
       .join('') || '?'
   )
 }
+
+/** « Ajouter un logement » avec le garage déjà choisi (le tunnel public ne prépare que des logements). */
+export const ADD_PARKING_PATH = '/espace/logements/nouveau?nature=parking'

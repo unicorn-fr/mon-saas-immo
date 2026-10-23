@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, NumberField, Select, TextArea, useLoad, useToast } from '../components/kit'
+import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, NumberField, Select, TextArea, useLoad, useToast, AddressInput } from '../components/kit'
 import { display } from '../components/ui'
 import { api } from '../lib/api'
 
@@ -107,7 +107,7 @@ export default function Candidature() {
                 <Input label="Email" type="email" value={f.email} onChange={(v) => set({ email: v })} autoComplete="email" inputMode="email" />
                 <Input label="Téléphone" hint="Facultatif." value={f.phone} onChange={(v) => set({ phone: v })} autoComplete="tel" inputMode="tel" />
               </Fields>
-              <Input label="Adresse actuelle" hint="Facultatif." value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} autoComplete="street-address" />
+              <AddressInput label="Adresse actuelle" hint="Facultatif." value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} />
               <Select
                 label="Situation professionnelle"
                 value={f.situation}
@@ -159,7 +159,7 @@ export default function Candidature() {
                 </a>
               </span>
               <details style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
+                <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink, padding: '10px 0' }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
                 {data.allowedDocuments.map((g) => (
                   <div key={g.title} style={{ marginTop: 10 }}>
                     <strong>{g.title}</strong>

@@ -1,6 +1,7 @@
 import { AccountNotice } from '../../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { MailLinks } from '../../components/MailLinks'
+import { EmailSuggestion } from '../../components/EmailSuggestion'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Check } from '../../components/Icons'
@@ -67,20 +68,20 @@ export default function RecevoirStep() {
     <div className="col-md" style={{ minHeight: '100vh', display: 'flex', background: BAI.bg }}>
       <div className="stack hide-lg" style={{ width: '47%', maxWidth: 680, background: BAI.night, padding: '48px 72px', gap: 40 }}>
         <Logo size={28} color={BAI.caramel} />
-        <div aria-hidden className="stack" style={{ alignSelf: 'center', position: 'relative', width: 400, maxWidth: '100%', height: 520, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, overflow: 'hidden' }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>{imported ? 'Bail signé' : 'Contrat de location'}</div>
+        <div aria-hidden className="stack" style={{ alignSelf: 'center', position: 'relative', overflowWrap: 'anywhere', width: 400, maxWidth: '100%', height: 520, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, overflow: 'hidden' }}>
+          <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>{imported ? 'Bail signé' : 'Contrat de location'}</div>
           <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>
             Logement {data.type === 'FURNISHED' ? 'meublé' : 'vide'} à usage de résidence principale
           </div>
           <div style={{ height: 1, background: BAI.rule, margin: '6px 0' }} />
-          <div style={{ fontSize: 12, fontWeight: 700 }}>I. Les parties</div>
-          <div style={{ fontSize: 12, color: BAI.inkMid }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>I. Les parties</div>
+          <div style={{ fontSize: 13, color: BAI.inkMid }}>
             Le bailleur : {fullName(data.landlord)}. {(data.tenants?.length ?? 0) > 1 ? 'Les locataires' : 'Le locataire'} : {tenants}.
           </div>
-          <div style={{ fontSize: 12, fontWeight: 700 }}>II. Le logement</div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>II. Le logement</div>
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2 }} />
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2, width: '85%' }} />
-          <div style={{ fontSize: 12, fontWeight: 700 }}>III. Durée</div>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>III. Durée</div>
           <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2, width: '70%' }} />
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 260, background: `linear-gradient(to bottom, rgba(255,255,255,0), ${BAI.surface} 60%)`, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 36 }}>
             <span style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 15, fontWeight: 600 }}>
@@ -103,7 +104,22 @@ export default function RecevoirStep() {
           </Notice>
         ) : null}
         {checkEmail ? (
-          <MailLinks email={checkEmail} />
+          <>
+            <MailLinks email={checkEmail} />
+            <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid }}>
+              Ce n’est pas la bonne adresse ?{' '}
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail(checkEmail)
+                  setCheckEmail(null)
+                }}
+                style={{ border: 'none', background: 'none', padding: '4px 0', font: 'inherit', fontWeight: 600, color: BAI.owner, textDecoration: 'underline', cursor: 'pointer' }}
+              >
+                Modifier mon adresse
+              </button>
+            </p>
+          </>
         ) : user ? (
           <>
             <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Il sera rangé dans votre espace, avec le compte {user.email}.</p>
@@ -117,7 +133,8 @@ export default function RecevoirStep() {
                 ? 'Où voulez-vous le ranger ?'
                 : 'Votre bail n’est pas encore valable : il est enregistré en brouillon. Avec votre email, vous ouvrez votre espace pour compléter les mentions qui manquent, puis le faire signer.'}</p>
             <form onSubmit={finish} className="stack" style={{ gap: 14 }}>
-              <TextField label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
+              <TextField maxLength={200} label="Votre email" name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@email.fr" />
+              <EmailSuggestion email={email} onPick={setEmail} />
               <Button type="submit" full loading={loading}>
                 {imported ? 'Enregistrer mon bail' : 'Continuer mon bail'}
               </Button>

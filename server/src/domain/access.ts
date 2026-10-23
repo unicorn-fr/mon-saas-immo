@@ -24,7 +24,7 @@ export interface Scope {
 }
 
 /** Adresses qui concernent toujours la personne connectée elle-même : l'en-tête d'espace y est ignoré. */
-export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo']
+export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo', '/admin', '/feedback']
 
 export const isSelfPath = (path: string) => SELF_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
@@ -80,6 +80,9 @@ function readFilter(model: string, s: Scope): Record<string, unknown> | 'DENY' |
       return s.role === 'CONTRACTOR' ? 'DENY' : null
     case 'User':
       return { id: s.ownerId }
+    case 'IrlPoint':
+      // Indice publié par l'INSEE, identique pour tous : lisible partout.
+      return null
     default:
       // Corbeille, brouillons, codes, sessions, accès, liens de connexion : jamais dans un espace partagé.
       return 'DENY'

@@ -1,0 +1,91 @@
+/**
+ * Toutes les pages à visiter, avec le compte qui les ouvre :
+ * `anon` (visiteur), `owner` (propriétaire avec un bail signé), `empty` (compte sans rien).
+ */
+export function routes(seed) {
+  const p = seed.propertyId
+  const l = seed.leaseId
+  const t = seed.tenantId
+  return [
+    // Public
+    { path: '/', who: 'anon', name: 'Accueil' },
+    { path: '/commencer', who: 'anon', name: 'Tunnel — type' },
+    { path: '/importer', who: 'anon', name: 'Importer un bail' },
+    { path: '/connexion', who: 'anon', name: 'Connexion' },
+    { path: '/inscription', who: 'anon', name: 'Inscription' },
+    { path: '/connexion/lien?jeton=faux', who: 'anon', name: 'Lien de connexion invalide' },
+    { path: '/reprendre?brouillon=faux', who: 'anon', name: 'Reprendre un brouillon (lien expiré)' },
+    { path: '/mentions-legales', who: 'anon', name: 'Mentions légales' },
+    { path: '/conditions', who: 'anon', name: 'Conditions' },
+    { path: '/confidentialite', who: 'anon', name: 'Confidentialité' },
+    { path: '/cookies', who: 'anon', name: 'Cookies' },
+    { path: '/prix-et-remboursement', who: 'anon', name: 'Prix et remboursement' },
+    { path: '/accessibilite', who: 'anon', name: 'Accessibilité' },
+    { path: '/contact', who: 'anon', name: 'Contact' },
+    { path: '/page-qui-n-existe-pas', who: 'anon', name: 'Page 404', notFound: true },
+    { path: '/espace/logements', who: 'anon', name: 'Page protégée sans connexion', redirect: '/connexion' },
+    // Liens publics reçus par email
+    { path: seed.public.locataire, who: 'anon', name: 'Lien du locataire', links: false },
+    { path: seed.public.dossier, who: 'anon', name: 'Dossier à compléter par le locataire', links: false },
+    { path: seed.public.candidature, who: 'anon', name: 'Candidature' },
+    { path: seed.public.signer, who: 'anon', name: 'Signature électronique', buttons: false },
+    { path: seed.public.invitation, who: 'anon', name: 'Invitation (accès partagé)' },
+    { path: '/signer/lien-inconnu', who: 'anon', name: 'Signature — lien inconnu' },
+    { path: '/locataire/inconnu', who: 'anon', name: 'Lien du locataire inconnu' },
+    { path: '/candidature/inconnu', who: 'anon', name: 'Candidature — lien inconnu' },
+    { path: '/dossier/inconnu', who: 'anon', name: 'Dossier — lien inconnu' },
+    // Espace propriétaire
+    { path: '/espace', who: 'owner', name: 'Aujourd’hui' },
+    { path: '/espace', who: 'empty', name: 'Aujourd’hui (compte vide)' },
+    { path: '/espace/logements', who: 'owner', name: 'Logements' },
+    { path: '/espace/logements', who: 'empty', name: 'Logements (compte vide)' },
+    { path: '/espace/logements/nouveau', who: 'owner', name: 'Ajouter un logement', buttons: false },
+    { path: `/espace/logements/${p}`, who: 'owner', name: 'Logement' },
+    { path: `/espace/logements/${p}?onglet=binder`, who: 'owner', name: 'Logement — dossier' },
+    { path: `/espace/logements/${p}?onglet=expenses`, who: 'owner', name: 'Logement — travaux et dépenses' },
+    { path: `/espace/logements/${p}/fiche`, who: 'owner', name: 'Fiche du logement', buttons: false },
+    { path: `/espace/logements/${p}/annonce`, who: 'owner', name: 'Annonce' },
+    { path: `/espace/logements/${seed.pendingPropertyId}/candidats`, who: 'owner', name: 'Candidats' },
+    { path: `/espace/logements/${p}/emprunt`, who: 'owner', name: 'Emprunt' },
+    { path: `/espace/logements/${p}/aides`, who: 'owner', name: 'Aides et dispositifs' },
+    { path: '/espace/patrimoine', who: 'owner', name: 'Tableau de bord des logements' },
+    { path: '/espace/locataires', who: 'owner', name: 'Locataires' },
+    { path: '/espace/locataires', who: 'empty', name: 'Locataires (compte vide)' },
+    { path: '/espace/locataires/nouveau', who: 'owner', name: 'Ajouter un locataire', buttons: false },
+    { path: `/espace/locataires/${t}`, who: 'owner', name: 'Locataire' },
+    { path: `/espace/locataires/${t}/fiche`, who: 'owner', name: 'Fiche du locataire', buttons: false },
+    { path: `/espace/locataires/${t}/caution`, who: 'owner', name: 'Acte de caution', buttons: false },
+    { path: `/espace/locataires/${seed.dossierTenantId}`, who: 'owner', name: 'Locataire au dossier incomplet' },
+    { path: '/espace/baux/nouveau', who: 'owner', name: 'Créer un bail', buttons: false },
+    { path: `/espace/baux/${l}`, who: 'owner', name: 'Bail signé' },
+    { path: `/espace/baux/${seed.pendingLeaseId}`, who: 'owner', name: 'Bail en signature' },
+    { path: `/espace/baux/${l}/contrat`, who: 'owner', name: 'Contrat', buttons: false },
+    { path: `/espace/baux/${l}/courriers`, who: 'owner', name: 'Courriers' },
+    { path: `/espace/baux/${l}/etat-des-lieux`, who: 'owner', name: 'États des lieux du bail' },
+    { path: `/edl/${seed.inventoryId}`, who: 'owner', name: 'État des lieux (saisie)', buttons: false },
+    { path: `/espace/baux/${l}/degradations`, who: 'owner', name: 'Dégradations' },
+    { path: `/espace/baux/${l}/parcours/DEPARTURE`, who: 'owner', name: 'Parcours — départ du locataire' },
+    { path: `/espace/baux/${l}/parcours/UNPAID`, who: 'owner', name: 'Parcours — impayé' },
+    { path: '/espace/situations', who: 'owner', name: 'Que se passe-t-il ?' },
+    { path: '/espace/actions', who: 'owner', name: 'Actions groupées' },
+    { path: '/espace/documents', who: 'owner', name: 'Documents' },
+    { path: '/espace/documents', who: 'empty', name: 'Documents (compte vide)' },
+    { path: '/espace/argent', who: 'owner', name: 'Argent' },
+    { path: '/espace/argent/facture', who: 'owner', name: 'Facture en photo' },
+    { path: '/espace/argent/releve', who: 'owner', name: 'Relevé bancaire' },
+    { path: '/espace/argent/declaration', who: 'owner', name: 'Déclaration des revenus' },
+    { path: '/espace/argent/bilan', who: 'owner', name: 'Bilan' },
+    { path: '/espace/argent/repartir', who: 'owner', name: 'Répartir une dépense', buttons: false },
+    { path: '/espace/carnet', who: 'owner', name: 'Carnet' },
+    { path: '/espace/compte', who: 'owner', name: 'Mon compte' },
+    { path: '/espace/compte/profil', who: 'owner', name: 'Profil du bailleur', buttons: false },
+    { path: '/espace/compte/acces', who: 'owner', name: 'Accès partagés' },
+    { path: '/espace/structures', who: 'owner', name: 'Structures' },
+    { path: '/espace/corbeille', who: 'owner', name: 'Corbeille' },
+    { path: `/espace/logements/00000000-0000-4000-8000-000000000000`, who: 'owner', name: 'Logement inexistant' },
+    { path: `/espace/baux/00000000-0000-4000-8000-000000000000`, who: 'owner', name: 'Bail inexistant' },
+  ]
+}
+
+/** Boutons jamais cliqués automatiquement : ils effacent, envoient ou annulent quelque chose. Testés à la main (tableau de bord). */
+export const DANGEROUS = /supprimer|effacer|retirer|d[ée]connect|quitter|annuler la signature|d[ée]sactiver|fermer le lien|repasser en pr[ée]paration|[ée]carter|choisir ce candidat|restaurer|enregistrer le d[ée]part|signer|envoyer|accepter l|tout exporter|recevoir mon code|le loyer n.est pas arriv|activer le suivi|j.ai relu|rétablir|c.est fait|ce n.est pas encore fait|valider|choisir|les rattacher|inviter/i

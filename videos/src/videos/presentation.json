@@ -1,0 +1,198 @@
+{
+  "id": "presentation",
+  "titre": "Bailio, c'est quoi ?",
+  "legende": "Propriétaire ? Bail, quittances, relances : Bailio prépare tout selon la loi et vous prévient quand il faut agir. Créez votre bail gratuitement sur bailio.fr 🏠 #proprietaire #immobilier #location #bailleur #investissementlocatif",
+  "musique": "musique/boucle-1.mp3",
+  "scenes": [
+    {
+      "type": "mots",
+      "voix": "Vous êtes propriétaire ? Alors vous connaissez ça… Le bail. Les quittances. Les relances. L'état des lieux… Et au final ? Des heures perdues, chaque mois.",
+      "mots": [
+        "Le bail",
+        "Les quittances",
+        "Les relances",
+        "L'état des lieux"
+      ],
+      "chute": "Des heures perdues.",
+      "reperes": [
+        "bail",
+        "quittances",
+        "relances",
+        "letat",
+        "heures"
+      ],
+      "relance": {
+        "repere": "alors",
+        "texte": "Vous connaissez ça…"
+      }
+    },
+    {
+      "type": "grand",
+      "voix": "Et si tout se faisait… presque tout seul ?",
+      "texte": "Et si tout se faisait",
+      "accent": "presque tout seul ?"
+    },
+    {
+      "type": "logo",
+      "voix": "Voici Bailio !",
+      "sous": "Le bail et le suivi de votre location"
+    },
+    {
+      "type": "ecran",
+      "voix": "Créez un bail conforme à la loi en quelques minutes. Bailio vous pose les bonnes questions, une à la fois.",
+      "titre": "Un bail conforme",
+      "accent": "en 3 minutes",
+      "image": "ecrans/tunnel-type.png",
+      "cote": "droite",
+      "focus": [
+        5,
+        40.6,
+        95,
+        56.2
+      ]
+    },
+    {
+      "type": "ecran",
+      "voix": "Faites-le signer en ligne, par le locataire et le garant. Zéro papier !",
+      "titre": "Signé en ligne",
+      "accent": "sans papier",
+      "image": "ecrans/bail.png",
+      "cote": "gauche",
+      "badge": "Signé ✓",
+      "focus": [
+        3,
+        14,
+        97,
+        32.5
+      ]
+    },
+    {
+      "type": "ecran",
+      "voix": "Dès qu'il y a quelque chose à faire, Bailio vous prévient par email : une relance, un état des lieux, la révision du loyer.",
+      "titre": "Prévenu",
+      "accent": "au bon moment",
+      "image": "ecrans/aujourdhui.png",
+      "cote": "droite",
+      "notifs": [
+        {
+          "titre": "Loyer de Lucas en retard",
+          "texte": "La relance est prête, il suffit de l'envoyer."
+        },
+        {
+          "titre": "État des lieux jeudi",
+          "texte": "La grille de l'entrée est prête à comparer."
+        },
+        {
+          "titre": "Révision du loyer",
+          "texte": "Le nouveau loyer est déjà calculé."
+        }
+      ]
+    },
+    {
+      "type": "ecran",
+      "voix": "Une fuite chez votre locataire ? Il la signale en quelques clics, photos à l'appui, et vous êtes prévenu tout de suite.",
+      "titre": "Un problème ?",
+      "accent": "tout de suite",
+      "image": "ecrans/logement.png",
+      "cote": "gauche",
+      "notifs": [
+        {
+          "titre": "Fuite signalée · Studio Sète",
+          "texte": "2 photos jointes, intervention à organiser."
+        }
+      ]
+    },
+    {
+      "type": "ecran",
+      "voix": "Et les quittances ? Elles partent toutes seules, chaque mois !",
+      "titre": "Quittances",
+      "accent": "automatiques",
+      "image": "ecrans/argent.png",
+      "cote": "gauche",
+      "tap": [
+        40,
+        19
+      ],
+      "carte": {
+        "titre": "Loyers reçus en 2026",
+        "montant": 8500,
+        "courbe": [
+          850,
+          1700,
+          2550,
+          3400,
+          4250,
+          5100,
+          5950,
+          6800,
+          7650,
+          8500
+        ],
+        "sous": "10 quittances envoyées ✓"
+      }
+    },
+    {
+      "type": "ecran",
+      "voix": "Révision du loyer, relance, congé… vos courriers sont prêts en un clic, conformes à la loi.",
+      "titre": "Vos courriers",
+      "accent": "en un clic",
+      "image": "ecrans/courriers.png",
+      "cote": "droite",
+      "focus": [
+        4,
+        25,
+        96,
+        50
+      ]
+    },
+    {
+      "type": "ecran",
+      "voix": "Et au moment de déclarer vos revenus ? Bailio fait les calculs et vous montre les bonnes cases.",
+      "titre": "Vos impôts",
+      "accent": "déjà calculés",
+      "image": "ecrans/argent.png",
+      "cote": "gauche",
+      "carte": {
+        "titre": "Revenus fonciers · 4BE",
+        "montant": 10200,
+        "sous": "Micro-foncier ✓"
+      },
+      "focus": [
+        52,
+        87.6,
+        96,
+        97.4
+      ]
+    },
+    {
+      "type": "liste",
+      "voix": "Annonce, candidats, dépenses, documents : tout est au même endroit.",
+      "titre": "Tout au même endroit",
+      "items": [
+        "Annonce",
+        "Candidats",
+        "Dépenses",
+        "Documents"
+      ],
+      "images": [
+        "ecrans/annonce.png",
+        "ecrans/logement.png",
+        "ecrans/courriers.png"
+      ]
+    },
+    {
+      "type": "grand",
+      "voix": "Simple, clair… et pensé pour les propriétaires comme vous.",
+      "texte": "Pensé pour les propriétaires",
+      "accent": "comme vous."
+    },
+    {
+      "type": "fin",
+      "voix": "Créez votre bail gratuitement sur bailio point f r !",
+      "texte": "Créez votre bail",
+      "accent": "gratuitement",
+      "url": "bailio.fr",
+      "sousTitre": "Créez votre bail gratuitement sur bailio.fr !"
+    }
+  ]
+}

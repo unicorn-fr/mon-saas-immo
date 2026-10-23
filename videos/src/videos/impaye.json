@@ -1,0 +1,79 @@
+{
+  "id": "impaye",
+  "titre": "Loyer impayé : les étapes dans l'ordre",
+  "legende": "Votre locataire ne paie plus ? Pas de panique 🙏 Relance, mise en demeure, garant, commandement de payer : les étapes dans l'ordre. Partagez à un propriétaire qui en a besoin 🔁 #proprietaire #loyerimpaye #immobilier #location #bailleur",
+  "musique": "musique/boucle-1.mp3",
+  "scenes": [
+    {
+      "type": "grand",
+      "voix": "Votre locataire ne paie plus son loyer ? Pas de panique, ça arrive à beaucoup de propriétaires. Voici les étapes à suivre, dans l'ordre.",
+      "texte": "Loyer impayé ?",
+      "accent": "pas de panique."
+    },
+    {
+      "type": "etapes",
+      "voix": "Un : une relance amiable, dès les premiers jours. Proposez d'en parler : souvent, c'est un simple oubli, ou une difficulté passagère. Deux : sans réponse, une mise en demeure par lettre recommandée. Trois : vous faites appel au garant, s'il y en a un.",
+      "titre": "Les premières étapes",
+      "etapes": [
+        "Relance amiable",
+        "Mise en demeure en recommandé",
+        "Appel au garant"
+      ],
+      "reperes": [
+        "relance",
+        "mise",
+        "garant"
+      ]
+    },
+    {
+      "type": "chiffre",
+      "voix": "Quatre : le commandement de payer, délivré par un commissaire de justice. Votre locataire a alors six semaines pour régler sa dette, avant que la clause résolutoire du bail puisse jouer.",
+      "kicker": "Étape 4",
+      "valeur": 6,
+      "suffixe": "semaines",
+      "texte": "après le commandement de payer, avant la clause résolutoire",
+      "note": "Délivré par un commissaire de justice"
+    },
+    {
+      "type": "chiffre",
+      "voix": "Bon à savoir : pendant la trêve hivernale, du premier novembre au 31 mars, aucune expulsion n'est possible. Mais les démarches, elles, continuent.",
+      "kicker": "Trêve hivernale",
+      "valeur": 5,
+      "suffixe": "mois",
+      "texte": "sans expulsion possible, du 1er novembre au 31 mars",
+      "note": "Les démarches, elles, continuent"
+    },
+    {
+      "type": "ecran",
+      "voix": "Avec Bailio, vous êtes prévenu dès qu'un loyer manque. La relance et la mise en demeure sont déjà rédigées, et un parcours vous guide à chaque étape.",
+      "titre": "Guidé",
+      "accent": "à chaque étape",
+      "image": "ecrans/aujourdhui.png",
+      "cote": "gauche",
+      "notifs": [
+        {
+          "titre": "Loyer de Lucas en retard",
+          "texte": "La relance est prête, il suffit de l'envoyer."
+        },
+        {
+          "titre": "Mise en demeure",
+          "texte": "Le courrier est prêt, pour un envoi en recommandé."
+        }
+      ]
+    },
+    {
+      "type": "grand",
+      "voix": "Gardez une trace écrite de chaque échange, et orientez votre locataire vers l'ADIL s'il est en difficulté. Et partagez cette vidéo à un propriétaire qui en a besoin.",
+      "texte": "Partagez-la à un",
+      "accent": "propriétaire."
+    },
+    {
+      "type": "fin",
+      "voix": "Et créez votre bail gratuitement sur bailio point f r !",
+      "texte": "Créez votre bail",
+      "accent": "gratuitement",
+      "url": "bailio.fr",
+      "sousTitre": "Et créez votre bail gratuitement sur bailio.fr !"
+    }
+  ]
+}

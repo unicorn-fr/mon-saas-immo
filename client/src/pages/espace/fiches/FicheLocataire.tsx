@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type TenantDocKey, type TenantFile } from '../../../lib/contract'
@@ -51,7 +51,7 @@ export default function FicheLocataire() {
           <Input label="Email" type="email" value={f.email} onChange={(v) => set({ email: v })} />
           <Input label="Téléphone" type="tel" value={f.phone} onChange={(v) => set({ phone: v })} />
         </Fields>
-        <Input label="Adresse actuelle" value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} hint="Jusqu’à son entrée dans les lieux." />
+        <AddressInput label="Adresse actuelle" value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} hint="Jusqu’à son entrée dans les lieux." />
       </FicheSection>
 
       <FicheSection id="situation" n={++n} title="Situation" intro="Sert à vous proposer le bon type de bail et à vérifier la part du loyer dans les revenus. Rien de cela ne figure dans le bail." done={done('situation')}>
@@ -155,7 +155,7 @@ function DocList({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) => v
               <Input label="Document fourni" value={d?.label} onChange={(v) => upd(k, { label: v })} placeholder={k === 'income' ? '3 derniers bulletins de salaire' : k === 'identity' ? 'Carte d’identité' : ''} />
             </div>
             <FileSlot compact label="" fileId={d?.fileId} onFile={(fileId) => upd(k, { fileId, received: true })} />
-            <button type="button" aria-pressed={Boolean(d?.received)} onClick={() => upd(k, { received: !d?.received })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <button type="button" className="tap" aria-pressed={Boolean(d?.received)} onClick={() => upd(k, { received: !d?.received })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
               <Pill tone={d?.received ? 'green' : 'muted'}>{d?.received ? 'Reçu' : 'À recevoir'}</Pill>
             </button>
           </div>

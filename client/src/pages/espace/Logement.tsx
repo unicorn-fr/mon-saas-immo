@@ -72,7 +72,10 @@ const currentLease = (p: PropertyView) => p.leases.find((l) => l.status === 'ACT
 /** « Ce logement » : chaque sujet tient en une ligne (où on en est), un clic pour y aller. */
 function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
   const required = p.diagnostics.filter((d) => d.required)
-  const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length
+  // Jamais fourni (« à fournir ») ou périmé (« à refaire ») : deux situations différentes pour le propriétaire.
+  const toAdd = required.filter((d) => diagnosticStatus(d, p.file).label === 'À ajouter').length
+  const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length - toAdd
+  const diagValue = [toAdd ? `${toAdd} à fournir` : '', expired ? `${expired} à refaire` : ''].filter(Boolean).join(', ') || 'À jour'
   const parking = p.nature === 'PARKING'
   const rows: Array<{ label: string; value: string; to: string; tone?: 'caramel' }> = parking ? [
     { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
@@ -80,7 +83,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
   ] : [
     { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
-    { label: 'Diagnostics', value: expired ? `${expired} à refaire` : 'À jour', to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: expired ? 'caramel' : undefined },
+    { label: 'Diagnostics', value: diagValue, to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: toAdd + expired ? 'caramel' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
     { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
@@ -206,7 +209,7 @@ function LeaseTab({ p }: { p: PropertyView }) {
               <Line label="Type" value={KIND_LABEL[l.kind]} />
               <Line label="Période" value={`${dateNum(l.startDate)} au ${dateNum(l.endDate)}`} />
               <Line label="Loyer" value={`${eurosCents(l.rentCents)} + ${eurosCents(l.chargesCents)} de charges`} />
-              {l.status !== 'DRAFT' && l.status !== 'ENDED' ? <Line label="Ce mois-ci" value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} /> : null}
+              {l.status !== 'DRAFT' && l.status !== 'ENDED' ? <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} /> : null}
               <div className="col-md" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Btn size="sm" onClick={() => navigate(`/espace/baux/${l.id}`)}>
                   Voir le bail

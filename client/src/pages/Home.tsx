@@ -1,3 +1,4 @@
+import { ADD_PARKING_PATH } from '../lib/contract'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import '@fontsource/young-serif/latin-400.css'
@@ -52,11 +53,11 @@ function termsFor(kind: Kind, rent: number): Array<[string, string]> {
 const ROWS = [
   { title: 'L’annonce', mock: 'ad', items: ['Texte prêt à coller', 'Leboncoin, SeLoger, PAP', 'Mentions obligatoires incluses', 'Un lien pour les candidatures'] },
   { title: 'Le bail signé', mock: 'lease', items: ['Contrat type d’octobre 2026', 'Vide, meublé ou garage', 'Signature en ligne, sans compte', 'Locataire et garant'] },
-  { title: 'Chaque mois', mock: 'month', items: ['Quittance envoyée seule', 'Loyer révisé à l’IRL', 'Rappel d’assurance', 'Relance si le loyer manque'] },
+  { title: 'Chaque mois', mock: 'month', items: ['Quittance (le reçu du loyer) envoyée seule', 'Loyer révisé chaque année selon l’indice officiel (IRL)', 'Rappel d’assurance', 'Relance si le loyer manque'] },
 ] as const
 
 const FAQ: Array<[string, string]> = [
-  ['Le bail est-il valable ?', 'Oui. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026.'],
+  ['Le bail est-il valable ?', 'Oui, une fois complet et signé. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026, et Bailio vous dit ce qu’il manque avant la signature.'],
   ['J’ai déjà un locataire.', 'Prenez votre bail signé en photo : Bailio le lit, vous vérifiez, et le suivi démarre.'],
   ['Mon locataire doit-il s’inscrire ?', 'Non. Il reçoit ses quittances par email et un lien pour envoyer son attestation d’assurance.'],
   ['Et la signature ?', 'En ligne, avec un code envoyé par email, ou sur papier si vous préférez. Le PDF signé garde sa preuve.'],
@@ -64,6 +65,7 @@ const FAQ: Array<[string, string]> = [
   ['Qui touche le loyer ?', 'Vous, directement. Bailio ne passe jamais par votre argent ni par le dépôt de garantie.'],
   ['Où sont mes données ?', 'Sur un serveur en Suisse. Elles ne sont ni revendues, ni confiées à une intelligence artificielle.'],
   ['Et si j’arrête ?', 'Vous exportez tout en un clic, puis vous supprimez votre compte. Sans engagement.'],
+  ['Je suis locataire, c’est pour moi ?', 'Bailio sert aux propriétaires. Pour monter votre dossier, utilisez DossierFacile (dossierfacile.logement.gouv.fr), le service gratuit de l’État. Si votre propriétaire utilise Bailio, il vous envoie un lien : rien à créer.'],
 ]
 
 const LEGAL = [
@@ -73,6 +75,7 @@ const LEGAL = [
   { to: '/cookies', label: 'Cookies' },
   { to: '/prix-et-remboursement', label: 'Prix et remboursement' },
   { to: '/accessibilite', label: 'Accessibilité' },
+  { to: '/securite', label: 'Sécurité' },
 ]
 
 /** Aperçus de l'application, dessinés en HTML : ce que le propriétaire verra vraiment. */
@@ -208,7 +211,7 @@ export default function Home() {
                   Le bail <span className="hl">juste</span>, du premier coup.
                 </h1>
                 <p className="card-lead" data-in style={{ ['--i' as string]: 2 }}>
-                  Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
+                  Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
                 </p>
                 <span>
                   <Link to="/commencer" className="btn">
@@ -253,8 +256,12 @@ export default function Home() {
                   </div>
                 ))}
               </dl>
+              <p className="terms-note" data-in style={{ ['--i' as string]: 3 }}>
+                Dépôt de garantie : somme versée à l’entrée, rendue à la sortie. Préavis : délai pour prévenir avant la fin du bail.
+                {kind === 'VIDE' ? ' Zone tendue : grande ville où les logements manquent.' : ''}
+              </p>
               <div className="live-actions">
-                <Link to="/commencer" className="btn btn--ink">
+                <Link to={kind === 'GARAGE' ? '/inscription' : '/commencer'} state={kind === 'GARAGE' ? { from: ADD_PARKING_PATH } : undefined} className="btn btn--ink">
                   Créer ce bail
                 </Link>
                 <Link to="/importer" className="btn btn--paper">
@@ -385,7 +392,7 @@ export default function Home() {
               Votre premier bail est offert.
             </h2>
             <p data-in style={{ ['--i' as string]: 1 }}>
-              Cinq minutes de questions, et vous repartez avec un bail prêt à signer.
+              Cinq minutes de questions pour le préparer. Bailio vous dit ensuite ce qu’il manque (diagnostics, équipements) avant de le faire signer.
             </p>
             <span>
               <Link to="/commencer" className="btn btn--paper">

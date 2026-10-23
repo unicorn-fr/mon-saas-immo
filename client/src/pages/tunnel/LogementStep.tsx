@@ -8,6 +8,7 @@ import { Notice, TextField, display, inputStyle } from '../../components/ui'
 import { api } from '../../lib/api'
 import { useDraft } from '../../lib/draft'
 import type { DraftData } from '../../lib/types'
+import { smallSurfaceWarning } from '../../lib/lease'
 
 type DpeClass = NonNullable<NonNullable<DraftData['property']>['dpeClass']>
 const CLASSES: DpeClass[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
@@ -49,6 +50,8 @@ export default function LogementStep() {
   const [rooms, setRooms] = useState<number | undefined>(p.rooms)
   const [dpe, setDpe] = useState<DpeRecord[] | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // Une erreur disparaît dès que l'on corrige la réponse, sans attendre « Continuer ».
+  const clear = (...keys: string[]) => setErrors((e) => (keys.some((k) => e[k]) ? Object.fromEntries(Object.entries(e).filter(([k]) => !keys.includes(k))) : e))
 
   useEffect(() => {
     if (!data.type) navigate('/commencer', { replace: true })
@@ -85,7 +88,12 @@ export default function LogementStep() {
     if (!p.constructionPeriod) e.period = 'Indiquez la période de construction.'
     if (!p.heatingMode || !p.hotWaterMode) e.heating = 'Indiquez le chauffage et l’eau chaude.'
     setErrors(e)
-    if (Object.keys(e).length) return
+    if (Object.keys(e).length) {
+      // Le curseur va sur la première réponse à donner : le lecteur d'écran lit la question et son message.
+      const first = ['address', 'surface', 'rooms', 'habitat', 'legalRegime', 'period', 'heating'].find((k) => e[k])
+      requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-field="${first}"] input, [data-field="${first}"] button`)?.focus())
+      return
+    }
     update((prev) => ({ property: { ...prev.property, address: address.trim(), surface: surfaceValue, rooms } }), 'personnes')
     await flush()
     navigate('/commencer/personnes')
@@ -96,6 +104,7 @@ export default function LogementStep() {
   return (
     <TunnelLayout step="logement">
       <h1 style={display('clamp(40px, 5vw, 56px)')}>Où se trouve le logement ?</h1>
+      <div data-field="address" className="stack">
       <AddressField
         label="Adresse"
         value={address}
@@ -104,16 +113,19 @@ export default function LogementStep() {
         error={errors.address}
         onChange={(v) => {
           setAddress(v)
+          if (v.trim().length >= 5) clear('address')
           // Adresse modifiée à la main : les informations liées à l'ancienne adresse ne valent plus.
           patch(p.banId ? { address: v, banId: undefined, inseeCode: undefined, postalCode: undefined, city: undefined, dpeClass: undefined, dpeNumber: undefined } : { address: v })
           if (p.banId) setDpe(null)
         }}
         onSelect={(s) => {
           setAddress(s.label)
+          clear('address')
           patch({ address: s.label, postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode, banId: s.banId, dpeClass: undefined, dpeNumber: undefined })
           if (s.banId) lookupDpe(s.banId)
         }}
       />
+      </div>
 
       {found ? (
         <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
@@ -145,7 +157,7 @@ export default function LogementStep() {
       ) : null}
       <DpeWarning dpeClass={p.dpeClass} />
 
-      <div style={{ display: 'flex', gap: 20 }}>
+      <div data-field="surface" style={{ display: 'flex', gap: 20 }}>
         <TextField
           label="Surface habitable"
           name="surface"
@@ -153,15 +165,17 @@ export default function LogementStep() {
           suffix="m²"
           value={surface}
           error={errors.surface}
+          hint={smallSurfaceWarning(Number(surface.replace(',', '.'))) ?? undefined}
           onChange={(e) => {
             const v = e.target.value.replace(/[^\d,.]/g, '')
             setSurface(v)
+            if (Number(v.replace(',', '.')) > 0) clear('surface')
             patch({ surface: Number(v.replace(',', '.')) || undefined })
           }}
         />
       </div>
 
-      <fieldset style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
+      <fieldset data-field="rooms" aria-describedby="rooms-help" style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
         <legend style={{ fontSize: 15, fontWeight: 600, padding: 0, marginBottom: 10 }}>Nombre de pièces principales</legend>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[1, 2, 3, 4, 5].map((n) => {
@@ -173,6 +187,7 @@ export default function LogementStep() {
                 aria-pressed={selected}
                 onClick={() => {
                   setRooms(n)
+                  clear('rooms')
                   patch({ rooms: n })
                 }}
                 style={{ width: 64, height: 56, border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 18, fontWeight: selected ? 700 : 600, borderRadius: 12 }}
@@ -191,18 +206,22 @@ export default function LogementStep() {
             }} />
           </div>
         ) : null}
-        <span style={{ fontSize: 14, color: errors.rooms ? BAI.error : BAI.inkSoft, marginTop: 10 }}>
+        <span id="rooms-help" style={{ fontSize: 14, color: errors.rooms ? BAI.error : BAI.inkSoft, marginTop: 10 }}>
           {errors.rooms ?? 'Séjour et chambres. La cuisine et la salle de bain ne comptent pas.'}
         </span>
       </fieldset>
 
-      <TextField label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
+      <TextField maxLength={120} label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
 
       <ChipGroup
         legend="C’est"
+        field="habitat"
         error={errors.habitat}
         value={p.habitat}
-        onChange={(v) => patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })}
+        onChange={(v) => {
+          clear('habitat', 'legalRegime')
+          patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })
+        }}
         options={[
           { value: 'COLLECTIVE', label: 'Un appartement' },
           { value: 'INDIVIDUAL', label: 'Une maison' },
@@ -211,9 +230,13 @@ export default function LogementStep() {
       <ChipGroup
         legend="En copropriété ?"
         hint="Copropriété : il y a un syndic et un règlement de copropriété."
+        field="legalRegime"
         error={errors.legalRegime}
         value={p.legalRegime}
-        onChange={(v) => patch({ legalRegime: v })}
+        onChange={(v) => {
+          clear('legalRegime')
+          patch({ legalRegime: v })
+        }}
         options={[
           { value: 'COPRO', label: 'Oui' },
           { value: 'MONO', label: 'Non' },
@@ -222,9 +245,13 @@ export default function LogementStep() {
       <ChipGroup
         legend="Période de construction"
         hint="Elle figure dans le bail et décide des diagnostics à fournir. Une estimation suffit."
+        field="period"
         error={errors.period}
         value={p.constructionPeriod}
-        onChange={(v) => patch({ constructionPeriod: v })}
+        onChange={(v) => {
+          clear('period')
+          patch({ constructionPeriod: v })
+        }}
         options={[
           { value: 'BEFORE_1949', label: 'Avant 1949' },
           { value: '1949_1974', label: '1949 à 1974' },
@@ -235,9 +262,13 @@ export default function LogementStep() {
       />
       <ChipGroup
         legend="Le chauffage est"
+        field="heating"
         error={errors.heating}
         value={p.heatingMode}
-        onChange={(v) => patch({ heatingMode: v })}
+        onChange={(v) => {
+          if (p.hotWaterMode) clear('heating')
+          patch({ heatingMode: v })
+        }}
         options={[
           { value: 'INDIVIDUAL', label: 'Individuel' },
           { value: 'COLLECTIVE', label: 'Collectif (pour tout l’immeuble)' },
@@ -259,7 +290,10 @@ export default function LogementStep() {
       <ChipGroup
         legend="L’eau chaude est"
         value={p.hotWaterMode}
-        onChange={(v) => patch({ hotWaterMode: v })}
+        onChange={(v) => {
+          if (p.heatingMode) clear('heating')
+          patch({ hotWaterMode: v })
+        }}
         options={[
           { value: 'INDIVIDUAL', label: 'Individuelle' },
           { value: 'COLLECTIVE', label: 'Collective' },
@@ -272,9 +306,10 @@ export default function LogementStep() {
 }
 
 /** Choix en boutons, comme le nombre de pièces. */
-function ChipGroup<T extends string>({ legend, hint, error, value, onChange, options }: { legend: string; hint?: string; error?: string; value?: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }> }) {
+function ChipGroup<T extends string>({ legend, field, hint, error, value, onChange, options }: { legend: string; field?: string; hint?: string; error?: string; value?: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }> }) {
+  const helpId = field ? `${field}-help` : undefined
   return (
-    <fieldset style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
+    <fieldset data-field={field} aria-describedby={error || hint ? helpId : undefined} style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
       <legend style={{ fontSize: 15, fontWeight: 600, padding: 0, marginBottom: 10 }}>{legend}</legend>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {options.map((o) => {
@@ -286,7 +321,7 @@ function ChipGroup<T extends string>({ legend, hint, error, value, onChange, opt
           )
         })}
       </div>
-      {error || hint ? <span style={{ fontSize: 14, color: error ? BAI.error : BAI.inkSoft, marginTop: 10 }}>{error ?? hint}</span> : null}
+      {error || hint ? <span id={helpId} style={{ fontSize: 14, color: error ? BAI.error : BAI.inkSoft, marginTop: 10 }}>{error ?? hint}</span> : null}
     </fieldset>
   )
 }

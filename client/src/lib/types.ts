@@ -56,4 +56,6 @@ export interface User {
   followUpActive: boolean
   notifyWeekly?: boolean
   notifyUrgent?: boolean
+  /** Accès au pilotage de Bailio (adresses autorisées sur le serveur). */
+  admin?: boolean
 }

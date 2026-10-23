@@ -21,6 +21,13 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
       details: err.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
     })
   }
+  // Fichier envoyé trop lourd (multer) : message clair au lieu d'une erreur serveur.
+  if ((err as { code?: string } | null)?.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ success: false, message: 'Ce fichier est trop volumineux. Envoyez une photo ou un PDF plus léger (15 Mo au maximum).' })
+  }
+  if ((err as { code?: string } | null)?.code === 'LIMIT_FILE_COUNT' || (err as { code?: string } | null)?.code === 'LIMIT_UNEXPECTED_FILE') {
+    return res.status(400).json({ success: false, message: 'Trop de fichiers envoyés en une fois.' })
+  }
   // Erreurs du parseur de corps (JSON invalide → 400, corps trop volumineux → 413) : statut correct, pas un 500 ni un log serveur.
   const status = (err as { status?: number; statusCode?: number } | null)?.status ?? (err as { statusCode?: number } | null)?.statusCode
   if (typeof status === 'number' && status >= 400 && status < 500) {

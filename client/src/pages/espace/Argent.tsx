@@ -131,7 +131,7 @@ function Chart({ data }: { data: MoneyView }) {
           return <div key={m.month} title={`${monthName(m.month, true)} : ${eurosCents(m.receivedCents)}`} style={{ flex: '1 1 0', height: h, background: m.receivedCents ? BAI.owner : BAI.border, borderRadius: m.receivedCents ? '6px 6px 0 0' : 0 }} />
         })}
       </div>
-      <div style={{ display: 'flex', gap: 'clamp(4px, 1.2vw, 14px)', fontSize: 12, color: BAI.inkSoft, textAlign: 'center', paddingTop: 8 }}>
+      <div style={{ display: 'flex', gap: 'clamp(4px, 1.2vw, 14px)', fontSize: 13, color: BAI.inkSoft, textAlign: 'center', paddingTop: 8 }}>
         {MONTHS_SHORT_CAP.map((m) => (
           <span key={m} style={{ flex: '1 1 0', overflow: 'hidden' }}>
             {m}

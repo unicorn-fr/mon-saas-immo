@@ -16,7 +16,8 @@ import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
 import { rentPatch } from '../services/rent.js'
-import { amountsForPeriod } from '../domain/rentHistory.js'
+import { amountsForPeriod, unpaidPeriods } from '../domain/rentHistory.js'
+import { formatEuros } from '../domain/lease.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
 import { ensureStructures } from '../services/structures.js'
@@ -56,20 +57,35 @@ router.put('/profile', async (req, res) => {
 
 const monthKey = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
 
-/** Situation du loyer du mois pour un bail en cours. */
+/**
+ * Situation des loyers d'un bail en cours. Les retards viennent de `unpaidPeriods`, le calcul du tableau de bord et des
+ * courriers : chaque échéance passée depuis l'entrée, le premier mois au prorata (échéance avant l'entrée) à part.
+ */
 export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'paymentDay' | 'startDate' | 'status' | 'data'>, payments: Pick<Payment, 'period' | 'amountCents' | 'receivedAt'>[], now = new Date()) {
+  const none = { lateDays: 0, unpaidCents: 0, unpaidPeriods: [] as string[] }
+  if (lease.status === 'DRAFT') return { key: 'DRAFT', label: 'Bail en préparation', ...none }
+  if (lease.startDate > now) return { key: 'UPCOMING', label: 'Bail signé, entrée à venir', ...none }
   const period = monthKey(now)
   const amounts = amountsForPeriod(lease, period)
   const due = amounts.rentCents + amounts.chargesCents
   const p = payments.find((x) => x.period === period)
+  const unpaid = unpaidPeriods(lease, payments, now)
+  const unpaidCents = unpaid.reduce((sum, u) => sum + u.missing, 0)
+  const owed = { unpaidCents, unpaidPeriods: unpaid.map((u) => u.period) }
+  if (unpaid.length) {
+    if (unpaid.length === 1 && unpaid[0].period === period && p) return { key: 'PARTIAL', label: 'Paiement partiel', lateDays: 0, ...owed }
+    const [y, m] = unpaid[0].period.split('-').map(Number)
+    const late = Math.floor((now.getTime() - Date.UTC(y, m - 1, lease.paymentDay)) / 86_400_000)
+    if (unpaid.length > 1) return { key: 'LATE', label: `${unpaid.length} loyers en retard (${formatEuros(unpaidCents)})`, lateDays: late, ...owed }
+    if (late > 0) return { key: 'LATE', label: `En retard de ${late} jour${late > 1 ? 's' : ''}`, lateDays: late, ...owed }
+    return { key: 'EXPECTED', label: 'Attendu aujourd’hui', ...owed, lateDays: 0 }
+  }
+  if (p && p.amountCents >= due) return { key: 'PAID', label: 'Payé', ...none }
+  if (p) return { key: 'PARTIAL', label: 'Paiement partiel', ...none }
   const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), lease.paymentDay))
-  if (lease.status === 'DRAFT') return { key: 'DRAFT', label: 'Bail en préparation', lateDays: 0 }
-  if (lease.startDate > now) return { key: 'UPCOMING', label: 'Bail signé, entrée à venir', lateDays: 0 }
-  if (p && p.amountCents >= due) return { key: 'PAID', label: 'Payé', lateDays: 0 }
-  if (p) return { key: 'PARTIAL', label: 'Paiement partiel', lateDays: 0 }
-  const late = Math.floor((now.getTime() - dueDate.getTime()) / 86_400_000)
-  if (late > 0) return { key: 'LATE', label: `En retard de ${late} jour${late > 1 ? 's' : ''}`, lateDays: late }
-  return { key: 'EXPECTED', label: `Attendu le ${lease.paymentDay}`, lateDays: 0 }
+  // Premier mois commencé après le jour de paiement : loyer au prorata, réglé à l'entrée et noté par le propriétaire.
+  if (dueDate < lease.startDate) return { key: 'FIRST', label: 'Premier loyer au prorata, à noter à sa réception', ...none }
+  return { key: 'EXPECTED', label: `Attendu le ${lease.paymentDay}`, ...none }
 }
 
 const PROPERTY_KIND = (f: PropertyFile) => {

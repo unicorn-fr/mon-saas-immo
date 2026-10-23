@@ -163,8 +163,8 @@ export default function RelectureStep() {
 
             <Row label="Propriétaire" value={data.landlord?.firstName ? `${fullName(data.landlord)}${data.landlord.address ? ` · ${data.landlord.address}` : ''}` : TODO} editing={editing === 'bailleur'} onEdit={() => edit('bailleur')}>
               <div style={{ display: 'flex', gap: 16 }}>
-                <TextField label="Prénom" name="e-lfirst" value={form.landlord?.firstName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, firstName: e.target.value } })} />
-                <TextField label="Nom" name="e-llast" value={form.landlord?.lastName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, lastName: e.target.value } })} />
+                <TextField maxLength={80} label="Prénom" name="e-lfirst" value={form.landlord?.firstName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, firstName: e.target.value } })} />
+                <TextField maxLength={80} label="Nom" name="e-llast" value={form.landlord?.lastName ?? ''} onChange={(e) => setF({ landlord: { ...form.landlord, lastName: e.target.value } })} />
               </div>
               <AddressField label="Votre adresse" value={form.landlord?.address ?? ''} onChange={(v) => setF({ landlord: { ...form.landlord, address: v } })} onSelect={(s) => setF({ landlord: { ...form.landlord, address: s.label } })} />
               <EditActions onSave={() => commit({ landlord: form.landlord })} onCancel={() => setEditing(null)} />
@@ -178,9 +178,9 @@ export default function RelectureStep() {
             >
               {(form.tenants?.length ? form.tenants : [{}]).map((t, i) => (
                 <div key={i} className="col-md" style={{ display: 'flex', gap: 12 }}>
-                  <TextField label={i === 0 ? 'Prénom' : `Prénom (colocataire ${i + 1})`} name={`e-t${i}f`} value={t.firstName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, firstName: e.target.value } : x)) })} />
-                  <TextField label="Nom" name={`e-t${i}l`} value={t.lastName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, lastName: e.target.value } : x)) })} />
-                  <TextField label="Email" name={`e-t${i}e`} type="email" value={t.email ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, email: e.target.value } : x)) })} />
+                  <TextField maxLength={80} label={i === 0 ? 'Prénom' : `Prénom (colocataire ${i + 1})`} name={`e-t${i}f`} value={t.firstName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, firstName: e.target.value } : x)) })} />
+                  <TextField maxLength={80} label="Nom" name={`e-t${i}l`} value={t.lastName ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, lastName: e.target.value } : x)) })} />
+                  <TextField maxLength={200} label="Email" name={`e-t${i}e`} type="email" value={t.email ?? ''} onChange={(e) => setF({ tenants: (form.tenants?.length ? form.tenants : [{}]).map((x, j) => (j === i ? { ...x, email: e.target.value } : x)) })} />
                 </div>
               ))}
               <Link to="/commencer/personnes" style={{ fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
@@ -222,8 +222,8 @@ export default function RelectureStep() {
         </div>
 
         {!imported ? (
-          <aside className="stack full-md" style={{ width: 420, flexShrink: 0, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, boxShadow: '0 16px 40px rgba(26,26,46,0.10)' }} aria-label="Aperçu du bail">
-            <div style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>Contrat de location</div>
+          <aside className="stack full-md" style={{ width: 420, flexShrink: 0, minWidth: 0, overflowWrap: 'anywhere', background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, boxShadow: '0 16px 40px rgba(26,26,46,0.10)' }} aria-label="Aperçu du bail">
+            <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>Contrat de location</div>
             <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>
               Logement {type === 'FURNISHED' ? 'meublé' : 'vide'} à usage de résidence principale
             </div>
@@ -235,8 +235,8 @@ export default function RelectureStep() {
               ['IV. Conditions financières', r.rentCents ? `Loyer de ${euros(r.rentCents)} et ${euros(r.chargesCents ?? 0)} de charges par mois.` : '…'],
             ].map(([t, v]) => (
               <div key={t} className="stack" style={{ gap: 4 }}>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{t}</div>
-                <div style={{ fontSize: 12, color: BAI.inkMid, lineHeight: 1.5 }}>{v}</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{t}</div>
+                <div style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.5 }}>{v}</div>
               </div>
             ))}
             <div style={{ height: 8, background: BAI.skeleton, borderRadius: 2 }} />

@@ -49,6 +49,11 @@ export function TunnelLayout({ step, children, width = 640 }: { step: TunnelStep
   )
 }
 
+/** Après un « Continuer » refusé : le curseur va sur le premier champ en erreur (le lecteur d'écran lit son intitulé et son message). */
+export function focusFirstError() {
+  requestAnimationFrame(() => document.querySelector<HTMLElement>('main [aria-invalid="true"]')?.focus())
+}
+
 /** Retour / Continuer, en bas de chaque étape. */
 export function StepNav({ back, next, nextLabel = 'Continuer', loading, disabled }: { back?: string; next: () => void; nextLabel?: string; loading?: boolean; disabled?: boolean }) {
   return (

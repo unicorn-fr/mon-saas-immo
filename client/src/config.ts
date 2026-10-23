@@ -19,7 +19,7 @@ export const FOUNDER_LINKEDIN = 'https://www.linkedin.com/in/enzo-mercier/'
  */
 export const EDITOR: { address: string | null; phone: string | null; company: string | null; registration: string | null; vat: string | null } = {
   address: null,
-  phone: null,
+  phone: '09 52 14 05 90',
   company: null,
   registration: null,
   vat: null,

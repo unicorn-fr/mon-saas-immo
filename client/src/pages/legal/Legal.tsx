@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '16 octobre 2026'
+const UPDATED = '22 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -78,8 +78,8 @@ export function MentionsLegales() {
             {EDITOR.address ? `, ${EDITOR.address}` : ', à Montpellier'}.
           </>
         )}{' '}
-        {EDITOR.phone ? <>Téléphone : {EDITOR.phone}. </> : null}
-        Email : <Mail />. Profil professionnel : <a href={FOUNDER_LINKEDIN} rel="noopener">linkedin.com/in/enzo-mercier</a>.
+        {EDITOR.phone ? <>Téléphone : <a href={`tel:${EDITOR.phone.replace(/[^\d+]/g, '')}`}>{EDITOR.phone}</a>. </> : null}
+        Email : <Mail />. Profil professionnel : <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">linkedin.com/in/enzo-mercier</a>.
       </p>
       {EDITOR.vat ? <p>Numéro de TVA intracommunautaire : {EDITOR.vat}.</p> : null}
       {EDITOR.company ? null : (
@@ -116,19 +116,19 @@ export function MentionsLegales() {
       <H2>Pour aller plus loin</H2>
       <ul>
         <li>
-          <Link to="/conditions">Conditions d'utilisation</Link>
+          <Link to="/conditions" className="tap">Conditions d'utilisation</Link>
         </li>
         <li>
-          <Link to="/confidentialite">Confidentialité et données personnelles</Link>
+          <Link to="/confidentialite" className="tap">Confidentialité et données personnelles</Link>
         </li>
         <li>
-          <Link to="/cookies">Cookies et stockage dans le navigateur</Link>
+          <Link to="/cookies" className="tap">Cookies et stockage dans le navigateur</Link>
         </li>
         <li>
-          <Link to="/prix-et-remboursement">Prix, rétractation et remboursement</Link>
+          <Link to="/prix-et-remboursement" className="tap">Prix, rétractation et remboursement</Link>
         </li>
         <li>
-          <Link to="/accessibilite">Accessibilité</Link>
+          <Link to="/accessibilite" className="tap">Accessibilité</Link>
         </li>
       </ul>
     </SimplePage>
@@ -266,6 +266,7 @@ export function Confidentialite() {
         <li>Ce que le locataire complète lui-même par le lien « Votre dossier de location » envoyé par son futur bailleur : identité, naissance, coordonnées, situation et revenus, ceux de son garant, et les justificatifs que la loi autorise à demander (décret n° 2015-1437). Ils rejoignent sa fiche et ne sont visibles que du propriétaire. Le lien expire après 30 jours ;</li>
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date, les problèmes qu'il signale dans le logement (type, lieu, description, photos) et ses demandes pour compléter l'état des lieux d'entrée (description, photos, réponse du propriétaire). Ces éléments sont rangés avec le bail ou le logement et ne sont visibles que du propriétaire et des personnes à qui il en donne l'accès ; un problème signalé est conservé avec l'historique des interventions du logement ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
+        <li>Si vous donnez votre avis depuis l'espace (« Votre avis ») : votre réponse, votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour améliorer Bailio et vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
       </ul>
       <p>
         Nous ne demandons jamais de pièces que la loi interdit d'exiger d'un locataire (article 22-2 de la loi du 6 juillet 1989). Les
@@ -280,6 +281,8 @@ export function Confidentialite() {
           ['Garder la preuve des signatures en ligne', 'Intérêt légitime : pouvoir prouver la signature en cas de désaccord'],
           ['Photo du signataire au moment de signer', 'Consentement du signataire, libre : il peut signer sans photo'],
           ['Relever les appareils connectés et limiter les tentatives de connexion', 'Intérêt légitime : la sécurité de votre compte'],
+          ['Lire vos avis et vous répondre', 'Intérêt légitime : améliorer le service ; vous choisissez d’écrire'],
+          ['Compter l’usage du service (comptes, baux, visites), en nombres globaux, sans cookie ni traceur', 'Intérêt légitime : savoir si Bailio rend service et l’améliorer'],
           ['Données de vos locataires, candidats et garants', 'Traitées pour votre compte, sur la base qui vous revient (préparation et exécution du bail)'],
           ['Conserver les factures, si une offre payante est un jour souscrite', 'Obligation légale (10 ans, Code de commerce, art. L123-22)'],
         ]}
@@ -324,6 +327,7 @@ export function Confidentialite() {
       <ul>
         <li>Un bail commencé sans compte : 30 jours, puis il est effacé ;</li>
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
+        <li>Vos avis envoyés depuis l'espace : dans notre messagerie, le temps de les lire et de vous répondre, deux ans au plus ;</li>
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes ;</li>
         <li>Les candidatures : trois mois au plus après leur envoi, pièces comprises. Celle que le propriétaire retient devient la fiche du locataire ;</li>
         <li>Les justificatifs d'un locataire et de son garant (pièce d'identité, revenus…) : gardés pendant toute la location, renouvellements compris, puis effacés 30 jours après sa fin ; le propriétaire est prévenu par email 7 jours avant ;</li>
@@ -465,6 +469,44 @@ export function Accessibilite() {
   )
 }
 
+/** Ce qui protège vos données, sans jargon : seulement ce qui est réellement en place. */
+export function Securite() {
+  return (
+    <SimplePage title="Sécurité de vos données">
+      <Updated />
+      <p>Vos baux et les informations de vos locataires sont sensibles. Voici, simplement, comment Bailio les protège.</p>
+      <H2>Où sont vos données</H2>
+      <ul>
+        <li>Sur un serveur loué à Infomaniak, à Genève, en Suisse (voir les <Link to="/mentions-legales">mentions légales</Link>). La Suisse est reconnue par l'Union européenne comme offrant un niveau de protection adéquat ;</li>
+        <li>La base de données n'est pas accessible depuis Internet : seule l'application y a accès ;</li>
+        <li>Elle est sauvegardée chaque nuit ; chaque sauvegarde est gardée 14 jours.</li>
+      </ul>
+      <H2>Comment on accède à votre espace</H2>
+      <ul>
+        <li>Pas de mot de passe à voler : vous recevez un lien de connexion par email, valable 30 minutes et utilisable une seule fois ;</li>
+        <li>Chaque connexion est un appareil, visible dans « Mon compte » : vous pouvez en déconnecter un à tout moment. Un appareil inutilisé pendant 30 jours est déconnecté tout seul ;</li>
+        <li>L'export de vos données et la suppression du compte demandent en plus un code à 6 chiffres envoyé par email ;</li>
+        <li>Toutes les pages passent par une connexion chiffrée (HTTPS), imposée par le navigateur.</li>
+      </ul>
+      <H2>Ce que nous ne faisons pas</H2>
+      <ul>
+        <li>Aucune publicité, aucun cookie, aucun outil de mesure d'audience ;</li>
+        <li>Aucune donnée vendue ni confiée à un service d'intelligence artificielle : même la lecture des baux importés se fait sur notre serveur ;</li>
+        <li>Bailio ne touche jamais à votre argent : les loyers vont directement de votre locataire à vous.</li>
+      </ul>
+      <H2>Vos locataires</H2>
+      <p>
+        Leurs pièces sont gardées le temps du bail, puis effacées 30 jours après sa fin ; les candidats non retenus, 3 mois après leur
+        candidature. Tout le détail est dans la page <Link to="/confidentialite">Confidentialité</Link>.
+      </p>
+      <H2>Un doute, un incident ?</H2>
+      <p>
+        Écrivez à <Mail />. En cas de violation de données, vous seriez prévenu comme le prévoit le RGPD (articles 33 et 34).
+      </p>
+    </SimplePage>
+  )
+}
+
 export function Contact() {
   return (
     <SimplePage title="Contact">
@@ -472,9 +514,14 @@ export function Contact() {
         Une question, un souci avec un document ? Écrivez-nous à <Mail />.
         Nous répondons sous deux jours ouvrés.
       </p>
+      {EDITOR.phone ? (
+        <p>
+          Par téléphone : <a href={`tel:${EDITOR.phone.replace(/[^\d+]/g, '')}`}>{EDITOR.phone}</a> (laissez un message, nous vous rappelons). L’email reste le plus rapide.
+        </p>
+      ) : null}
       <p>
         Bailio a été fondé à Montpellier par{' '}
-        <a href={FOUNDER_LINKEDIN} rel="noopener">
+        <a href={FOUNDER_LINKEDIN} target="_blank" rel="noopener noreferrer">
           Enzo Mercier
         </a>
         .
@@ -488,7 +535,7 @@ export function NotFound() {
     <SimplePage title="Page introuvable">
       <p>Cette page n'existe pas ou n'existe plus.</p>
       <p>
-        <Link to="/">Retour à l'accueil</Link>
+        <Link to="/" className="tap">Retour à l'accueil</Link>
       </p>
     </SimplePage>
   )

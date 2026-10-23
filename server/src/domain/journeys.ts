@@ -201,7 +201,7 @@ function unpaid(input: JourneyInput): Journey {
       {
         key: 'command',
         title: 'Commandement de payer par un commissaire de justice',
-        text: 'Il laisse six semaines au locataire pour payer et déclenche la clause résolutoire. Le commissaire le signifie aussi au garant dans les 15 jours. Indiquez-le ici quand c’est fait.',
+        text: 'Il laisse six semaines au locataire pour payer et déclenche la clause résolutoire. Le commissaire le signifie aussi au garant dans les 15 jours. Annuaire officiel : commissaire-justice.fr. Sans paiement après six semaines, le juge du tribunal judiciaire constate la fin du bail et peut accorder des délais ; aucune expulsion n’a lieu pendant la trêve hivernale, du 1er novembre au 31 mars. Indiquez-le ici quand c’est fait.',
         status: !input.unpaid.length ? 'LATER' : command ? 'DONE' : formal ? 'TODO' : 'LATER',
         doneAt: command,
         action: { type: 'MANUAL' },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAIL_PROVIDERS, isApple, providerFor, providersFor } from './mail'
+import { MAIL_PROVIDERS, isApple, providerFor, providersFor, suggestEmail } from './mail'
 
 describe('messageries : la boîte de l’adresse saisie en premier', () => {
   it('reconnaît les domaines courants', () => {
@@ -19,5 +19,22 @@ describe('messageries : la boîte de l’adresse saisie en premier', () => {
     expect(MAIL_PROVIDERS.every((p) => p.url.startsWith('https://'))).toBe(true)
     expect(isApple('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)')).toBe(true)
     expect(isApple('Mozilla/5.0 (Windows NT 10.0)')).toBe(false)
+  })
+})
+
+describe('faute de frappe dans l’adresse', () => {
+  it('propose la messagerie voisine', () => {
+    expect(suggestEmail('paul.durand@gmial.com')).toBe('paul.durand@gmail.com')
+    expect(suggestEmail('Marie@Hotmial.fr')).toBe('marie@hotmail.fr')
+    expect(suggestEmail('a@gmail.con')).toBe('a@gmail.com')
+    expect(suggestEmail('a@wanadoo.ff')).toBe('a@wanadoo.fr')
+    expect(suggestEmail('a@yaho.fr')).toBe('a@yahoo.fr')
+  })
+  it('se tait pour une adresse juste ou inconnue', () => {
+    expect(suggestEmail('a@gmail.com')).toBeNull()
+    expect(suggestEmail('a@monentreprise.fr')).toBeNull()
+    expect(suggestEmail('a@gmx.de')).toBeNull()
+    expect(suggestEmail('a@')).toBeNull()
+    expect(suggestEmail('pas-une-adresse')).toBeNull()
   })
 })

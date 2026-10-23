@@ -4,6 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { ApiError } from '../lib/api'
 import { centsToInput, parseEuros } from '../lib/format'
 import { Spinner, display } from './ui'
+import { useAddressSuggestions, type AddressSuggestion } from './AddressField'
 
 /**
  * Composants de l'espace propriétaire, repris de la maquette : cartes blanches à bord crème,
@@ -68,7 +69,7 @@ export function Crumbs({ items }: { items: Array<{ label: string; to?: string }>
         <span key={i} style={{ display: 'inline-flex', gap: 6 }}>
           {i > 0 ? <span aria-hidden>/</span> : null}
           {it.to ? (
-            <Link to={it.to} style={{ textDecoration: 'none', fontWeight: 600 }}>
+            <Link to={it.to} className="tap" style={{ textDecoration: 'none', fontWeight: 600 }}>
               {it.label}
             </Link>
           ) : (
@@ -104,7 +105,7 @@ const PILL: Record<Tone, { color: string; bg: string }> = {
 
 export function Pill({ tone = 'owner', children, style }: { tone?: Tone; children: ReactNode; style?: CSSProperties }) {
   const p = PILL[tone]
-  return <span style={{ fontSize: 12, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
+  return <span style={{ fontSize: 13, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
 }
 
 export const toneColor = (tone: string | undefined) => (tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? BAI.caramelInk : tone === 'owner' ? BAI.owner : BAI.inkSoft)
@@ -227,11 +228,11 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, newT
 export function TextLink({ to, onClick, children, style }: { to?: string; onClick?: () => void; children: ReactNode; style?: CSSProperties }) {
   const s: CSSProperties = { fontSize: 15, fontWeight: 600, color: BAI.owner, textDecoration: 'none', background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', ...style }
   return to ? (
-    <Link to={to} style={s}>
+    <Link to={to} className="tap" style={s}>
       {children}
     </Link>
   ) : (
-    <button type="button" onClick={onClick} style={s}>
+    <button type="button" className="tap" onClick={onClick} style={s}>
       {children}
     </button>
   )
@@ -265,7 +266,7 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
 export function Computed({ title = 'Calculé par Bailio', rows }: { title?: string; rows: Array<[ReactNode, ReactNode]> }) {
   return (
     <div style={{ background: BAI.night, borderRadius: 14, padding: '14px 18px 6px' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 8 }}>{title}</div>
       {rows.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '9px 0', borderTop: `1px solid ${BAI.nightLine}`, fontSize: 14 }}>
           <span style={{ color: BAI.onDarkMuted }}>{k}</span>
@@ -360,6 +361,29 @@ export function Input({ label, hideLabel, hint, error, big, style, value, onChan
           style={{ ...fieldStyle(big, Boolean(error)), paddingRight: suffix ? 44 : undefined, opacity: disabled ? 0.6 : 1 }}
         />
         {suffix ? <span aria-hidden style={{ position: 'absolute', right: 14, top: 0, bottom: 0, display: 'flex', alignItems: 'center', color: BAI.inkSoft, fontSize: 16 }}>{suffix}</span> : null}
+      </div>
+    </Shell>
+  )
+}
+
+/** Adresse avec suggestions de la Base Adresse Nationale : même apparence que les autres champs. */
+export function AddressInput({ label, hint, error, big, style, value, onChange, onSelect, placeholder }: FieldShell & { value: string | null | undefined; onChange: (v: string) => void; onSelect?: (s: AddressSuggestion) => void; placeholder?: string }) {
+  const { id, inputProps, list, reopen } = useAddressSuggestions(value ?? '', (s) => (onSelect ? onSelect(s) : onChange(s.label)))
+  return (
+    <Shell id={id} label={label} hint={hint} error={error} big={big} style={style}>
+      <div style={{ position: 'relative' }}>
+        <input
+          {...inputProps}
+          value={value ?? ''}
+          placeholder={placeholder}
+          aria-invalid={Boolean(error) || undefined}
+          onChange={(e) => {
+            onChange(e.target.value)
+            reopen()
+          }}
+          style={fieldStyle(big, Boolean(error))}
+        />
+        {list}
       </div>
     </Shell>
   )
@@ -571,8 +595,8 @@ export function Toggle({ checked, onChange, label, sub, disabled, border = true 
 
 export function Check({ checked, onChange, label, sub }: { checked: boolean; onChange: (v: boolean) => void; label: ReactNode; sub?: ReactNode }) {
   return (
-    <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, cursor: 'pointer', lineHeight: 1.4 }}>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 18, height: 18, flexShrink: 0, marginTop: 2, accentColor: BAI.owner }} />
+    <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, cursor: 'pointer', lineHeight: 1.4, minHeight: 24 }}>
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} style={{ width: 24, height: 24, flexShrink: 0, margin: 0, accentColor: BAI.owner }} />
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span>{label}</span>
         {sub ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>{sub}</span> : null}
@@ -614,7 +638,7 @@ export function Tabs<T extends string>({ tabs, value, onChange, label }: { tabs:
 /** Filtres en pastilles (Documents). */
 export function Filters<T extends string>({ items, value, onChange }: { items: Array<{ value: T; label: string }>; value: T; onChange: (v: T) => void }) {
   return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div className="filters" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
       {items.map((it) => (
         <button
           key={it.value}
@@ -749,7 +773,8 @@ export function Loader({ label = 'Chargement' }: { label?: string }) {
 export function LoadError({ message, retry }: { message: string; retry?: () => void }) {
   return (
     <Card>
-      <Callout tone="warn" title="Impossible d’afficher cette page">
+      {/* Titre principal de la page en erreur (titre de l'onglet, lecteurs d'écran). */}
+      <Callout tone="warn" title={<h1 style={{ margin: 0, font: 'inherit' }}>Impossible d’afficher cette page</h1>}>
         {message}
       </Callout>
       {retry ? (

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
-import { StepNav, TunnelLayout } from '../../components/TunnelLayout'
+import { StepNav, TunnelLayout, focusFirstError } from '../../components/TunnelLayout'
 import { TextField, display, inputStyle } from '../../components/ui'
 import { useDraft } from '../../lib/draft'
 import { centsToInput, dateFr, durationLabel, endDate, euros, maxDepositCents, maxDepositLabel, parseEuros } from '../../lib/lease'
@@ -20,6 +20,13 @@ function CalcRow({ label, value, note }: { label: string; value: ReactNode; note
 
 const small = { ...inputStyle(), height: 44, fontSize: 16, width: 120, padding: '0 12px' }
 const editLink = { background: 'none', border: 'none', padding: 0, color: BAI.caramel, fontWeight: 600, fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 3 } as const
+
+/** Date du jour décalée de quelques années, AAAA-MM-JJ. */
+const shiftYears = (n: number) => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() + n)
+  return d.toISOString().slice(0, 10)
+}
 
 export default function LoyerStep() {
   const { data, update, flush } = useDraft()
@@ -58,14 +65,31 @@ export default function LoyerStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rent, charges, startDate, paymentDay, deposit])
 
-  async function next() {
+  function validate() {
     const e: Record<string, string> = {}
     if (!rentCents) e.rent = 'Indiquez le loyer hors charges.'
+    // Garde-fous : une faute de frappe ne doit pas produire un bail absurde (0,01 € ou 99 999 € par mois).
+    else if (rentCents < 1000) e.rent = 'Ce loyer paraît trop bas : indiquez le montant en euros par mois.'
+    else if (rentCents > 2_000_000) e.rent = 'Ce loyer paraît très élevé : vérifiez le montant en euros par mois.'
     if (parseEuros(charges) === undefined && charges.trim()) e.charges = 'Montant invalide.'
     if (!startDate) e.startDate = "Indiquez la date d'entrée du locataire."
+    else if (data.source !== 'import' && startDate < shiftYears(-1)) e.startDate = 'Cette date est passée depuis plus d’un an. Pour un bail déjà signé, choisissez « J’ai déjà un bail » sur l’accueil.'
+    else if (startDate > shiftYears(2)) e.startDate = 'Cette date est dans plus de deux ans : vérifiez-la.'
     if (depositTooHigh) e.deposit = `Le dépôt de garantie ne peut pas dépasser ${euros(maxDeposit)}.`
+    return e
+  }
+
+  // Une erreur affichée disparaît dès que la réponse est corrigée ; aucune nouvelle n'apparaît pendant la saisie.
+  useEffect(() => {
+    const now = validate()
+    setErrors((prev) => (Object.keys(prev).some((k) => !now[k]) ? Object.fromEntries(Object.entries(prev).filter(([k]) => now[k])) : prev))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rent, charges, startDate, deposit])
+
+  async function next() {
+    const e = validate()
     setErrors(e)
-    if (Object.keys(e).length) return
+    if (Object.keys(e).length) return focusFirstError()
     update((prev) => ({ rent: { ...prev.rent, rentCents, chargesCents, startDate, paymentDay } }), 'relecture')
     await flush()
     navigate('/commencer/relecture')
@@ -132,6 +156,7 @@ export default function LoyerStep() {
               {' · '}
               <button
                 type="button"
+                className="tap"
                 style={editLink}
                 onClick={() => {
                   // On repart du montant affiché, modifiable autant de fois que nécessaire.
@@ -146,6 +171,7 @@ export default function LoyerStep() {
                   {' · '}
                   <button
                     type="button"
+                    className="tap"
                     style={editLink}
                     onClick={() => {
                       setDeposit('')
@@ -177,7 +203,7 @@ export default function LoyerStep() {
             )
           }
           note={
-            <button type="button" style={editLink} onClick={() => setEditDay(true)}>
+            <button type="button" className="tap" style={editLink} onClick={() => setEditDay(true)}>
               Modifier
             </button>
           }

@@ -85,12 +85,13 @@ de la base chaque nuit (14 jours conservés).
 
 Chaque nuit, `backup.sh` garde une copie sur le serveur (14 jours). Pour qu'une panne du serveur ne fasse rien
 perdre, il envoie aussi une copie **chiffrée** (AES-256) hors du serveur, gardée 30 jours. Deux choix de stockage :
-kDrive Infomaniak (WebDAV), le plus simple si vous en avez déjà un, ou un stockage compatible S3.
+kDrive Infomaniak (WebDAV, **offre payante seulement** : le kDrive gratuit de my kSuite refuse WebDAV, erreur
+« 403 Forbidden »), ou un stockage compatible S3 (Backblaze B2 : 10 Go gratuits, bien assez).
 
 Générez d'abord une phrase secrète : `openssl rand -base64 32`. **Notez-la ailleurs que sur le serveur**
 (gestionnaire de mots de passe) : sans elle, impossible de restaurer. Elle va dans `BACKUP_PASSPHRASE`.
 
-**Choix A — kDrive Infomaniak (WebDAV)**
+**Choix A — kDrive Infomaniak (WebDAV)**, offre kDrive payante (Solo, Team, Pro)
 
 1. Dans le Manager Infomaniak → **Mon profil → Sécurité → Mots de passe d'application** : créez un mot de passe
    d'application dédié (« sauvegarde bailio »). N'utilisez **jamais** le mot de passe principal du compte.
@@ -99,9 +100,12 @@ Générez d'abord une phrase secrète : `openssl rand -base64 32`. **Notez-la ai
 3. Sur le serveur : `sudo nano /opt/bailio/deploy/vps/.env` et remplissez `BACKUP_KDRIVE_URL`, `BACKUP_KDRIVE_USER`
    (votre identifiant Infomaniak), `BACKUP_KDRIVE_PASS` (le mot de passe d'application) et `BACKUP_PASSPHRASE`.
 
-**Choix B — stockage compatible S3** (Scaleway, OVH, Swiss Object Storage…)
+**Choix B — stockage compatible S3** (Backblaze B2 gratuit jusqu'à 10 Go, Scaleway, OVH, Swiss Object Storage…)
 
 1. Créez le stockage et notez l'adresse (endpoint), le compartiment (bucket), la clé d'accès et la clé secrète.
+   Backblaze B2 : compartiment **privé**, région « EU Central », puis **Application Keys → Add a New Application Key**
+   limitée à ce compartiment ; keyID = clé d'accès, applicationKey = clé secrète, endpoint affiché sur le compartiment
+   (`https://s3.eu-central-003.backblazeb2.com` par exemple), région = la partie du milieu (`eu-central-003`).
 2. Sur le serveur : remplissez `BACKUP_S3_ENDPOINT`, `BACKUP_S3_REGION` (si demandée), `BACKUP_S3_BUCKET`,
    `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY` et `BACKUP_PASSPHRASE`. (Utilisé seulement si les variables
    kDrive sont vides.)

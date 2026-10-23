@@ -98,20 +98,20 @@ export default function Courriers() {
       <FlowHeader
         height={80}
         left={
-          <Link to={`/espace/baux/${id}`} style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
+          <Link to={`/espace/baux/${id}`} className="tap" style={{ textDecoration: 'none', fontSize: 15, fontWeight: 600 }}>
             Retour
           </Link>
         }
         center={
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <span style={{ fontSize: 17, fontWeight: 700 }}>Actes et courriers</span>
+            <h1 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Actes et courriers</h1>
             <span className="hide-md" style={{ fontSize: 13, color: BAI.inkSoft }}>
               {lease ? `${lease.tenantName}, ${lease.property.name}` : 'Tous les documents de la vie du bail'}
             </span>
           </div>
         }
         right={
-          <Link to="/espace/documents" className="hide-md" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid }}>
+          <Link to="/espace/documents" className="hide-md tap" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid }}>
             Documents
           </Link>
         }
@@ -124,7 +124,7 @@ export default function Courriers() {
           <nav className="hide-md" aria-label="Courriers" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
             {groups.map((g) => (
               <div key={g.title} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: BAI.inkSoft, padding: '10px 10px 4px' }}>{g.title}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: BAI.inkSoft, padding: '10px 10px 4px' }}>{g.title}</span>
                 {g.tabs.map((t) => (
                   <button
                     key={t.value}

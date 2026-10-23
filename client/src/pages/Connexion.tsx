@@ -1,3 +1,4 @@
+import { EmailSuggestion } from '../components/EmailSuggestion'
 import { AccountNotice } from '../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { safePath } from '../lib/safePath'
@@ -24,7 +25,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }} className="col-md">
       <div className="auth-side" style={{ width: 'min(600px, 42vw)', background: BAI.night, boxSizing: 'border-box', padding: 'clamp(28px, 4vw, 48px) clamp(24px, 5vw, 72px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}>
-        <Link to="/" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: BAI.caramel }}>
+        <Link to="/" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: BAI.caramel, alignSelf: 'flex-start', padding: '6px 0' }}>
           Bailio
         </Link>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
@@ -59,7 +60,8 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Indiquez une adresse email valide.')
     setLoading(true)
     try {
-      await api('/auth/magic-link', { method: 'POST', body: { email: email.trim(), signup } })
+      // Page demandée avant la connexion : le lien reçu par email y ramènera.
+      await api('/auth/magic-link', { method: 'POST', body: { email: email.trim(), signup, next: safePath(state?.from) ?? undefined } })
       setSent(true)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Envoi impossible.')
@@ -76,7 +78,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
           {signup ? `Un lien pour ouvrir votre espace vient de partir vers ${email}.` : `Si un espace Bailio existe avec ${email}, un lien de connexion vient de partir.`} Il est valable 30 minutes.
         </p>
         <MailLinks email={email} />
-        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Rien reçu ? Regardez dans les indésirables, ou <button type="button" onClick={() => setSent(false)} style={{ background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>recommencez</button>.</span>
+        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Rien reçu ? Regardez dans les indésirables, ou <button type="button" onClick={() => setSent(false)} className="tap" style={{ background: 'none', border: 'none', padding: 0, color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>recommencez</button>.</span>
       </>
     )
   }
@@ -87,6 +89,7 @@ function MagicLinkForm({ signup }: { signup: boolean }) {
       <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid }}>{signup ? 'Gratuit, sans carte bancaire, sans mot de passe.' : 'Pas de mot de passe : nous vous envoyons un lien de connexion par email.'}</p>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} noValidate>
         <Input big label="Email" type="email" autoComplete="email" inputMode="email" value={email} onChange={setEmail} autoFocus />
+        <EmailSuggestion email={email} onPick={setEmail} />
         {error ? <Callout tone="warn">{error}</Callout> : null}
         <Button type="submit" full loading={loading} height={58}>
           {signup ? 'Créer mon espace' : 'Recevoir mon lien de connexion'}

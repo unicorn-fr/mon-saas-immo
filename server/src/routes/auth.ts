@@ -11,6 +11,7 @@ import { createSession, deleteSession, optionalUser, requireUser, sessionToken }
 import { createLeaseFromDraft, draftToLeaseInput } from '../services/leases.js'
 import { draftFromRequest } from './drafts.js'
 import { acceptAccess, invitationEmailFor, ownerLabel } from './access.js'
+import { isAdmin } from '../services/admin.js'
 
 const router = Router()
 const limiter = limitPerVisitor(15, 20)
@@ -28,15 +29,25 @@ export function publicUser(u: User) {
     followUpActive: Boolean(u.followUpSince),
     notifyWeekly: u.notifyWeekly,
     notifyUrgent: u.notifyUrgent,
+    // Pilotage réservé aux adresses de ADMIN_EMAILS (lien affiché dans « Mon compte »).
+    admin: isAdmin(u.email),
   }
 }
 
-async function sendMagicLink(email: string, draftId: string | null, isNew = false, accessId: string | null = null): Promise<void> {
+/** Page de l'espace à rouvrir après la connexion : chemin interne seulement (jamais une autre adresse). */
+const nextPath = z
+  .string()
+  .max(300)
+  .regex(/^\/(espace|edl|bienvenue)(\/[A-Za-z0-9\-_/?=&%.]*)?$/)
+  .optional()
+  .catch(undefined)
+
+async function sendMagicLink(email: string, draftId: string | null, isNew = false, accessId: string | null = null, next?: string): Promise<void> {
   const token = newToken()
   await prisma.loginToken.create({
     data: { tokenHash: hashToken(token), email, draftId, accessId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000) },
   })
-  const url = `${env.CLIENT_URL}/connexion/lien?jeton=${encodeURIComponent(token)}`
+  const url = `${env.CLIENT_URL}/connexion/lien?jeton=${encodeURIComponent(token)}${next ? `&suite=${encodeURIComponent(next)}` : ''}`
   const mail = accessId
     ? layout({
         title: 'Accédez à l’espace partagé avec vous.',
@@ -97,9 +108,10 @@ router.post('/finish-draft', limiter, optionalUser, async (req, res) => {
 // Connexion par lien magique.
 // Avec « signup », l'espace sera créé au premier clic sur le lien (l'adresse est ainsi vérifiée).
 router.post('/magic-link', limiter, async (req, res) => {
-  const { email, signup } = emailSchema.extend({ signup: z.boolean().optional() }).parse(req.body)
+  const { email, signup, next } = emailSchema.extend({ signup: z.boolean().optional(), next: nextPath }).parse(req.body)
   const user = await prisma.user.findUnique({ where: { email } })
-  if (user || signup) await sendMagicLink(email, null, !user)
+  // Page demandée avant la connexion : le lien de l'email y ramène.
+  if (user || signup) await sendMagicLink(email, null, !user, null, next)
   // Même réponse que le compte existe ou non (on ne révèle pas les adresses inscrites).
   res.json({ success: true, data: { sent: true } })
 })
@@ -114,8 +126,9 @@ router.post('/invitation-link', limiter, async (req, res) => {
 })
 
 router.post('/magic-link/verify', limiter, async (req, res) => {
-  const { token } = z.object({ token: z.string().min(10).max(200) }).parse(req.body)
-  const row = await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } })
+  // Un lien tronqué (copié à moitié depuis l'email) reçoit le même message qu'un lien expiré.
+  const token = z.object({ token: z.string().min(10).max(200) }).safeParse(req.body).data?.token
+  const row = token ? await prisma.loginToken.findUnique({ where: { tokenHash: hashToken(token) } }) : null
   // Le lien est consommé en une seule écriture conditionnelle : deux clics simultanés n'ouvrent pas deux sessions.
   const used = row ? await prisma.loginToken.updateMany({ where: { id: row.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { usedAt: new Date() } }) : null
   if (!row || !used?.count) {

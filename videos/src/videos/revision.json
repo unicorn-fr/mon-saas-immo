@@ -1,0 +1,82 @@
+{
+  "id": "revision",
+  "titre": "Augmenter son loyer chaque année : la révision",
+  "legende": "Votre loyer peut augmenter chaque année… si vous respectez les règles 📈 Clause, date anniversaire, IRL, délai d'un an : tout est dans la vidéo. Et vous, vous révisez votre loyer ? Dites-le en commentaire 👇 #proprietaire #loyer #IRL #immobilier #location #bailleur",
+  "musique": "musique/boucle-1.mp3",
+  "scenes": [
+    {
+      "type": "grand",
+      "voix": "Vous louez un logement ? Bonne nouvelle : vous avez peut-être le droit d'augmenter votre loyer chaque année. Et pourtant, beaucoup de propriétaires l'oublient.",
+      "texte": "Votre loyer peut augmenter",
+      "accent": "chaque année."
+    },
+    {
+      "type": "etapes",
+      "voix": "Il faut trois choses. Une clause de révision dans le bail. La date anniversaire du bail. Et l'indice de référence des loyers, l'IRL, publié par l'Insee chaque trimestre. Sans clause dans le bail, pas de révision possible.",
+      "titre": "Ce qu'il faut",
+      "etapes": [
+        "Une clause de révision dans le bail",
+        "La date anniversaire du bail",
+        "L'IRL, publié par l'Insee"
+      ],
+      "reperes": [
+        "clause",
+        "date",
+        "l'indice"
+      ]
+    },
+    {
+      "type": "chiffre",
+      "voix": "Le calcul est simple : le loyer, multiplié par le nouvel indice, divisé par l'ancien. Par exemple, si l'indice monte de deux pour cent, un loyer de 800 euros passe à 816 euros. Seize euros de plus par mois, soit près de 200 euros par an.",
+      "kicker": "Exemple",
+      "valeur": 816,
+      "suffixe": "€",
+      "texte": "au lieu de 800 €, si l'indice monte de 2 %",
+      "note": "Loyer × nouvel IRL ÷ ancien IRL",
+      "sousTitre": "Le calcul est simple : le loyer, multiplié par le nouvel indice, divisé par l'ancien. Par exemple, si l'indice monte de 2 %, un loyer de 800 € passe à 816 €. 16 € de plus par mois, soit près de 200 € par an."
+    },
+    {
+      "type": "chiffre",
+      "voix": "Attention : vous avez un an, à partir de la date anniversaire, pour la demander. Après, elle est perdue. Et si le logement est classé F ou G, la révision est interdite.",
+      "kicker": "Attention",
+      "valeur": 1,
+      "suffixe": "an",
+      "texte": "pour demander la révision, sinon elle est perdue",
+      "note": "Interdite en classe F ou G"
+    },
+    {
+      "type": "ecran",
+      "voix": "Bailio repère la date anniversaire, calcule le nouveau loyer avec le bon indice, et prépare la lettre pour votre locataire. Vous n'avez plus qu'à l'envoyer.",
+      "titre": "La révision",
+      "accent": "calculée pour vous",
+      "image": "ecrans/courriers.png",
+      "cote": "droite",
+      "focus": [
+        4,
+        25,
+        96,
+        50
+      ],
+      "carte": {
+        "titre": "Nouveau loyer",
+        "montant": 816,
+        "sous": "Lettre prête ✓"
+      }
+    },
+    {
+      "type": "grand",
+      "voix": "Et vous, vous révisez votre loyer chaque année ? Dites-le-moi en commentaire, on en parle.",
+      "texte": "Et vous, vous révisez",
+      "accent": "votre loyer ?",
+      "sousTitre": "Et vous, vous révisez votre loyer chaque année ? Dites-le-moi en commentaire, on en parle."
+    },
+    {
+      "type": "fin",
+      "voix": "Et créez votre bail gratuitement sur bailio point f r !",
+      "texte": "Créez votre bail",
+      "accent": "gratuitement",
+      "url": "bailio.fr",
+      "sousTitre": "Et créez votre bail gratuitement sur bailio.fr !"
+    }
+  ]
+}

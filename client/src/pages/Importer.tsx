@@ -59,16 +59,23 @@ export default function Importer() {
       <main style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: 'clamp(40px, 6vw, 88px) 20px 64px' }}>
         <div className="stack" style={{ width: '100%', maxWidth: 640, gap: 28 }}>
           <h1 style={display('clamp(40px, 5vw, 56px)')}>Importez votre bail signé</h1>
-          <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, color: BAI.inkMid }}>
-            Prenez chaque page en photo, ou déposez le PDF. Bailio lit le bail et remplit tout : le logement, le locataire, le loyer, les dates. Vous vérifiez ensuite.
-            Pour une bonne lecture : la page à plat, en pleine lumière, une photo par page.
-          </p>
+          {/* Sans lecture automatique, on ne promet pas ce qui n'est pas proposé. */}
+          {available === false ? (
+            <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, color: BAI.inkMid }}>
+              Gardez votre bail sous la main : vous recopiez le logement, le locataire, le loyer et les dates, et Bailio prépare le reste.
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: 18, lineHeight: 1.55, color: BAI.inkMid }}>
+              Prenez chaque page en photo, ou déposez le PDF. Bailio lit le bail et remplit tout : le logement, le locataire, le loyer, les dates. Vous vérifiez ensuite.
+              Pour une bonne lecture : la page à plat, en pleine lumière, une photo par page.
+            </p>
+          )}
 
           {available === false ? (
             <Notice tone="info">
               La lecture automatique arrive très bientôt. En attendant, vous pouvez saisir votre bail en 4 questions : cela prend 5 minutes.
               <div style={{ marginTop: 12 }}>
-                <Link to="/commencer" style={{ fontWeight: 600 }}>
+                <Link to="/commencer" className="tap" style={{ fontWeight: 600 }}>
                   Saisir mon bail
                 </Link>
               </div>

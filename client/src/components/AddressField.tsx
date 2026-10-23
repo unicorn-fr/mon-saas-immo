@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import { BAI } from '../constants/bailio-tokens'
 import { api } from '../lib/api'
 import { inputStyle } from './ui'
@@ -21,8 +21,11 @@ interface Props {
   autoFocus?: boolean
 }
 
-/** Adresse avec suggestions de la Base Adresse Nationale (Géoplateforme). */
-export function AddressField({ label, value, onChange, onSelect, error, placeholder, autoFocus }: Props) {
+/**
+ * Suggestions d'adresses de la Base Adresse Nationale (Géoplateforme), pour un champ texte :
+ * liste déroulante, flèches du clavier, Entrée pour choisir, Échap pour fermer.
+ */
+export function useAddressSuggestions(value: string, onSelect: (s: AddressSuggestion) => void) {
   const id = useId()
   const [items, setItems] = useState<AddressSuggestion[]>([])
   const [open, setOpen] = useState(false)
@@ -62,62 +65,76 @@ export function AddressField({ label, value, onChange, onSelect, error, placehol
     setItems([])
   }
 
+  const inputProps = {
+    id,
+    maxLength: 300,
+    role: 'combobox' as const,
+    'aria-expanded': open,
+    'aria-controls': `${id}-list`,
+    'aria-autocomplete': 'list' as const,
+    'aria-activedescendant': active >= 0 ? `${id}-${active}` : undefined,
+    autoComplete: 'off',
+    onBlur: () => window.setTimeout(() => setOpen(false), 150),
+    onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
+      if (!open || items.length === 0) return
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setActive((a) => (a + 1) % items.length)
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setActive((a) => (a <= 0 ? items.length - 1 : a - 1))
+      } else if (e.key === 'Enter' && active >= 0) {
+        e.preventDefault()
+        choose(items[active])
+      } else if (e.key === 'Escape') setOpen(false)
+    },
+  }
+
+  const list =
+    open && items.length > 0 ? (
+      <ul id={`${id}-list`} role="listbox" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, margin: '6px 0 0', padding: 6, listStyle: 'none', background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 14, boxShadow: '0 12px 40px rgba(26,26,46,0.12)' }}>
+        {items.map((s, i) => (
+          <li
+            key={s.banId || s.label}
+            id={`${id}-${i}`}
+            role="option"
+            aria-selected={i === active}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              choose(s)
+            }}
+            style={{ padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 16, background: i === active ? BAI.ownerLight : 'transparent' }}
+          >
+            {s.label}
+          </li>
+        ))}
+      </ul>
+    ) : null
+
+  return { id, inputProps, list, reopen: () => setOpen(true) }
+}
+
+/** Adresse avec suggestions (tunnel et « Ajouter un logement »). */
+export function AddressField({ label, value, onChange, onSelect, error, placeholder, autoFocus }: Props) {
+  const { id, inputProps, list, reopen } = useAddressSuggestions(value, onSelect)
   return (
     <div className="stack" style={{ gap: 8, position: 'relative' }}>
       <label htmlFor={id} style={{ fontSize: 15, fontWeight: 600 }}>
         {label}
       </label>
       <input
-        id={id}
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={`${id}-list`}
-        aria-autocomplete="list"
-        aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined}
+        {...inputProps}
         aria-invalid={Boolean(error) || undefined}
-        autoComplete="off"
         autoFocus={autoFocus}
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
           onChange(e.target.value)
-          setOpen(true)
-        }}
-        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
-        onKeyDown={(e) => {
-          if (!open || items.length === 0) return
-          if (e.key === 'ArrowDown') {
-            e.preventDefault()
-            setActive((a) => (a + 1) % items.length)
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault()
-            setActive((a) => (a <= 0 ? items.length - 1 : a - 1))
-          } else if (e.key === 'Enter' && active >= 0) {
-            e.preventDefault()
-            choose(items[active])
-          } else if (e.key === 'Escape') setOpen(false)
+          reopen()
         }}
         style={inputStyle(Boolean(error))}
       />
-      {open && items.length > 0 ? (
-        <ul id={`${id}-list`} role="listbox" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 20, margin: '6px 0 0', padding: 6, listStyle: 'none', background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 14, boxShadow: '0 12px 40px rgba(26,26,46,0.12)' }}>
-          {items.map((s, i) => (
-            <li
-              key={s.banId || s.label}
-              id={`${id}-${i}`}
-              role="option"
-              aria-selected={i === active}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                choose(s)
-              }}
-              style={{ padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontSize: 16, background: i === active ? BAI.ownerLight : 'transparent' }}
-            >
-              {s.label}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {list}
       {error ? (
         <span role="alert" style={{ fontSize: 14, color: BAI.error }}>
           {error}

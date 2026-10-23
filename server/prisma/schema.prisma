@@ -527,3 +527,11 @@ model TrashItem {
 
   @@index([userId])
 }
+
+/// Dernières valeurs de l'IRL (INSEE) : reprises quand l'INSEE ne répond pas.
+model IrlPoint {
+  quarter     String   @id // "2026-Q2"
+  value       Float
+  publishedAt String?
+  updatedAt   DateTime @updatedAt
+}

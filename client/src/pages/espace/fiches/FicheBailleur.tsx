@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { SignaturePad } from '../../../components/media'
-import { Callout, Chips, Input, LoadError, Loader, TextLink, useLoad } from '../../../components/kit'
+import { Callout, Chips, Input, LoadError, Loader, TextLink, useLoad, AddressInput } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { useAuth } from '../../../lib/auth'
 import type { LandlordProfile } from '../../../lib/contract'
@@ -54,7 +54,7 @@ export default function FicheBailleur() {
       </FicheSection>
 
       <FicheSection id="address" n={++n} title="Votre adresse" reference="loi n° 89-462 du 6 juillet 1989, art. 3" done={done('address')}>
-        <Input label="Adresse" value={p.address} onChange={(v) => set({ address: v })} placeholder="8 rue de l’Aiguillerie" />
+        <AddressInput label="Adresse" value={p.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city })} placeholder="8 rue de l’Aiguillerie" />
         <Fields>
           <Input label="Code postal" value={p.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
           <Input label="Ville" value={p.city} onChange={(v) => set({ city: v })} />

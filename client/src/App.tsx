@@ -19,7 +19,7 @@ import RecevoirStep from './pages/tunnel/RecevoirStep'
 import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
-import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement } from './pages/legal/Legal'
+import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
 
 type EspaceModule = typeof import('./pages/espace/index')
@@ -68,6 +68,7 @@ const Emprunt = page('Emprunt')
 const Degradations = page('Degradations')
 const Aides = page('Aides')
 const Patrimoine = page('Patrimoine')
+const Pilotage = page('Pilotage')
 const Actions = page('Actions')
 const Repartir = page('Repartir')
 const AccesPartages = page('AccesPartages')
@@ -95,7 +96,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth()
   const location = useLocation()
   if (loading) return <Loading />
-  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname }} />
+  if (!user) return <Navigate to="/connexion" replace state={{ from: location.pathname + location.search }} />
   return <>{children}</>
 }
 
@@ -220,6 +221,7 @@ function Pages() {
               <Route path="/espace/baux/:id/degradations" element={<RequireAuth><Degradations /></RequireAuth>} />
               <Route path="/espace/logements/:id/aides" element={<RequireAuth><Aides /></RequireAuth>} />
               <Route path="/espace/patrimoine" element={<RequireAuth><Patrimoine /></RequireAuth>} />
+              <Route path="/espace/pilotage" element={<RequireAuth><Pilotage /></RequireAuth>} />
               <Route path="/espace/actions" element={<RequireAuth><Actions /></RequireAuth>} />
               <Route path="/espace/argent/repartir" element={<RequireAuth><Repartir /></RequireAuth>} />
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />
@@ -245,6 +247,7 @@ function Pages() {
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
               <Route path="/accessibilite" element={<Accessibilite />} />
+              <Route path="/securite" element={<Securite />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
