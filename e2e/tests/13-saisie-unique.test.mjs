@@ -64,8 +64,11 @@ test('le locataire remplit lui-même son dossier, avec les mêmes informations q
   await v.getByRole('heading', { name: 'Votre garant', exact: true }).waitFor()
   await v.getByLabel('Lien avec vous').fill('Mère')
   await shot(v, 'dossier-locataire-complet')
-  await v.getByRole('button', { name: 'Enregistrer' }).nth(1).click()
-  await v.getByText('Enregistré.').last().waitFor()
+  // Attendre la réponse du serveur : le message « Enregistré. » du premier envoi peut être encore affiché.
+  await Promise.all([
+    v.waitForResponse((r) => /\/api\/dossier\/[^/]+$/.test(new URL(r.url()).pathname) && r.request().method() === 'POST' && r.ok()),
+    v.getByRole('button', { name: 'Enregistrer' }).nth(1).click(),
+  ])
   await visitor.close()
   const done = await api(`/tenants/${tenantId}`, { token })
   assert.equal(done.file.lastName, 'Roux')
