@@ -91,7 +91,16 @@ kDrive Infomaniak (WebDAV, **offre payante seulement** : le kDrive gratuit de my
 Générez d'abord une phrase secrète : `openssl rand -base64 32`. **Notez-la ailleurs que sur le serveur**
 (gestionnaire de mots de passe) : sans elle, impossible de restaurer. Elle va dans `BACKUP_PASSPHRASE`.
 
-**Choix A — kDrive Infomaniak (WebDAV)**, offre kDrive payante (Solo, Team, Pro)
+**Choix A — kDrive Infomaniak par l'API** (marche avec le kDrive gratuit)
+
+1. Manager Infomaniak → **Mon profil → Développeur → Tokens API** → **Créer un token**, autorisation **drive**
+   seulement, durée illimitée. Copiez-le (il n'est affiché qu'une fois).
+2. Dans kDrive, créez un dossier (par exemple « Sauvegardes Bailio ») et ouvrez-le : l'adresse se termine par
+   `/drive/<numéro du kDrive>/files/<numéro du dossier>`.
+3. Sur le serveur : remplissez `BACKUP_KDRIVE_TOKEN`, `BACKUP_KDRIVE_DRIVE_ID`, `BACKUP_KDRIVE_FOLDER_ID` et
+   `BACKUP_PASSPHRASE`. Les copies de plus de 30 jours partent dans la corbeille du kDrive.
+
+**Choix A bis — kDrive Infomaniak (WebDAV)**, offre kDrive payante (Solo, Team, Pro)
 
 1. Dans le Manager Infomaniak → **Mon profil → Sécurité → Mots de passe d'application** : créez un mot de passe
    d'application dédié (« sauvegarde bailio »). N'utilisez **jamais** le mot de passe principal du compte.
