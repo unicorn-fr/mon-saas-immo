@@ -1,0 +1,62 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #l6-g1 { left: 900px; top: -300px; width: 1800px; height: 1800px; }
+    #l6-g2 { left: -600px; top: -600px; width: 1500px; height: 1500px; }
+    #l6-h { position: absolute; left: 150px; top: 150px; font-size: 170px; color: #faf7f2; }
+    #l6-s { position: absolute; left: 150px; top: 1040px; font-size: 250px; color: #c4976a; }
+    #l6-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #l6-phone { left: 1320px; top: 134px; width: 560px; height: 1172px; }
+    #l6-part { left: 470px; top: 420px; width: 820px; }
+    .l6-q { position: absolute; left: 1420px; top: 600px; width: 380px; height: 230px; border-radius: 26px; background: #faf7f2; padding: 30px 34px;
+      box-shadow: 0 30px 70px rgba(0,0,0,.45); }
+    .l6-q b { display: block; font-size: 46px; color: #1a1a2e; }
+    .l6-q span { display: block; margin-top: 6px; font-size: 36px; color: #45455a; }
+    .l6-q em { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-style: normal; font-size: 34px; color: #1b5e3b; font-weight: 700; }
+    .l6-q em i { width: 36px; height: 36px; border-radius: 50%; background: #1b5e3b; }
+    #l6-blue { position: absolute; inset: 0; background: #1a3270; transform-origin: 50% 100%; }
+  </style>
+  <div id="root" data-composition-id="l6" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="l6-g1"></div><div class="k-glow c" id="l6-g2"></div></div>
+    <div id="l6-h" class="k-punch">Chaque mois,</div>
+    <div id="l6-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="l6-phone"><div class="scr"><img src="assets/ecrans/bail.png" alt="" style="object-position: 50% 62%" /></div><div class="isl"></div></div>
+      <div id="l6-qs"></div>
+      <div class="k-part" id="l6-part"><img src="assets/ecrans/part-quittance-auto.png" alt="" /></div>
+    </div>
+    <div id="l6-s" class="k-serif">Toute seule.</div>
+    <div id="l6-blue"></div>
+  </div>
+  <script>
+    (function () {
+      const months = ['novembre', 'décembre', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet'];
+      const box = document.getElementById('l6-qs');
+      const qs = months.map((m) => {
+        const q = document.createElement('div');
+        q.className = 'l6-q k-ui';
+        q.innerHTML = '<b class="k-punch">Quittance</b><span>' + m + '</span><em><i></i>Envoyée</em>';
+        box.appendChild(q);
+        return q;
+      });
+      const tl = gsap.timeline({ paused: true });
+      tl.set('#l6-blue', { scaleY: 0 }, 0);
+      tl.fromTo('#l6-g1', { x: 0 }, { x: -300, duration: 2.9, ease: 'none' }, 0);
+      tl.fromTo('#l6-h', { y: -300, opacity: 0, filter: 'blur(20px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.1);
+      tl.fromTo('#l6-phone', { y: 1500, rotationY: 30, rotationX: 20 }, { y: 0, rotationY: -14, rotationX: 6, duration: 0.5, ease: 'expo.out' }, 0.0);
+      tl.to('#l6-phone', { rotationY: 12, duration: 2.4, ease: 'none' }, 0.5);
+      // L'interrupteur « Quittance automatique » sort de l'écran.
+      tl.fromTo('#l6-part', { x: 900, y: 150, scale: 0.45, rotationY: -40, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.32);
+      // Les quittances partent du téléphone, une par mois (orbite des pièces de la référence Phantom).
+      qs.forEach((q, i) => {
+        const t = 0.9 + i * 0.14;
+        tl.fromTo(q, { x: 0, y: 0, scale: 0.3, rotation: -10, opacity: 0 },
+          { x: 620 + (i % 3) * 110, y: -560 + i * 135, scale: 1.3, rotation: -12 + (i % 4) * 7, opacity: 1, duration: 0.6, ease: 'expo.out' }, t);
+      });
+      // « Toute seule. »
+      tl.fromTo('#l6-s', { scale: 1.6, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out', transformOrigin: '0% 50%' }, 2.1);
+      // Sortie : le bleu monte et remplit le cadre.
+      tl.to('#l6-blue', { scaleY: 1, duration: 0.24, ease: 'power3.inOut' }, 2.66);
+      window.__timelines['l6'] = tl;
+    })();
+  </script>
+</template>

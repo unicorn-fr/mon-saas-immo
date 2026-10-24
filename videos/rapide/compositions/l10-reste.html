@@ -1,0 +1,46 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #l10-g1 { left: 380px; top: -180px; width: 1800px; height: 1800px; }
+    #l10-stage { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 45%; }
+    #l10-ring { position: absolute; left: 1280px; top: 720px; width: 0; height: 0; transform-style: preserve-3d; }
+    #l10-ring .k-phone { left: -210px; top: -440px; width: 420px; height: 879px; }
+    .l10-t { position: absolute; left: 0; width: 2560px; text-align: center; color: #faf7f2; text-shadow: 0 16px 80px rgba(10,10,30,.85); }
+    #l10-a { top: 560px; font-size: 280px; }
+    #l10-b { top: 400px; font-size: 250px; line-height: 1.02; }
+    #l10-b b { font-weight: 700; color: #c4976a; }
+    #l10-scrim { position: absolute; left: 280px; top: 280px; width: 2000px; height: 880px; border-radius: 50%; background: radial-gradient(ellipse, rgba(26,26,46,.92) 0%, rgba(26,26,46,.75) 45%, rgba(26,26,46,0) 72%); opacity: 0; }
+    #l10-flash { position: absolute; inset: 0; background: #faf7f2; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="l10" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="l10-g1"></div></div>
+    <div id="l10-stage" data-layout-allow-overlap data-layout-allow-overflow><div id="l10-ring"></div></div>
+    <div id="l10-scrim"></div>
+    <div class="l10-t k-punch" id="l10-a">Vous louez.</div>
+    <div class="l10-t k-serif" id="l10-b">Bailio s’occupe<br />du <b>reste.</b></div>
+    <div id="l10-flash"></div>
+  </div>
+  <script>
+    (function () {
+      const screens = ['aujourdhui', 'bail', 'courriers', 'argent', 'logement', 'annonce', 'tunnel-type', 'aujourdhui', 'bail', 'logement'];
+      const ring = document.getElementById('l10-ring');
+      screens.forEach((s, i) => {
+        const p = document.createElement('div');
+        p.className = 'k-phone';
+        p.style.transform = 'rotateY(' + (i * 36) + 'deg) translateZ(1150px)';
+        p.innerHTML = '<div class="scr"><img src="assets/ecrans/' + s + '.png" alt=""></div><div class="isl"></div>';
+        ring.appendChild(p);
+      });
+      const tl = gsap.timeline({ paused: true });
+      // Tous les écrans du logiciel tournent autour de vous.
+      tl.fromTo('#l10-ring', { rotationY: 70, rotationX: -8, z: -2600, y: 0 }, { rotationY: -160, z: -900, duration: 3.15, ease: 'power2.inOut' }, 0);
+      tl.to('#l10-scrim', { opacity: 1, duration: 0.2, ease: 'power2.out' }, 0.05);
+      tl.fromTo('#l10-a', { opacity: 0, scale: 1.4, filter: 'blur(20px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 0.12);
+      tl.to('#l10-a', { opacity: 0, filter: 'blur(14px)', duration: 0.12, ease: 'power3.in' }, 0.82);
+      tl.fromTo('#l10-b', { opacity: 0, y: 120, filter: 'blur(18px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.92);
+      // Sortie : flash crème sur le temps.
+      tl.to('#l10-flash', { opacity: 1, duration: 0.2, ease: 'power2.in' }, 2.95);
+      window.__timelines['l10'] = tl;
+    })();
+  </script>
+</template>

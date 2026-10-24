@@ -1,0 +1,47 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #k4-g1 { left: -300px; top: 500px; width: 1500px; height: 1500px; }
+    #k4-h { position: absolute; left: 0; width: 1080px; top: 190px; text-align: center; font-size: 130px; color: #faf7f2; }
+    #k4-s { position: absolute; left: 0; width: 1080px; top: 1165px; text-align: center; font-size: 160px; color: #c4976a; }
+    #k4-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #k4-phone { left: 350px; top: 380px; width: 380px; height: 797px; }
+    .k4-q { position: absolute; left: 400px; top: 700px; width: 300px; height: 190px; border-radius: 22px; background: #faf7f2; padding: 24px 28px; box-shadow: 0 26px 60px rgba(0,0,0,.45); }
+    .k4-q b { display: block; font-size: 40px; color: #1a1a2e; }
+    .k4-q span { display: block; margin-top: 4px; font-size: 32px; color: #45455a; }
+    .k4-q em { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-style: normal; font-size: 30px; color: #1b5e3b; font-weight: 700; }
+    .k4-q em i { width: 30px; height: 30px; border-radius: 50%; background: #1b5e3b; }
+  </style>
+  <div id="root" data-composition-id="k4" data-width="1080" data-height="1920">
+    <div class="k-night"><div class="k-glow c" id="k4-g1"></div></div>
+    <div id="k4-h" class="k-punch">Les quittances</div>
+    <div id="k4-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="k4-phone"><div class="scr"><img src="assets/ecrans/bail.png" alt="" style="object-position: 50% 62%" /></div><div class="isl"></div></div>
+      <div id="k4-qs"></div>
+    </div>
+    <div id="k4-s" class="k-serif">toutes seules.</div>
+  </div>
+  <script>
+    (function () {
+      const months = ['novembre', 'décembre', 'janvier', 'février', 'mars', 'avril'];
+      const box = document.getElementById('k4-qs');
+      const qs = months.map((m) => {
+        const q = document.createElement('div');
+        q.className = 'k4-q k-ui';
+        q.innerHTML = '<b class="k-punch">Quittance</b><span>' + m + '</span><em><i></i>Envoyée</em>';
+        box.appendChild(q);
+        return q;
+      });
+      // Positions d'arrivée, en éventail de part et d'autre du téléphone.
+      const to = [[-330, -300, -14], [330, -250, 12], [-350, -60, -8], [340, -10, 10], [-310, 170, -12], [320, 210, 14]];
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#k4-h', { y: -300, opacity: 0, filter: 'blur(20px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, 0.04);
+      tl.fromTo('#k4-phone', { y: 1300, rotationX: 30 }, { y: 0, rotationX: 0, duration: 0.4, ease: 'expo.out' }, 0.0);
+      qs.forEach((q, i) => tl.fromTo(q, { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 },
+        { x: to[i][0], y: to[i][1], scale: 1.15, opacity: 1, rotation: to[i][2], duration: 0.45, ease: 'expo.out' }, 0.35 + i * 0.1));
+      tl.fromTo('#k4-s', { scale: 1.5, opacity: 0, filter: 'blur(18px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 1.18);
+      tl.to(['#k4-h', '#k4-stage', '#k4-s'], { x: 1300, filter: 'blur(26px)', duration: 0.2, ease: 'power3.in' }, 1.65);
+      window.__timelines['k4'] = tl;
+    })();
+  </script>
+</template>

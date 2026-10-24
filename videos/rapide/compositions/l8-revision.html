@@ -1,0 +1,33 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #l8-g1 { left: 400px; top: -300px; width: 1800px; height: 1800px; }
+    #l8-q { position: absolute; left: 180px; top: 260px; font-size: 300px; color: #faf7f2; }
+    #l8-q span { display: inline-block; }
+    #l8-q .m { color: #c4976a; }
+    #l8-a { position: absolute; left: 0; width: 2560px; top: 380px; display: flex; align-items: center; justify-content: center; gap: 70px; }
+    #l8-a b { font-size: 420px; color: #c4976a; }
+    #l8-ok { width: 300px; height: 300px; }
+    #l8-n { position: absolute; left: 0; width: 2560px; top: 1050px; text-align: center; font-size: 64px; color: #d6d1e0; }
+  </style>
+  <div id="root" data-composition-id="l8" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow c" id="l8-g1"></div></div>
+    <div id="l8-q" class="k-punch"><span>La</span> <span>révision</span><br /><span>du</span> <span>loyer</span> <span class="m">?</span></div>
+    <div id="l8-a"><svg id="l8-ok" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1b5e3b" /><path id="l8-tick" d="M12 23 L19 30 L32 15" fill="none" stroke="#faf7f2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" /></svg><b class="k-serif">Calculée.</b></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#l8-g1', { scale: 0.7 }, { scale: 1.2, duration: 2.2, ease: 'none' }, 0);
+      // La question tombe mot à mot.
+      const w = document.querySelectorAll('#l8-q span');
+      [0.1, 0.26, 0.62, 0.76, 1.0].forEach((t, i) => tl.fromTo(w[i], { opacity: 0, y: -80, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.14, ease: 'expo.out' }, t));
+      tl.to('#l8-q', { opacity: 0, scale: 0.9, filter: 'blur(14px)', duration: 0.12, ease: 'power3.in' }, 1.36);
+      // « Calculée. » frappe, la coche se trace.
+      tl.fromTo('#l8-a', { opacity: 0, scale: 1.5, filter: 'blur(20px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 1.47);
+      tl.fromTo('#l8-tick', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.2, ease: 'power2.out' }, 1.55);
+      tl.to(['#l8-a'], { y: -1500, filter: 'blur(24px)', duration: 0.22, ease: 'power3.in' }, 1.98);
+      window.__timelines['l8'] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,33 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    .l3-ring { position: absolute; left: 1280px; top: 720px; width: 600px; height: 600px; margin: -300px 0 0 -300px; border-radius: 50%; }
+    #l3-r1 { border: 26px solid #c4976a; }
+    #l3-r2 { border: 14px solid #1a3270; }
+    #l3-voici { position: absolute; left: 0; width: 2560px; top: 330px; text-align: center; font-size: 120px; color: #1a1a2e; }
+    #l3-logo { position: absolute; left: 630px; top: 540px; width: 1300px; height: 470px; }
+    #l3-logo img { width: 1300px; height: 470px; display: block; }
+  </style>
+  <div id="root" data-composition-id="l3" data-width="2560" data-height="1440">
+    <div class="l3-ring" id="l3-r1"></div>
+    <div class="l3-ring" id="l3-r2"></div>
+    <div id="l3-voici" class="k-punch">Voici</div>
+    <div id="l3-logo"><img src="assets/logo/bailio-logo.svg" alt="Bailio" /></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Le temps fort : flash crème, deux anneaux qui s'ouvrent (référence « Spark »).
+      tl.fromTo('#l3-r1', { scale: 0.1, opacity: 1 }, { scale: 4.2, opacity: 0, duration: 0.7, ease: 'expo.out' }, 0);
+      tl.fromTo('#l3-r2', { scale: 0.1, opacity: 1 }, { scale: 3.2, opacity: 0, duration: 0.8, ease: 'expo.out' }, 0.06);
+      tl.fromTo('#l3-voici', { opacity: 0, y: 40, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.18, ease: 'expo.out' }, 0.05);
+      // Le logo frappe sur « Bailio ».
+      tl.fromTo('#l3-logo', { scale: 1.7, opacity: 0, filter: 'blur(24px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.55);
+      [-12, 9, -5, 0].forEach((x, i) => tl.to('#l3-logo', { x, duration: 0.03, ease: 'none' }, 0.8 + i * 0.03));
+      // Sortie : on plonge dans le logo.
+      tl.to('#l3-voici', { opacity: 0, duration: 0.12 }, 1.12);
+      tl.to('#l3-logo', { scale: 7, opacity: 0, filter: 'blur(20px)', duration: 0.3, ease: 'power3.in' }, 1.15);
+      window.__timelines['l3'] = tl;
+    })();
+  </script>
+</template>

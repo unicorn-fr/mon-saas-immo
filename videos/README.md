@@ -27,6 +27,9 @@ française et des sous-titres intégrés. Tout est fabriqué par du code : aucun
 formats : YouTube 2560×1440 (77 s) et publicité verticale 1080×1920 (22 s). Voix off ElevenLabs, identité de
 bailio.fr. Voir `motion/README.md`.
 
+`rapide/` : seconde série, montée sur le rythme (124 BPM), sans la page d'accueil : seulement les écrans du logiciel
+en 3D. YouTube 2560×1440 (36 s) et publicité verticale (15 s). Voir `rapide/README.md`.
+
 ## Fabriquer une vidéo
 
 ```bash

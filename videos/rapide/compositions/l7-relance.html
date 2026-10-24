@@ -1,0 +1,43 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a3270; }
+    #l7-glow { left: 1200px; top: -400px; width: 1800px; height: 1800px; }
+    #l7-all { position: absolute; inset: 0; }
+    #l7-h { position: absolute; left: 900px; top: 70px; font-size: 116px; color: #faf7f2; white-space: nowrap; }
+    #l7-s { position: absolute; left: 905px; top: 1120px; font-size: 150px; color: #faf7f2; white-space: nowrap; }
+    #l7-s b { font-weight: 700; color: #c4976a; }
+    #l7-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #l7-phone { left: 170px; top: 134px; width: 560px; height: 1172px; }
+    #l7-part { left: 900px; top: 250px; width: 980px; }
+  </style>
+  <div id="root" data-composition-id="l7" data-width="2560" data-height="1440">
+    <div class="k-glow c" id="l7-glow"></div>
+    <div id="l7-all">
+      <div id="l7-h" class="k-punch">Le loyer n’arrive pas ?</div>
+      <div id="l7-stage" data-layout-allow-overlap data-layout-allow-overflow>
+        <div class="k-phone" id="l7-phone"><div class="scr"><img src="assets/ecrans/aujourdhui.png" alt="" /></div><div class="isl"></div></div>
+        <div class="k-part" id="l7-part"><img src="assets/ecrans/part-retard.png" alt="" /></div>
+      </div>
+      <div id="l7-s" class="k-serif">La relance est <b>prête.</b></div>
+      <svg class="k-cursor" id="l7-cur" width="96" height="120" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#l7-glow', { x: 0 }, { x: -400, duration: 2.55, ease: 'none' }, 0);
+      tl.fromTo('#l7-h', { opacity: 0, x: 200, filter: 'blur(20px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.06);
+      tl.fromTo('#l7-phone', { x: -900, rotationY: -50 }, { x: 0, rotationY: 22, duration: 0.45, ease: 'expo.out' }, 0.0);
+      // La carte « Loyer en retard » du logiciel sort de l'écran.
+      tl.fromTo('#l7-part', { x: -650, y: 120, scale: 0.4, rotationY: 40, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: 6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.18);
+      tl.to('#l7-part', { rotationY: -4, duration: 2.0, ease: 'none' }, 0.63);
+      // Le curseur clique « Relire la relance ».
+      tl.fromTo('#l7-cur', { x: 2500, y: 1500 }, { x: 1160, y: 770, duration: 0.4, ease: 'expo.out' }, 0.95);
+      tl.to('#l7-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.36);
+      tl.to('#l7-part', { scale: 0.975, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.37);
+      tl.fromTo('#l7-s', { opacity: 0, y: 120, filter: 'blur(16px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.33);
+      tl.to('#l7-all', { x: -2600, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 2.3);
+      window.__timelines['l7'] = tl;
+    })();
+  </script>
+</template>

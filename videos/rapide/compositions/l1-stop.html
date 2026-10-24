@@ -1,0 +1,44 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #l1-g1 { left: -500px; top: -700px; width: 1800px; height: 1800px; }
+    #l1-g2 { left: 1500px; top: 500px; width: 1600px; height: 1600px; }
+    #l1-pill { left: 480px; top: 600px; width: 1600px; height: 240px; }
+    #l1-txt { position: absolute; left: 96px; top: 0; height: 234px; line-height: 234px; font-size: 124px; color: #faf7f2; white-space: nowrap; }
+    #l1-txt span { display: none; }
+    #l1-txt span:first-child { display: inline; }
+    #l1-caret { display: inline-block; width: 7px; height: 120px; background: #faf7f2; vertical-align: -14px; margin-left: 8px; }
+    #l1-stop { position: absolute; inset: 0; background: #c4976a; display: flex; align-items: center; justify-content: center; }
+    #l1-stop b { font-size: 640px; color: #1a1a2e; }
+  </style>
+  <div id="root" data-composition-id="l1" data-width="2560" data-height="1440">
+    <div class="k-night" id="l1-n">
+      <div class="k-glow b" id="l1-g1"></div>
+      <div class="k-glow c" id="l1-g2"></div>
+      <div class="k-glass" id="l1-pill"><div id="l1-txt" class="k-ui"><span>P</span><span>r</span><span>o</span><span>p</span><span>r</span><span>i</span><span>é</span><span>t</span><span>a</span><span>i</span><span>r</span><span>e</span><span> </span><span>?</span><i id="l1-caret"></i></div></div>
+    </div>
+    <div id="l1-stop"><b class="k-punch" id="l1-word">STOP.</b></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Les lueurs tournent lentement autour de la pilule.
+      tl.fromTo('#l1-g1', { x: 0, y: 0 }, { x: 260, y: 120, duration: 2.25, ease: 'none' }, 0);
+      tl.fromTo('#l1-g2', { x: 0, y: 0 }, { x: -320, y: -160, duration: 2.25, ease: 'none' }, 0);
+      tl.fromTo('#l1-pill', { scale: 0.92 }, { scale: 1.04, duration: 1.45, ease: 'power2.out' }, 0);
+      // « Propriétaire ? » se tape sur la voix ; la première lettre est déjà là à l'image 0.
+      const ch = document.querySelectorAll('#l1-txt span');
+      tl.set(ch[0], { display: 'inline' }, 0);
+      for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 0.33 + i * 0.05);
+      [1.05, 1.2, 1.35].forEach((t, i) => tl.set('#l1-caret', { opacity: i % 2 ? 1 : 0 }, t));
+      // « Stop. » : coupe franche sur le temps, aplat caramel, le mot frappe et tremble.
+      tl.set('#l1-stop', { opacity: 0 }, 0);
+      tl.set('#l1-stop', { opacity: 1 }, 1.5);
+      tl.set('#l1-n', { opacity: 0 }, 1.5);
+      tl.fromTo('#l1-word', { scale: 1.55, filter: 'blur(14px)' }, { scale: 1, filter: 'blur(0px)', duration: 0.14, ease: 'expo.out' }, 1.5);
+      [-18, 14, -9, 5, 0].forEach((x, i) => tl.to('#l1-word', { x, duration: 0.035, ease: 'none' }, 1.64 + i * 0.035));
+      tl.to('#l1-word', { scale: 1.06, duration: 0.6, ease: 'power1.out' }, 1.82);
+      window.__timelines['l1'] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,44 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #k2-g1 { left: 200px; top: 300px; width: 1400px; height: 1400px; }
+    #k2-g2 { left: -600px; top: -300px; width: 1200px; height: 1200px; }
+    #k2-all { position: absolute; inset: 0; }
+    #k2-h { position: absolute; left: 0; width: 1080px; top: 200px; text-align: center; font-size: 150px; color: #faf7f2; }
+    #k2-h b { color: #c4976a; font-size: 170px; }
+    #k2-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #k2-phone { left: 340px; top: 520px; width: 400px; height: 838px; }
+    #k2-part { left: 80px; top: 760px; width: 920px; }
+    #k2-badge { position: absolute; left: 720px; top: 470px; width: 300px; height: 300px; border-radius: 50%; background: #c4976a; color: #1a1a2e;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    #k2-badge b { font-size: 150px; line-height: 0.9; }
+    #k2-badge span { font-size: 62px; }
+  </style>
+  <div id="root" data-composition-id="k2" data-width="1080" data-height="1920">
+    <div class="k-night"><div class="k-glow b" id="k2-g1"></div><div class="k-glow c" id="k2-g2"></div></div>
+    <div id="k2-all">
+      <div id="k2-h" class="k-punch">Un bail<br /><b class="k-serif">conforme.</b></div>
+      <div id="k2-stage" data-layout-allow-overlap data-layout-allow-overflow>
+        <div class="k-phone" id="k2-phone"><div class="scr"><img id="k2-i1" src="assets/ecrans/tunnel-type.png" alt="" /><img id="k2-i2" src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div>
+        <div class="k-part" id="k2-part"><img src="assets/ecrans/part-signe.png" alt="" /></div>
+        <div id="k2-badge" class="k-punch"><b>5</b><span>min</span></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#k2-h', { y: -300, opacity: 0, filter: 'blur(20px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#k2-phone', { y: 1300, rotationZ: 18, rotationY: -40 }, { y: 0, rotationZ: 0, rotationY: -14, duration: 0.45, ease: 'expo.out' }, 0.0);
+      tl.to('#k2-phone', { rotationY: 10, duration: 1.75, ease: 'none' }, 0.45);
+      tl.set('#k2-i2', { opacity: 0 }, 0);
+      tl.to('#k2-i2', { opacity: 1, duration: 0.1 }, 0.5);
+      // Le bail signé sort de l'écran.
+      tl.fromTo('#k2-part', { y: 120, scale: 0.4, rotationX: 30, opacity: 0 }, { y: 0, scale: 1, rotationX: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, 0.6);
+      // « en cinq minutes » : la pastille tombe.
+      tl.fromTo('#k2-badge', { scale: 0, rotation: -40 }, { scale: 1, rotation: 0, duration: 0.3, ease: 'back.out(1.8)' }, 1.27);
+      tl.to('#k2-all', { x: -1300, filter: 'blur(26px)', duration: 0.22, ease: 'power3.in' }, 2.0);
+      window.__timelines['k2'] = tl;
+    })();
+  </script>
+</template>

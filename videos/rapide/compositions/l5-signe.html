@@ -1,0 +1,42 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #l5-all { position: absolute; inset: 0; }
+    #l5-h { position: absolute; left: 150px; top: 230px; font-size: 230px; color: #1a1a2e; }
+    #l5-s { position: absolute; left: 165px; top: 790px; font-size: 140px; color: #1a3270; }
+    #l5-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #l5-phone { left: 1880px; top: 134px; width: 560px; height: 1172px; }
+    .k-chip { left: 1190px; font-size: 68px; }
+    .k-chip i { width: 70px; height: 70px; }
+  </style>
+  <div id="root" data-composition-id="l5" data-width="2560" data-height="1440">
+    <div id="l5-all">
+      <div id="l5-h" class="k-punch">Signé<br />en ligne.</div>
+      <div id="l5-s" class="k-serif">Par chacun,<br />sans compte.</div>
+      <div id="l5-stage" data-layout-allow-overlap data-layout-allow-overflow>
+        <div class="k-phone" id="l5-phone"><div class="scr"><img src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div>
+        <div class="k-chip" id="l5-c1" style="top: 330px"><i></i>Bailleur</div>
+        <div class="k-chip" id="l5-c2" style="top: 600px"><i></i>Locataire</div>
+        <div class="k-chip" id="l5-c3" style="top: 870px"><i></i>Garant</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Arrivée par le bas (on vient d'un fouet vers la gauche) ; le mot frappe sur « Signé ».
+      tl.fromTo('#l5-h', { y: 300, opacity: 0, filter: 'blur(20px)' }, { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.02);
+      tl.fromTo('#l5-phone', { x: 900, rotationY: 50, rotationZ: -10 }, { x: 0, rotationY: 20, rotationZ: 0, duration: 0.5, ease: 'expo.out' }, 0.0);
+      tl.to('#l5-phone', { rotationY: 10, duration: 2.4, ease: 'none' }, 0.5);
+      // Bailleur, locataire, garant : chaque signature sort du téléphone, cochée.
+      ['#l5-c1', '#l5-c2', '#l5-c3'].forEach((c, i) => {
+        tl.fromTo(c, { x: 820, scale: 0.3, opacity: 0, rotationY: 40 }, { x: 0, scale: 1, opacity: 1, rotationY: 0, duration: 0.32, ease: 'back.out(1.5)' }, 1.27 + i * 0.35);
+        tl.fromTo(c + ' i', { scale: 0 }, { scale: 1, duration: 0.2, ease: 'back.out(2)' }, 1.45 + i * 0.35);
+      });
+      tl.fromTo('#l5-s', { opacity: 0, x: 80, filter: 'blur(14px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.24);
+      // Sortie : fouet vers le haut.
+      tl.to('#l5-all', { y: -1600, filter: 'blur(26px)', duration: 0.24, ease: 'power3.in' }, 2.66);
+      window.__timelines['l5'] = tl;
+    })();
+  </script>
+</template>

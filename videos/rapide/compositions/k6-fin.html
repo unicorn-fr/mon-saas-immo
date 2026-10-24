@@ -1,0 +1,54 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #k6-g1 { left: 200px; top: 900px; width: 1300px; height: 1300px; opacity: 0.55; }
+    .k6-ring { position: absolute; left: 540px; top: 520px; width: 400px; height: 400px; margin: -200px 0 0 -200px; border-radius: 50%; }
+    #k6-r1 { border: 20px solid #c4976a; }
+    #k6-r2 { border: 12px solid #1a3270; }
+    #k6-logo { position: absolute; left: 160px; top: 380px; width: 760px; height: 275px; }
+    #k6-logo img { width: 760px; height: 275px; display: block; }
+    #k6-h { position: absolute; left: 0; width: 1080px; top: 740px; text-align: center; font-size: 130px; color: #1a1a2e; }
+    #k6-h span { display: inline-block; }
+    #k6-h .o { color: #1a3270; }
+    #k6-pill { left: 60px; top: 1080px; width: 960px; height: 170px; }
+    #k6-url { position: absolute; left: 56px; top: 0; height: 164px; line-height: 164px; font-size: 78px; color: #1a1a2e; white-space: nowrap; }
+    #k6-url span { display: none; }
+    #k6-url span:first-child { display: inline; }
+    #k6-caret { display: inline-block; width: 5px; height: 74px; background: #1a1a2e; vertical-align: -10px; margin-left: 6px; }
+    #k6-btn { position: absolute; right: 18px; top: 18px; height: 128px; border-radius: 999px; background: #1a3270; color: #faf7f2; font-size: 50px; line-height: 128px; padding: 0 44px; white-space: nowrap; }
+  </style>
+  <div id="root" data-composition-id="k6" data-width="1080" data-height="1920">
+    <div class="k-glow c" id="k6-g1"></div>
+    <div class="k6-ring" id="k6-r1"></div><div class="k6-ring" id="k6-r2"></div>
+    <div id="k6-logo"><img src="assets/logo/bailio-logo.svg" alt="Bailio" /></div>
+    <div id="k6-h" class="k-punch"><span>Premier</span> <span>bail</span><br /><span class="o">offert.</span></div>
+    <div class="k-pill" id="k6-pill">
+      <div id="k6-url" class="k-ui"><span>b</span><span>a</span><span>i</span><span>l</span><span>i</span><span>o</span><span>.</span><span>f</span><span>r</span><i id="k6-caret"></i></div>
+      <div id="k6-btn" class="k-punch">Créer mon bail</div>
+    </div>
+    <svg class="k-cursor" id="k6-cur" width="84" height="105" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // « Bailio. » sur le temps fort : anneaux et logo qui frappe.
+      tl.fromTo('#k6-r1', { scale: 0.1, opacity: 1 }, { scale: 4, opacity: 0, duration: 0.7, ease: 'expo.out' }, 0.04);
+      tl.fromTo('#k6-r2', { scale: 0.1, opacity: 1 }, { scale: 3, opacity: 0, duration: 0.8, ease: 'expo.out' }, 0.1);
+      tl.fromTo('#k6-logo', { scale: 1.7, opacity: 0, filter: 'blur(24px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.06);
+      [-10, 8, -4, 0].forEach((x, i) => tl.to('#k6-logo', { x, duration: 0.03, ease: 'none' }, 0.3 + i * 0.03));
+      const w = document.querySelectorAll('#k6-h span');
+      [0.92, 1.3, 1.7].forEach((t, i) => tl.fromTo(w[i], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.16, ease: 'expo.out' }, t));
+      tl.fromTo('#k6-pill', { scaleX: 0.15, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.4, ease: 'expo.out' }, 2.2);
+      const ch = document.querySelectorAll('#k6-url span');
+      tl.set(ch[0], { opacity: 0 }, 0);
+      tl.set(ch[0], { opacity: 1 }, 2.4);
+      for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 2.4 + i * 0.07);
+      tl.fromTo('#k6-btn', { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: 'back.out(1.6)', transformOrigin: '100% 50%' }, 3.2);
+      tl.fromTo('#k6-cur', { x: 1100, y: 1700 }, { x: 960, y: 1210, duration: 0.4, ease: 'expo.out' }, 3.4);
+      tl.to('#k6-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 3.88);
+      tl.to('#k6-btn', { scale: 0.95, backgroundColor: '#0f1f4a', duration: 0.07, yoyo: true, repeat: 1, ease: 'power2.out' }, 3.89);
+      [4.4, 4.8, 5.2, 5.6, 6.0, 6.4].forEach((t, i) => tl.set('#k6-caret', { opacity: i % 2 ? 1 : 0 }, t));
+      window.__timelines['k6'] = tl;
+    })();
+  </script>
+</template>

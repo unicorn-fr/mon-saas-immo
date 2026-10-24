@@ -1,0 +1,37 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a3270; }
+    #k5-g1 { left: 200px; top: 800px; width: 1400px; height: 1400px; }
+    #k5-all { position: absolute; inset: 0; }
+    #k5-h { position: absolute; left: 0; width: 1080px; top: 190px; text-align: center; font-size: 130px; color: #faf7f2; }
+    #k5-h b { color: #c4976a; font-size: 150px; }
+    #k5-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #k5-phone { left: 350px; top: 520px; width: 380px; height: 797px; }
+    #k5-part { left: 90px; top: 700px; width: 900px; }
+  </style>
+  <div id="root" data-composition-id="k5" data-width="1080" data-height="1920">
+    <div class="k-glow c" id="k5-g1"></div>
+    <div id="k5-all">
+      <div id="k5-h" class="k-punch">Les relances<br /><b class="k-serif">sont prêtes.</b></div>
+      <div id="k5-stage" data-layout-allow-overlap data-layout-allow-overflow>
+        <div class="k-phone" id="k5-phone"><div class="scr"><img src="assets/ecrans/aujourdhui.png" alt="" /></div><div class="isl"></div></div>
+        <div class="k-part" id="k5-part"><img src="assets/ecrans/part-retard.png" alt="" /></div>
+      </div>
+      <svg class="k-cursor" id="k5-cur" width="84" height="105" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#k5-h', { x: -900, opacity: 0, filter: 'blur(20px)' }, { x: 0, opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, 0.04);
+      tl.fromTo('#k5-phone', { x: -1000, rotationY: -50 }, { x: 0, rotationY: 12, duration: 0.4, ease: 'expo.out' }, 0.0);
+      tl.fromTo('#k5-part', { y: 150, scale: 0.4, rotationX: 30, opacity: 0 }, { y: 0, scale: 1, rotationX: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, 0.18);
+      // Le curseur clique « Relire la relance ».
+      tl.fromTo('#k5-cur', { x: 1100, y: 1700 }, { x: 330, y: 1175, duration: 0.35, ease: 'expo.out' }, 0.35);
+      tl.to('#k5-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 0.67);
+      tl.to('#k5-part', { scale: 0.975, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 0.68);
+      tl.to('#k5-all', { scale: 0.15, opacity: 0, filter: 'blur(20px)', duration: 0.22, ease: 'power3.in' }, 1.18);
+      window.__timelines['k5'] = tl;
+    })();
+  </script>
+</template>

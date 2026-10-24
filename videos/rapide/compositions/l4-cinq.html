@@ -1,0 +1,53 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    #l4-g1 { left: 1100px; top: -500px; width: 1900px; height: 1900px; }
+    #l4-g2 { left: -500px; top: 700px; width: 1400px; height: 1400px; }
+    #l4-all { position: absolute; inset: 0; }
+    #l4-five { position: absolute; left: 150px; top: 250px; font-size: 380px; color: #faf7f2; white-space: nowrap; }
+    #l4-five small { font-size: 200px; }
+    .l4-sub { position: absolute; left: 165px; top: 720px; width: 1000px; font-size: 136px; color: #c4976a; }
+    #l4-s2 { color: #faf7f2; }
+    #l4-s2 b { font-weight: 700; color: #c4976a; }
+    #l4-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #l4-phone { left: 1700px; top: 134px; width: 560px; height: 1172px; }
+    #l4-p1 { left: 1150px; top: 520px; width: 720px; }
+    #l4-p2 { left: 1080px; top: 300px; width: 900px; }
+  </style>
+  <div id="root" data-composition-id="l4" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="l4-g1"></div><div class="k-glow c" id="l4-g2"></div></div>
+    <div id="l4-all">
+      <div id="l4-five" class="k-punch">5 <small>min</small></div>
+      <div class="l4-sub k-serif" id="l4-s1">de questions.</div>
+      <div class="l4-sub k-serif" id="l4-s2">Un bail <b>conforme</b> à la loi.</div>
+      <div id="l4-stage" data-layout-allow-overlap data-layout-allow-overflow>
+        <div class="k-phone" id="l4-phone"><div class="scr"><img id="l4-i1" src="assets/ecrans/tunnel-type.png" alt="" /><img id="l4-i2" src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div>
+        <div class="k-part" id="l4-p1"><img src="assets/ecrans/part-meuble.png" alt="" /></div>
+        <div class="k-part" id="l4-p2"><img src="assets/ecrans/part-signe.png" alt="" /></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#l4-g1', { x: 0 }, { x: -400, duration: 3.25, ease: 'none' }, 0);
+      // « 5 minutes » : le chiffre frappe, le téléphone arrive en tournant (référence Phantom).
+      tl.fromTo('#l4-five', { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out', transformOrigin: '0% 50%' }, 0.06);
+      tl.fromTo('#l4-s1', { opacity: 0, x: 100, filter: 'blur(14px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, 0.62);
+      tl.fromTo('#l4-phone', { y: 1500, rotationZ: 22, rotationY: -40, rotationX: 10 }, { y: 0, rotationZ: 0, rotationY: -22, rotationX: 8, duration: 0.5, ease: 'expo.out' }, 0.0);
+      tl.to('#l4-phone', { rotationY: -12, duration: 2.7, ease: 'none' }, 0.5);
+      // Une question sort de l'écran vers nous.
+      tl.fromTo('#l4-p1', { x: 380, y: -40, scale: 0.55, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -10, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.5);
+      // « Un bail conforme à la loi » : l'écran devient le bail signé.
+      tl.set('#l4-i2', { opacity: 0 }, 0);
+      tl.to('#l4-i2', { opacity: 1, duration: 0.12, ease: 'none' }, 1.58);
+      tl.to('#l4-p1', { y: 1300, rotation: 12, filter: 'blur(18px)', duration: 0.22, ease: 'power3.in' }, 1.55);
+      tl.to('#l4-s1', { opacity: 0, filter: 'blur(12px)', duration: 0.12, ease: 'power3.in' }, 1.55);
+      tl.fromTo('#l4-s2', { opacity: 0, x: 100, filter: 'blur(14px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.66);
+      tl.fromTo('#l4-p2', { x: 520, y: 80, scale: 0.5, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -8, opacity: 1, duration: 0.45, ease: 'expo.out' }, 1.7);
+      // Sortie : fouet vers la gauche.
+      tl.to('#l4-all', { x: -2600, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 3.0);
+      window.__timelines['l4'] = tl;
+    })();
+  </script>
+</template>

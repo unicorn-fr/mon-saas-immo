@@ -1,0 +1,434 @@
+[
+  {
+    "text": "Propriétaire?",
+    "start": 0.07,
+    "end": 1.26,
+    "id": "w0"
+  },
+  {
+    "text": "Stop!",
+    "start": 1.32,
+    "end": 1.71,
+    "id": "w1"
+  },
+  {
+    "text": "Finis",
+    "start": 1.97,
+    "end": 2.23,
+    "id": "w2"
+  },
+  {
+    "text": "les",
+    "start": 2.23,
+    "end": 2.36,
+    "id": "w3"
+  },
+  {
+    "text": "modèles",
+    "start": 2.42,
+    "end": 2.73,
+    "id": "w4"
+  },
+  {
+    "text": "de",
+    "start": 2.73,
+    "end": 3.09,
+    "id": "w5"
+  },
+  {
+    "text": "bail",
+    "start": 3.09,
+    "end": 3.29,
+    "id": "w6"
+  },
+  {
+    "text": "trouvés",
+    "start": 3.29,
+    "end": 3.75,
+    "id": "w7"
+  },
+  {
+    "text": "sur",
+    "start": 3.89,
+    "end": 3.95,
+    "id": "w8"
+  },
+  {
+    "text": "Internet.",
+    "start": 4.06,
+    "end": 4.6,
+    "id": "w9"
+  },
+  {
+    "text": "Finis",
+    "start": 4.67,
+    "end": 4.91,
+    "id": "w10"
+  },
+  {
+    "text": "les",
+    "start": 4.91,
+    "end": 5.06,
+    "id": "w11"
+  },
+  {
+    "text": "quittances",
+    "start": 5.13,
+    "end": 5.43,
+    "id": "w12"
+  },
+  {
+    "text": "à",
+    "start": 5.77,
+    "end": 5.79,
+    "id": "w13"
+  },
+  {
+    "text": "la",
+    "start": 5.79,
+    "end": 5.85,
+    "id": "w14"
+  },
+  {
+    "text": "main.",
+    "start": 5.92,
+    "end": 6.31,
+    "id": "w15"
+  },
+  {
+    "text": "Finis",
+    "start": 6.47,
+    "end": 6.76,
+    "id": "w16"
+  },
+  {
+    "text": "les",
+    "start": 6.76,
+    "end": 6.98,
+    "id": "w17"
+  },
+  {
+    "text": "dates",
+    "start": 6.98,
+    "end": 7.21,
+    "id": "w18"
+  },
+  {
+    "text": "oubliées.",
+    "start": 7.5,
+    "end": 8.1,
+    "id": "w19"
+  },
+  {
+    "text": "Voici",
+    "start": 8.27,
+    "end": 8.83,
+    "id": "w20"
+  },
+  {
+    "text": "Bailio.",
+    "start": 8.83,
+    "end": 9.64,
+    "id": "w21"
+  },
+  {
+    "text": "5",
+    "start": 9.77,
+    "end": 9.89,
+    "id": "w22"
+  },
+  {
+    "text": "minutes",
+    "start": 9.93,
+    "end": 10.44,
+    "id": "w23"
+  },
+  {
+    "text": "de",
+    "start": 10.44,
+    "end": 10.52,
+    "id": "w24"
+  },
+  {
+    "text": "question.",
+    "start": 10.88,
+    "end": 11.2,
+    "id": "w25"
+  },
+  {
+    "text": "Un",
+    "start": 11.25,
+    "end": 11.34,
+    "id": "w26"
+  },
+  {
+    "text": "bail",
+    "start": 11.34,
+    "end": 11.63,
+    "id": "w27"
+  },
+  {
+    "text": "conforme",
+    "start": 11.63,
+    "end": 12.21,
+    "id": "w28"
+  },
+  {
+    "text": "à",
+    "start": 12.21,
+    "end": 12.37,
+    "id": "w29"
+  },
+  {
+    "text": "la",
+    "start": 12.37,
+    "end": 12.42,
+    "id": "w30"
+  },
+  {
+    "text": "loi.",
+    "start": 12.42,
+    "end": 12.83,
+    "id": "w31"
+  },
+  {
+    "text": "Signé",
+    "start": 12.99,
+    "end": 13.35,
+    "id": "w32"
+  },
+  {
+    "text": "en",
+    "start": 13.43,
+    "end": 13.59,
+    "id": "w33"
+  },
+  {
+    "text": "ligne.",
+    "start": 13.59,
+    "end": 14.1,
+    "id": "w34"
+  },
+  {
+    "text": "Par",
+    "start": 14.17,
+    "end": 14.29,
+    "id": "w35"
+  },
+  {
+    "text": "chacun,",
+    "start": 14.33,
+    "end": 14.89,
+    "id": "w36"
+  },
+  {
+    "text": "sans",
+    "start": 14.89,
+    "end": 14.94,
+    "id": "w37"
+  },
+  {
+    "text": "compte.",
+    "start": 15.29,
+    "end": 15.81,
+    "id": "w38"
+  },
+  {
+    "text": "Chaque",
+    "start": 15.95,
+    "end": 16.24,
+    "id": "w39"
+  },
+  {
+    "text": "mois,",
+    "start": 16.24,
+    "end": 16.58,
+    "id": "w40"
+  },
+  {
+    "text": "l'acquittance",
+    "start": 16.58,
+    "end": 17.3,
+    "id": "w41"
+  },
+  {
+    "text": "part.",
+    "start": 17.3,
+    "end": 17.61,
+    "id": "w42"
+  },
+  {
+    "text": "Tout",
+    "start": 17.89,
+    "end": 18.12,
+    "id": "w43"
+  },
+  {
+    "text": "seul.",
+    "start": 18.12,
+    "end": 18.59,
+    "id": "w44"
+  },
+  {
+    "text": "Le",
+    "start": 18.75,
+    "end": 18.82,
+    "id": "w45"
+  },
+  {
+    "text": "loyer",
+    "start": 18.82,
+    "end": 19.12,
+    "id": "w46"
+  },
+  {
+    "text": "n'arrive",
+    "start": 19.12,
+    "end": 19.49,
+    "id": "w47"
+  },
+  {
+    "text": "pas.",
+    "start": 19.79,
+    "end": 19.95,
+    "id": "w48"
+  },
+  {
+    "text": "La",
+    "start": 20.05,
+    "end": 20.13,
+    "id": "w49"
+  },
+  {
+    "text": "relance",
+    "start": 20.13,
+    "end": 20.57,
+    "id": "w50"
+  },
+  {
+    "text": "est",
+    "start": 20.57,
+    "end": 20.76,
+    "id": "w51"
+  },
+  {
+    "text": "prête.",
+    "start": 20.76,
+    "end": 21.25,
+    "id": "w52"
+  },
+  {
+    "text": "La",
+    "start": 21.35,
+    "end": 21.44,
+    "id": "w53"
+  },
+  {
+    "text": "révision",
+    "start": 21.44,
+    "end": 21.99,
+    "id": "w54"
+  },
+  {
+    "text": "du",
+    "start": 21.99,
+    "end": 22.09,
+    "id": "w55"
+  },
+  {
+    "text": "loyer?",
+    "start": 22.11,
+    "end": 22.7,
+    "id": "w56"
+  },
+  {
+    "text": "Calculé.",
+    "start": 22.7,
+    "end": 23.5,
+    "id": "w57"
+  },
+  {
+    "text": "L'état",
+    "start": 23.55,
+    "end": 23.83,
+    "id": "w58"
+  },
+  {
+    "text": "des",
+    "start": 23.83,
+    "end": 23.96,
+    "id": "w59"
+  },
+  {
+    "text": "lieux?",
+    "start": 24.03,
+    "end": 24.33,
+    "id": "w60"
+  },
+  {
+    "text": "Sur",
+    "start": 24.67,
+    "end": 24.71,
+    "id": "w61"
+  },
+  {
+    "text": "votre",
+    "start": 24.71,
+    "end": 24.94,
+    "id": "w62"
+  },
+  {
+    "text": "téléphone.",
+    "start": 25.08,
+    "end": 25.9,
+    "id": "w63"
+  },
+  {
+    "text": "Vouloz.",
+    "start": 25.97,
+    "end": 26.68,
+    "id": "w64"
+  },
+  {
+    "text": "Bailio",
+    "start": 26.77,
+    "end": 27.12,
+    "id": "w65"
+  },
+  {
+    "text": "s'occupe",
+    "start": 27.12,
+    "end": 27.55,
+    "id": "w66"
+  },
+  {
+    "text": "du",
+    "start": 27.55,
+    "end": 27.89,
+    "id": "w67"
+  },
+  {
+    "text": "reste.",
+    "start": 27.89,
+    "end": 28.33,
+    "id": "w68"
+  },
+  {
+    "text": "Prends-les",
+    "start": 28.45,
+    "end": 29.62,
+    "id": "w69"
+  },
+  {
+    "text": "sur",
+    "start": 29.62,
+    "end": 29.99,
+    "id": "w70"
+  },
+  {
+    "text": "bailio.fr",
+    "start": 29.99,
+    "end": 31.4,
+    "id": "w71"
+  }
+]
