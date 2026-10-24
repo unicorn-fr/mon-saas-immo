@@ -12,6 +12,20 @@ DM Sans) et ses couleurs (nuit #1a1a2e, crème #faf7f2, bleu #1a3270, caramel #c
 
 Son mesuré à −14 LUFS. `videos/out/` n'est pas versionné.
 
+## Série 2 (même grammaire, générée)
+
+`scripts/scenes.py` rend chaque type de scène (accroche, typographie, téléphone, anneau, logo, fin) ;
+`scripts/serie2.py` décrit les quatre films et en déduit les bruitages. `python3 scripts/serie2.py` écrit
+`compositions/{a,b,c,d}*.html` et les projets `vide/`, `lundi/`, `vide-court/`, `lundi-court/` (liens vers `assets/`
+et `compositions/`), qu'on rend chacun avec `npx hyperframes@0.8.192 render` depuis leur dossier.
+
+| Fichier rendu | Format | Durée | Rythme |
+|---|---|---|---|
+| `bailio-logement-vide-1440p.mp4` | 2560×1440 | 34,5 s | house 120 BPM (`beat-house.mp3`) |
+| `bailio-lundi-matin-1440p.mp4` | 2560×1440 | 33 s | hip-hop (`beat-hiphop.mp3`) |
+| `bailio-logement-vide-pub-9x16.mp4` | 1080×1920 | 15 s | house |
+| `bailio-lundi-matin-pub-9x16.mp4` | 1080×1920 | 15,5 s | hip-hop |
+
 ## Grammaire reprise des références
 
 - Pilule en verre où l'on tape, puis bouton qui apparaît et qu'on clique (vidéo « waitlist » Sanctum).

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr" data-resolution="custom">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/kit.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #1a1a2e; }
+      #root { position: relative; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <!-- Bailio : film rapide, « Lundi matin », 9:16. Découpage : SPEC.md. Généré par scripts/assemble.py. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15.5" data-width="1080" data-height="1920">
+      <div id="d1" data-composition-id="d1" data-composition-src="compositions/d1.html" data-start="0.0" data-duration="1.2"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="d2" data-composition-id="d2" data-composition-src="compositions/d2.html" data-start="1.2" data-duration="2.2"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="d3" data-composition-id="d3" data-composition-src="compositions/d3.html" data-start="3.4" data-duration="2.0"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="d4" data-composition-id="d4" data-composition-src="compositions/d4.html" data-start="5.4" data-duration="2.0"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="d5" data-composition-id="d5" data-composition-src="compositions/d5.html" data-start="7.4" data-duration="2.1"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="d6" data-composition-id="d6" data-composition-src="compositions/d6.html" data-start="9.5" data-duration="6.0"
+        data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <audio id="vo1" class="clip" src="assets/voix/lundi-court.wav" data-start="0.04" data-media-start="0.0" data-duration="13.84" data-track-index="10" data-volume="1"></audio>
+      <audio id="bed" class="clip" src="assets/musique/bed-lundi-court.wav" data-start="0" data-duration="15.5" data-track-index="11" data-volume="0.3"></audio>
+      <audio id="fx1" class="clip" src="assets/sfx/typing.mp3" data-start="0" data-duration="1.5" data-track-index="12" data-volume="0.3"></audio>
+      <audio id="fx2" class="clip" src="assets/sfx/whoosh.wav" data-start="0.933" data-duration="0.7" data-track-index="13" data-volume="0.45"></audio>
+      <audio id="fx3" class="clip" src="assets/sfx/pop.mp3" data-start="1.513" data-duration="0.6" data-track-index="14" data-volume="0.45"></audio>
+      <audio id="fx4" class="clip" src="assets/sfx/whoosh2.wav" data-start="3.001" data-duration="0.9" data-track-index="15" data-volume="0.45"></audio>
+      <audio id="fx5" class="clip" src="assets/sfx/pop.mp3" data-start="3.763" data-duration="0.6" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="fx6" class="clip" src="assets/sfx/click.mp3" data-start="4.86" data-duration="0.37" data-track-index="13" data-volume="0.8"></audio>
+      <audio id="fx7" class="clip" src="assets/sfx/whoosh.mp3" data-start="5.291" data-duration="0.57" data-track-index="14" data-volume="0.45"></audio>
+      <audio id="fx8" class="clip" src="assets/sfx/whoosh-cinematic.mp3" data-start="3.78" data-duration="4.3" data-track-index="15" data-volume="0.45"></audio>
+      <audio id="fx9" class="clip" src="assets/sfx/whoosh.wav" data-start="7.133" data-duration="0.7" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="fx10" class="clip" src="assets/sfx/pop.mp3" data-start="7.813" data-duration="0.6" data-track-index="13" data-volume="0.45"></audio>
+      <audio id="fx11" class="clip" src="assets/sfx/whoosh2.wav" data-start="9.101" data-duration="0.9" data-track-index="14" data-volume="0.45"></audio>
+      <audio id="fx12" class="clip" src="assets/sfx/typing.mp3" data-start="11.616" data-duration="1.5" data-track-index="15" data-volume="0.35"></audio>
+      <audio id="fx13" class="clip" src="assets/sfx/pop.mp3" data-start="12.803" data-duration="0.6" data-track-index="12" data-volume="0.55"></audio>
+      <audio id="fx14" class="clip" src="assets/sfx/click.mp3" data-start="13.5" data-duration="0.37" data-track-index="13" data-volume="0.8"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines['main'] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

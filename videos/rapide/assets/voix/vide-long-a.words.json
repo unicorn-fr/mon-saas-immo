@@ -1,0 +1,464 @@
+[
+  {
+    "text": "Votre",
+    "start": 0.04,
+    "end": 0.3,
+    "id": "w0"
+  },
+  {
+    "text": "logement",
+    "start": 0.3,
+    "end": 0.78,
+    "id": "w1"
+  },
+  {
+    "text": "est",
+    "start": 0.78,
+    "end": 0.96,
+    "id": "w2"
+  },
+  {
+    "text": "vide?",
+    "start": 0.96,
+    "end": 1.4,
+    "id": "w3"
+  },
+  {
+    "text": "Chaque",
+    "start": 1.44,
+    "end": 1.76,
+    "id": "w4"
+  },
+  {
+    "text": "mois",
+    "start": 1.76,
+    "end": 2,
+    "id": "w5"
+  },
+  {
+    "text": "sans",
+    "start": 2,
+    "end": 2.24,
+    "id": "w6"
+  },
+  {
+    "text": "locataire,",
+    "start": 2.24,
+    "end": 2.96,
+    "id": "w7"
+  },
+  {
+    "text": "c'est",
+    "start": 2.96,
+    "end": 3.32,
+    "id": "w8"
+  },
+  {
+    "text": "un",
+    "start": 3.32,
+    "end": 3.42,
+    "id": "w9"
+  },
+  {
+    "text": "loyer",
+    "start": 3.47,
+    "end": 3.84,
+    "id": "w10"
+  },
+  {
+    "text": "perdu.",
+    "start": 3.84,
+    "end": 4.46,
+    "id": "w11"
+  },
+  {
+    "text": "Avec",
+    "start": 4.54,
+    "end": 4.8,
+    "id": "w12"
+  },
+  {
+    "text": "Bailio,",
+    "start": 4.8,
+    "end": 5.44,
+    "id": "w13"
+  },
+  {
+    "text": "vous",
+    "start": 5.44,
+    "end": 5.6,
+    "id": "w14"
+  },
+  {
+    "text": "le",
+    "start": 5.6,
+    "end": 5.98,
+    "id": "w15"
+  },
+  {
+    "text": "louez",
+    "start": 5.98,
+    "end": 6.16,
+    "id": "w16"
+  },
+  {
+    "text": "étape",
+    "start": 6.26,
+    "end": 6.48,
+    "id": "w17"
+  },
+  {
+    "text": "par",
+    "start": 6.57,
+    "end": 6.75,
+    "id": "w18"
+  },
+  {
+    "text": "étape.",
+    "start": 6.82,
+    "end": 7.32,
+    "id": "w19"
+  },
+  {
+    "text": "Décrivez-le",
+    "start": 7.42,
+    "end": 8.15,
+    "id": "w20"
+  },
+  {
+    "text": "une",
+    "start": 8.15,
+    "end": 8.36,
+    "id": "w21"
+  },
+  {
+    "text": "fois.",
+    "start": 8.36,
+    "end": 8.88,
+    "id": "w22"
+  },
+  {
+    "text": "Votre",
+    "start": 8.91,
+    "end": 9.08,
+    "id": "w23"
+  },
+  {
+    "text": "annonce",
+    "start": 9.18,
+    "end": 9.49,
+    "id": "w24"
+  },
+  {
+    "text": "est",
+    "start": 9.49,
+    "end": 9.66,
+    "id": "w25"
+  },
+  {
+    "text": "prête.",
+    "start": 9.66,
+    "end": 10.12,
+    "id": "w26"
+  },
+  {
+    "text": "Mention",
+    "start": 10.16,
+    "end": 10.53,
+    "id": "w27"
+  },
+  {
+    "text": "obligatoire",
+    "start": 10.53,
+    "end": 11.18,
+    "id": "w28"
+  },
+  {
+    "text": "comprise.",
+    "start": 11.18,
+    "end": 11.82,
+    "id": "w29"
+  },
+  {
+    "text": "Copiez-la",
+    "start": 11.93,
+    "end": 12.52,
+    "id": "w30"
+  },
+  {
+    "text": "sur",
+    "start": 12.52,
+    "end": 12.74,
+    "id": "w31"
+  },
+  {
+    "text": "le",
+    "start": 12.74,
+    "end": 12.85,
+    "id": "w32"
+  },
+  {
+    "text": "bon",
+    "start": 12.85,
+    "end": 12.99,
+    "id": "w33"
+  },
+  {
+    "text": "coin,",
+    "start": 13.38,
+    "end": 13.56,
+    "id": "w34"
+  },
+  {
+    "text": "se",
+    "start": 13.56,
+    "end": 13.71,
+    "id": "w35"
+  },
+  {
+    "text": "loger",
+    "start": 13.71,
+    "end": 14.08,
+    "id": "w36"
+  },
+  {
+    "text": "ou",
+    "start": 14.08,
+    "end": 14.23,
+    "id": "w37"
+  },
+  {
+    "text": "pape.",
+    "start": 14.23,
+    "end": 14.72,
+    "id": "w38"
+  },
+  {
+    "text": "Les",
+    "start": 14.88,
+    "end": 15,
+    "id": "w39"
+  },
+  {
+    "text": "candidats",
+    "start": 15,
+    "end": 15.49,
+    "id": "w40"
+  },
+  {
+    "text": "envoient",
+    "start": 15.49,
+    "end": 15.92,
+    "id": "w41"
+  },
+  {
+    "text": "leurs",
+    "start": 15.92,
+    "end": 15.98,
+    "id": "w42"
+  },
+  {
+    "text": "dossiers",
+    "start": 16.36,
+    "end": 16.64,
+    "id": "w43"
+  },
+  {
+    "text": "par",
+    "start": 16.64,
+    "end": 16.8,
+    "id": "w44"
+  },
+  {
+    "text": "un",
+    "start": 16.8,
+    "end": 16.86,
+    "id": "w45"
+  },
+  {
+    "text": "simple",
+    "start": 16.91,
+    "end": 17.24,
+    "id": "w46"
+  },
+  {
+    "text": "lien.",
+    "start": 17.24,
+    "end": 17.69,
+    "id": "w47"
+  },
+  {
+    "text": "Vous",
+    "start": 17.78,
+    "end": 17.94,
+    "id": "w48"
+  },
+  {
+    "text": "choisissez.",
+    "start": 17.95,
+    "end": 18.76,
+    "id": "w49"
+  },
+  {
+    "text": "Le",
+    "start": 18.8,
+    "end": 18.89,
+    "id": "w50"
+  },
+  {
+    "text": "bail",
+    "start": 18.89,
+    "end": 19.16,
+    "id": "w51"
+  },
+  {
+    "text": "reprend",
+    "start": 19.16,
+    "end": 19.63,
+    "id": "w52"
+  },
+  {
+    "text": "tout,",
+    "start": 19.63,
+    "end": 19.91,
+    "id": "w53"
+  },
+  {
+    "text": "sans",
+    "start": 20.28,
+    "end": 20.34,
+    "id": "w54"
+  },
+  {
+    "text": "rien",
+    "start": 20.34,
+    "end": 20.62,
+    "id": "w55"
+  },
+  {
+    "text": "ressaisir.",
+    "start": 20.62,
+    "end": 21.46,
+    "id": "w56"
+  },
+  {
+    "text": "Signature",
+    "start": 21.54,
+    "end": 22.02,
+    "id": "w57"
+  },
+  {
+    "text": "en",
+    "start": 22.02,
+    "end": 22.14,
+    "id": "w58"
+  },
+  {
+    "text": "ligne.",
+    "start": 22.14,
+    "end": 22.57,
+    "id": "w59"
+  },
+  {
+    "text": "État",
+    "start": 22.7,
+    "end": 22.9,
+    "id": "w60"
+  },
+  {
+    "text": "des",
+    "start": 22.91,
+    "end": 23.08,
+    "id": "w61"
+  },
+  {
+    "text": "lieux",
+    "start": 23.08,
+    "end": 23.38,
+    "id": "w62"
+  },
+  {
+    "text": "sur",
+    "start": 23.38,
+    "end": 23.56,
+    "id": "w63"
+  },
+  {
+    "text": "votre",
+    "start": 23.56,
+    "end": 23.77,
+    "id": "w64"
+  },
+  {
+    "text": "téléphone.",
+    "start": 24.18,
+    "end": 24.6,
+    "id": "w65"
+  },
+  {
+    "text": "Chaque",
+    "start": 24.67,
+    "end": 25,
+    "id": "w66"
+  },
+  {
+    "text": "étape,",
+    "start": 25,
+    "end": 25.46,
+    "id": "w67"
+  },
+  {
+    "text": "dans",
+    "start": 25.46,
+    "end": 25.71,
+    "id": "w68"
+  },
+  {
+    "text": "l'ordre.",
+    "start": 25.72,
+    "end": 26.42,
+    "id": "w69"
+  },
+  {
+    "text": "Aucune",
+    "start": 26.46,
+    "end": 26.85,
+    "id": "w70"
+  },
+  {
+    "text": "oubliée.",
+    "start": 26.85,
+    "end": 27.53,
+    "id": "w71"
+  },
+  {
+    "text": "1er",
+    "start": 27.7,
+    "end": 28.09,
+    "id": "w72"
+  },
+  {
+    "text": "bail",
+    "start": 28.13,
+    "end": 28.54,
+    "id": "w73"
+  },
+  {
+    "text": "offert",
+    "start": 28.54,
+    "end": 29.15,
+    "id": "w74"
+  },
+  {
+    "text": "sur",
+    "start": 29.15,
+    "end": 29.46,
+    "id": "w75"
+  },
+  {
+    "text": "bailio.fr",
+    "start": 29.46,
+    "end": 30.49,
+    "id": "w76"
+  }
+]

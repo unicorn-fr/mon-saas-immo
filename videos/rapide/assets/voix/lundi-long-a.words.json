@@ -1,0 +1,422 @@
+[
+  {
+    "text": "Lundi",
+    "start": 0.04,
+    "end": 0.4,
+    "id": "w0"
+  },
+  {
+    "text": "matin,",
+    "start": 0.4,
+    "end": 0.85,
+    "id": "w1"
+  },
+  {
+    "text": "vous",
+    "start": 1.2,
+    "end": 1.39,
+    "id": "w2"
+  },
+  {
+    "text": "ouvrez",
+    "start": 1.39,
+    "end": 1.97,
+    "id": "w3"
+  },
+  {
+    "text": "Baylio.",
+    "start": 1.97,
+    "end": 2.58,
+    "id": "w4"
+  },
+  {
+    "text": "Quatre",
+    "start": 2.69,
+    "end": 2.93,
+    "id": "w5"
+  },
+  {
+    "text": "actions",
+    "start": 2.93,
+    "end": 3.33,
+    "id": "w6"
+  },
+  {
+    "text": "cette",
+    "start": 3.33,
+    "end": 3.64,
+    "id": "w7"
+  },
+  {
+    "text": "semaine,",
+    "start": 3.64,
+    "end": 4.2,
+    "id": "w8"
+  },
+  {
+    "text": "déjà",
+    "start": 4.24,
+    "end": 4.44,
+    "id": "w9"
+  },
+  {
+    "text": "préparées.",
+    "start": 4.44,
+    "end": 5,
+    "id": "w10"
+  },
+  {
+    "text": "Un",
+    "start": 5.04,
+    "end": 5.17,
+    "id": "w11"
+  },
+  {
+    "text": "loyer",
+    "start": 5.17,
+    "end": 5.51,
+    "id": "w12"
+  },
+  {
+    "text": "en",
+    "start": 5.6,
+    "end": 5.75,
+    "id": "w13"
+  },
+  {
+    "text": "retard,",
+    "start": 6.19,
+    "end": 6.5,
+    "id": "w14"
+  },
+  {
+    "text": "la",
+    "start": 6.5,
+    "end": 6.64,
+    "id": "w15"
+  },
+  {
+    "text": "relance",
+    "start": 6.64,
+    "end": 7.13,
+    "id": "w16"
+  },
+  {
+    "text": "est",
+    "start": 7.13,
+    "end": 7.2,
+    "id": "w17"
+  },
+  {
+    "text": "écrite.",
+    "start": 7.32,
+    "end": 7.99,
+    "id": "w18"
+  },
+  {
+    "text": "Une",
+    "start": 8.04,
+    "end": 8.14,
+    "id": "w19"
+  },
+  {
+    "text": "quittance",
+    "start": 8.14,
+    "end": 8.56,
+    "id": "w20"
+  },
+  {
+    "text": "a",
+    "start": 8.56,
+    "end": 8.6,
+    "id": "w21"
+  },
+  {
+    "text": "envoyé,",
+    "start": 8.6,
+    "end": 8.92,
+    "id": "w22"
+  },
+  {
+    "text": "elle",
+    "start": 9.14,
+    "end": 9.3,
+    "id": "w23"
+  },
+  {
+    "text": "part",
+    "start": 9.3,
+    "end": 9.6,
+    "id": "w24"
+  },
+  {
+    "text": "toute",
+    "start": 9.6,
+    "end": 9.98,
+    "id": "w25"
+  },
+  {
+    "text": "seule.",
+    "start": 9.99,
+    "end": 10,
+    "id": "w26"
+  },
+  {
+    "text": "Un",
+    "start": 10.04,
+    "end": 10.17,
+    "id": "w27"
+  },
+  {
+    "text": "reçu,",
+    "start": 10.17,
+    "end": 10.68,
+    "id": "w28"
+  },
+  {
+    "text": "un",
+    "start": 10.68,
+    "end": 10.79,
+    "id": "w29"
+  },
+  {
+    "text": "avis",
+    "start": 11.18,
+    "end": 11.19,
+    "id": "w30"
+  },
+  {
+    "text": "d'échéance,",
+    "start": 11.2,
+    "end": 12.18,
+    "id": "w31"
+  },
+  {
+    "text": "un",
+    "start": 12.18,
+    "end": 12.21,
+    "id": "w32"
+  },
+  {
+    "text": "congé,",
+    "start": 12.61,
+    "end": 12.99,
+    "id": "w33"
+  },
+  {
+    "text": "le",
+    "start": 13.04,
+    "end": 13.17,
+    "id": "w34"
+  },
+  {
+    "text": "courrier",
+    "start": 13.17,
+    "end": 13.85,
+    "id": "w35"
+  },
+  {
+    "text": "est",
+    "start": 13.86,
+    "end": 13.92,
+    "id": "w36"
+  },
+  {
+    "text": "rédigé,",
+    "start": 14.14,
+    "end": 14.81,
+    "id": "w37"
+  },
+  {
+    "text": "selon",
+    "start": 14.81,
+    "end": 14.99,
+    "id": "w38"
+  },
+  {
+    "text": "la",
+    "start": 15.39,
+    "end": 15.42,
+    "id": "w39"
+  },
+  {
+    "text": "loi.",
+    "start": 15.42,
+    "end": 15.87,
+    "id": "w40"
+  },
+  {
+    "text": "Une",
+    "start": 16.04,
+    "end": 16.18,
+    "id": "w41"
+  },
+  {
+    "text": "question?",
+    "start": 16.18,
+    "end": 16.79,
+    "id": "w42"
+  },
+  {
+    "text": "Que",
+    "start": 16.83,
+    "end": 16.86,
+    "id": "w43"
+  },
+  {
+    "text": "se",
+    "start": 16.86,
+    "end": 17.2,
+    "id": "w44"
+  },
+  {
+    "text": "passe-t-il?",
+    "start": 17.2,
+    "end": 18,
+    "id": "w45"
+  },
+  {
+    "text": "Vous",
+    "start": 18,
+    "end": 18.19,
+    "id": "w46"
+  },
+  {
+    "text": "guide,",
+    "start": 18.69,
+    "end": 18.99,
+    "id": "w47"
+  },
+  {
+    "text": "pas",
+    "start": 19.04,
+    "end": 19.29,
+    "id": "w48"
+  },
+  {
+    "text": "à",
+    "start": 19.32,
+    "end": 19.41,
+    "id": "w49"
+  },
+  {
+    "text": "pas.",
+    "start": 19.41,
+    "end": 19.87,
+    "id": "w50"
+  },
+  {
+    "text": "Finis",
+    "start": 20.04,
+    "end": 20.31,
+    "id": "w51"
+  },
+  {
+    "text": "les",
+    "start": 20.31,
+    "end": 20.5,
+    "id": "w52"
+  },
+  {
+    "text": "tableurs,",
+    "start": 20.5,
+    "end": 21.12,
+    "id": "w53"
+  },
+  {
+    "text": "finis",
+    "start": 21.2,
+    "end": 21.43,
+    "id": "w54"
+  },
+  {
+    "text": "les",
+    "start": 21.43,
+    "end": 21.62,
+    "id": "w55"
+  },
+  {
+    "text": "rappels",
+    "start": 21.62,
+    "end": 22.06,
+    "id": "w56"
+  },
+  {
+    "text": "dans",
+    "start": 22.06,
+    "end": 22.2,
+    "id": "w57"
+  },
+  {
+    "text": "l'agenda,",
+    "start": 22.37,
+    "end": 22.99,
+    "id": "w58"
+  },
+  {
+    "text": "juste",
+    "start": 23.04,
+    "end": 23.29,
+    "id": "w59"
+  },
+  {
+    "text": "vos",
+    "start": 23.33,
+    "end": 23.54,
+    "id": "w60"
+  },
+  {
+    "text": "logements",
+    "start": 23.54,
+    "end": 23.91,
+    "id": "w61"
+  },
+  {
+    "text": "et",
+    "start": 24.14,
+    "end": 24.27,
+    "id": "w62"
+  },
+  {
+    "text": "votre",
+    "start": 24.27,
+    "end": 24.61,
+    "id": "w63"
+  },
+  {
+    "text": "temps.",
+    "start": 24.61,
+    "end": 25,
+    "id": "w64"
+  },
+  {
+    "text": "premier",
+    "start": 25.03,
+    "end": 26.22,
+    "id": "w65"
+  },
+  {
+    "text": "bail",
+    "start": 26.22,
+    "end": 26.91,
+    "id": "w66"
+  },
+  {
+    "text": "offert",
+    "start": 26.91,
+    "end": 27.95,
+    "id": "w67"
+  },
+  {
+    "text": "sur",
+    "start": 27.95,
+    "end": 28.44,
+    "id": "w68"
+  },
+  {
+    "text": "bailio.fr",
+    "start": 28.5,
+    "end": 30.42,
+    "id": "w69"
+  }
+]

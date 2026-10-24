@@ -1,0 +1,46 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #a4-all { position: absolute; inset: 0; }
+    #a4-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #a4-ph { left:1840px; top:134px; width:560px; height:1171px; }
+    #a4-pa0 { left:1150px; top:520px; width:720px; }
+    #a4-pa1 { left:1150px; top:300px; width:860px; }
+    #a4-pa2 { left:1150px; top:700px; width:760px; }
+  </style>
+  <div id="root" data-composition-id="a4" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="a4-g1" style="left:-500px;top:-600px;width:1792px;height:1792px"></div><div class="k-glow c" id="a4-g2" style="left:1660px;top:740px;width:1536px;height:1536px"></div></div>
+    <div id="a4-all">
+      <div id="a4-t0" class="k-punch" style="position:absolute;left:150px;top:230px;width:2350px;font-size:210px;color:#faf7f2;text-align:left;" data-layout-allow-overlap>Décrivez-le<br />une fois.</div>
+      <div id="a4-t1" class="k-punch" style="position:absolute;left:150px;top:230px;width:2350px;font-size:190px;color:#faf7f2;text-align:left;" data-layout-allow-overlap>Annonce<br />prête.</div>
+      <div id="a4-t2" class="k-serif" style="position:absolute;left:150px;top:760px;width:850px;font-size:120px;color:#c4976a;text-align:left;" data-layout-allow-overlap>Mentions<br />obligatoires<br />comprises.</div>
+      <div id="a4-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="a4-ph"><div class="scr"><img id="a4-i0" src="assets/ecrans/tunnel-type.png" alt="" style="object-position:50% 0%" /><img id="a4-i1" src="assets/ecrans/annonce.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="a4-pa0"><img src="assets/ecrans/part-meuble.png" alt="" /></div>
+      <div class="k-part" id="a4-pa1"><img src="assets/ecrans/part-annonce-tete.png" alt="" /></div>
+      <div class="k-part" id="a4-pa2"><img src="assets/ecrans/part-loyer.png" alt="" /></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#a4-g1', { x: 0 }, { x: 384, duration: 4.4, ease: 'none' }, 0);
+      tl.fromTo('#a4-g2', { y: 0 }, { y: -216, duration: 4.4, ease: 'none' }, 0);
+      tl.fromTo("#a4-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.05);
+      tl.to('#a4-t0', { opacity: 0, filter: 'blur(14px)', duration: 0.12, ease: 'power3.in' }, 1.68);
+      tl.fromTo("#a4-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.8);
+      tl.fromTo("#a4-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 2.78);
+      tl.fromTo('#a4-ph', { y: 1640, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: -18, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#a4-ph', { rotationY: -6, duration: 3.9000000000000004, ease: 'none' }, 0.48);
+      tl.set('#a4-i1', { opacity: 0 }, 0); tl.to('#a4-i1', { opacity: 1, duration: 0.12, ease: 'none' }, 1.75);
+      tl.fromTo('#a4-pa0', { x: 500, y: 60, scale: 0.4, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.55);
+      tl.to('#a4-pa0', { y: 1640, rotation: 10, filter: 'blur(18px)', duration: 0.22, ease: 'power3.in' }, 1.6);
+      tl.fromTo('#a4-pa1', { x: 500, y: 60, scale: 0.4, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 1.85);
+      tl.fromTo('#a4-pa2', { x: 500, y: 60, scale: 0.4, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 2.85);
+      tl.to('#a4-all', { x: -2660, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 4.15);
+      window.__timelines['a4'] = tl;
+    })();
+  </script>
+</template>

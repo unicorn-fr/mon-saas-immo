@@ -1,0 +1,43 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #b6-all { position: absolute; inset: 0; }
+    #b6-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #b6-ph { left:1880px; top:134px; width:560px; height:1171px; }
+    #b6-pa0 { left:1250px; top:360px; width:760px; }
+  </style>
+  <div id="root" data-composition-id="b6" data-width="2560" data-height="1440">
+    
+    <div id="b6-all">
+      <div id="b6-t0" class="k-punch" style="position:absolute;left:150px;top:160px;width:2350px;font-size:120px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>Un reçu,</div>
+      <div id="b6-t1" class="k-punch" style="position:absolute;left:150px;top:320px;width:2350px;font-size:120px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>un avis d’échéance,</div>
+      <div id="b6-t2" class="k-punch" style="position:absolute;left:150px;top:480px;width:2350px;font-size:120px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>un congé ?</div>
+      <div id="b6-t3" class="k-serif" style="position:absolute;left:150px;top:820px;width:950px;font-size:140px;color:#1a3270;text-align:left;" data-layout-allow-overlap>Le courrier est rédigé.</div>
+      <div id="b6-t4" class="k-punch" style="position:absolute;left:150px;top:1100px;width:2350px;font-size:110px;color:#8a5f36;text-align:left;" data-layout-allow-overlap>Selon la loi.</div>
+      <div id="b6-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="b6-ph"><div class="scr"><img id="b6-i0" src="assets/ecrans/courriers.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="b6-pa0"><img src="assets/ecrans/part-courrier.png" alt="" /></div>
+      </div>
+      <svg class="k-cursor" id="b6-cur" width="96" height="120" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#b6-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.07);
+      tl.fromTo("#b6-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.08);
+      tl.fromTo("#b6-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 2.5);
+      tl.fromTo("#b6-t3", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 3.07);
+      tl.fromTo("#b6-t4", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 4.7);
+      tl.fromTo('#b6-ph', { y: 1640, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: 18, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#b6-ph', { rotationY: 6, duration: 5.3, ease: 'none' }, 0.48);
+      tl.fromTo('#b6-pa0', { x: 500, y: 60, scale: 0.4, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.4);
+      tl.fromTo('#b6-cur', { x: 2620, y: 1500 }, { x: 1434, y: 890, duration: 0.4, ease: 'expo.out' }, 0.9);
+      tl.to('#b6-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.3);
+      tl.to('#b6-pa0', { scale: 0.975, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.31);
+      tl.to('#b6-all', { x: -2660, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 5.55);
+      window.__timelines['b6'] = tl;
+    })();
+  </script>
+</template>

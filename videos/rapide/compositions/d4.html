@@ -1,0 +1,45 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #d4-all { position: absolute; inset: 0; }
+    #d4-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #d4-ph { left:350px; top:380px; width:380px; height:795px; }
+    .d4-q { position:absolute; left:400px; top:700px; width:300px; border-radius:24px; background:#faf7f2; padding:25px 27px; box-shadow:0 30px 70px rgba(0,0,0,.45); }.d4-q b { display:block; font-size:37px; color:#1a1a2e; } .d4-q span { display:block; margin-top:4px; font-size:30px; color:#45455a; }.d4-q em { display:flex; align-items:center; gap:10px; margin-top:10px; font-style:normal; font-size:27px; color:#1b5e3b; font-weight:700; }.d4-q em i { width:27px; height:27px; border-radius:50%; background:#1b5e3b; }
+  </style>
+  <div id="root" data-composition-id="d4" data-width="1080" data-height="1920">
+    <div class="k-night"><div class="k-glow b" id="d4-g1" style="left:-500px;top:-600px;width:1344px;height:1344px"></div><div class="k-glow c" id="d4-g2" style="left:180px;top:1220px;width:1152px;height:1152px"></div></div>
+    <div id="d4-all">
+      <div id="d4-t0" class="k-punch" style="position:absolute;left:0px;top:190px;width:1080px;font-size:130px;color:#faf7f2;text-align:center;" data-layout-allow-overlap>La quittance :</div>
+      <div id="d4-t1" class="k-serif" style="position:absolute;left:0px;top:1150px;width:1080px;font-size:200px;color:#c4976a;text-align:center;" data-layout-allow-overlap>envoyée.</div>
+      <div id="d4-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="d4-ph"><div class="scr"><img id="d4-i0" src="assets/ecrans/bail.png" alt="" style="object-position:50% 62%" /></div><div class="isl"></div></div>
+      <div class="d4-q k-ui" id="d4-q0"><b class="k-punch">Quittance</b><span>novembre</span><em><i></i>Envoyée</em></div>
+      <div class="d4-q k-ui" id="d4-q1"><b class="k-punch">Quittance</b><span>décembre</span><em><i></i>Envoyée</em></div>
+      <div class="d4-q k-ui" id="d4-q2"><b class="k-punch">Quittance</b><span>janvier</span><em><i></i>Envoyée</em></div>
+      <div class="d4-q k-ui" id="d4-q3"><b class="k-punch">Quittance</b><span>février</span><em><i></i>Envoyée</em></div>
+      <div class="d4-q k-ui" id="d4-q4"><b class="k-punch">Quittance</b><span>mars</span><em><i></i>Envoyée</em></div>
+      <div class="d4-q k-ui" id="d4-q5"><b class="k-punch">Quittance</b><span>avril</span><em><i></i>Envoyée</em></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#d4-g1', { x: 0 }, { x: 162, duration: 2.0, ease: 'none' }, 0);
+      tl.fromTo('#d4-g2', { y: 0 }, { y: -288, duration: 2.0, ease: 'none' }, 0);
+      tl.fromTo("#d4-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.18);
+      tl.fromTo("#d4-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.38);
+      tl.fromTo('#d4-ph', { y: 2120, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: -8, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#d4-ph', { rotationY: 8, duration: 1.5, ease: 'none' }, 0.48);
+      tl.fromTo('#d4-q0', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: -330, y: -300, scale: 1.15, opacity: 1, rotation: -14, duration: 0.55, ease: 'expo.out' }, 0.45);
+      tl.fromTo('#d4-q1', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: 330, y: -250, scale: 1.15, opacity: 1, rotation: 12, duration: 0.55, ease: 'expo.out' }, 0.55);
+      tl.fromTo('#d4-q2', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: -350, y: -60, scale: 1.15, opacity: 1, rotation: -8, duration: 0.55, ease: 'expo.out' }, 0.65);
+      tl.fromTo('#d4-q3', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: 340, y: -10, scale: 1.15, opacity: 1, rotation: 10, duration: 0.55, ease: 'expo.out' }, 0.75);
+      tl.fromTo('#d4-q4', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: -310, y: 170, scale: 1.15, opacity: 1, rotation: -12, duration: 0.55, ease: 'expo.out' }, 0.8500000000000001);
+      tl.fromTo('#d4-q5', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: 320, y: 210, scale: 1.15, opacity: 1, rotation: 14, duration: 0.55, ease: 'expo.out' }, 0.95);
+      tl.to('#d4-all', { x: 1180, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 1.78);
+      window.__timelines['d4'] = tl;
+    })();
+  </script>
+</template>

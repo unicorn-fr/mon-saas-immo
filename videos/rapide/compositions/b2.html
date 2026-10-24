@@ -1,0 +1,29 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #b2-all { position: absolute; inset: 0; }
+    #b2-stage { position: absolute; inset: 0; perspective: 2400px; }
+    .b2-ring { position:absolute; left:1280px; top:794px; width:650px; height:650px; margin:-325px 0 0 -325px; border-radius:50%; }
+  </style>
+  <div id="root" data-composition-id="b2" data-width="2560" data-height="1440">
+    
+    <div id="b2-all">
+      <div id="b2-t0" class="k-punch" style="position:absolute;left:0px;top:340px;width:2560px;font-size:120px;color:#1a1a2e;text-align:center;" data-layout-allow-overlap>Vous ouvrez</div>
+      <div class="b2-ring" id="b2-r1" style="border:26px solid #c4976a"></div><div class="b2-ring" id="b2-r2" style="border:14px solid #1a3270"></div>
+      <div id="b2-logo" style="position:absolute;left:630px;top:560px;width:1300px;height:470px"><img src="assets/logo/bailio-logo.svg" alt="Bailio" style="width:100%;height:100%;display:block" /></div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#b2-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.05);
+      tl.fromTo('#b2-r1', { scale: 0.1, opacity: 1 }, { scale: 4.2, opacity: 0, duration: 0.7, ease: 'expo.out' }, 0.7799999999999999);
+      tl.fromTo('#b2-r2', { scale: 0.1, opacity: 1 }, { scale: 3.2, opacity: 0, duration: 0.8, ease: 'expo.out' }, 0.84);
+      tl.fromTo('#b2-logo', { scale: 1.7, opacity: 0, filter: 'blur(24px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.82);
+      [-12, 9, -5, 0].forEach((x, i) => tl.to('#b2-logo', { x, duration: 0.03, ease: 'none' }, 1.0699999999999998 + i * 0.03));
+      tl.to('#b2-all', { scale: 2.6, opacity: 0, filter: 'blur(30px)', duration: 0.3, ease: 'power3.in' }, 1.25);
+      window.__timelines['b2'] = tl;
+    })();
+  </script>
+</template>

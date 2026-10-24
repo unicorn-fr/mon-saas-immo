@@ -1,0 +1,38 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a3270; }
+    #d3-all { position: absolute; inset: 0; }
+    #d3-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #d3-ph { left:350px; top:600px; width:380px; height:795px; }
+    #d3-pa0 { left:90px; top:780px; width:900px; }
+  </style>
+  <div id="root" data-composition-id="d3" data-width="1080" data-height="1920">
+    <div class="k-glow c" id="d3-g1" style="left:200px;top:800px;width:1400px;height:1400px;opacity:.6"></div>
+    <div id="d3-all">
+      <div id="d3-t0" class="k-punch" style="position:absolute;left:0px;top:200px;width:1080px;font-size:140px;color:#faf7f2;text-align:center;" data-layout-allow-overlap>La relance :</div>
+      <div id="d3-t1" class="k-serif" style="position:absolute;left:0px;top:370px;width:1080px;font-size:200px;color:#c4976a;text-align:center;" data-layout-allow-overlap>écrite.</div>
+      <div id="d3-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="d3-ph"><div class="scr"><img id="d3-i0" src="assets/ecrans/aujourdhui.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="d3-pa0"><img src="assets/ecrans/part-retard.png" alt="" /></div>
+      </div>
+      <svg class="k-cursor" id="d3-cur" width="84" height="105" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#d3-g1', { x: 0 }, { x: -162, duration: 2.0, ease: 'none' }, 0);
+      tl.fromTo("#d3-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.18);
+      tl.fromTo("#d3-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.38);
+      tl.fromTo('#d3-ph', { x: -1080, rotationY: -50, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: 12, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#d3-ph', { rotationY: 4, duration: 1.5, ease: 'none' }, 0.48);
+      tl.fromTo('#d3-pa0', { x: 0, y: 150, scale: 0.4, rotationY: 30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.35);
+      tl.fromTo('#d3-cur', { x: 1140, y: 1980 }, { x: 330, y: 1255, duration: 0.4, ease: 'expo.out' }, 1.1);
+      tl.to('#d3-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.5);
+      tl.to('#d3-pa0', { scale: 0.975, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 1.51);
+      tl.to('#d3-all', { y: -2120, filter: 'blur(28px)', duration: 0.24, ease: 'power3.in' }, 1.78);
+      window.__timelines['d3'] = tl;
+    })();
+  </script>
+</template>

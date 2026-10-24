@@ -1,0 +1,51 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #c3-all { position: absolute; inset: 0; }
+    #c3-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #c3-ph { left:350px; top:600px; width:380px; height:795px; }
+    #c3-pa0 { left:80px; top:700px; width:920px; }
+    .c3-q { position:absolute; left:390px; top:860px; width:320px; border-radius:24px; background:#faf7f2; padding:26px 29px; box-shadow:0 30px 70px rgba(0,0,0,.45); }.c3-q b { display:block; font-size:40px; color:#1a1a2e; } .c3-q span { display:block; margin-top:4px; font-size:32px; color:#45455a; }.c3-q em { display:flex; align-items:center; gap:10px; margin-top:10px; font-style:normal; font-size:29px; color:#1b5e3b; font-weight:700; }.c3-q em i { width:29px; height:29px; border-radius:50%; background:#1b5e3b; }
+  </style>
+  <div id="root" data-composition-id="c3" data-width="1080" data-height="1920">
+    <div class="k-night"><div class="k-glow b" id="c3-g1" style="left:-500px;top:-600px;width:1344px;height:1344px"></div><div class="k-glow c" id="c3-g2" style="left:180px;top:1220px;width:1152px;height:1152px"></div></div>
+    <div id="c3-all">
+      <div id="c3-t0" class="k-punch" style="position:absolute;left:0px;top:200px;width:1080px;font-size:150px;color:#faf7f2;text-align:center;" data-layout-allow-overlap>L’annonce</div>
+      <div id="c3-t1" class="k-serif" style="position:absolute;left:0px;top:370px;width:1080px;font-size:160px;color:#c4976a;text-align:center;" data-layout-allow-overlap>est prête.</div>
+      <div id="c3-t2" class="k-punch" style="position:absolute;left:0px;top:200px;width:1080px;font-size:130px;color:#faf7f2;text-align:center;" data-layout-allow-overlap>Les candidats</div>
+      <div id="c3-t3" class="k-serif" style="position:absolute;left:0px;top:360px;width:1080px;font-size:120px;color:#c4976a;text-align:center;" data-layout-allow-overlap>arrivent par un lien.</div>
+      <div id="c3-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="c3-ph"><div class="scr"><img id="c3-i0" src="assets/ecrans/annonce.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="c3-pa0"><img src="assets/ecrans/part-annonce-tete.png" alt="" /></div>
+      <div class="c3-q k-ui" id="c3-q0"><b class="k-punch">Dossier</b><span>Camille R.</span><em><i></i>Pièces déposées</em></div>
+      <div class="c3-q k-ui" id="c3-q1"><b class="k-punch">Dossier</b><span>Hugo B.</span><em><i></i>Pièces déposées</em></div>
+      <div class="c3-q k-ui" id="c3-q2"><b class="k-punch">Dossier</b><span>Inès T.</span><em><i></i>Pièces déposées</em></div>
+      <div class="c3-q k-ui" id="c3-q3"><b class="k-punch">Dossier</b><span>Léo M.</span><em><i></i>Pièces déposées</em></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#c3-g1', { x: 0 }, { x: 162, duration: 3.35, ease: 'none' }, 0);
+      tl.fromTo('#c3-g2', { y: 0 }, { y: -288, duration: 3.35, ease: 'none' }, 0);
+      tl.fromTo("#c3-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.29);
+      tl.to('#c3-t0', { opacity: 0, filter: 'blur(14px)', duration: 0.12, ease: 'power3.in' }, 1.6);
+      tl.fromTo("#c3-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.98);
+      tl.to('#c3-t1', { opacity: 0, filter: 'blur(14px)', duration: 0.12, ease: 'power3.in' }, 1.6);
+      tl.fromTo("#c3-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.73);
+      tl.fromTo("#c3-t3", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 2.5);
+      tl.fromTo('#c3-ph', { y: 2120, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: -12, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#c3-ph', { rotationY: 10, duration: 2.85, ease: 'none' }, 0.48);
+      tl.fromTo('#c3-pa0', { x: 0, y: 120, scale: 0.4, rotationY: 30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.4);
+      tl.to('#c3-pa0', { y: 2120, rotation: 10, filter: 'blur(18px)', duration: 0.22, ease: 'power3.in' }, 1.62);
+      tl.fromTo('#c3-q0', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: -300, y: -160, scale: 1.1, opacity: 1, rotation: -10, duration: 0.55, ease: 'expo.out' }, 2.0);
+      tl.fromTo('#c3-q1', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: 300, y: -100, scale: 1.1, opacity: 1, rotation: 8, duration: 0.55, ease: 'expo.out' }, 2.14);
+      tl.fromTo('#c3-q2', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: -320, y: 200, scale: 1.1, opacity: 1, rotation: 6, duration: 0.55, ease: 'expo.out' }, 2.2800000000000002);
+      tl.fromTo('#c3-q3', { x: 0, y: 0, scale: 0.3, opacity: 0, rotation: 0 }, { x: 300, y: 260, scale: 1.1, opacity: 1, rotation: -6, duration: 0.55, ease: 'expo.out' }, 2.42);
+      tl.to('#c3-all', { x: -1180, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 3.1);
+      window.__timelines['c3'] = tl;
+    })();
+  </script>
+</template>

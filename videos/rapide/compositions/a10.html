@@ -1,0 +1,41 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #a10-all { position: absolute; inset: 0; }
+    #a10-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #a10-pill { left:530px; top:900px; width:1500px; height:200px; }
+    #a10-url { position:absolute; left:80px; top:0; height:194px; line-height:194px; font-size:100px; color:#1a1a2e; white-space:nowrap; }
+    #a10-url span { display:none; } #a10-url span:first-child { display:inline; }
+    #a10-car { display:inline-block; width:6px; height:95px; background:#1a1a2e; vertical-align:-12px; margin-left:6px; }
+    #a10-btn { position:absolute; right:22px; top:22px; height:150px; border-radius:999px; background:#1a3270; color:#faf7f2; font-size:62px; line-height:150px; padding:0 62px; white-space:nowrap; }
+  </style>
+  <div id="root" data-composition-id="a10" data-width="2560" data-height="1440">
+    <div class="k-glow c" id="a10-g1" style="left:1500px;top:500px;width:1600px;height:1600px;opacity:.6"></div>
+    <div id="a10-all">
+      <div id="a10-t0" class="k-punch" style="position:absolute;left:0px;top:590px;width:2560px;font-size:150px;color:#1a1a2e;text-align:center;" data-layout-allow-overlap><span>Premier</span> <span>bail</span> <span style="color:#1a3270">offert.</span></div>
+      <div id="a10-logo" style="position:absolute;left:830px;top:170px;width:900px;height:325px"><img src="assets/logo/bailio-logo.svg" alt="Bailio" style="width:100%;height:100%;display:block" /></div>
+      <div class="k-pill" id="a10-pill"><div id="a10-url" class="k-ui"><span>b</span><span>a</span><span>i</span><span>l</span><span>i</span><span>o</span><span>.</span><span>f</span><span>r</span><i id="a10-car"></i></div><div id="a10-btn" class="k-punch">Créer mon bail</div></div>
+      <svg class="k-cursor" id="a10-cur" width="96" height="120" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#a10-g1', { x: 0 }, { x: -384, duration: 6.2, ease: 'none' }, 0);
+      document.querySelectorAll('#a10-t0 span').forEach((s) => s.style.display = 'inline-block');
+      tl.fromTo(document.querySelectorAll('#a10-t0 span')[0], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 0.2);
+      tl.fromTo(document.querySelectorAll('#a10-t0 span')[1], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 0.62);
+      tl.fromTo(document.querySelectorAll('#a10-t0 span')[2], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.04);
+      tl.fromTo("#a10-logo", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.0);
+      tl.fromTo('#a10-pill', { scaleX: 0.14, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.4, ease: 'expo.out' }, 1.76);
+      const ch = document.querySelectorAll('#a10-url span'); tl.set(ch[0], { opacity: 0 }, 0); tl.set(ch[0], { opacity: 1 }, 1.96); for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 1.96 + i * 0.07);
+      tl.fromTo('#a10-btn', { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: 'back.out(1.6)', transformOrigin: '100% 50%' }, 2.76);
+      tl.fromTo('#a10-cur', { x: 2620, y: 1500 }, { x: 1978, y: 1048, duration: 0.45, ease: 'expo.out' }, 2.96);
+      tl.to('#a10-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 3.46);
+      tl.to('#a10-btn', { scale: 0.95, backgroundColor: '#0f1f4a', duration: 0.07, yoyo: true, repeat: 1, ease: 'power2.out' }, 3.4699999999999998);
+      [3.96, 4.36, 4.76, 5.16, 5.56].forEach((t, i) => tl.set('#a10-car', { opacity: i % 2 ? 1 : 0 }, t));
+      window.__timelines['a10'] = tl;
+    })();
+  </script>
+</template>

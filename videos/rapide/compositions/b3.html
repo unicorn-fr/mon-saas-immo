@@ -1,0 +1,37 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #b3-all { position: absolute; inset: 0; }
+    #b3-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #b3-ph { left:1880px; top:134px; width:560px; height:1171px; }
+    #b3-pa0 { left:1260px; top:300px; width:1000px; }
+  </style>
+  <div id="root" data-composition-id="b3" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="b3-g1" style="left:-500px;top:-600px;width:1792px;height:1792px"></div><div class="k-glow c" id="b3-g2" style="left:1660px;top:740px;width:1536px;height:1536px"></div></div>
+    <div id="b3-all">
+      <div id="b3-t0" class="k-punch" style="position:absolute;left:150px;top:230px;width:2350px;font-size:230px;color:#faf7f2;text-align:left;" data-layout-allow-overlap>4 actions</div>
+      <div id="b3-t1" class="k-serif" style="position:absolute;left:150px;top:600px;width:2350px;font-size:150px;color:#faf7f2;text-align:left;" data-layout-allow-overlap>cette semaine.</div>
+      <div id="b3-t2" class="k-serif" style="position:absolute;left:150px;top:830px;width:2350px;font-size:170px;color:#c4976a;text-align:left;" data-layout-allow-overlap>Déjà préparées.</div>
+      <div id="b3-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="b3-ph"><div class="scr"><img id="b3-i0" src="assets/ecrans/aujourdhui.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="b3-pa0"><img src="assets/ecrans/part-bonjour.png" alt="" /></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#b3-g1', { x: 0 }, { x: 384, duration: 2.45, ease: 'none' }, 0);
+      tl.fromTo('#b3-g2', { y: 0 }, { y: -216, duration: 2.45, ease: 'none' }, 0);
+      tl.fromTo("#b3-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.24);
+      tl.fromTo("#b3-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.19);
+      tl.fromTo("#b3-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.79);
+      tl.fromTo('#b3-ph', { y: 1640, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: -16, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#b3-ph', { rotationY: -4, duration: 1.9500000000000002, ease: 'none' }, 0.48);
+      tl.fromTo('#b3-pa0', { x: 500, y: 60, scale: 0.4, rotationY: -30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.3);
+      tl.to('#b3-all', { x: -2660, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 2.2);
+      window.__timelines['b3'] = tl;
+    })();
+  </script>
+</template>

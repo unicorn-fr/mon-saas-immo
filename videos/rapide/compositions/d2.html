@@ -1,0 +1,35 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #d2-all { position: absolute; inset: 0; }
+    #d2-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #d2-ph { left:350px; top:620px; width:380px; height:795px; }
+    #d2-pa0 { left:60px; top:700px; width:960px; }
+  </style>
+  <div id="root" data-composition-id="d2" data-width="1080" data-height="1920">
+    <div class="k-night"><div class="k-glow b" id="d2-g1" style="left:-500px;top:-600px;width:1344px;height:1344px"></div><div class="k-glow c" id="d2-g2" style="left:180px;top:1220px;width:1152px;height:1152px"></div></div>
+    <div id="d2-all">
+      <div id="d2-t0" class="k-punch" style="position:absolute;left:0px;top:190px;width:1080px;font-size:220px;color:#faf7f2;text-align:center;" data-layout-allow-overlap>4 actions</div>
+      <div id="d2-t1" class="k-serif" style="position:absolute;left:0px;top:430px;width:1080px;font-size:140px;color:#c4976a;text-align:center;" data-layout-allow-overlap>déjà préparées.</div>
+      <div id="d2-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="d2-ph"><div class="scr"><img id="d2-i0" src="assets/ecrans/aujourdhui.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-part" id="d2-pa0"><img src="assets/ecrans/part-bonjour.png" alt="" /></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#d2-g1', { x: 0 }, { x: 162, duration: 2.2, ease: 'none' }, 0);
+      tl.fromTo('#d2-g2', { y: 0 }, { y: -288, duration: 2.2, ease: 'none' }, 0);
+      tl.fromTo("#d2-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.08);
+      tl.fromTo("#d2-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.1);
+      tl.fromTo('#d2-ph', { y: 2120, rotationX: 25, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: -12, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#d2-ph', { rotationY: 10, duration: 1.7000000000000002, ease: 'none' }, 0.48);
+      tl.fromTo('#d2-pa0', { x: 0, y: 150, scale: 0.4, rotationY: 30, opacity: 0 }, { x: 0, y: 0, scale: 1, rotationY: -6, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.3);
+      tl.to('#d2-all', { x: -1180, filter: 'blur(30px)', duration: 0.24, ease: 'power3.in' }, 1.98);
+      window.__timelines['d2'] = tl;
+    })();
+  </script>
+</template>

@@ -1,0 +1,32 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #b9-all { position: absolute; inset: 0; }
+    #b9-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #b9-ring { position:absolute; left:1280px; top:720px; width:0; height:0; transform-style:preserve-3d; }
+    #b9-ring .k-phone { left:-210px; top:-439px; width:420px; height:879px; }
+    #b9-scrim { position:absolute; left:256px; top:288px; width:2048px; height:864px; border-radius:50%; background:radial-gradient(ellipse, rgba(26,26,46,.92) 0%, rgba(26,26,46,.75) 45%, rgba(26,26,46,0) 72%); opacity:0; }
+  </style>
+  <div id="root" data-composition-id="b9" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="b9-g1" style="left:-500px;top:-600px;width:1792px;height:1792px"></div><div class="k-glow c" id="b9-g2" style="left:1660px;top:740px;width:1536px;height:1536px"></div></div>
+    <div id="b9-all">
+      <div id="b9-stage" data-layout-allow-overlap data-layout-allow-overflow><div id="b9-ring"><div class="k-phone" style="transform:rotateY(0deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/aujourdhui.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(36deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(72deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/courriers.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(108deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/argent.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(144deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/logement.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(180deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/annonce.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(216deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/tunnel-type.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(252deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/aujourdhui.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(288deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/courriers.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(324deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div></div></div><div id="b9-scrim"></div>
+      <div id="b9-t0" class="k-punch" style="position:absolute;left:0px;top:420px;width:2560px;font-size:200px;color:#faf7f2;text-align:center;text-shadow:0 16px 80px rgba(10,10,30,.85);" data-layout-allow-overlap>Juste vos logements.</div>
+      <div id="b9-t1" class="k-serif" style="position:absolute;left:0px;top:700px;width:2560px;font-size:230px;color:#c4976a;text-align:center;text-shadow:0 16px 80px rgba(10,10,30,.85);" data-layout-allow-overlap>Et votre temps.</div>
+    </div>
+    <div id="b9-flood" style="position:absolute;inset:0;background:#faf7f2;transform-origin:50% 100%;transform:scaleY(0)"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#b9-g1', { x: 0 }, { x: 384, duration: 2.6, ease: 'none' }, 0);
+      tl.fromTo('#b9-g2', { y: 0 }, { y: -216, duration: 2.6, ease: 'none' }, 0);
+      tl.fromTo("#b9-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.14);
+      tl.fromTo("#b9-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.37);
+      tl.fromTo('#b9-ring', { rotationY: 70, rotationX: -8, z: -2300 }, { rotationY: -160, z: -920, duration: 2.6, ease: 'power2.inOut' }, 0);
+      tl.to('#b9-scrim', { opacity: 1, duration: 0.2 }, 0.05);
+      tl.fromTo('#b9-flood', { scaleY: 0 }, { scaleY: 1, duration: 0.24, ease: 'power3.inOut' }, 2.35);
+      window.__timelines['b9'] = tl;
+    })();
+  </script>
+</template>

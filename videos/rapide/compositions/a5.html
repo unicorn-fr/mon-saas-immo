@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #a5-all { position: absolute; inset: 0; }
+    #a5-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #a5-ph { left:1880px; top:134px; width:560px; height:1171px; }
+  </style>
+  <div id="root" data-composition-id="a5" data-width="2560" data-height="1440">
+    
+    <div id="a5-all">
+      <div id="a5-t0" class="k-punch" style="position:absolute;left:150px;top:230px;width:2350px;font-size:300px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>Copiez.</div>
+      <div id="a5-t1" class="k-ui" style="position:absolute;left:150px;top:520px;width:2350px;font-size:90px;color:#45455a;text-align:left;" data-layout-allow-overlap>Publiez où vous voulez.</div>
+      <div id="a5-stage" data-layout-allow-overlap data-layout-allow-overflow>
+      <div class="k-phone" id="a5-ph"><div class="scr"><img id="a5-i0" src="assets/ecrans/annonce.png" alt="" style="object-position:50% 0%" /></div><div class="isl"></div></div>
+      <div class="k-chip" id="a5-c0" style="left:170px;top:700px;font-size:80px"><i style="width:80px;height:80px"></i>Leboncoin</div>
+      <div class="k-chip" id="a5-c1" style="left:170px;top:920px;font-size:80px"><i style="width:80px;height:80px"></i>SeLoger</div>
+      <div class="k-chip" id="a5-c2" style="left:170px;top:1140px;font-size:80px"><i style="width:80px;height:80px"></i>PAP</div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#a5-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.12);
+      tl.fromTo("#a5-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.5);
+      tl.fromTo('#a5-ph', { x: 2560, rotationY: 50, rotationZ: 12 }, { x: 0, y: 0, rotationX: 6, rotationY: 18, rotationZ: 0, duration: 0.48, ease: 'expo.out' }, 0);
+      tl.to('#a5-ph', { rotationY: 8, duration: 2.4, ease: 'none' }, 0.48);
+      tl.fromTo('#a5-c0', { x: -400, scale: 0.3, opacity: 0 }, { x: 0, scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.5)' }, 1.05);
+      tl.fromTo('#a5-c1', { x: -400, scale: 0.3, opacity: 0 }, { x: 0, scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.5)' }, 1.76);
+      tl.fromTo('#a5-c2', { x: -400, scale: 0.3, opacity: 0 }, { x: 0, scale: 1, opacity: 1, duration: 0.3, ease: 'back.out(1.5)' }, 2.43);
+      tl.to('#a5-all', { y: -1640, filter: 'blur(28px)', duration: 0.24, ease: 'power3.in' }, 2.65);
+      window.__timelines['a5'] = tl;
+    })();
+  </script>
+</template>

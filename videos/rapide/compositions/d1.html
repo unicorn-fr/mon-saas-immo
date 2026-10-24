@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #d1-all { position: absolute; inset: 0; }
+    #d1-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #d1-pill { left:140px; top:760px; width:800px; height:170px; }
+    #d1-tx { position:absolute; left:71px; top:0; height:164px; line-height:164px; font-size:84px; color:#faf7f2; white-space:nowrap; }
+    #d1-tx span { display:none; } #d1-tx span:first-child { display:inline; }
+    #d1-car { display:inline-block; width:5px; height:79px; background:#faf7f2; vertical-align:-9px; margin-left:8px; }
+  </style>
+  <div id="root" data-composition-id="d1" data-width="1080" data-height="1920">
+    
+    <div id="d1-all">
+      <div id="d1-n" style="position:absolute;inset:0"><div class="k-night"><div class="k-glow b" id="d1-g1" style="left:-500px;top:-600px;width:1344px;height:1344px"></div><div class="k-glow c" id="d1-g2" style="left:180px;top:1220px;width:1152px;height:1152px"></div></div>
+      <div class="k-glass" id="d1-pill"><div id="d1-tx" class="k-ui"><span>L</span><span>u</span><span>n</span><span>d</span><span>i</span><span> </span><span>m</span><span>a</span><span>t</span><span>i</span><span>n</span><span>.</span><i id="d1-car"></i></div></div>
+      </div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#d1-g1', { x: 0 }, { x: 162, duration: 1.2, ease: 'none' }, 0);
+      tl.fromTo('#d1-g2', { y: 0 }, { y: -288, duration: 1.2, ease: 'none' }, 0);
+      tl.fromTo('#d1-pill', { scale: 0.93 }, { scale: 1.04, duration: 0.9500000000000001, ease: 'power2.out' }, 0);
+      const ch = document.querySelectorAll('#d1-tx span'); for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 0.08 + i * 0.043);
+      tl.to('#d1-all', { scale: 2.6, opacity: 0, filter: 'blur(30px)', duration: 0.3, ease: 'power3.in' }, 0.98);
+      window.__timelines['d1'] = tl;
+    })();
+  </script>
+</template>

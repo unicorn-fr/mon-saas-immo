@@ -1,0 +1,41 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #d6-all { position: absolute; inset: 0; }
+    #d6-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #d6-pill { left:60px; top:1080px; width:960px; height:170px; }
+    #d6-url { position:absolute; left:68px; top:0; height:164px; line-height:164px; font-size:78px; color:#1a1a2e; white-space:nowrap; }
+    #d6-url span { display:none; } #d6-url span:first-child { display:inline; }
+    #d6-car { display:inline-block; width:6px; height:74px; background:#1a1a2e; vertical-align:-9px; margin-left:6px; }
+    #d6-btn { position:absolute; right:18px; top:18px; height:128px; border-radius:999px; background:#1a3270; color:#faf7f2; font-size:50px; line-height:128px; padding:0 50px; white-space:nowrap; }
+  </style>
+  <div id="root" data-composition-id="d6" data-width="1080" data-height="1920">
+    <div class="k-glow c" id="d6-g1" style="left:200px;top:900px;width:1300px;height:1300px;opacity:.6"></div>
+    <div id="d6-all">
+      <div id="d6-t0" class="k-punch" style="position:absolute;left:0px;top:740px;width:1080px;font-size:130px;color:#1a1a2e;text-align:center;" data-layout-allow-overlap><span>Premier</span> <span>bail</span><br /><span style="color:#1a3270">offert.</span></div>
+      <div id="d6-logo" style="position:absolute;left:160px;top:330px;width:760px;height:274px"><img src="assets/logo/bailio-logo.svg" alt="Bailio" style="width:100%;height:100%;display:block" /></div>
+      <div class="k-pill" id="d6-pill"><div id="d6-url" class="k-ui"><span>b</span><span>a</span><span>i</span><span>l</span><span>i</span><span>o</span><span>.</span><span>f</span><span>r</span><i id="d6-car"></i></div><div id="d6-btn" class="k-punch">Créer mon bail</div></div>
+      <svg class="k-cursor" id="d6-cur" width="84" height="105" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#1a1a2e" stroke="#faf7f2" stroke-width="5" stroke-linejoin="round" /></svg>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#d6-g1', { x: 0 }, { x: -162, duration: 6.0, ease: 'none' }, 0);
+      document.querySelectorAll('#d6-t0 span').forEach((s) => s.style.display = 'inline-block');
+      tl.fromTo(document.querySelectorAll('#d6-t0 span')[0], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 0.75);
+      tl.fromTo(document.querySelectorAll('#d6-t0 span')[1], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.48);
+      tl.fromTo(document.querySelectorAll('#d6-t0 span')[2], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.9);
+      tl.fromTo("#d6-logo", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.08);
+      tl.fromTo('#d6-pill', { scaleX: 0.14, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.4, ease: 'expo.out' }, 2.34);
+      const ch = document.querySelectorAll('#d6-url span'); tl.set(ch[0], { opacity: 0 }, 0); tl.set(ch[0], { opacity: 1 }, 2.54); for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 2.54 + i * 0.07);
+      tl.fromTo('#d6-btn', { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.32, ease: 'back.out(1.6)', transformOrigin: '100% 50%' }, 3.34);
+      tl.fromTo('#d6-cur', { x: 1140, y: 1980 }, { x: 960, y: 1210, duration: 0.45, ease: 'expo.out' }, 3.54);
+      tl.to('#d6-cur', { scale: 0.85, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 4.04);
+      tl.to('#d6-btn', { scale: 0.95, backgroundColor: '#0f1f4a', duration: 0.07, yoyo: true, repeat: 1, ease: 'power2.out' }, 4.05);
+      [4.54, 4.94, 5.34].forEach((t, i) => tl.set('#d6-car', { opacity: i % 2 ? 1 : 0 }, t));
+      window.__timelines['d6'] = tl;
+    })();
+  </script>
+</template>

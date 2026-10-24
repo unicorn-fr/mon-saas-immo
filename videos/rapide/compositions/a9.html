@@ -1,0 +1,34 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #a9-all { position: absolute; inset: 0; }
+    #a9-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #a9-ring { position:absolute; left:1280px; top:720px; width:0; height:0; transform-style:preserve-3d; }
+    #a9-ring .k-phone { left:-210px; top:-439px; width:420px; height:879px; }
+    #a9-scrim { position:absolute; left:256px; top:288px; width:2048px; height:864px; border-radius:50%; background:radial-gradient(ellipse, rgba(26,26,46,.92) 0%, rgba(26,26,46,.75) 45%, rgba(26,26,46,0) 72%); opacity:0; }
+  </style>
+  <div id="root" data-composition-id="a9" data-width="2560" data-height="1440">
+    <div class="k-night"><div class="k-glow b" id="a9-g1" style="left:-500px;top:-600px;width:1792px;height:1792px"></div><div class="k-glow c" id="a9-g2" style="left:1660px;top:740px;width:1536px;height:1536px"></div></div>
+    <div id="a9-all">
+      <div id="a9-stage" data-layout-allow-overlap data-layout-allow-overflow><div id="a9-ring"><div class="k-phone" style="transform:rotateY(0deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/logement.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(36deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/annonce.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(72deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(108deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/aujourdhui.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(144deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/tunnel-type.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(180deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/courriers.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(216deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/argent.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(252deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/logement.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(288deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/annonce.png" alt="" /></div><div class="isl"></div></div><div class="k-phone" style="transform:rotateY(324deg) translateZ(1150px)"><div class="scr"><img src="assets/ecrans/bail.png" alt="" /></div><div class="isl"></div></div></div></div><div id="a9-scrim"></div>
+      <div id="a9-t0" class="k-punch" style="position:absolute;left:0px;top:330px;width:2560px;font-size:230px;color:#faf7f2;text-align:center;text-shadow:0 16px 80px rgba(10,10,30,.85);" data-layout-allow-overlap>Chaque étape,</div>
+      <div id="a9-t1" class="k-serif" style="position:absolute;left:0px;top:610px;width:2560px;font-size:210px;color:#c4976a;text-align:center;text-shadow:0 16px 80px rgba(10,10,30,.85);" data-layout-allow-overlap>dans l’ordre.</div>
+      <div id="a9-t2" class="k-punch" style="position:absolute;left:0px;top:900px;width:2560px;font-size:150px;color:#faf7f2;text-align:center;text-shadow:0 16px 80px rgba(10,10,30,.85);" data-layout-allow-overlap>Aucune oubliée.</div>
+    </div>
+    <div id="a9-flood" style="position:absolute;inset:0;background:#faf7f2;transform-origin:50% 100%;transform:scaleY(0)"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#a9-g1', { x: 0 }, { x: 384, duration: 3.7, ease: 'none' }, 0);
+      tl.fromTo('#a9-g2', { y: 0 }, { y: -216, duration: 3.7, ease: 'none' }, 0);
+      tl.fromTo("#a9-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.48);
+      tl.fromTo("#a9-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 1.52);
+      tl.fromTo("#a9-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 2.28);
+      tl.fromTo('#a9-ring', { rotationY: 70, rotationX: -8, z: -2300 }, { rotationY: -160, z: -920, duration: 3.7, ease: 'power2.inOut' }, 0);
+      tl.to('#a9-scrim', { opacity: 1, duration: 0.2 }, 0.05);
+      tl.fromTo('#a9-flood', { scaleY: 0 }, { scaleY: 1, duration: 0.24, ease: 'power3.inOut' }, 3.45);
+      window.__timelines['a9'] = tl;
+    })();
+  </script>
+</template>

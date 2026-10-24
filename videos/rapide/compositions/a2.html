@@ -1,0 +1,26 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #c4976a; }
+    #a2-all { position: absolute; inset: 0; }
+    #a2-stage { position: absolute; inset: 0; perspective: 2400px; }
+  </style>
+  <div id="root" data-composition-id="a2" data-width="2560" data-height="1440">
+    
+    <div id="a2-all">
+      <div id="a2-t0" class="k-punch" style="position:absolute;left:150px;top:260px;width:2350px;font-size:230px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>Chaque mois</div>
+      <div id="a2-t1" class="k-serif" style="position:absolute;left:150px;top:560px;width:2350px;font-size:170px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>sans locataire,</div>
+      <div id="a2-t2" class="k-punch" style="position:absolute;left:150px;top:820px;width:2350px;font-size:230px;color:#1a1a2e;text-align:left;" data-layout-allow-overlap>un loyer perdu.</div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#a2-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.02);
+      tl.fromTo("#a2-t1", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.8);
+      tl.fromTo("#a2-t2", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 2.0);
+      tl.to('#a2-all', { scale: 2.6, opacity: 0, filter: 'blur(30px)', duration: 0.3, ease: 'power3.in' }, 2.72);
+      window.__timelines['a2'] = tl;
+    })();
+  </script>
+</template>

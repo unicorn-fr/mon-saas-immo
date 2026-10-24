@@ -1,0 +1,34 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #faf7f2; }
+    #a3-all { position: absolute; inset: 0; }
+    #a3-stage { position: absolute; inset: 0; perspective: 2400px; }
+    .a3-ring { position:absolute; left:1280px; top:754px; width:650px; height:650px; margin:-325px 0 0 -325px; border-radius:50%; }
+  </style>
+  <div id="root" data-composition-id="a3" data-width="2560" data-height="1440">
+    
+    <div id="a3-all">
+      <div id="a3-t0" class="k-punch" style="position:absolute;left:0px;top:330px;width:2560px;font-size:110px;color:#1a1a2e;text-align:center;" data-layout-allow-overlap>Avec</div>
+      <div id="a3-t1" class="k-serif" style="position:absolute;left:0px;top:1080px;width:2560px;font-size:150px;color:#1a3270;text-align:center;" data-layout-allow-overlap><span>étape</span> <span>par</span> <span>étape.</span></div>
+      <div class="a3-ring" id="a3-r1" style="border:26px solid #c4976a"></div><div class="a3-ring" id="a3-r2" style="border:14px solid #1a3270"></div>
+      <div id="a3-logo" style="position:absolute;left:630px;top:520px;width:1300px;height:470px"><img src="assets/logo/bailio-logo.svg" alt="Bailio" style="width:100%;height:100%;display:block" /></div>
+    </div>
+    
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#a3-t0", { scale: 1.5, opacity: 0, filter: 'blur(20px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, 0.2);
+      document.querySelectorAll('#a3-t1 span').forEach((s) => s.style.display = 'inline-block');
+      tl.fromTo(document.querySelectorAll('#a3-t1 span')[0], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 1.93);
+      tl.fromTo(document.querySelectorAll('#a3-t1 span')[1], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 2.24);
+      tl.fromTo(document.querySelectorAll('#a3-t1 span')[2], { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.15, ease: 'expo.out' }, 2.49);
+      tl.fromTo('#a3-r1', { scale: 0.1, opacity: 1 }, { scale: 4.2, opacity: 0, duration: 0.7, ease: 'expo.out' }, 0.43);
+      tl.fromTo('#a3-r2', { scale: 0.1, opacity: 1 }, { scale: 3.2, opacity: 0, duration: 0.8, ease: 'expo.out' }, 0.49);
+      tl.fromTo('#a3-logo', { scale: 1.7, opacity: 0, filter: 'blur(24px)' }, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.24, ease: 'expo.out' }, 0.47);
+      [-12, 9, -5, 0].forEach((x, i) => tl.to('#a3-logo', { x, duration: 0.03, ease: 'none' }, 0.72 + i * 0.03));
+      tl.to('#a3-all', { scale: 2.6, opacity: 0, filter: 'blur(30px)', duration: 0.3, ease: 'power3.in' }, 2.8);
+      window.__timelines['a3'] = tl;
+    })();
+  </script>
+</template>

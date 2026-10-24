@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #a1-all { position: absolute; inset: 0; }
+    #a1-stage { position: absolute; inset: 0; perspective: 2400px; }
+    #a1-pill { left:430px; top:600px; width:1700px; height:240px; }
+    #a1-tx { position:absolute; left:100px; top:0; height:234px; line-height:234px; font-size:118px; color:#faf7f2; white-space:nowrap; }
+    #a1-tx span { display:none; } #a1-tx span:first-child { display:inline; }
+    #a1-car { display:inline-block; width:6px; height:112px; background:#faf7f2; vertical-align:-13px; margin-left:8px; }
+  </style>
+  <div id="root" data-composition-id="a1" data-width="2560" data-height="1440">
+    
+    <div id="a1-all">
+      <div id="a1-n" style="position:absolute;inset:0"><div class="k-night"><div class="k-glow b" id="a1-g1" style="left:-500px;top:-600px;width:1792px;height:1792px"></div><div class="k-glow c" id="a1-g2" style="left:1660px;top:740px;width:1536px;height:1536px"></div></div>
+      <div class="k-glass" id="a1-pill"><div id="a1-tx" class="k-ui"><span>V</span><span>o</span><span>t</span><span>r</span><span>e</span><span> </span><span>l</span><span>o</span><span>g</span><span>e</span><span>m</span><span>e</span><span>n</span><span>t</span><span> </span><span>e</span><span>s</span><span>t</span><span> </span><span>v</span><span>i</span><span>d</span><span>e</span><span> </span><span>?</span><i id="a1-car"></i></div></div>
+      </div>
+    </div>
+    <div id="a1-flood" style="position:absolute;inset:0;background:#c4976a;transform-origin:50% 100%;transform:scaleY(0)"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#a1-g1', { x: 0 }, { x: 384, duration: 1.72, ease: 'none' }, 0);
+      tl.fromTo('#a1-g2', { y: 0 }, { y: -216, duration: 1.72, ease: 'none' }, 0);
+      tl.fromTo('#a1-pill', { scale: 0.93 }, { scale: 1.04, duration: 1.65, ease: 'power2.out' }, 0);
+      const ch = document.querySelectorAll('#a1-tx span'); for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 0.32 + i * 0.039);
+      tl.fromTo('#a1-flood', { scaleY: 0 }, { scaleY: 1, duration: 0.24, ease: 'power3.inOut' }, 1.5);
+      window.__timelines['a1'] = tl;
+    })();
+  </script>
+</template>

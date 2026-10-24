@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #1a1a2e; }
+    #c1-all { position: absolute; inset: 0; }
+    #c1-stage { position: absolute; inset: 0; perspective: 2200px; }
+    #c1-pill { left:50px; top:760px; width:980px; height:170px; }
+    #c1-tx { position:absolute; left:71px; top:0; height:164px; line-height:164px; font-size:70px; color:#faf7f2; white-space:nowrap; }
+    #c1-tx span { display:none; } #c1-tx span:first-child { display:inline; }
+    #c1-car { display:inline-block; width:5px; height:66px; background:#faf7f2; vertical-align:-7px; margin-left:8px; }
+  </style>
+  <div id="root" data-composition-id="c1" data-width="1080" data-height="1920">
+    
+    <div id="c1-all">
+      <div id="c1-n" style="position:absolute;inset:0"><div class="k-night"><div class="k-glow b" id="c1-g1" style="left:-500px;top:-600px;width:1344px;height:1344px"></div><div class="k-glow c" id="c1-g2" style="left:180px;top:1220px;width:1152px;height:1152px"></div></div>
+      <div class="k-glass" id="c1-pill"><div id="c1-tx" class="k-ui"><span>V</span><span>o</span><span>t</span><span>r</span><span>e</span><span> </span><span>l</span><span>o</span><span>g</span><span>e</span><span>m</span><span>e</span><span>n</span><span>t</span><span> </span><span>e</span><span>s</span><span>t</span><span> </span><span>v</span><span>i</span><span>d</span><span>e</span><span> </span><span>?</span><i id="c1-car"></i></div></div>
+      </div>
+    </div>
+    <div id="c1-flood" style="position:absolute;inset:0;background:#faf7f2;transform-origin:50% 100%;transform:scaleY(0)"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#c1-g1', { x: 0 }, { x: 162, duration: 1.45, ease: 'none' }, 0);
+      tl.fromTo('#c1-g2', { y: 0 }, { y: -288, duration: 1.45, ease: 'none' }, 0);
+      tl.fromTo('#c1-pill', { scale: 0.93 }, { scale: 1.04, duration: 1.35, ease: 'power2.out' }, 0);
+      const ch = document.querySelectorAll('#c1-tx span'); for (let i = 1; i < ch.length; i++) tl.set(ch[i], { display: 'inline' }, 0.06 + i * 0.037);
+      tl.fromTo('#c1-flood', { scaleY: 0 }, { scaleY: 1, duration: 0.24, ease: 'power3.inOut' }, 1.22);
+      window.__timelines['c1'] = tl;
+    })();
+  </script>
+</template>
