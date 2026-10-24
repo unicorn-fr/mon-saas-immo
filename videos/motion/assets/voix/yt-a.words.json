@@ -1,0 +1,956 @@
+[
+  {
+    "text": "Vous",
+    "start": 0.04,
+    "end": 0.23,
+    "id": "w0"
+  },
+  {
+    "text": "louez",
+    "start": 0.23,
+    "end": 0.51,
+    "id": "w1"
+  },
+  {
+    "text": "votre",
+    "start": 0.51,
+    "end": 0.8,
+    "id": "w2"
+  },
+  {
+    "text": "logement",
+    "start": 0.8,
+    "end": 1.26,
+    "id": "w3"
+  },
+  {
+    "text": "vous-même,",
+    "start": 1.26,
+    "end": 1.97,
+    "id": "w4"
+  },
+  {
+    "text": "sans",
+    "start": 1.99,
+    "end": 2.23,
+    "id": "w5"
+  },
+  {
+    "text": "agence.",
+    "start": 2.23,
+    "end": 2.74,
+    "id": "w6"
+  },
+  {
+    "text": "Alors",
+    "start": 2.88,
+    "end": 3.12,
+    "id": "w7"
+  },
+  {
+    "text": "vous",
+    "start": 3.12,
+    "end": 3.34,
+    "id": "w8"
+  },
+  {
+    "text": "connaissez",
+    "start": 3.34,
+    "end": 3.9,
+    "id": "w9"
+  },
+  {
+    "text": "la",
+    "start": 3.9,
+    "end": 4.01,
+    "id": "w10"
+  },
+  {
+    "text": "suite.",
+    "start": 4.01,
+    "end": 4.47,
+    "id": "w11"
+  },
+  {
+    "text": "Le",
+    "start": 4.52,
+    "end": 4.66,
+    "id": "w12"
+  },
+  {
+    "text": "bail",
+    "start": 4.66,
+    "end": 5.02,
+    "id": "w13"
+  },
+  {
+    "text": "arrêt",
+    "start": 5.02,
+    "end": 5.47,
+    "id": "w14"
+  },
+  {
+    "text": "digé,",
+    "start": 5.47,
+    "end": 5.94,
+    "id": "w15"
+  },
+  {
+    "text": "les",
+    "start": 5.94,
+    "end": 6.07,
+    "id": "w16"
+  },
+  {
+    "text": "règles",
+    "start": 6.07,
+    "end": 6.42,
+    "id": "w17"
+  },
+  {
+    "text": "qui",
+    "start": 6.44,
+    "end": 6.58,
+    "id": "w18"
+  },
+  {
+    "text": "changent,",
+    "start": 6.58,
+    "end": 7.1,
+    "id": "w19"
+  },
+  {
+    "text": "l'équitance,",
+    "start": 7.1,
+    "end": 7.92,
+    "id": "w20"
+  },
+  {
+    "text": "chaque",
+    "start": 7.92,
+    "end": 8.35,
+    "id": "w21"
+  },
+  {
+    "text": "mois.",
+    "start": 8.35,
+    "end": 8.64,
+    "id": "w22"
+  },
+  {
+    "text": "Et",
+    "start": 8.66,
+    "end": 8.76,
+    "id": "w23"
+  },
+  {
+    "text": "c'est",
+    "start": 8.76,
+    "end": 9.06,
+    "id": "w24"
+  },
+  {
+    "text": "date",
+    "start": 9.06,
+    "end": 9.29,
+    "id": "w25"
+  },
+  {
+    "text": "qu'il",
+    "start": 9.3,
+    "end": 9.59,
+    "id": "w26"
+  },
+  {
+    "text": "ne",
+    "start": 9.59,
+    "end": 9.72,
+    "id": "w27"
+  },
+  {
+    "text": "faut",
+    "start": 9.72,
+    "end": 9.96,
+    "id": "w28"
+  },
+  {
+    "text": "pas",
+    "start": 9.96,
+    "end": 10.14,
+    "id": "w29"
+  },
+  {
+    "text": "oublier.",
+    "start": 10.14,
+    "end": 10.8,
+    "id": "w30"
+  },
+  {
+    "text": "Bailio",
+    "start": 10.82,
+    "end": 11.17,
+    "id": "w31"
+  },
+  {
+    "text": "prépare",
+    "start": 11.17,
+    "end": 11.61,
+    "id": "w32"
+  },
+  {
+    "text": "chaque",
+    "start": 11.61,
+    "end": 11.98,
+    "id": "w33"
+  },
+  {
+    "text": "papier",
+    "start": 11.98,
+    "end": 12.34,
+    "id": "w34"
+  },
+  {
+    "text": "de",
+    "start": 12.37,
+    "end": 12.45,
+    "id": "w35"
+  },
+  {
+    "text": "votre",
+    "start": 12.75,
+    "end": 12.82,
+    "id": "w36"
+  },
+  {
+    "text": "location,",
+    "start": 12.83,
+    "end": 13.53,
+    "id": "w37"
+  },
+  {
+    "text": "selon",
+    "start": 13.83,
+    "end": 13.86,
+    "id": "w38"
+  },
+  {
+    "text": "la",
+    "start": 13.86,
+    "end": 13.99,
+    "id": "w39"
+  },
+  {
+    "text": "loi.",
+    "start": 13.99,
+    "end": 14.4,
+    "id": "w40"
+  },
+  {
+    "text": "Décrivez",
+    "start": 14.42,
+    "end": 14.87,
+    "id": "w41"
+  },
+  {
+    "text": "votre",
+    "start": 14.89,
+    "end": 15.19,
+    "id": "w42"
+  },
+  {
+    "text": "logement.",
+    "start": 15.19,
+    "end": 15.92,
+    "id": "w43"
+  },
+  {
+    "text": "La",
+    "start": 15.94,
+    "end": 16.06,
+    "id": "w44"
+  },
+  {
+    "text": "durée,",
+    "start": 16.06,
+    "end": 16.54,
+    "id": "w45"
+  },
+  {
+    "text": "le",
+    "start": 16.56,
+    "end": 16.69,
+    "id": "w46"
+  },
+  {
+    "text": "dépôt",
+    "start": 16.69,
+    "end": 17.04,
+    "id": "w47"
+  },
+  {
+    "text": "de",
+    "start": 17.04,
+    "end": 17.18,
+    "id": "w48"
+  },
+  {
+    "text": "garantie",
+    "start": 17.18,
+    "end": 17.8,
+    "id": "w49"
+  },
+  {
+    "text": "et",
+    "start": 17.87,
+    "end": 17.92,
+    "id": "w50"
+  },
+  {
+    "text": "les",
+    "start": 17.92,
+    "end": 18.1,
+    "id": "w51"
+  },
+  {
+    "text": "préavis",
+    "start": 18.1,
+    "end": 18.52,
+    "id": "w52"
+  },
+  {
+    "text": "sont",
+    "start": 18.52,
+    "end": 18.66,
+    "id": "w53"
+  },
+  {
+    "text": "déjà",
+    "start": 18.95,
+    "end": 19,
+    "id": "w54"
+  },
+  {
+    "text": "calculés.",
+    "start": 19,
+    "end": 19.64,
+    "id": "w55"
+  },
+  {
+    "text": "Votre",
+    "start": 19.74,
+    "end": 20.02,
+    "id": "w56"
+  },
+  {
+    "text": "annonce",
+    "start": 20.02,
+    "end": 20.44,
+    "id": "w57"
+  },
+  {
+    "text": "est",
+    "start": 20.44,
+    "end": 20.61,
+    "id": "w58"
+  },
+  {
+    "text": "prête",
+    "start": 20.62,
+    "end": 20.91,
+    "id": "w59"
+  },
+  {
+    "text": "à",
+    "start": 20.92,
+    "end": 20.98,
+    "id": "w60"
+  },
+  {
+    "text": "coller",
+    "start": 20.98,
+    "end": 21.32,
+    "id": "w61"
+  },
+  {
+    "text": "sur",
+    "start": 21.32,
+    "end": 21.38,
+    "id": "w62"
+  },
+  {
+    "text": "le",
+    "start": 21.38,
+    "end": 21.68,
+    "id": "w63"
+  },
+  {
+    "text": "bon",
+    "start": 21.68,
+    "end": 21.82,
+    "id": "w64"
+  },
+  {
+    "text": "coin,",
+    "start": 21.82,
+    "end": 22.19,
+    "id": "w65"
+  },
+  {
+    "text": "ce",
+    "start": 22.2,
+    "end": 22.38,
+    "id": "w66"
+  },
+  {
+    "text": "loger",
+    "start": 22.38,
+    "end": 22.87,
+    "id": "w67"
+  },
+  {
+    "text": "ou",
+    "start": 22.87,
+    "end": 23.05,
+    "id": "w68"
+  },
+  {
+    "text": "PAP.",
+    "start": 23.05,
+    "end": 23.68,
+    "id": "w69"
+  },
+  {
+    "text": "Mention",
+    "start": 23.7,
+    "end": 24.1,
+    "id": "w70"
+  },
+  {
+    "text": "obligatoire",
+    "start": 24.1,
+    "end": 24.76,
+    "id": "w71"
+  },
+  {
+    "text": "comprise.",
+    "start": 24.76,
+    "end": 25.33,
+    "id": "w72"
+  },
+  {
+    "text": "Le",
+    "start": 25.46,
+    "end": 25.57,
+    "id": "w73"
+  },
+  {
+    "text": "bail",
+    "start": 25.57,
+    "end": 25.84,
+    "id": "w74"
+  },
+  {
+    "text": "suit",
+    "start": 25.84,
+    "end": 26.1,
+    "id": "w75"
+  },
+  {
+    "text": "le",
+    "start": 26.11,
+    "end": 26.24,
+    "id": "w76"
+  },
+  {
+    "text": "contrat",
+    "start": 26.24,
+    "end": 26.72,
+    "id": "w77"
+  },
+  {
+    "text": "type",
+    "start": 26.72,
+    "end": 26.98,
+    "id": "w78"
+  },
+  {
+    "text": "officiel.",
+    "start": 26.98,
+    "end": 27.6,
+    "id": "w79"
+  },
+  {
+    "text": "Bailleur,",
+    "start": 27.62,
+    "end": 28.25,
+    "id": "w80"
+  },
+  {
+    "text": "locataire,",
+    "start": 28.25,
+    "end": 28.98,
+    "id": "w81"
+  },
+  {
+    "text": "garant,",
+    "start": 28.98,
+    "end": 29.51,
+    "id": "w82"
+  },
+  {
+    "text": "chacun",
+    "start": 29.58,
+    "end": 29.91,
+    "id": "w83"
+  },
+  {
+    "text": "signe",
+    "start": 29.91,
+    "end": 30.24,
+    "id": "w84"
+  },
+  {
+    "text": "en",
+    "start": 30.24,
+    "end": 30.34,
+    "id": "w85"
+  },
+  {
+    "text": "ligne,",
+    "start": 30.63,
+    "end": 30.83,
+    "id": "w86"
+  },
+  {
+    "text": "sans",
+    "start": 30.83,
+    "end": 31.06,
+    "id": "w87"
+  },
+  {
+    "text": "créer",
+    "start": 31.11,
+    "end": 31.42,
+    "id": "w88"
+  },
+  {
+    "text": "de",
+    "start": 31.42,
+    "end": 31.55,
+    "id": "w89"
+  },
+  {
+    "text": "compte.",
+    "start": 31.55,
+    "end": 32.24,
+    "id": "w90"
+  },
+  {
+    "text": "Ensuite,",
+    "start": 32.28,
+    "end": 32.8,
+    "id": "w91"
+  },
+  {
+    "text": "chaque",
+    "start": 32.8,
+    "end": 33.15,
+    "id": "w92"
+  },
+  {
+    "text": "mois,",
+    "start": 33.17,
+    "end": 33.54,
+    "id": "w93"
+  },
+  {
+    "text": "Bailio",
+    "start": 33.54,
+    "end": 33.89,
+    "id": "w94"
+  },
+  {
+    "text": "s'occupe",
+    "start": 33.89,
+    "end": 34.38,
+    "id": "w95"
+  },
+  {
+    "text": "du",
+    "start": 34.38,
+    "end": 34.5,
+    "id": "w96"
+  },
+  {
+    "text": "reste.",
+    "start": 34.5,
+    "end": 34.98,
+    "id": "w97"
+  },
+  {
+    "text": "L'équitance",
+    "start": 35.1,
+    "end": 35.65,
+    "id": "w98"
+  },
+  {
+    "text": "part",
+    "start": 35.65,
+    "end": 35.86,
+    "id": "w99"
+  },
+  {
+    "text": "toute",
+    "start": 35.86,
+    "end": 36.13,
+    "id": "w100"
+  },
+  {
+    "text": "seule.",
+    "start": 36.13,
+    "end": 36.6,
+    "id": "w101"
+  },
+  {
+    "text": "Le",
+    "start": 36.62,
+    "end": 36.74,
+    "id": "w102"
+  },
+  {
+    "text": "loyer",
+    "start": 36.74,
+    "end": 37.07,
+    "id": "w103"
+  },
+  {
+    "text": "est",
+    "start": 37.09,
+    "end": 37.3,
+    "id": "w104"
+  },
+  {
+    "text": "révisé,",
+    "start": 37.3,
+    "end": 37.86,
+    "id": "w105"
+  },
+  {
+    "text": "l'assurance",
+    "start": 37.86,
+    "end": 38.63,
+    "id": "w106"
+  },
+  {
+    "text": "est",
+    "start": 38.67,
+    "end": 38.84,
+    "id": "w107"
+  },
+  {
+    "text": "demandée.",
+    "start": 38.84,
+    "end": 39.44,
+    "id": "w108"
+  },
+  {
+    "text": "Et",
+    "start": 39.46,
+    "end": 39.56,
+    "id": "w109"
+  },
+  {
+    "text": "si",
+    "start": 39.56,
+    "end": 39.68,
+    "id": "w110"
+  },
+  {
+    "text": "le",
+    "start": 39.68,
+    "end": 39.8,
+    "id": "w111"
+  },
+  {
+    "text": "loyer",
+    "start": 39.8,
+    "end": 40.09,
+    "id": "w112"
+  },
+  {
+    "text": "manque,",
+    "start": 40.1,
+    "end": 40.59,
+    "id": "w113"
+  },
+  {
+    "text": "la",
+    "start": 40.59,
+    "end": 40.71,
+    "id": "w114"
+  },
+  {
+    "text": "relance",
+    "start": 40.71,
+    "end": 41.09,
+    "id": "w115"
+  },
+  {
+    "text": "est",
+    "start": 41.09,
+    "end": 41.39,
+    "id": "w116"
+  },
+  {
+    "text": "prête.",
+    "start": 41.39,
+    "end": 41.88,
+    "id": "w117"
+  },
+  {
+    "text": "Un",
+    "start": 41.9,
+    "end": 42,
+    "id": "w118"
+  },
+  {
+    "text": "logement",
+    "start": 42,
+    "end": 42.45,
+    "id": "w119"
+  },
+  {
+    "text": "loué,",
+    "start": 42.48,
+    "end": 42.83,
+    "id": "w120"
+  },
+  {
+    "text": "un",
+    "start": 42.83,
+    "end": 42.96,
+    "id": "w121"
+  },
+  {
+    "text": "dossier",
+    "start": 42.96,
+    "end": 43.38,
+    "id": "w122"
+  },
+  {
+    "text": "complet.",
+    "start": 43.38,
+    "end": 44.04,
+    "id": "w123"
+  },
+  {
+    "text": "40",
+    "start": 44.08,
+    "end": 44.38,
+    "id": "w124"
+  },
+  {
+    "text": "minutes,",
+    "start": 44.38,
+    "end": 44.89,
+    "id": "w125"
+  },
+  {
+    "text": "montre",
+    "start": 44.89,
+    "end": 45.22,
+    "id": "w126"
+  },
+  {
+    "text": "en",
+    "start": 45.23,
+    "end": 45.34,
+    "id": "w127"
+  },
+  {
+    "text": "main.",
+    "start": 45.34,
+    "end": 45.69,
+    "id": "w128"
+  },
+  {
+    "text": "Le",
+    "start": 45.78,
+    "end": 45.88,
+    "id": "w129"
+  },
+  {
+    "text": "loyer",
+    "start": 45.88,
+    "end": 46.18,
+    "id": "w130"
+  },
+  {
+    "text": "arrive",
+    "start": 46.18,
+    "end": 46.54,
+    "id": "w131"
+  },
+  {
+    "text": "chez",
+    "start": 46.54,
+    "end": 46.78,
+    "id": "w132"
+  },
+  {
+    "text": "vous,",
+    "start": 46.78,
+    "end": 47.14,
+    "id": "w133"
+  },
+  {
+    "text": "directement.",
+    "start": 47.14,
+    "end": 48,
+    "id": "w134"
+  },
+  {
+    "text": "Vos",
+    "start": 48.02,
+    "end": 48.16,
+    "id": "w135"
+  },
+  {
+    "text": "données",
+    "start": 48.16,
+    "end": 48.55,
+    "id": "w136"
+  },
+  {
+    "text": "restent",
+    "start": 48.56,
+    "end": 48.94,
+    "id": "w137"
+  },
+  {
+    "text": "en",
+    "start": 48.95,
+    "end": 49.06,
+    "id": "w138"
+  },
+  {
+    "text": "Suisse",
+    "start": 49.06,
+    "end": 49.39,
+    "id": "w139"
+  },
+  {
+    "text": "et",
+    "start": 49.39,
+    "end": 49.5,
+    "id": "w140"
+  },
+  {
+    "text": "ne",
+    "start": 49.5,
+    "end": 49.6,
+    "id": "w141"
+  },
+  {
+    "text": "sont",
+    "start": 49.6,
+    "end": 49.65,
+    "id": "w142"
+  },
+  {
+    "text": "jamais",
+    "start": 49.96,
+    "end": 50.17,
+    "id": "w143"
+  },
+  {
+    "text": "revendues.",
+    "start": 50.17,
+    "end": 50.74,
+    "id": "w144"
+  },
+  {
+    "text": "Votre",
+    "start": 50.94,
+    "end": 51.27,
+    "id": "w145"
+  },
+  {
+    "text": "premier",
+    "start": 51.27,
+    "end": 51.77,
+    "id": "w146"
+  },
+  {
+    "text": "bail",
+    "start": 51.77,
+    "end": 52.05,
+    "id": "w147"
+  },
+  {
+    "text": "est",
+    "start": 52.06,
+    "end": 52.27,
+    "id": "w148"
+  },
+  {
+    "text": "offert.",
+    "start": 52.27,
+    "end": 52.96,
+    "id": "w149"
+  },
+  {
+    "text": "Bailio,",
+    "start": 52.98,
+    "end": 53.86,
+    "id": "w150"
+  },
+  {
+    "text": "le",
+    "start": 53.89,
+    "end": 54,
+    "id": "w151"
+  },
+  {
+    "text": "bail",
+    "start": 54,
+    "end": 54.25,
+    "id": "w152"
+  },
+  {
+    "text": "juste,",
+    "start": 54.25,
+    "end": 54.61,
+    "id": "w153"
+  },
+  {
+    "text": "du",
+    "start": 54.61,
+    "end": 54.92,
+    "id": "w154"
+  },
+  {
+    "text": "premier",
+    "start": 54.92,
+    "end": 55.37,
+    "id": "w155"
+  },
+  {
+    "text": "coup,",
+    "start": 55.37,
+    "end": 55.7,
+    "id": "w156"
+  },
+  {
+    "text": "sur",
+    "start": 55.99,
+    "end": 56.17,
+    "id": "w157"
+  },
+  {
+    "text": "bailio.fr.",
+    "start": 56.17,
+    "end": 57.32,
+    "id": "w158"
+  }
+]

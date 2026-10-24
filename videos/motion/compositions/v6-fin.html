@@ -1,0 +1,52 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #v6-a { position: absolute; inset: 0; }
+    #v6-h { position: absolute; left: 0; width: 1080px; top: 330px; text-align: center; font-family: 'Young Serif', serif; font-size: 130px; color: #181715; }
+    #v6-zero { position: absolute; left: 0; width: 1080px; top: 560px; text-align: center; font-family: 'Young Serif', serif; font-size: 480px; line-height: 1; color: #1A3270; }
+    #v6-s { position: absolute; left: 0; width: 1080px; top: 1090px; text-align: center; font-family: 'Source Serif 4', serif; font-size: 56px; color: #55544E; }
+    #v6-logo { position: absolute; left: 190px; top: 400px; width: 700px; height: 253px; }
+    #v6-logo img { width: 700px; height: 253px; display: block; }
+    #v6-tag { position: absolute; left: 0; width: 1080px; top: 730px; text-align: center; font-family: 'Young Serif', serif; font-size: 96px; line-height: 1.12; color: #181715; }
+    #v6-tag span { display: inline-block; color: #86857F; }
+    #v6-btn { position: absolute; left: 0; width: 1080px; top: 1010px; text-align: center; }
+    #v6-btn span { display: inline-block; background: #1A3270; color: #FBFBF8; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 52px; padding: 30px 60px; border-radius: 8px; }
+    #v6-url { position: absolute; left: 0; width: 1080px; top: 1200px; text-align: center; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 64px; color: #181715; }
+    #v6-cursor { position: absolute; left: 0; top: 0; width: 76px; height: 96px; transform-origin: 6px 6px; }
+  </style>
+  <div id="root" data-composition-id="v6" data-width="1080" data-height="1920">
+    <div id="v6-a">
+      <div id="v6-h">Premier bail</div>
+      <div id="v6-zero">0 €</div>
+      <div id="v6-s">Pour louer un logement.</div>
+    </div>
+    <div id="v6-logo"><img src="assets/logo/bailio-logo.svg" alt="Bailio" /></div>
+    <div id="v6-tag"><span>Le</span> <span>bail</span> <span>juste,</span><br /><span>du</span> <span>premier</span> <span>coup.</span></div>
+    <div id="v6-btn"><span id="v6-b">Créer mon bail gratuit</span></div>
+    <div id="v6-url">bailio.fr</div>
+    <svg id="v6-cursor" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#181715" stroke="#FBFBF8" stroke-width="5" stroke-linejoin="round" /></svg>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#v6-h', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.3);
+      tl.fromTo('#v6-zero', { opacity: 0, scale: 1.35, filter: 'blur(14px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.5, ease: 'back.out(1.3)' }, 1.2);
+      tl.fromTo('#v6-s', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 1.5);
+      tl.to('#v6-a', { opacity: 0, filter: 'blur(12px)', duration: 0.22, ease: 'power3.in' }, 2.3);
+      // La marque, puis la promesse, l'adresse et le bouton.
+      tl.fromTo('#v6-logo', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power3.inOut' }, 2.45);
+      tl.fromTo('#v6-tag', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 2.8);
+      const w = document.querySelectorAll('#v6-tag span');
+      [2.9, 3.0, 3.15, 3.35, 3.5, 3.7].forEach((t, i) => tl.to(w[i], { color: i === 2 ? '#1A3270' : '#181715', duration: 0.1, ease: 'none' }, t));
+      tl.fromTo('#v6-url', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 2.6);
+      tl.fromTo('#v6-b', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: 'back.out(1.4)' }, 3.2);
+      tl.fromTo('#v6-cursor', { x: 1100, y: 1500 }, { x: 860, y: 1100, duration: 0.7, ease: 'expo.out' }, 3.5);
+      tl.to('#v6-cursor', { scale: 0.86, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 4.25);
+      tl.to('#v6-b', { scale: 0.96, backgroundColor: '#0F1F4A', duration: 0.07, yoyo: true, repeat: 1, ease: 'power2.out' }, 4.26);
+      window.__timelines['v6'] = tl;
+    })();
+  </script>
+</template>

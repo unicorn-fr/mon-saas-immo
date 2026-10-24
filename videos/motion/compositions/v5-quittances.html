@@ -1,0 +1,49 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    @font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #v5-t { position: absolute; left: 0; width: 1080px; top: 230px; text-align: center; font-family: 'Young Serif', serif; font-size: 120px; color: #181715; }
+    #v5-b { position: absolute; left: 0; width: 1080px; top: 1150px; text-align: center; font-family: 'Young Serif', serif; font-size: 120px; color: #1A3270; }
+    #v5-stage { position: absolute; inset: 0; perspective: 2000px; perspective-origin: 50% 40%; }
+    #v5-ring { position: absolute; left: 540px; top: 790px; width: 0; height: 0; transform-style: preserve-3d; }
+    .v5-q { position: absolute; left: -160px; top: -215px; width: 320px; height: 430px; transform-style: preserve-3d; }
+    .v5-qi { position: absolute; inset: 0; background: #FBFBF8; border-radius: 12px; border: 3px solid #DCDCD6; padding: 30px 28px; box-shadow: 0 20px 50px rgba(24,23,21,.18); }
+    .v5-qi b { display: block; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: 0.08em; color: #55544E; }
+    .v5-qi i { display: block; font-style: normal; font-family: 'Young Serif', serif; font-size: 52px; color: #181715; margin-top: 22px; }
+    .v5-qi em { display: block; font-style: normal; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 40px; color: #181715; margin-top: 90px; }
+    .v5-qi u { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: 'Source Serif 4', serif; font-size: 28px; color: #1A3270; margin-top: 18px; }
+  </style>
+  <div id="root" data-composition-id="v5" data-width="1080" data-height="1920">
+    <div id="v5-t">Chaque mois,</div>
+    <div id="v5-stage" data-layout-allow-overflow data-layout-allow-overlap><div id="v5-ring"></div></div>
+    <div id="v5-b">toute seule.</div>
+  </div>
+  <script>
+    (function () {
+      const months = ['novembre', 'décembre', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre'];
+      const ring = document.getElementById('v5-ring');
+      const cards = months.map((m, i) => {
+        const q = document.createElement('div');
+        q.className = 'v5-q';
+        q.style.transform = 'rotateY(' + (i * 30) + 'deg) translateZ(640px)';
+        q.innerHTML = '<div class="v5-qi"><b>QUITTANCE DE LOYER</b><i>' + m + '</i><em>780,00 €</em>' +
+          '<u><svg viewBox="0 0 44 44" width="32" height="32"><circle cx="22" cy="22" r="20" fill="#1A3270"/><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Envoyée</u></div>';
+        ring.appendChild(q);
+        return q.firstChild;
+      });
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo('#v5-t', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.1);
+      tl.fromTo('#v5-ring', { rotationX: -10, rotationY: 60, z: -900 }, { rotationY: -170, z: -250, duration: 3.4, ease: 'power1.inOut' }, 0);
+      cards.forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 0.4, y: 260 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: 'expo.out' }, 0.2 + i * 0.05));
+      tl.fromTo('#v5-b', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 1.45);
+      // Sortie : l'anneau traverse l'écran vers nous.
+      tl.to('#v5-ring', { scale: 2.6, duration: 0.4, ease: 'power3.in' }, 3.0);
+      tl.to(cards, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 3.15);
+      tl.to(['#v5-t', '#v5-b'], { opacity: 0, filter: 'blur(10px)', duration: 0.18, ease: 'power3.in' }, 3.0);
+      window.__timelines['v5'] = tl;
+    })();
+  </script>
+</template>

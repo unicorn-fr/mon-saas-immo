@@ -1,0 +1,99 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    @font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #s4-panel { position: absolute; left: 0; top: 0; width: 1700px; height: 1440px; background: #EFEFEB; }
+    #s4-tabs { position: absolute; left: 200px; top: 150px; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 44px; color: #55544E; }
+    #s4-tabs span { display: inline-block; margin-right: 56px; }
+    #s4-tabs span.on { color: #181715; }
+    #s4-uline { position: absolute; left: 200px; top: 220px; width: 92px; height: 5px; background: #181715; transform-origin: 0 50%; }
+    .s4-title { position: absolute; left: 200px; top: 270px; font-family: 'Young Serif', serif; font-size: 112px; line-height: 1.05; color: #181715; white-space: nowrap; letter-spacing: -0.01em; }
+    .s4-title b { font-weight: 400; color: #1A3270; }
+    #s4-flabel { position: absolute; left: 200px; top: 600px; font-family: 'Source Serif 4', serif; font-size: 46px; color: #55544E; }
+    #s4-field { position: absolute; left: 700px; top: 505px; width: 480px; height: 200px; }
+    #s4-num { position: absolute; left: 10px; top: 0; font-family: 'Young Serif', serif; font-size: 156px; line-height: 190px; color: #1A3270; }
+    #s4-num span { opacity: 0; }
+    #s4-caret { position: absolute; left: 16px; top: 34px; width: 6px; height: 130px; background: #1A3270; }
+    #s4-fline { position: absolute; left: 0; top: 196px; width: 480px; height: 5px; background: #1A3270; transform-origin: 0 50%; }
+    #s4-unit { position: absolute; left: 1215px; top: 600px; font-family: 'Source Serif 4', serif; font-size: 46px; color: #55544E; }
+    .s4-row { position: absolute; left: 200px; width: 1400px; height: 110px; border-top: 3px solid #DCDCD6; }
+    .s4-row .l { position: absolute; left: 0; top: 28px; font-family: 'Source Serif 4', serif; font-size: 46px; color: #55544E; }
+    .s4-row .m { position: absolute; left: 500px; top: 18px; height: 80px; width: 900px; overflow: hidden; }
+    .s4-row .v { height: 80px; line-height: 80px; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 52px; color: #1A3270; white-space: nowrap; }
+    #s4-photo { position: absolute; left: 1700px; top: 0; width: 860px; height: 1440px; overflow: hidden; }
+    #s4-photo img { position: absolute; left: 0; top: 0; width: 860px; height: 1440px; object-fit: cover; object-position: 50% 50%; }
+    #s4-tag { position: absolute; left: 0; bottom: 0; background: #1A3270; color: #EFEFEB; font-family: 'Source Serif 4', serif; font-size: 40px; padding: 18px 34px; }
+    #s4-dot { position: absolute; left: 0; top: 0; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: #C4976A; }
+    #s4-cursor { position: absolute; left: 0; top: 0; width: 76px; height: 96px; transform-origin: 6px 6px; }
+    #s4-ink { position: absolute; left: 0; top: 0; width: 2560px; height: 1440px; background: #181715; }
+  </style>
+  <div id="root" data-composition-id="s4" data-width="2560" data-height="1440">
+    <div id="s4-panel">
+      <div id="s4-tabs"><span id="s4-t1" class="on">Vide</span><span id="s4-t2">Meublé</span><span>Garage</span></div>
+      <div id="s4-uline"></div>
+      <div class="s4-title" id="s4-title1">Bail vide, <b>déjà calculé.</b></div>
+      <div class="s4-title" id="s4-title2">Bail meublé, <b>déjà calculé.</b></div>
+      <div id="s4-flabel">Loyer hors charges</div>
+      <div id="s4-field">
+        <div id="s4-num"><span>7</span><span>8</span><span>0</span></div>
+        <div id="s4-caret"></div>
+        <div id="s4-fline"></div>
+      </div>
+      <div id="s4-unit">€ par mois</div>
+      <div class="s4-row" style="top: 800px"><div class="l">Durée</div><div class="m"><div class="v">Trois ans, renouvelé</div><div class="v">Un an, renouvelé</div></div></div>
+      <div class="s4-row" style="top: 910px"><div class="l">Dépôt de garantie</div><div class="m"><div class="v">780 € au plus</div><div class="v">1 560 € au plus</div></div></div>
+      <div class="s4-row" style="top: 1020px"><div class="l">Votre préavis</div><div class="m"><div class="v">Six mois avant la fin</div><div class="v">Trois mois avant la fin</div></div></div>
+      <div class="s4-row" style="top: 1130px"><div class="l">Préavis du locataire</div><div class="m"><div class="v">Trois mois, un en zone tendue</div><div class="v">Un mois</div></div></div>
+    </div>
+    <div id="s4-photo"><img id="s4-img" src="assets/photos/comedie.jpg" alt="" /><div id="s4-tag">Place de la Comédie, Montpellier</div></div>
+    <div id="s4-dot"></div>
+    <svg id="s4-cursor" viewBox="0 0 76 96"><path d="M6 6 L6 78 L24 62 L36 90 L50 84 L38 57 L62 57 Z" fill="#181715" stroke="#FBFBF8" stroke-width="5" stroke-linejoin="round" /></svg>
+    <div id="s4-ink"></div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.set('#s4-ink', { x: 2560 }, 0);
+      // Le point arrive de la scène précédente ; le panneau s'ouvre depuis lui en une ligne qui s'élargit.
+      tl.fromTo('#s4-dot', { x: 900, y: 640, scale: 0.45 }, { scale: 0, duration: 0.25, ease: 'power3.in' }, 0.3);
+      tl.fromTo('#s4-panel', { clipPath: 'inset(49.5% 47% 49.5% 47%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.65, ease: 'expo.out' }, 0.0);
+      tl.fromTo('#s4-photo', { x: 860 }, { x: 0, duration: 0.8, ease: 'expo.out' }, 0.15);
+      tl.fromTo('#s4-img', { scale: 1.15 }, { scale: 1.02, duration: 8, ease: 'power1.out' }, 0.15);
+      tl.fromTo('#s4-tag', { yPercent: 100 }, { yPercent: 0, duration: 0.4, ease: 'expo.out' }, 0.8);
+      tl.fromTo(['#s4-tabs', '#s4-uline', '#s4-title1', '#s4-flabel', '#s4-unit'], { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out', stagger: 0.06 }, 0.3);
+      tl.fromTo('#s4-fline', { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: 'expo.out' }, 0.4);
+      tl.set('#s4-title2', { opacity: 0 }, 0);
+      // Le curseur naît du point, clique dans le champ, le loyer se tape.
+      tl.fromTo('#s4-cursor', { x: 900, y: 640, scale: 0 }, { scale: 1, duration: 0.3, ease: 'back.out(1.4)' }, 0.42);
+      tl.to('#s4-cursor', { x: 760, y: 660, duration: 0.35, ease: 'power2.inOut' }, 0.6);
+      tl.to('#s4-cursor', { scale: 0.86, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 0.95);
+      tl.fromTo('#s4-caret', { opacity: 0 }, { opacity: 1, duration: 0.01 }, 1.0);
+      const digits = document.querySelectorAll('#s4-num span');
+      [1.12, 1.27, 1.42].forEach((t, i) => { tl.set(digits[i], { opacity: 1 }, t); tl.set('#s4-caret', { x: 92 * (i + 1) }, t); });
+      tl.to('#s4-caret', { opacity: 0, duration: 0.01 }, 1.9);
+      tl.to('#s4-cursor', { x: 1380, y: 760, duration: 0.6, ease: 'power2.inOut' }, 1.6);
+      // Les règles se posent quand la voix les nomme.
+      const rows = document.querySelectorAll('.s4-row');
+      [2.05, 2.68, 4.02, 4.32].forEach((t, i) => tl.fromTo(rows[i], { opacity: 0, filter: 'blur(8px)', x: -30 }, { opacity: 1, filter: 'blur(0px)', x: 0, duration: 0.35, ease: 'expo.out' }, t));
+      // Meublé : un clic, la durée, le dépôt et les préavis changent selon la loi.
+      tl.to('#s4-cursor', { x: 420, y: 205, duration: 0.6, ease: 'power2.inOut' }, 5.7);
+      tl.to('#s4-cursor', { scale: 0.86, duration: 0.06, yoyo: true, repeat: 1, ease: 'power2.out' }, 6.32);
+      tl.to('#s4-uline', { x: 172, scaleX: 1.62, duration: 0.3, ease: 'power3.inOut' }, 6.36);
+      tl.to('#s4-t1', { color: '#55544E', duration: 0.1 }, 6.36);
+      tl.to('#s4-t2', { color: '#181715', duration: 0.1 }, 6.36);
+      tl.to('#s4-title1', { opacity: 0, filter: 'blur(8px)', duration: 0.15, ease: 'power3.in' }, 6.38);
+      tl.fromTo('#s4-title2', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.15, ease: 'power4.out' }, 6.52);
+      tl.to('.s4-row .m', { y: 0 }, 0);
+      document.querySelectorAll('.s4-row .m').forEach((m, i) => {
+        tl.to(m.children, { y: -80, duration: 0.3, ease: 'expo.inOut' }, 6.5 + i * 0.08);
+      });
+      tl.to('#s4-cursor', { x: 1330, y: 640, duration: 0.6, ease: 'power2.inOut' }, 6.9);
+      // Volet d'encre depuis la droite : le monde suivant.
+      tl.to('#s4-ink', { x: 0, duration: 0.5, ease: 'power3.inOut' }, 7.9);
+      window.__timelines['s4'] = tl;
+    })();
+  </script>
+</template>

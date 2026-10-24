@@ -1,0 +1,137 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    @font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #181715; overflow: hidden; }
+    #s2-lead { position: absolute; left: 180px; top: 640px; font-family: 'Source Serif 4', serif; font-size: 80px; color: #E8E8E3; }
+    #s2-lead span { display: inline-block; }
+    #s2-mask { position: absolute; left: 180px; top: 520px; width: 1400px; height: 240px; overflow: hidden; }
+    #s2-roll { position: absolute; left: 0; top: 0; }
+    #s2-roll div { height: 240px; font-family: 'Young Serif', serif; font-size: 172px; line-height: 240px; color: #E8E8E3; white-space: nowrap; letter-spacing: -0.01em; }
+    #s2-roll div:last-child { color: #E8E8E3; }
+    #s2-stage { position: absolute; left: 1500px; top: 0; width: 1060px; height: 1440px; }
+    .s2-paper { position: absolute; background: #FBFBF8; border-radius: 8px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    #s2-sheet { left: 140px; top: 250px; width: 700px; height: 900px; padding: 80px 70px; }
+    #s2-sheet h3 { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 34px; letter-spacing: 0.12em; color: #181715; margin-bottom: 46px; }
+    .s2-line { height: 18px; background: #CFCEC7; border-radius: 9px; margin-bottom: 34px; transform-origin: 0 50%; position: relative; }
+    .s2-strike { position: absolute; left: -10px; right: -10px; top: 6px; height: 6px; background: #9A3412; transform-origin: 0 50%; border-radius: 3px; }
+    #s2-scrib { position: absolute; left: 60px; top: 520px; width: 580px; height: 200px; }
+    #s2-scrib path { fill: none; stroke: #9A3412; stroke-width: 7; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+    #s2-stamp { position: absolute; left: 300px; top: 640px; border: 5px solid #1A3270; color: #1A3270; border-radius: 12px; padding: 18px 28px;
+      font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 44px; text-align: center; background: #FBFBF8; }
+    #s2-stamp small { display: block; font-size: 30px; margin-top: 6px; }
+    .s2-q { position: absolute; width: 300px; height: 390px; padding: 34px 30px; }
+    .s2-q b { display: block; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 24px; letter-spacing: 0.12em; color: #55544E; }
+    .s2-q i { display: block; font-style: normal; font-family: 'Young Serif', serif; font-size: 56px; color: #181715; margin-top: 26px; }
+    .s2-q em { display: block; font-style: normal; font-family: 'Source Serif 4', serif; font-size: 36px; color: #181715; margin-top: 120px; }
+    #s2-cal { left: 120px; top: 330px; width: 800px; height: 720px; padding: 50px 56px; }
+    #s2-cal h4 { font-family: 'Young Serif', serif; font-weight: 400; font-size: 60px; color: #181715; margin-bottom: 26px; }
+    #s2-grid { display: grid; grid-template-columns: repeat(7, 1fr); row-gap: 12px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 36px; color: #55544E; text-align: center; }
+    #s2-grid div { height: 72px; line-height: 72px; position: relative; }
+    #s2-circles { position: absolute; inset: 0; }
+    #s2-circles ellipse { fill: none; stroke: #C2410C; stroke-width: 6; stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .s2-tag { position: absolute; background: #9A3412; color: #FBFBF8; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 30px; padding: 10px 20px; border-radius: 8px; }
+  </style>
+  <div id="root" data-composition-id="s2" data-width="2560" data-height="1440">
+    <div id="s2-lead"><span>Alors</span> <span>vous</span> <span>connaissez</span> <span>la</span> <span>suite.</span></div>
+    <div id="s2-mask">
+      <div id="s2-roll">
+        <div>Le bail</div>
+        <div>Les règles</div>
+        <div>Les quittances</div>
+        <div>Les dates</div>
+      </div>
+    </div>
+    <div id="s2-stage" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="s2-sheet" class="s2-paper">
+        <h3>CONTRAT DE LOCATION</h3>
+        <div class="s2-line" style="width: 96%"></div>
+        <div class="s2-line" style="width: 88%"></div>
+        <div class="s2-line" style="width: 92%"><div class="s2-strike"></div></div>
+        <div class="s2-line" style="width: 70%"></div>
+        <div class="s2-line" style="width: 94%"></div>
+        <div class="s2-line" style="width: 84%"><div class="s2-strike"></div></div>
+        <div class="s2-line" style="width: 90%"></div>
+        <div class="s2-line" style="width: 60%"></div>
+        <div class="s2-line" style="width: 86%"></div>
+        <svg id="s2-scrib" viewBox="0 0 580 200"><path pathLength="1" d="M10 120 C 60 40, 90 180, 140 100 S 220 30, 260 120 S 340 180, 380 90 S 460 30, 500 120 S 550 160, 570 100" /></svg>
+        <div id="s2-stamp">Loi n° 89-462<small>modifiée en <span id="s2-year">1994</span></small></div>
+      </div>
+      <div id="s2-pile"></div>
+      <div id="s2-cal" class="s2-paper">
+        <h4>Novembre</h4>
+        <div id="s2-grid"></div>
+        <svg id="s2-circles" viewBox="0 0 800 720"></svg>
+        <div class="s2-tag" id="s2-tag1" style="left: 470px; top: 150px">Quittance ?</div>
+        <div class="s2-tag" id="s2-tag2" style="left: 40px; top: 330px">Révision ?</div>
+        <div class="s2-tag" id="s2-tag3" style="left: 420px; top: 420px">Assurance ?</div>
+        <div class="s2-tag" id="s2-tag4" style="left: 300px; top: 610px">Préavis ?</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      // Hasard reproductible (même image à chaque rendu).
+      let seed = 7;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'sept.', 'octobre', 'novembre', 'décembre'];
+      const pile = document.getElementById('s2-pile');
+      const qs = months.map((m, i) => {
+        const q = document.createElement('div');
+        q.className = 's2-paper s2-q';
+        q.innerHTML = '<b>QUITTANCE</b><i>' + m + '</i><em>780,00 €</em>';
+        q.style.left = (300 + rnd() * 420) + 'px';
+        q.style.top = (430 + rnd() * 520) + 'px';
+        pile.appendChild(q);
+        return { el: q, r: (rnd() - 0.5) * 40 };
+      });
+      // Novembre 2026 : le 1er est un dimanche.
+      const grid = document.getElementById('s2-grid');
+      ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach((d) => { const c = document.createElement('div'); c.textContent = d; c.style.color = '#181715'; grid.appendChild(c); });
+      for (let i = 0; i < 6; i++) grid.appendChild(document.createElement('div'));
+      for (let d = 1; d <= 30; d++) { const c = document.createElement('div'); c.textContent = d; grid.appendChild(c); }
+      // Cercles sur le 1er, le 6, le 15, le 20 et le 28 (colonne, ligne dans la grille).
+      const svg = document.getElementById('s2-circles');
+      const cell = (day) => { const idx = 6 + day - 1; return { x: 56 + (idx % 7) * 98.3 + 49, y: 136 + 84 + Math.floor(idx / 7) * 84 + 36 }; };
+      const circles = [1, 15, 20, 28].map((d) => {
+        const p = cell(d);
+        const e = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+        e.setAttribute('cx', p.x); e.setAttribute('cy', p.y); e.setAttribute('rx', 52); e.setAttribute('ry', 42);
+        e.setAttribute('pathLength', 1); svg.appendChild(e); return e;
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      // a. « Alors vous connaissez la suite. »
+      const lead = document.querySelectorAll('#s2-lead span');
+      [0.43, 0.6, 0.82, 1.38, 1.5].forEach((t, i) => tl.fromTo(lead[i], { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.14, ease: 'power4.out' }, t));
+      tl.to('#s2-lead', { opacity: 0, filter: 'blur(8px)', duration: 0.18, ease: 'power3.in' }, 1.82);
+      // b. « Le bail » : la feuille arrive, les lignes s'écrivent, puis on rature.
+      tl.fromTo('#s2-mask', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 2.02);
+      tl.fromTo('#s2-sheet', { y: 1300, rotation: 6 }, { y: 0, rotation: -3, duration: 0.7, ease: 'expo.out' }, 1.95);
+      tl.fromTo('#s2-sheet .s2-line', { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out', stagger: 0.07 }, 2.2);
+      tl.fromTo('#s2-sheet .s2-strike', { scaleX: 0 }, { scaleX: 1, duration: 0.2, ease: 'power2.out', stagger: 0.25 }, 2.7);
+      tl.to('#s2-scrib path', { strokeDashoffset: 0, duration: 0.45, ease: 'power1.inOut' }, 3.0);
+      // c. « Les règles » : le texte de loi et ses années de modification.
+      tl.to('#s2-roll', { y: -240, duration: 0.32, ease: 'expo.inOut' }, 3.38);
+      tl.fromTo('#s2-stamp', { scale: 1.6, opacity: 0, rotation: -14 }, { scale: 1, opacity: 1, rotation: -8, duration: 0.3, ease: 'back.out(1.4)' }, 3.5);
+      const years = ['1994', '2000', '2006', '2009', '2014', '2018', '2023', '2026'];
+      const yr = { i: 0 };
+      tl.to(yr, { i: years.length - 1, duration: 0.9, ease: 'none', onUpdate: () => { document.getElementById('s2-year').textContent = years[Math.round(yr.i)]; } }, 3.7);
+      // d. « Les quittances » : douze mois tombent sur la pile.
+      tl.to('#s2-roll', { y: -480, duration: 0.32, ease: 'expo.inOut' }, 4.55);
+      tl.to('#s2-sheet', { x: -60, rotation: -7, duration: 0.6, ease: 'power2.out' }, 4.7);
+      qs.forEach((q, i) => tl.fromTo(q.el, { y: -1500, rotation: q.r * 3 }, { y: 0, rotation: q.r, duration: 0.42, ease: 'expo.out' }, 4.65 + i * 0.09));
+      // e. « Les dates » : le calendrier glisse dessus, les échéances s'entourent.
+      tl.to('#s2-roll', { y: -720, duration: 0.32, ease: 'expo.inOut' }, 6.1);
+      tl.fromTo('#s2-cal', { x: 1200, rotation: 8 }, { x: 0, rotation: 2, duration: 0.5, ease: 'expo.out' }, 6.12);
+      circles.forEach((c, i) => tl.to(c, { strokeDashoffset: 0, duration: 0.3, ease: 'power2.out' }, 6.55 + i * 0.32));
+      ['#s2-tag1', '#s2-tag2', '#s2-tag3', '#s2-tag4'].forEach((t, i) => tl.fromTo(t, { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(1.6)' }, 6.75 + i * 0.32));
+      // f. Tout est balayé vers la droite.
+      tl.to('#s2-stage', { x: 1700, filter: 'blur(18px)', duration: 0.45, ease: 'power3.in' }, 9.45);
+      tl.to('#s2-mask', { opacity: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power3.in' }, 9.4);
+      window.__timelines['s2'] = tl;
+    })();
+  </script>
+</template>

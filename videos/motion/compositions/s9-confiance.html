@@ -1,0 +1,58 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #s9-a { position: absolute; inset: 0; overflow: hidden; background: #181715; }
+    #s9-pw { position: absolute; inset: 0; }
+    #s9-pw img { position: absolute; left: 0; top: 0; width: 2560px; height: 1440px; object-fit: cover; }
+    #s9-scrim { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(24,23,21,.72) 0%, rgba(24,23,21,.45) 45%, rgba(24,23,21,0) 75%); }
+    #s9-t1 { position: absolute; left: 180px; top: 760px; font-family: 'Young Serif', serif; font-size: 160px; line-height: 1.04; color: #FBFBF8; letter-spacing: -0.01em; }
+    #s9-t1 span { display: inline-block; }
+    #s9-s1 { position: absolute; left: 186px; top: 1120px; font-family: 'Source Serif 4', serif; font-size: 56px; color: #EFEFEB; }
+    #s9-b { position: absolute; inset: 0; background: #E8E8E3; }
+    #s9-t2 { position: absolute; left: 180px; top: 300px; font-family: 'Young Serif', serif; font-size: 170px; line-height: 1.04; color: #181715; letter-spacing: -0.01em; }
+    #s9-t2 b { font-weight: 400; color: #1A3270; }
+    #s9-s2 { position: absolute; left: 186px; top: 760px; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 72px; color: #181715; }
+    #s9-s3 { position: absolute; left: 186px; top: 880px; width: 1300px; font-family: 'Source Serif 4', serif; font-size: 54px; line-height: 1.35; color: #55544E; }
+    #s9-ph { position: absolute; left: 1700px; top: 0; width: 860px; height: 1440px; overflow: hidden; }
+    #s9-ph img { position: absolute; left: 0; top: 0; width: 860px; height: 1440px; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="s9" data-width="2560" data-height="1440">
+    <div id="s9-a">
+      <div id="s9-pw"><img src="assets/photos/peyrou.jpg" alt="" /></div>
+      <div id="s9-scrim"></div>
+      <div id="s9-t1"><span>Le</span> <span>loyer</span> <span>arrive</span><br /><span>chez</span> <span>vous.</span></div>
+      <div id="s9-s1">Bailio ne passe jamais par votre argent.</div>
+    </div>
+    <div id="s9-b">
+      <div id="s9-t2">Vos données<br />restent <b>en Suisse.</b></div>
+      <div id="s9-s2">Jamais revendues.</div>
+      <div id="s9-ph"><img id="s9-img2" src="assets/photos/ruelle.jpg" alt="" /></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // A. Promenade du Peyrou : la photo sort du flou, la caméra pousse doucement.
+      tl.fromTo('#s9-pw', { opacity: 0, filter: 'blur(20px)', scale: 1.04 }, { opacity: 1, filter: 'blur(0px)', scale: 1.0, duration: 0.35, ease: 'power4.out' }, 0);
+      tl.fromTo('#s9-pw img', { scale: 1.0 }, { scale: 1.06, duration: 2.6, ease: 'none' }, 0);
+      const w = document.querySelectorAll('#s9-t1 span');
+      [0.23, 0.33, 0.63, 0.99, 1.23].forEach((t, i) => tl.fromTo(w[i], { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.14, ease: 'power4.out' }, t));
+      tl.fromTo('#s9-s1', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 1.6);
+      // Coupe franche après un léger assombrissement.
+      tl.to('#s9-pw', { opacity: 0.6, duration: 0.1, ease: 'none' }, 2.3);
+      tl.set('#s9-b', { opacity: 0 }, 0);
+      tl.set('#s9-b', { opacity: 1 }, 2.4);
+      tl.set('#s9-a', { opacity: 0 }, 2.4);
+      // B. La pierre : où sont vos données.
+      tl.fromTo('#s9-t2', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 2.45);
+      tl.fromTo('#s9-ph', { clipPath: 'inset(0% 0% 0% 100%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.6, ease: 'power3.inOut' }, 2.45);
+      tl.fromTo('#s9-img2', { scale: 1.15 }, { scale: 1.03, duration: 3.4, ease: 'power1.out' }, 2.45);
+      tl.fromTo('#s9-s2', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 4.0);
+      tl.to(['#s9-t2', '#s9-s2', '#s9-ph'], { opacity: 0, filter: 'blur(10px)', duration: 0.22, ease: 'power3.in', stagger: 0.04 }, 5.45);
+      window.__timelines['s9'] = tl;
+    })();
+  </script>
+</template>

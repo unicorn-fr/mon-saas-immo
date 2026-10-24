@@ -1,0 +1,42 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    #root { position: absolute; inset: 0; background: #181715; overflow: hidden; }
+    #v2-ph { position: absolute; inset: 0; }
+    #v2-ph img { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; object-position: 50% 40%; }
+    #v2-sheet { position: absolute; inset: 0; background: #E8E8E3; }
+    #v2-logo { position: absolute; left: 160px; top: 330px; width: 760px; height: 275px; }
+    #v2-logo img { width: 760px; height: 275px; display: block; }
+    #v2-l1 { position: absolute; left: 0; width: 1080px; top: 700px; text-align: center; font-family: 'Source Serif 4', serif; font-size: 66px; color: #181715; }
+    #v2-l1 span { display: inline-block; color: #86857F; }
+    #v2-mask { position: absolute; left: 0; width: 1080px; top: 800px; height: 150px; overflow: hidden; }
+    #v2-roll div { height: 150px; line-height: 150px; text-align: center; font-family: 'Young Serif', serif; font-size: 118px; color: #181715; white-space: nowrap; }
+    #v2-law { position: absolute; left: 0; width: 1080px; top: 1030px; text-align: center; font-family: 'Young Serif', serif; font-size: 104px; color: #1A3270; }
+  </style>
+  <div id="root" data-composition-id="v2" data-width="1080" data-height="1920">
+    <div id="v2-ph"><img src="assets/photos/arbre-blanc.jpg" alt="" /></div>
+    <div id="v2-sheet">
+      <div id="v2-logo"><img src="assets/logo/bailio-logo.svg" alt="Bailio" /></div>
+      <div id="v2-l1"><span>prépare</span> <span>chaque</span> <span>papier :</span></div>
+      <div id="v2-mask"><div id="v2-roll"><div>le bail,</div><div>la quittance,</div><div>l’état des lieux,</div><div>l’annonce.</div></div></div>
+      <div id="v2-law">Selon la loi.</div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // La feuille de pierre monte sur la photo, comme une page qu'on pose.
+      tl.fromTo('#v2-sheet', { y: 1920 }, { y: 0, duration: 0.5, ease: 'power3.out' }, 0);
+      tl.fromTo('#v2-logo', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.55, ease: 'power3.inOut' }, 0.05);
+      tl.fromTo('#v2-l1', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 0.35);
+      const w = document.querySelectorAll('#v2-l1 span');
+      [0.46, 0.94, 1.35].forEach((t, i) => tl.to(w[i], { color: '#181715', duration: 0.1, ease: 'none' }, t));
+      tl.fromTo('#v2-mask', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 1.4);
+      [1.85, 2.2, 2.55].forEach((t, i) => tl.to('#v2-roll', { y: -150 * (i + 1), duration: 0.24, ease: 'expo.inOut' }, t));
+      tl.fromTo('#v2-law', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 1.95);
+      tl.to(['#v2-logo', '#v2-l1', '#v2-law'], { opacity: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power3.in' }, 3.1);
+      window.__timelines['v2'] = tl;
+    })();
+  </script>
+</template>

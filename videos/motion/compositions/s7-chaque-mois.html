@@ -1,0 +1,85 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    @font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #s7-h { position: absolute; left: 180px; top: 380px; font-family: 'Young Serif', serif; font-size: 210px; line-height: 1.0; color: #181715; letter-spacing: -0.01em; }
+    #s7-mask { position: absolute; left: 180px; top: 610px; width: 1500px; height: 250px; overflow: hidden; }
+    #s7-roll div { height: 250px; line-height: 250px; font-family: 'Young Serif', serif; font-size: 210px; color: #1A3270; white-space: nowrap; }
+    #s7-stage { position: absolute; inset: 0; perspective: 2600px; perspective-origin: 50% 40%; }
+    #s7-ring { position: absolute; left: 1280px; top: 640px; width: 0; height: 0; transform-style: preserve-3d; }
+    .s7-q { position: absolute; left: -210px; top: -280px; width: 420px; height: 560px; transform-style: preserve-3d; }
+    .s7-qi { position: absolute; inset: 0; background: #FBFBF8; border-radius: 14px; border: 3px solid #DCDCD6; padding: 40px 36px; box-shadow: 0 24px 60px rgba(24,23,21,.18); }
+    .s7-qi b { display: block; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 26px; letter-spacing: 0.1em; color: #55544E; }
+    .s7-qi i { display: block; font-style: normal; font-family: 'Young Serif', serif; font-size: 62px; color: #181715; margin-top: 30px; }
+    .s7-qi em { display: block; font-style: normal; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 46px; color: #181715; margin-top: 120px; }
+    .s7-qi u { display: flex; align-items: center; gap: 12px; text-decoration: none; font-family: 'Source Serif 4', serif; font-size: 32px; color: #1A3270; margin-top: 30px; }
+    #s7-alone { position: absolute; left: 0; width: 2560px; top: 1150px; text-align: center; font-family: 'Young Serif', serif; font-size: 150px; color: #181715; }
+    #s7-card { position: absolute; left: 480px; top: 170px; width: 1600px; height: 1100px; background: #FBFBF8; border-radius: 16px; border: 3px solid #DCDCD6; box-shadow: 0 40px 100px rgba(24,23,21,.2); padding: 64px 80px; }
+    #s7-ch { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #DCDCD6; padding-bottom: 34px; }
+    #s7-ch b { font-family: 'Young Serif', serif; font-weight: 400; font-size: 92px; color: #181715; }
+    #s7-ch span { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 40px; color: #55544E; }
+    .s7-row { display: flex; align-items: flex-start; height: 210px; padding-top: 40px; border-bottom: 3px solid #EFEFEB; }
+    .s7-row .d { width: 250px; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 44px; color: #55544E; padding-top: 6px; }
+    .s7-row .t { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 58px; color: #181715; }
+    .s7-row .s { margin-top: 10px; font-family: 'Source Serif 4', serif; font-size: 48px; color: #1A3270; display: flex; align-items: center; gap: 16px; }
+    .s7-row .s svg { width: 46px; height: 46px; }
+    #s7-dim { position: absolute; inset: 0; }
+  </style>
+  <div id="root" data-composition-id="s7" data-width="2560" data-height="1440">
+    <div id="s7-h">Chaque</div>
+    <div id="s7-mask"><div id="s7-roll"><div>mois.</div><div>octobre.</div><div>novembre.</div><div>décembre.</div><div>janvier.</div></div></div>
+    <div id="s7-stage" data-layout-allow-overflow data-layout-allow-overlap><div id="s7-ring"></div></div>
+    <div id="s7-alone">Toute seule.</div>
+    <div id="s7-card">
+      <div id="s7-ch"><b>Aujourd’hui</b><span>T2 Écusson</span></div>
+      <div class="s7-row"><div class="d">1 nov.</div><div><div class="t">Quittance d’octobre</div><div class="s"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1A3270" /><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>Envoyée à Léa</div></div></div>
+      <div class="s7-row"><div class="d">15 nov.</div><div><div class="t">Loyer révisé (IRL)</div><div class="s">780 € → <span id="s7-irl">780</span> €</div></div></div>
+      <div class="s7-row"><div class="d">20 nov.</div><div><div class="t">Attestation d’assurance</div><div class="s">Demandée</div></div></div>
+      <div class="s7-row" style="border-bottom: 0"><div class="d">6 déc.</div><div><div class="t">Loyer de décembre</div><div class="s">Relance prête</div></div></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const months = ['novembre', 'décembre', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre'];
+      const ring = document.getElementById('s7-ring');
+      const R = 1000;
+      const cards = months.map((m, i) => {
+        const q = document.createElement('div');
+        q.className = 's7-q';
+        q.style.transform = 'rotateY(' + (i * 30) + 'deg) translateZ(' + R + 'px)';
+        q.innerHTML = '<div class="s7-qi"><b>QUITTANCE DE LOYER</b><i>' + m + '</i><em>780,00 €</em>' +
+          '<u><svg viewBox="0 0 44 44" width="38" height="38"><circle cx="22" cy="22" r="20" fill="#1A3270"/><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Envoyée à Léa</u></div>';
+        ring.appendChild(q);
+        return q.firstChild;
+      });
+
+      const tl = gsap.timeline({ paused: true });
+      // A. « Ensuite, chaque mois » : les mois roulent.
+      tl.fromTo('#s7-h', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.15);
+      tl.fromTo('#s7-mask', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.75);
+      [1.5, 1.95, 2.35, 2.7].forEach((t, i) => tl.to('#s7-roll', { y: -250 * (i + 1), duration: 0.28, ease: 'expo.inOut' }, t));
+      tl.to(['#s7-h', '#s7-mask'], { opacity: 0, filter: 'blur(12px)', duration: 0.22, ease: 'power3.in' }, 3.05);
+      // B. Le grand moment : douze quittances forment un anneau qui tourne, chacune envoyée.
+      tl.fromTo('#s7-ring', { rotationX: -10, rotationY: 40, z: -1400 }, { rotationY: -150, z: -500, duration: 4.2, ease: 'power1.inOut' }, 2.7);
+      cards.forEach((c, i) => tl.fromTo(c, { opacity: 0, scale: 0.4, y: 300 }, { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: 'expo.out' }, 2.8 + i * 0.05));
+      tl.fromTo('#s7-alone', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 3.7);
+      tl.to('#s7-alone', { opacity: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power3.in' }, 4.75);
+      // C. L'anneau se range dans « Aujourd'hui » : la première ligne est la quittance d'octobre.
+      tl.to('#s7-ring', { scale: 0.08, x: -460, y: -260, duration: 0.5, ease: 'power3.in' }, 4.7);
+      tl.to(cards, { opacity: 0, duration: 0.2, ease: 'power2.in' }, 5.0);
+      tl.fromTo('#s7-card', { clipPath: 'inset(0% 0% 100% 0% round 16px)' }, { clipPath: 'inset(0% 0% 0% 0% round 16px)', duration: 0.6, ease: 'expo.out' }, 4.85);
+      const rows = document.querySelectorAll('.s7-row');
+      tl.fromTo('#s7-ch', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 4.95);
+      [5.05, 5.3, 5.95, 7.6].forEach((t, i) => tl.fromTo(rows[i], { opacity: 0, x: -40, filter: 'blur(8px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.4, ease: 'expo.out' }, t));
+      const irl = { v: 780 };
+      tl.to(irl, { v: 791, duration: 0.7, ease: 'power2.out', onUpdate: () => { document.getElementById('s7-irl').textContent = Math.round(irl.v); } }, 5.7);
+      tl.fromTo(rows[3].querySelector('.s'), { scale: 1 }, { scale: 1.08, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out', transformOrigin: '0% 50%' }, 9.25);
+      // Sortie : la carte file vers le haut.
+      tl.to('#s7-card', { y: -1500, duration: 0.45, ease: 'power3.in' }, 10.45);
+      window.__timelines['s7'] = tl;
+    })();
+  </script>
+</template>

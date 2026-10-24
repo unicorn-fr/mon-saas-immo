@@ -1,0 +1,99 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    @font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #181715; overflow: hidden; }
+    #s6-flood { position: absolute; inset: 0; background: #E8E8E3; opacity: 0; }
+    #s6-h { position: absolute; left: 180px; top: 190px; font-family: 'Young Serif', serif; font-size: 200px; line-height: 1.0; color: #E8E8E3; letter-spacing: -0.01em; }
+    #s6-n { position: absolute; left: 186px; top: 720px; width: 820px; font-family: 'Source Serif 4', serif; font-size: 52px; line-height: 1.35; color: #B9B8B1; }
+    #s6-sans { position: absolute; left: 186px; top: 1000px; width: 900px; font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 66px; line-height: 1.25; color: #E8E8E3; }
+    #s6-sans span { display: inline-block; }
+    #s6-card { position: absolute; left: 1240px; top: 220px; width: 1140px; height: 1000px; background: #FBFBF8; border-radius: 14px; box-shadow: 0 40px 100px rgba(0,0,0,.45); transform-origin: 50% 50%; }
+    #s6-in { position: absolute; inset: 0; padding: 64px 70px; }
+    #s6-t { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 50px; letter-spacing: 0.1em; color: #181715; }
+    #s6-st { margin-top: 10px; font-family: 'Source Serif 4', serif; font-size: 40px; color: #55544E; }
+    #s6-win { position: absolute; left: 70px; top: 230px; width: 1000px; height: 370px; overflow: hidden;
+      -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
+    .s6-r { height: 92px; padding-top: 6px; }
+    .s6-r b { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 40px; color: #181715; }
+    .s6-r i { display: block; margin-top: 14px; height: 14px; width: 82%; background: #DCDCD6; border-radius: 7px; }
+    #s6-sigs { position: absolute; left: 70px; top: 630px; display: flex; gap: 40px; }
+    .s6-box { width: 306px; height: 300px; border: 4px dashed #8A8274; border-radius: 16px; padding: 26px 26px; position: relative; }
+    .s6-box b { font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 36px; color: #181715; }
+    .s6-box svg.sig { position: absolute; left: 20px; top: 84px; width: 266px; height: 130px; }
+    .s6-box svg.sig path { fill: none; stroke: #1A3270; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .s6-box .ok { position: absolute; left: 26px; bottom: 26px; display: flex; align-items: center; gap: 14px; font-family: 'Source Serif 4', serif; font-size: 38px; color: #55544E; }
+    .s6-box .ok svg { width: 44px; height: 44px; }
+  </style>
+  <div id="root" data-composition-id="s6" data-width="2560" data-height="1440">
+    <div id="s6-flood"></div>
+    <div id="s6-h">Le bail<br />signé.</div>
+    <div id="s6-n">Le contrat type officiel, dans sa version d’octobre 2026.</div>
+    <div id="s6-sans"><span>En</span> <span>ligne,</span> <span>sans</span> <span>créer</span> <span>de</span> <span>compte.</span></div>
+    <div id="s6-card">
+      <div id="s6-in">
+        <div id="s6-t">CONTRAT DE LOCATION</div>
+        <div id="s6-st">Logement vide · contrat type, octobre 2026</div>
+        <div id="s6-win">
+          <div id="s6-list">
+            <div class="s6-r"><b>I. Désignation des parties</b><i></i></div>
+            <div class="s6-r"><b>II. Objet du contrat</b><i></i></div>
+            <div class="s6-r"><b>III. Date de prise d’effet et durée</b><i></i></div>
+            <div class="s6-r"><b>IV. Conditions financières</b><i></i></div>
+            <div class="s6-r"><b>V. Travaux</b><i></i></div>
+            <div class="s6-r"><b>VI. Garanties</b><i></i></div>
+            <div class="s6-r"><b>VII. Clause de solidarité</b><i></i></div>
+            <div class="s6-r"><b>VIII. Clause résolutoire</b><i></i></div>
+            <div class="s6-r"><b>IX. Honoraires</b><i></i></div>
+            <div class="s6-r"><b>X. Autres conditions particulières</b><i></i></div>
+            <div class="s6-r"><b>XI. Annexes</b><i></i></div>
+          </div>
+        </div>
+        <div id="s6-sigs">
+          <div class="s6-box"><b>Bailleur</b>
+            <svg class="sig" viewBox="0 0 266 130"><path pathLength="1" d="M14 92 C 30 20, 52 18, 48 70 S 70 110, 92 60 S 120 30, 128 76 C 134 100, 150 96, 166 66 S 196 46, 206 78 L 252 70" /></svg>
+            <div class="ok"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1A3270" /><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>le 2 oct.</div>
+          </div>
+          <div class="s6-box"><b>Locataire</b>
+            <svg class="sig" viewBox="0 0 266 130"><path pathLength="1" d="M20 70 C 40 40, 60 110, 84 64 C 98 36, 110 40, 112 72 C 114 100, 136 100, 150 70 C 160 50, 176 46, 186 70 S 214 98, 230 54 M 60 104 L 240 98" /></svg>
+            <div class="ok"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1A3270" /><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>le 2 oct.</div>
+          </div>
+          <div class="s6-box"><b>Garant</b>
+            <svg class="sig" viewBox="0 0 266 130"><path pathLength="1" d="M16 100 C 40 30, 70 10, 74 50 C 78 90, 40 110, 60 80 C 90 40, 120 70, 130 90 C 140 60, 160 50, 176 84 C 188 60, 208 56, 224 80 L 250 84" /></svg>
+            <div class="ok"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1A3270" /><path d="M12 23 L19 30 L32 15" fill="none" stroke="#FBFBF8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" /></svg>le 3 oct.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // La carte vide de l'annonce devient le contrat.
+      tl.fromTo('#s6-in', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.25, ease: 'power4.out' }, 0.1);
+      tl.fromTo('#s6-h', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.15);
+      tl.fromTo('#s6-n', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.9);
+      // « Le bail suit le contrat type officiel » : les rubriques I à XI défilent.
+      tl.fromTo('#s6-list', { y: 0 }, { y: -650, duration: 1.6, ease: 'power2.inOut' }, 0.35);
+      tl.fromTo('.s6-box', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: 'expo.out', stagger: 0.06 }, 1.7);
+      tl.set('.s6-box .ok', { opacity: 0 }, 0);
+      // Bailleur, locataire, garant : chacun signe sur le mot qui le nomme.
+      const boxes = document.querySelectorAll('.s6-box');
+      [2.45, 3.08, 3.8].forEach((t, i) => {
+        tl.to(boxes[i].querySelector('.sig path'), { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, t);
+        tl.to(boxes[i], { borderColor: '#1A3270', borderStyle: 'solid', duration: 0.01 }, t + 0.55);
+        tl.fromTo(boxes[i].querySelector('.ok'), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.6)' }, t + 0.55);
+      });
+      // « chacun signe en ligne, sans créer de compte »
+      const w = document.querySelectorAll('#s6-sans span');
+      [4.9, 5.12, 5.72, 5.98, 6.3, 6.42].forEach((t, i) => tl.fromTo(w[i], { opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.14, ease: 'power4.out' }, t));
+      // Sortie : le fond passe à la pierre, le contrat tombe hors du cadre.
+      tl.to(['#s6-h', '#s6-n', '#s6-sans'], { opacity: 0, filter: 'blur(10px)', duration: 0.2, ease: 'power3.in' }, 7.25);
+      tl.to('#s6-card', { y: 1500, rotation: 8, duration: 0.5, ease: 'power3.in' }, 7.25);
+      tl.to('#s6-flood', { opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 7.35);
+      window.__timelines['s6'] = tl;
+    })();
+  </script>
+</template>

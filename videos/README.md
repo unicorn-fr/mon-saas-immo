@@ -21,6 +21,12 @@ française et des sous-titres intégrés. Tout est fabriqué par du code : aucun
 - **Une vidéo = un fichier** `src/videos/<id>.json` : la liste des scènes, le texte de la voix off et la légende à
   publier.
 
+## Film de présentation (HyperFrames)
+
+`motion/` : le film de présentation en motion design, fait avec HyperFrames (HTML + GSAP) et non Remotion, en deux
+formats : YouTube 2560×1440 (77 s) et publicité verticale 1080×1920 (22 s). Voix off ElevenLabs, identité de
+bailio.fr. Voir `motion/README.md`.
+
 ## Fabriquer une vidéo
 
 ```bash

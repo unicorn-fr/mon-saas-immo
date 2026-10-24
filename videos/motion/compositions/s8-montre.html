@@ -1,0 +1,66 @@
+<template>
+  <style>
+    @font-face { font-family: 'Young Serif'; src: url('assets/fonts/young-serif-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-400.woff2') format('woff2'); font-weight: 400; }
+    @font-face { font-family: 'Source Serif 4'; src: url('assets/fonts/source-serif-4-600.woff2') format('woff2'); font-weight: 600; }
+    #root { position: absolute; inset: 0; background: #E8E8E3; overflow: hidden; }
+    #s8-blue { position: absolute; inset: 0; background: #1A3270; }
+    #s8-h { position: absolute; left: 180px; top: 200px; font-family: 'Young Serif', serif; font-size: 136px; line-height: 1.04; color: #EFEFEB; letter-spacing: -0.01em; }
+    #s8-big { position: absolute; left: 170px; top: 680px; font-family: 'Young Serif', serif; font-size: 400px; line-height: 1; color: #EFEFEB; white-space: nowrap; }
+    #s8-big small { font-size: 160px; margin-left: 30px; }
+    #s8-cap { position: absolute; left: 186px; top: 1150px; font-family: 'Source Serif 4', serif; font-size: 52px; color: #C9D0DE; }
+    #s8-tk { position: absolute; left: 1380px; top: 150px; width: 1040px; height: 1060px; }
+    #s8-paper { position: absolute; inset: 0; background: #FBFBF8; padding: 60px 64px 0;
+      -webkit-mask-image: linear-gradient(#000, #000); }
+    #s8-zig { position: absolute; left: 0; bottom: -28px; width: 1040px; height: 30px; }
+    .s8-sec { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 42px; color: #181715; height: 84px; line-height: 84px; }
+    .s8-r { display: flex; align-items: baseline; height: 80px; font-family: 'Source Serif 4', serif; font-size: 40px; color: #181715; }
+    .s8-r i { flex: 1; border-bottom: 4px dotted #8A8274; margin: 0 16px; transform: translateY(-10px); }
+    .s8-r b { font-weight: 600; color: #1A3270; }
+    #s8-tot { position: absolute; left: 0; right: 0; bottom: 0; height: 130px; background: #181715; color: #EFEFEB; display: flex; align-items: center; justify-content: space-between; padding: 0 56px;
+      font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 38px; white-space: nowrap; gap: 30px; }
+    #s8-tot b { font-family: 'Young Serif', serif; font-weight: 400; font-size: 56px; }
+  </style>
+  <div id="root" data-composition-id="s8" data-width="2560" data-height="1440">
+    <div id="s8-blue"></div>
+    <div id="s8-h">Louer,<br />montre en main.</div>
+    <div id="s8-big"><span id="s8-n">0</span><small>min</small></div>
+    <div id="s8-cap">Un logement loué, un dossier complet.</div>
+    <div id="s8-tk">
+      <div id="s8-paper">
+        <div class="s8-sec s8-l">Avant l’entrée</div>
+        <div class="s8-r s8-l">Décrire le logement<i></i><b>5 min</b></div>
+        <div class="s8-r s8-l">Publier l’annonce<i></i><b>2 min</b></div>
+        <div class="s8-r s8-l">Choisir un candidat<i></i><b>à votre rythme</b></div>
+        <div class="s8-sec s8-l">Le jour de l’entrée</div>
+        <div class="s8-r s8-l">Signer le bail en ligne<i></i><b>3 min</b></div>
+        <div class="s8-r s8-l">État des lieux en photos<i></i><b>30 min</b></div>
+        <div class="s8-sec s8-l">Chaque mois</div>
+        <div class="s8-r s8-l">Quittance envoyée<i></i><b>automatique</b></div>
+        <div class="s8-r s8-l">Rappels avant échéance<i></i><b>automatique</b></div>
+        <div id="s8-tot">Un logement loué, un dossier complet<b id="s8-totv">40 min</b></div>
+      </div>
+      <svg id="s8-zig" viewBox="0 0 960 30" preserveAspectRatio="none"><path d="M0 0 H960 V2 L940 28 L920 2 L900 28 L880 2 L860 28 L840 2 L820 28 L800 2 L780 28 L760 2 L740 28 L720 2 L700 28 L680 2 L660 28 L640 2 L620 28 L600 2 L580 28 L560 2 L540 28 L520 2 L500 28 L480 2 L460 28 L440 2 L420 28 L400 2 L380 28 L360 2 L340 28 L320 2 L300 28 L280 2 L260 28 L240 2 L220 28 L200 2 L180 28 L160 2 L140 28 L120 2 L100 28 L80 2 L60 28 L40 2 L20 28 L0 2 Z" fill="#181715" /></svg>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      // Le bleu monte et recouvre la pierre.
+      tl.fromTo('#s8-blue', { yPercent: 100 }, { yPercent: 0, duration: 0.5, ease: 'power3.out' }, 0);
+      tl.fromTo('#s8-h', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.35);
+      // Le ticket s'imprime de haut en bas, ligne par ligne.
+      tl.fromTo('#s8-tk', { clipPath: 'inset(0% 0% 100% 0%)', y: -200 }, { clipPath: 'inset(0% 0% -3% 0%)', y: 0, duration: 1.6, ease: 'power2.out' }, 0.35);
+      tl.fromTo('.s8-l', { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none', stagger: 0.13 }, 0.45);
+      tl.fromTo('#s8-big', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.5);
+      tl.fromTo('#s8-cap', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.5);
+      // 5 + 2 + 3 + 30 : le total tombe sur « quarante minutes ».
+      const n = { v: 0 };
+      tl.to(n, { v: 40, duration: 0.75, ease: 'power2.out', onUpdate: () => { document.getElementById('s8-n').textContent = Math.round(n.v); } }, 1.85);
+      tl.fromTo('#s8-totv', { scale: 1 }, { scale: 1.18, duration: 0.14, yoyo: true, repeat: 1, ease: 'power2.out' }, 2.55);
+      // Sortie : flou et effacement, sur place.
+      tl.to(['#s8-h', '#s8-big', '#s8-cap', '#s8-tk'], { opacity: 0, filter: 'blur(10px)', duration: 0.22, ease: 'power3.in', stagger: 0.04 }, 5.8);
+      window.__timelines['s8'] = tl;
+    })();
+  </script>
+</template>
