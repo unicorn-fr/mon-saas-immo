@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '22 octobre 2026'
+const UPDATED = '23 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -282,7 +282,7 @@ export function Confidentialite() {
           ['Photo du signataire au moment de signer', 'Consentement du signataire, libre : il peut signer sans photo'],
           ['Relever les appareils connectés et limiter les tentatives de connexion', 'Intérêt légitime : la sécurité de votre compte'],
           ['Lire vos avis et vous répondre', 'Intérêt légitime : améliorer le service ; vous choisissez d’écrire'],
-          ['Compter l’usage du service (comptes, baux, visites), en nombres globaux, sans cookie ni traceur', 'Intérêt légitime : savoir si Bailio rend service et l’améliorer'],
+          ['Compter l’usage du service (comptes, baux) et les visites du site (page publique vue, site d’où vous venez), en nombres par jour, sans cookie, sans adresse IP ni identifiant', 'Intérêt légitime : savoir si Bailio rend service et l’améliorer'],
           ['Données de vos locataires, candidats et garants', 'Traitées pour votre compte, sur la base qui vous revient (préparation et exécution du bail)'],
           ['Conserver les factures, si une offre payante est un jour souscrite', 'Obligation légale (10 ans, Code de commerce, art. L123-22)'],
         ]}
@@ -328,6 +328,7 @@ export function Confidentialite() {
         <li>Un bail commencé sans compte : 30 jours, puis il est effacé ;</li>
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
         <li>Vos avis envoyés depuis l'espace : dans notre messagerie, le temps de les lire et de vous répondre, deux ans au plus ;</li>
+        <li>Les compteurs de visites du site (nombres par jour, sans identifiant) : 13 mois ;</li>
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes ;</li>
         <li>Les candidatures : trois mois au plus après leur envoi, pièces comprises. Celle que le propriétaire retient devient la fiche du locataire ;</li>
         <li>Les justificatifs d'un locataire et de son garant (pièce d'identité, revenus…) : gardés pendant toute la location, renouvellements compris, puis effacés 30 jours après sa fin ; le propriétaire est prévenu par email 7 jours avant ;</li>
@@ -350,8 +351,9 @@ export function Confidentialite() {
       </p>
       <H2>Cookies</H2>
       <p>
-        Bailio ne dépose aucun cookie et ne contient aucun traceur publicitaire ni outil de mesure d'audience. Les seules informations
-        gardées dans votre navigateur sont nécessaires au service : voir la page <Link to="/cookies">Cookies et stockage dans le navigateur</Link>.
+        Bailio ne dépose aucun cookie et ne contient aucun traceur publicitaire. Les visites des pages publiques sont seulement comptées,
+        sans cookie ni identifiant. Les seules informations gardées dans votre navigateur sont nécessaires au service : voir la page{' '}
+        <Link to="/cookies">Cookies et stockage dans le navigateur</Link>.
       </p>
     </SimplePage>
   )
@@ -362,8 +364,17 @@ export function Cookies() {
     <SimplePage title="Cookies">
       <Updated />
       <p>
-        Bailio ne dépose aucun cookie. Aucun outil de mesure d'audience, aucune publicité, aucun bouton de réseau social, aucune police
-        ou script chargé depuis un autre site : tout est servi par Bailio.
+        Bailio ne dépose aucun cookie. Aucune publicité, aucun outil de mesure d'audience d'un autre site, aucun bouton de réseau social,
+        aucune police ou script chargé depuis un autre site : tout est servi par Bailio.
+      </p>
+      <H2>Visites comptées, sans cookie</H2>
+      <p>
+        Pour savoir si le site est utile et d'où viennent ses visiteurs, chaque page publique affichée (accueil, création du bail, pages
+        d'information) ajoute 1 à un compteur du jour, avec le site d'où vous venez (par exemple « Google » ou « Accès direct »). Rien
+        n'est gardé dans votre navigateur et rien ne permet de vous reconnaître : ni cookie, ni adresse IP, ni identifiant. Les pages de
+        votre espace et les liens privés (signature, dossier du locataire…) ne sont jamais comptés. Les compteurs sont effacés après 13
+        mois. Si votre navigateur demande à ne pas être suivi (réglage « Do Not Track » ou « Global Privacy Control »), vos visites ne
+        sont pas comptées.
       </p>
       <H2>Ce qui est gardé dans votre navigateur</H2>
       <p>Quelques informations restent sur votre appareil, dans le stockage du navigateur, parce que le service ne fonctionne pas sans elles :</p>
@@ -490,7 +501,7 @@ export function Securite() {
       </ul>
       <H2>Ce que nous ne faisons pas</H2>
       <ul>
-        <li>Aucune publicité, aucun cookie, aucun outil de mesure d'audience ;</li>
+        <li>Aucune publicité, aucun cookie, aucun traceur : les visites du site sont seulement comptées, sans identifiant ;</li>
         <li>Aucune donnée vendue ni confiée à un service d'intelligence artificielle : même la lecture des baux importés se fait sur notre serveur ;</li>
         <li>Bailio ne touche jamais à votre argent : les loyers vont directement de votre locataire à vous.</li>
       </ul>

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, type ComponentType, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useRef, type ComponentType, type ReactNode } from 'react'
 import { recoverOnce } from './lib/recover'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
@@ -7,6 +7,7 @@ import { ToastProvider } from './components/kit'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
+import { countVisit } from './lib/visits'
 import Home from './pages/Home'
 // Pages publiques dans le fichier principal ; l'espace dans un second fichier (pages/espace/index.ts),
 // téléchargé dès que la première page est affichée.
@@ -171,6 +172,14 @@ export default function App() {
 
 function Pages() {
   const { pathname } = useLocation()
+  // Mesure d'audience sans cookie (lib/visits.ts) : une fois la session connue, les comptes du pilotage ne comptent pas.
+  const { user, loading } = useAuth()
+  const counted = useRef<string | null>(null)
+  useEffect(() => {
+    if (loading || counted.current === pathname) return
+    counted.current = pathname
+    if (!user?.admin) countVisit(pathname)
+  }, [pathname, loading, user])
   // L'espace est téléchargé dès que la première page est affichée : y entrer est ensuite instantané.
   useEffect(() => {
     const t = window.setTimeout(() => void loadEspace().catch(() => undefined), 800)

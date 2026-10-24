@@ -95,7 +95,7 @@ export function computeMetrics(i: MetricsInput): Metrics {
     funnel,
     weeks,
     notMeasured: [
-      'Visiteurs du site : aucun outil de mesure d’audience n’est installé (pas de cookie ni de traceur). Les journaux du serveur peuvent donner un ordre d’idée.',
+      'Visiteurs uniques : sans cookie ni identifiant, une même personne venue deux fois compte pour deux visites. Les visiteurs qui refusent le suivi dans leur navigateur et les robots ne sont pas comptés.',
       'Connexions des assistants d’IA : arriveront avec le connecteur (phase 2).',
       'Abonnés payants, revenu mensuel et résiliations : aucune offre payante n’est encore ouverte.',
     ],

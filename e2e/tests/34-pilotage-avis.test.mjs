@@ -57,6 +57,27 @@ test('pilotage : chiffres réservés à l’adresse autorisée', { skip: !proces
   assert.equal(m.weeks.length, 8)
 
   const browser = await launch()
+  // Un visiteur venu de Google (navigateur ordinaire : les robots et navigateurs automatisés ne comptent pas),
+  // puis un lien partagé marqué, puis une page de l'espace : seules les pages publiques sont comptées.
+  const before = (await api('/admin/metrics', { token })).audience
+  const count = (a, source) => a.sources.find((s) => s.source === source)?.visits ?? 0
+  const ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36'
+  const vctx = await browser.newContext({ userAgent: ua })
+  const visitor = await vctx.newPage()
+  const counted = () => visitor.waitForResponse((r) => r.url().includes('/api/visits'))
+  await Promise.all([counted(), visitor.goto(`${BASE}/`, { referer: 'https://www.google.fr/' })])
+  await Promise.all([counted(), visitor.getByRole('link', { name: 'Sécurité' }).first().click()])
+  await vctx.close()
+  const tagged = await browser.newContext({ userAgent: ua })
+  const tp = await tagged.newPage()
+  await Promise.all([tp.waitForResponse((r) => r.url().includes('/api/visits')), tp.goto(`${BASE}/?utm_source=essai-e2e`)])
+  await tagged.close()
+  const after = (await api('/admin/metrics', { token })).audience
+  assert.equal(count(after, 'Google'), count(before, 'Google') + 1)
+  assert.equal(count(after, 'essai-e2e'), count(before, 'essai-e2e') + 1)
+  assert.equal(after.homeViews30, before.homeViews30 + 2)
+  assert.equal(after.visits30, before.visits30 + 2, 'la page Sécurité vue en naviguant n’est pas une nouvelle visite')
+
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()
   const errors = []
@@ -66,6 +87,8 @@ test('pilotage : chiffres réservés à l’adresse autorisée', { skip: !proces
   await page.goto(`${BASE}/espace/pilotage`)
   await page.getByRole('heading', { name: 'Pilotage', exact: true }).waitFor()
   await page.getByRole('heading', { name: 'Du compte au premier loyer' }).waitFor()
+  await page.getByRole('heading', { name: 'D’où viennent les visiteurs' }).waitFor()
+  await page.getByText('essai-e2e', { exact: true }).waitFor()
   await page.getByRole('table').waitFor()
   await shot(page, 'pilotage')
   await browser.close()

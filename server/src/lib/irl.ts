@@ -12,6 +12,31 @@ export interface IrlPoint {
 
 let cache: { at: number; points: IrlPoint[] } | null = null
 
+/**
+ * Valeurs publiées de la série 001515333 (France métropolitaine), relevées le 24 octobre 2026 : dernier recours quand
+ * l'INSEE ne répond pas et que la base n'a rien gardé. À compléter après chaque publication trimestrielle.
+ */
+export const KNOWN_IRL: IrlPoint[] = [
+  { quarter: '2026-Q3', value: 148.06, publishedAt: '2026-10-16' },
+  { quarter: '2026-Q2', value: 148.37, publishedAt: null },
+  { quarter: '2026-Q1', value: 146.6, publishedAt: null },
+  { quarter: '2025-Q4', value: 145.78, publishedAt: null },
+  { quarter: '2025-Q3', value: 145.77, publishedAt: null },
+  { quarter: '2025-Q2', value: 146.68, publishedAt: null },
+  { quarter: '2025-Q1', value: 145.47, publishedAt: null },
+  { quarter: '2024-Q4', value: 144.64, publishedAt: null },
+  { quarter: '2024-Q3', value: 144.51, publishedAt: null },
+  { quarter: '2024-Q2', value: 145.17, publishedAt: null },
+  { quarter: '2024-Q1', value: 143.46, publishedAt: null },
+]
+
+/** Valeurs gardées en base, complétées par les valeurs connues (la base l'emporte), de la plus récente à la plus ancienne. */
+export function withKnown(stored: IrlPoint[]): IrlPoint[] {
+  const byQuarter = new Map(KNOWN_IRL.map((p) => [p.quarter, p]))
+  for (const p of stored) byQuarter.set(p.quarter, p)
+  return [...byQuarter.values()].sort((a, b) => b.quarter.localeCompare(a.quarter))
+}
+
 /** Valeurs gardées en base : l'INSEE indisponible ne bloque pas la création d'un bail. */
 async function storedIrl(): Promise<IrlPoint[]> {
   // Import différé : les PDF (et leurs tests) utilisent ce fichier sans base de données.
@@ -28,9 +53,8 @@ export async function fetchIrl(): Promise<IrlPoint[]> {
     import('../db.js').then(({ prisma }) => Promise.all(points.map((p) => prisma.irlPoint.upsert({ where: { quarter: p.quarter }, create: p, update: { value: p.value, publishedAt: p.publishedAt } })))).catch(() => undefined)
     return points
   } catch (err) {
-    const stored = await storedIrl()
-    if (stored.length) return stored
-    throw err
+    console.warn('[irl] INSEE indisponible, valeurs gardées utilisées :', (err as Error).message)
+    return withKnown(await storedIrl())
   }
 }
 
