@@ -93,7 +93,7 @@ export function StepFlow({
             </div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               {extra}
-              <button type="submit" disabled={nextDisabled || busy} aria-busy={busy || undefined} style={{ border: 'none', background: BAI.owner, color: BAI.surface, fontFamily: 'inherit', height: 60, padding: '0 clamp(24px, 4vw, 40px)', borderRadius: 14, fontWeight: 600, fontSize: 17, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: nextDisabled ? 'not-allowed' : 'pointer', opacity: nextDisabled ? 0.5 : 1 }}>
+              <button type="submit" disabled={nextDisabled || busy} aria-busy={busy || undefined} className="btn btn-primary" style={{ border: 'none', background: BAI.cta, color: BAI.ctaInk, fontFamily: 'inherit', height: 60, padding: '0 clamp(24px, 4vw, 40px)', borderRadius: 999, fontWeight: 600, fontSize: 17, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: nextDisabled ? 'not-allowed' : 'pointer', opacity: nextDisabled ? 0.5 : 1 }}>
                 {busy ? <Spinner size={18} color={BAI.surface} /> : null}
                 {nextLabel}
               </button>

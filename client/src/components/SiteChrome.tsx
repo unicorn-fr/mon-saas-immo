@@ -23,7 +23,7 @@ export function SiteHeader() {
             Se connecter
           </Link>
         )}
-        <Link to="/commencer" className="btn btn-primary" style={{ textDecoration: 'none', background: BAI.owner, color: BAI.surface, border: `1.5px solid ${BAI.owner}`, padding: '12px clamp(14px, 2vw, 24px)', borderRadius: 999, fontWeight: 600 }}>
+        <Link to="/commencer" className="btn btn-primary" style={{ textDecoration: 'none', background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}`, padding: '12px clamp(14px, 2vw, 24px)', borderRadius: 999, fontWeight: 600 }}>
           Créer mon bail
         </Link>
       </nav>

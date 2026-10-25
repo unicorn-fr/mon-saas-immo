@@ -131,7 +131,7 @@ export function Progress({ percent, height = 6, label = 'Avancement' }: { percen
 type BtnVariant = 'primary' | 'outline' | 'ghost' | 'dark' | 'accent' | 'danger' | 'light'
 
 const BTN: Record<BtnVariant, CSSProperties> = {
-  primary: { background: BAI.owner, color: BAI.surface, border: `1.5px solid ${BAI.owner}` },
+  primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
   outline: { background: BAI.surface, color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
   ghost: { background: 'transparent', color: BAI.inkMid, border: '1.5px solid transparent' },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },

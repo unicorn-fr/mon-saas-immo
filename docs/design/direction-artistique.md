@@ -12,7 +12,7 @@ Ce qu'il doit ressentir : **c'est sérieux, c'est clair, c'est fait pour moi.** 
 
 Le bail est la feuille autour de laquelle tout tourne. Chaque bloc important (accroche, fiche calculée, ticket, offre) est une page : grands coins arrondis, un coin replié en haut à droite. C'est la signature visuelle de Bailio, présente dans le logo, sur l'accueil et dans le favicon.
 
-Le décor vient de Montpellier, ville de Bailio : la pierre claire des façades, le bleu canard des persiennes, le laurier-rose des avenues, le vert des oliviers et des pins. Les photos sont celles de la ville (fournies par l'éditeur).
+Le décor vient de Montpellier, ville de Bailio : les photos sont celles de la ville (fournies par l'éditeur).
 
 ## Ce que nous avons pris d'une grande charte de l'immobilier (et ce que nous n'avons pas pris)
 
@@ -27,30 +27,44 @@ Repris comme **principes** :
 
 **Non repris** : aucune de ses couleurs, ni ses polices, ni sa forme (le biais du toit de son logo), ni ses capitales espacées sur les boutons, ni son logo, son nom ou son slogan.
 
-## Couleurs (`client/src/constants/bailio-tokens.ts`)
+## Couleurs : palette « Confiance et élan » (`client/src/constants/bailio-tokens.ts`)
+
+### Pourquoi ces couleurs (ce que dit la recherche)
+
+- **La couleur pèse dans le premier jugement.** Selon la revue de Singh (*Management Decision*, 2006), on se fait une idée d'un produit en 90 secondes et la couleur compte pour 62 à 90 % de cette impression (chiffre repris d'études antérieures, à prendre comme un ordre de grandeur).
+- **Bleu = compétence.** Labrecque et Milne (*Journal of the Academy of Marketing Science*, 2012, « Exciting red and competent blue ») associent le bleu à la compétence et le rouge à l'excitation. Pour un outil qui rédige un bail et gère de l'argent, la compétence est le premier trait à montrer.
+- **Sobre = confiance.** Une étude sur 1 995 personnes et des sites de banque et d'assurance a trouvé que les couleurs ternes inspirent plus confiance que les couleurs vives. D'où un bleu profond et peu saturé pour la marque, et un fond gris bleuté très clair plutôt que du blanc éclatant partout.
+- **Le bouton doit se détacher, pas être « de la bonne couleur ».** Le célèbre test du bouton rouge (+21 %) s'explique surtout par l'effet d'isolement (Von Restorff) : le bouton était la seule chose rouge d'une page verte. Ce qui fait cliquer, c'est le contraste avec le reste de la page. Sur un site bleu, l'action principale est donc **orange** (couleur complémentaire du bleu, associée à l'enthousiasme et à la chaleur), et c'est la **seule** chose orange de l'écran.
+- **Vert = c'est fait.** Code universel du « validé », gardé pour les étapes terminées.
+- **Rouge = erreur, et rien d'autre.**
+
+Limites : la plupart des affirmations « telle couleur fait vendre » des blogs ne s'appuient sur aucune étude. Seuls le contraste du bouton et la sobriété pour la confiance reposent sur des données sérieuses. À terme, mesurer les clics sur « Créer mon bail » avec la mesure d'audience maison.
+
+Sources : [Singh, 2006](https://www.emeraldinsight.com/doi/abs/10.1108/00251740610673332) ; [Labrecque et Milne, 2012](https://colab.ws/articles/10.1007/s11747-010-0245-y) ; [couleur et confiance en banque et assurance](https://www.asiainsurancereview.com/Magazine/ReadMagazineArticle?aid=39963) ; [effet d'isolement et couleur du bouton](https://atticusli.com/blog/posts/cta-button-ab-tests-why-button-color-tests-are-worthless/) ; [contraste plutôt que teinte](https://www.clickguard.com/blog/call-to-action-colors-for-landing-pages/).
+
+### La palette
 
 | Rôle | Token | Valeur | Usage |
 |---|---|---|---|
-| Fond de page | `bg` | `#f4f4f0` pierre claire | espace propriétaire, tunnel |
+| Fond de page | `bg` | `#f5f7fa` gris bleuté | espace propriétaire, tunnel |
 | Surface | `surface` | `#ffffff` | cartes, accueil, pages publiques |
-| Encre | `ink` | `#16201e` | texte, titres |
-| Signature | `owner` | `#0f5257` bleu canard | action principale, liens, pastilles |
-| Survol | `ownerHover` | `#0a3a3e` | |
-| Nuit | `night` | `#0d2a2c` canard nuit | menu latéral, blocs sombres, pied de page |
-| Accent | `accent` | `#f59bb4` laurier-rose | **seulement sur fond sombre** (mot en italique, bouton « Ajouter ») |
-| Accent sur clair | `accentInk` | `#a3264d` framboise | mot en italique sur fond clair, étiquettes « à faire » |
-| Validé | `green` | `#3b6a1d` olive | |
-| Aplats | `pistache` `#d6e29c`, `rose` `#f8c9d5` | | sections et cartes, texte `ink` ou `owner` |
-| Erreur | `error` | `#b42318` | le rouge ne sert qu'aux erreurs |
+| Encre | `ink` | `#16233f` | texte, titres |
+| Marque | `owner` | `#1f4396` bleu confiance | liens, sélection, pastilles, progression, grands blocs |
+| Action | `cta` | `#ff8a3d` orange, texte `ctaInk` `#0f1f3d` | **le** bouton principal, un par écran |
+| Nuit | `night` | `#0f1f3d` | menu latéral, blocs sombres, pied de page |
+| Accent | `accent` / `accentInk` / `accentSoft` | `#ff8a3d` / `#c2410c` / `#ffb27a` | mot en italique : orange sur fond sombre, orange foncé sur fond clair, orange clair sur bloc bleu |
+| Validé | `green` | `#1f7a4a` | |
+| Aplats | `sky` `#dbe7fb`, `peach` `#fde4cf` | | sections et cartes, texte `ink` ou `owner` |
+| Erreur | `error` | `#c11f2b` | uniquement les erreurs |
 
-Contrastes mesurés (WCAG 2.1) : encre sur pierre 15,1:1 ; blanc sur canard 8,9:1 ; canard sur pierre 8,1:1 ; framboise sur blanc 7,1:1 ; laurier-rose sur nuit 7,4:1 ; encre sur pistache 12,1:1, sur rose 11,4:1 ; olive sur blanc 6,4:1 ; `inkSoft` sur pierre 6,2:1 ; bord des champs 3,9:1. Laurier-rose sur canard : 4,3:1, réservé aux grands titres (≥ 3:1).
+Contrastes mesurés (WCAG 2.1) : encre sur fond 14,5:1 ; blanc sur bleu 9,1:1 ; bleu nuit sur orange 7:1 ; bleu sur fond 8,5:1 ; orange foncé sur blanc 5,2:1 ; orange sur nuit 7:1 ; orange clair sur bleu 5,2:1 ; vert sur blanc 5,3:1 ; `inkSoft` sur blanc 5,9:1 ; bord des champs 3,5:1.
 
-Interdits : texte blanc sur pistache, rose ou laurier-rose ; laurier-rose sur fond clair ; logo en couleurs sur un aplat de couleur.
+Interdits : texte blanc sur orange (2,4:1, illisible) ; deux boutons orange sur le même écran ; logo en couleurs sur un aplat de couleur.
 
 ## Typographies (servies par le site, aucune requête à Google)
 
 - **Figtree** 400 à 700 : texte, boutons, champs, intertitres. Lisible, ronde, chaleureuse. 16 px minimum pour le texte courant.
-- **Fraunces** (axe « SOFT » pour des empattements arrondis) 500 : titres, accroches courtes, chiffres clés (`display()`, `components/ui.tsx`). Jamais pour le texte courant. Un mot ou une ligne d'une accroche peut passer en italique avec `<em>` (framboise sur fond clair, laurier-rose sur fond sombre), une fois par écran au plus.
+- **Fraunces** (axe « SOFT » pour des empattements arrondis) 500 : titres, accroches courtes, chiffres clés (`display()`, `components/ui.tsx`). Jamais pour le texte courant. Un mot ou une ligne d'une accroche peut passer en italique avec `<em>` (orange foncé sur fond clair, orange sur fond sombre, orange clair sur bloc bleu), une fois par écran au plus.
 
 ## Formes
 
@@ -59,7 +73,7 @@ Interdits : texte blanc sur pistache, rose ou laurier-rose ; laurier-rose sur fo
 
 ## Logo
 
-`components/Logo.tsx` : la page au coin replié (canard, revers laurier-rose, deux lignes de texte) puis « Bailio » en Fraunces. Version horizontale partout. En couleurs sur fond clair, en blanc (`onDark`) sur un aplat sombre. Marge libre autour : la hauteur d'une capitale.
+`components/Logo.tsx` : la page au coin replié (bleu, revers orange, deux lignes de texte) puis « Bailio » en Fraunces. Version horizontale partout. En couleurs sur fond clair, en blanc (`onDark`) sur un aplat sombre. Marge libre autour : la hauteur d'une capitale.
 
 ## Photos
 

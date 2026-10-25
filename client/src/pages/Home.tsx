@@ -174,8 +174,12 @@ const VARS = {
   '--on-dark': BAI.onDark,
   '--accent': BAI.accent,
   '--accent-ink': BAI.accentInk,
-  '--pistache': BAI.pistache,
-  '--rose': BAI.rose,
+  '--sky': BAI.sky,
+  '--peach': BAI.peach,
+  '--cta': BAI.cta,
+  '--cta-hover': BAI.ctaHover,
+  '--cta-ink': BAI.ctaInk,
+  '--accent-soft': BAI.accentSoft,
   '--paper': BAI.surface,
   '--line': BAI.divider,
   '--display': BAI.fontDisplay,
@@ -202,7 +206,7 @@ function Check() {
   )
 }
 
-const FIELDS = ['rose', 'pistache', 'night'] as const
+const FIELDS = ['peach', 'sky', 'night'] as const
 
 export default function Home() {
   const { user } = useAuth()
@@ -271,7 +275,7 @@ export default function Home() {
               Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
             </p>
             <div className="hero-actions" data-in style={{ ['--i' as string]: 2 }}>
-              <Link to="/commencer" className="btn btn--paper">
+              <Link to="/commencer" className="btn">
                 Créer mon bail gratuit
                 <Arrow />
               </Link>
@@ -427,7 +431,7 @@ export default function Home() {
                 <span className="plan-price">{priceLabel()}</span>
                 {MONTHLY_PRICE ? <span>par mois</span> : null}
               </span>
-              <Link to="/commencer" className="btn btn--accent">
+              <Link to="/commencer" className="btn btn--paper">
                 Essayer
                 <Arrow />
               </Link>

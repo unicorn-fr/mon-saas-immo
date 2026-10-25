@@ -24,7 +24,7 @@ export const overline: CSSProperties = {
 type Variant = 'primary' | 'dark' | 'outline' | 'light' | 'accent' | 'ghost'
 
 const variants: Record<Variant, CSSProperties> = {
-  primary: { background: BAI.owner, color: BAI.surface, border: `1.5px solid ${BAI.owner}` },
+  primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
   outline: { background: 'transparent', color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
   light: { background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },

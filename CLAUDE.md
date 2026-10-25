@@ -22,9 +22,9 @@
 
 - Toute couleur vient de `BAI` (`client/src/constants/bailio-tokens.ts`). Aucune couleur hexadécimale dans les composants.
 - Titres : Fraunces 500 (axe SOFT), `display()` dans `components/ui.tsx` ; un mot ou une ligne d'accroche en italique avec `<em>`, une fois par écran. Corps : Figtree. Polices servies par le site (`@fontsource`).
-- Fond pierre claire `BAI.bg` (blanc `BAI.surface` sur l'accueil et les pages publiques), encre `BAI.ink`, action principale bleu canard `BAI.owner`, accent laurier-rose `BAI.accent`, validé olive `BAI.green`, aplats `BAI.pistache` et `BAI.rose`. Pas de dégradé, pas d'ombre lourde ; le rouge ne sert qu'aux erreurs.
+- Palette « Confiance et élan » (choix argumenté dans la direction artistique) : fond `BAI.bg` (blanc `BAI.surface` sur l'accueil et les pages publiques), encre `BAI.ink`, marque bleu `BAI.owner`, **bouton de l'action principale orange `BAI.cta` avec texte `BAI.ctaInk`, seul élément orange de l'écran**, accent `BAI.accent`, validé `BAI.green`, aplats `BAI.sky` et `BAI.peach`. Pas de dégradé, pas d'ombre lourde ; le rouge ne sert qu'aux erreurs ; jamais de texte blanc sur orange.
 - Module « page de bail » (coin replié) : `.fold`, `.fold--lg`, `.fold--ear` dans `styles.css` ; photo dans un module arrondi, bloc de couleur posé en bas, jamais en haut.
-- Une seule action principale par écran. Boutons et étiquettes en pilule. Champs de 60 px de haut, rayon 14 px ; cartes rayon 24 px.
+- Une seule action principale par écran (variante `primary` des boutons, orange). Boutons et étiquettes en pilule. Champs de 60 px de haut, rayon 14 px ; cartes rayon 24 px.
 - Logo (`components/Logo.tsx`) : en couleurs sur fond clair, `onDark` sur un aplat sombre, jamais en couleurs sur un aplat de couleur.
 - Mobile d'abord : `clamp()` pour les tailles, classes `.col-md`, `.hide-md`, `.grid-*` pour les ruptures.
 - Accessibilité (RGAA 4.1 / WCAG 2.1 AA), contrôlée par axe-core sur toutes les pages (`e2e/tests/16-accessibilite.test.mjs`) :
@@ -32,7 +32,7 @@
   - bord des champs et boutons à choix `BAI.borderStrong` (≥ 3:1) ;
   - jamais d'`opacity` pour estomper un texte (étape verrouillée : fond `BAI.bg` et bord pointillé) ; seuls les boutons et champs désactivés peuvent l'être ;
   - chaque champ a un intitulé (`hideLabel` pour les lignes répétées d'une liste) ; chaque image un `alt` ; icônes `aria-hidden` ;
-  - lien « Aller au contenu » (`SkipLink`, `App.tsx`) et contour de focus canard cerclé de pierre claire (`styles.css`).
+  - lien « Aller au contenu » (`SkipLink`, `App.tsx`) et contour de focus bleu cerclé de clair (`styles.css`).
 
 ## Pages légales (`client/src/pages/legal/Legal.tsx`)
 

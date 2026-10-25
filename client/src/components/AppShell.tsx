@@ -96,7 +96,7 @@ function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; o
       <div style={{ padding: '0 10px' }}>
         <Logo size={30} onDark to="/espace" />
       </div>
-      <button type="button" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 999, background: BAI.accent, color: BAI.night, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
+      <button type="button" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 999, background: BAI.surface, color: BAI.night, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
         <Plus />
         Ajouter
       </button>
