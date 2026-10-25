@@ -70,7 +70,9 @@ function Flow({ inv }: { inv: InventoryView }) {
   }
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
-  useEffect(() => window.scrollTo(0, 0), [screen])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [screen])
 
   const rooms = data.rooms ?? []
   const hasFurniture = inv.lease.furnished && (data.furniture?.length ?? 0) > 0

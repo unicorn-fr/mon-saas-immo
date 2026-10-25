@@ -104,7 +104,7 @@ const PILL: Record<Tone, { color: string; bg: string }> = {
 }
 
 export function Pill({ tone = 'owner', children, style }: { tone?: Tone; children: ReactNode; style?: CSSProperties }) {
-  const p = PILL[tone]
+  const p = PILL[tone] ?? PILL.muted
   return <span style={{ fontSize: 13, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
 }
 
