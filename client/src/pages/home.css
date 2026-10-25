@@ -64,14 +64,16 @@
 
 /* ── Le bail en direct : le calcul à gauche, la photo et la fiche à droite ── */
 .live { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 12vw, 176px) var(--pad); align-items: center; }
-.live-form { grid-column: 1 / 6; display: flex; flex-direction: column; gap: 30px; }
+.live-form { grid-column: 1 / 6; display: flex; flex-direction: column; gap: 28px; }
+.live-lead { font-size: var(--step-body); max-width: 44ch; }
+.live-step { display: flex; flex-direction: column; gap: 10px; }
+.live-label { font-weight: 700; }
 .live h2 { font-size: var(--step-head); }
-.tabs-live { display: inline-flex; gap: 4px; padding: 4px; background: var(--stone); border-radius: 999px; align-self: flex-start; }
-.tabs-live button { background: transparent; border: 0; border-radius: 999px; padding: 10px 20px; min-height: 44px; font-family: var(--text); font-size: var(--step-body); font-weight: 500; color: var(--ink); cursor: pointer; transition: background-color 0.18s, color 0.18s; }
+.tabs-live { display: flex; flex-direction: column; gap: 4px; padding: 4px; background: var(--stone); border-radius: 26px; max-width: 380px; }
+.tabs-live button { text-align: left; background: transparent; border: 0; border-radius: 999px; padding: 10px 20px; min-height: 44px; font-family: var(--text); font-size: var(--step-body); font-weight: 500; color: var(--ink); cursor: pointer; transition: background-color 0.18s, color 0.18s; }
 .tabs-live button[aria-pressed='true'] { background: var(--owner); color: var(--paper); font-weight: 600; }
 .tabs-live button:hover:not([aria-pressed='true']) { background: var(--owner-light); }
 .rent { display: flex; flex-direction: column; gap: 6px; }
-.rent label { font-weight: 600; }
 .rent-field { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .rent input { width: 5ch; font-family: var(--display); font-variation-settings: 'SOFT' 60; font-weight: 500; font-size: var(--step-head); line-height: 1.1; background: transparent; border: 0; border-bottom: 3px solid var(--owner); color: var(--owner); padding: 0; }
 .rent input:focus-visible { outline: 3px solid var(--owner); outline-offset: 4px; }
@@ -163,9 +165,15 @@
 /* ── Questions en texte courant ── */
 .faq { padding: clamp(96px, 11vw, 160px) var(--pad); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
 .faq h2 { grid-column: 1 / 4; font-size: var(--step-head); }
-.faq-text { grid-column: 5 / 13; columns: 2; column-gap: 56px; }
-.faq-text p { break-inside: avoid; margin: 0 0 22px; }
-.faq-text strong { font-weight: 700; color: var(--owner); }
+.faq-list { grid-column: 5 / 13; display: flex; flex-direction: column; gap: 10px; }
+.faq-list details { background: var(--stone); border-radius: 20px; }
+.faq-list summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; min-height: 60px; font-weight: 700; color: var(--ink); border-radius: 20px; transition: background-color 0.18s; }
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary:hover { background: var(--owner-light); }
+.faq-icon { flex-shrink: 0; color: var(--owner); transition: transform 0.2s ease; }
+.faq-list details[open] .faq-icon { transform: rotate(45deg); }
+.faq-list details[open] summary { color: var(--owner); }
+.faq-list details p { padding: 0 24px 22px; max-width: 64ch; }
 
 /* ── Dernier appel : photo du Peyrou, bloc bleu ciel posé en bas à droite ── */
 .last { position: relative; padding: 0 var(--pad); }
@@ -206,7 +214,7 @@
   .itin-intro, .slip { grid-column: 1 / -1; }
   .slip { margin-top: 48px; max-width: 560px; }
   .faq h2 { grid-column: 1 / -1; margin-bottom: 32px; }
-  .faq-text { grid-column: 1 / -1; }
+  .faq-list { grid-column: 1 / -1; }
   .last-block { width: min(560px, 70%); }
   .foot { grid-template-columns: 1fr; }
   .foot-photo { display: none; }
@@ -240,7 +248,9 @@
   .plan-foot { margin-top: 24px; }
   .plan-foot .btn { width: 100%; }
   .faq { padding: 80px 16px; }
-  .faq-text { columns: 1; }
+  .faq-list summary { padding: 16px 18px; }
+  .faq-list details p { padding: 0 18px 20px; }
+  .tabs-live { max-width: none; }
   .last { padding: 0 12px; }
   .last-photo { height: 46svh; min-height: 260px; }
   .last-block { position: relative; right: auto; bottom: auto; width: auto; margin-top: -32px; padding: 30px 22px; }

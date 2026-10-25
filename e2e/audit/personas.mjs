@@ -368,7 +368,7 @@ const PERSONAS = [
       const page = await ctx.newPage()
       watchErrors(page)
       await page.goto(BASE + '/')
-      await btn(page, 'Garage', true).click()
+      await btn(page, 'Un garage ou une place', true).click()
       await page.waitForTimeout(500)
       await shot(page, '07-lucas-accueil-garage')
       const cta = page.getByRole('link', { name: /Créer ce bail/ }).first()
