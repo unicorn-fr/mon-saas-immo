@@ -17,9 +17,9 @@ import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../confi
 type Kind = 'VIDE' | 'MEUBLE' | 'GARAGE'
 
 const KINDS: Array<{ id: Kind; label: string; title: string }> = [
-  { id: 'VIDE', label: 'Vide', title: 'Bail vide' },
-  { id: 'MEUBLE', label: 'Meublé', title: 'Bail meublé' },
-  { id: 'GARAGE', label: 'Garage', title: 'Garage ou parking' },
+  { id: 'VIDE', label: 'Un logement vide', title: 'Logement vide' },
+  { id: 'MEUBLE', label: 'Un logement meublé', title: 'Logement meublé' },
+  { id: 'GARAGE', label: 'Un garage ou une place', title: 'Garage ou place' },
 ]
 
 const euros = (n: number) => `${n.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`
@@ -288,18 +288,28 @@ export default function Home() {
 
         <section className="live" data-section aria-labelledby="live-title">
           <div className="live-form">
-            <div className="tabs-live" role="group" aria-label="Type de location" data-in style={{ ['--i' as string]: 0 }}>
-              {KINDS.map((k) => (
-                <button key={k.id} type="button" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
-                  {k.label}
-                </button>
-              ))}
-            </div>
-            <h2 id="live-title" data-in style={{ ['--i' as string]: 1 }}>
-              {current.title}, <em>déjà calculé.</em>
+            <h2 id="live-title" data-in style={{ ['--i' as string]: 0 }}>
+              Ce que la loi impose <em>à votre bail.</em>
             </h2>
+            <p className="live-lead" data-in style={{ ['--i' as string]: 1 }}>
+              Dites-nous ce que vous louez et à quel prix : vous voyez tout de suite la durée du bail, le dépôt de garantie maximum et les préavis. Bailio les reprend ensuite dans votre bail.
+            </p>
+            <div className="live-step" data-in style={{ ['--i' as string]: 2 }}>
+              <span className="live-label" id="live-kind">
+                Vous louez
+              </span>
+              <div className="tabs-live" role="group" aria-labelledby="live-kind">
+                {KINDS.map((k) => (
+                  <button key={k.id} type="button" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
+                    {k.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="rent" data-in style={{ ['--i' as string]: 2 }}>
-              <label htmlFor="live-rent">Loyer hors charges</label>
+              <label htmlFor="live-rent" className="live-label">
+                Votre loyer, sans les charges
+              </label>
               <span className="rent-field">
                 <input
                   id="live-rent"
@@ -317,7 +327,7 @@ export default function Home() {
                 <Arrow />
               </Link>
               <Link to="/importer" className="btn btn--line">
-                Importer le mien
+                J’ai déjà un bail signé
               </Link>
             </div>
           </div>
@@ -326,7 +336,7 @@ export default function Home() {
               <img src="/accueil/comedie.webp" alt="La fontaine des Trois Grâces devant l’opéra Comédie, à Montpellier" width={960} height={1200} loading="lazy" decoding="async" />
             </div>
             <div className="terms-block fold fold--ear" data-in style={{ ['--i' as string]: 2 }}>
-              <p className="terms-title">Ce que la loi fixe</p>
+              <p className="terms-title">{current.title} : ce que dit la loi</p>
               <dl className="terms" id="live-terms" aria-live="polite">
                 {termsFor(kind, rent).map(([k, v]) => (
                   <div key={k}>
@@ -443,11 +453,17 @@ export default function Home() {
           <h2 id="faq-title" data-in>
             Questions
           </h2>
-          <div className="faq-text" data-in style={{ ['--i' as string]: 1 }}>
+          <div className="faq-list" data-in style={{ ['--i' as string]: 1 }}>
             {FAQ.map(([q, a]) => (
-              <p key={q}>
-                <strong>{q}</strong> {a}
-              </p>
+              <details key={q}>
+                <summary>
+                  <span>{q}</span>
+                  <svg className="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden focusable="false">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </summary>
+                <p>{a}</p>
+              </details>
             ))}
           </div>
         </section>

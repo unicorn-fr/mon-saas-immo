@@ -88,7 +88,7 @@ test('garage : de l’accueil à « Ajouter un logement » avec le garage déjà
   watch(page, errors)
   page.setDefaultTimeout(15000)
   await page.goto(BASE + '/')
-  await page.getByRole('button', { name: 'Garage', exact: true }).click()
+  await page.getByRole('button', { name: 'Un garage ou une place', exact: true }).click()
   await page.getByRole('link', { name: 'Créer ce bail' }).click()
   await page.getByRole('heading', { name: 'Créez votre espace.' }).waitFor()
   const email = `garage+${Date.now()}@example.fr`
