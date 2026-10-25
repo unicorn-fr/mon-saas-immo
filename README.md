@@ -7,7 +7,7 @@ Maquette de référence : [`docs/maquette/bailio-refonte-proprietaire.html`](doc
 
 ## Démarrer en local
 
-Prérequis : Node 20+, PostgreSQL. Pour l'import de baux : `tesseract-ocr`, `tesseract-ocr-fra` et `poppler-utils` (sinon l'import s'affiche comme indisponible).
+Prérequis : Node 22.23.4 ou plus récent (correctif de sécurité Node2Shell), PostgreSQL. Pour l'import de baux : `tesseract-ocr`, `tesseract-ocr-fra` et `poppler-utils` (sinon l'import s'affiche comme indisponible).
 
 ```bash
 npm run install:all                        # installe server/ et client/ (un package-lock.json chacun)

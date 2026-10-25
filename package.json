@@ -13,6 +13,6 @@
     "test:e2e": "npm --prefix e2e test"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.23.4"
   }
 }
