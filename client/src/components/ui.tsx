@@ -2,13 +2,15 @@ import { forwardRef, type CSSProperties, type InputHTMLAttributes, type ReactNod
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
+/** Titre en Fraunces : un mot ou une ligne peut passer en italique avec <em> (une fois par accroche). */
 export const display = (size: number | string, extra: CSSProperties = {}): CSSProperties => ({
   margin: 0,
   fontFamily: BAI.fontDisplay,
-  fontStyle: 'italic',
-  fontWeight: 700,
+  fontWeight: 500,
+  fontVariationSettings: "'SOFT' 60",
+  letterSpacing: '-0.02em',
   fontSize: size,
-  lineHeight: 1.02,
+  lineHeight: 1.06,
   color: BAI.ink,
   ...extra,
 })
@@ -16,17 +18,17 @@ export const display = (size: number | string, extra: CSSProperties = {}): CSSPr
 export const overline: CSSProperties = {
   fontSize: 15,
   fontWeight: 700,
-  color: BAI.caramelInk,
+  color: BAI.accentInk,
 }
 
-type Variant = 'primary' | 'dark' | 'outline' | 'light' | 'caramel' | 'ghost'
+type Variant = 'primary' | 'dark' | 'outline' | 'light' | 'accent' | 'ghost'
 
 const variants: Record<Variant, CSSProperties> = {
-  primary: { background: BAI.owner, color: BAI.surface, border: `1.5px solid ${BAI.owner}` },
+  primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
   outline: { background: 'transparent', color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
   light: { background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },
-  caramel: { background: BAI.caramel, color: BAI.night, border: `1.5px solid ${BAI.caramel}` },
+  accent: { background: BAI.accent, color: BAI.night, border: `1.5px solid ${BAI.accent}` },
   ghost: { background: 'transparent', color: BAI.owner, border: '1.5px solid transparent', padding: '0 4px' },
 }
 
@@ -40,7 +42,7 @@ export function buttonStyle({ variant = 'primary', height = 60, full = false }: 
   return {
     height,
     padding: '0 32px',
-    borderRadius: 14,
+    borderRadius: 999,
     fontWeight: 600,
     fontSize: height >= 60 ? 17 : 16,
     display: 'inline-flex',
@@ -71,6 +73,7 @@ export function Button({
       onClick={onClick}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
+      className={`btn btn-${variant ?? 'primary'}`}
       style={{ ...buttonStyle({ variant, height, full }), opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'pointer', ...style }}
     >
       {loading ? <Spinner color="currentColor" /> : null}
@@ -81,7 +84,7 @@ export function Button({
 
 export function ButtonLink({ to, children, variant, height, full, style }: ButtonStyleOptions & { to: string; children: ReactNode; style?: CSSProperties }) {
   return (
-    <Link to={to} style={{ ...buttonStyle({ variant, height, full }), ...style }}>
+    <Link to={to} className={`btn btn-${variant ?? 'primary'}`} style={{ ...buttonStyle({ variant, height, full }), ...style }}>
       {children}
     </Link>
   )
@@ -101,7 +104,7 @@ export const inputStyle = (invalid = false): CSSProperties => ({
   height: 60,
   width: '100%',
   border: `1.5px solid ${invalid ? BAI.error : BAI.borderStrong}`,
-  borderRadius: 14,
+  borderRadius: BAI.radiusField,
   padding: '0 18px',
   fontSize: 18,
   background: BAI.surface,

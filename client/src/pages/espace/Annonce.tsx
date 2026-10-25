@@ -155,7 +155,7 @@ export default function Annonce() {
               Ensuite : le message avec votre lien de candidature, à envoyer aux personnes intéressées
             </TextLink>
           </Card>
-          <Card title="Mentions obligatoires" action={<span style={{ fontSize: 14, color: missing.length ? BAI.caramelInk : BAI.green, fontWeight: 600 }}>{missing.length ? `${missing.length} à compléter` : 'Complètes'}</span>}>
+          <Card title="Mentions obligatoires" action={<span style={{ fontSize: 14, color: missing.length ? BAI.accentInk : BAI.green, fontWeight: 600 }}>{missing.length ? `${missing.length} à compléter` : 'Complètes'}</span>}>
             {view.checks.map((c) => (
               <div key={c.label} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14 }}>
                 {c.ok ? <Check size={18} /> : <Circle size={18} />}

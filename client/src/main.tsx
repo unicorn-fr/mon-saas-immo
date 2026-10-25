@@ -3,12 +3,13 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { recoverOnce, reportError } from './lib/recover'
 // Polices servies par le site lui-même : aucune requête vers Google (adresse IP des visiteurs).
-import '@fontsource/cormorant-garamond/latin-600-italic.css'
-import '@fontsource/cormorant-garamond/latin-700-italic.css'
-import '@fontsource/dm-sans/latin-400.css'
-import '@fontsource/dm-sans/latin-500.css'
-import '@fontsource/dm-sans/latin-600.css'
-import '@fontsource/dm-sans/latin-700.css'
+// Fraunces (titres, axe « SOFT » pour des empattements arrondis) et Figtree (texte, boutons, champs).
+import '@fontsource-variable/fraunces/soft.css'
+import '@fontsource-variable/fraunces/soft-italic.css'
+import '@fontsource/figtree/latin-400.css'
+import '@fontsource/figtree/latin-500.css'
+import '@fontsource/figtree/latin-600.css'
+import '@fontsource/figtree/latin-700.css'
 import './styles.css'
 
 // Un ancien service worker (version précédente du site) peut encore servir de vieux fichiers

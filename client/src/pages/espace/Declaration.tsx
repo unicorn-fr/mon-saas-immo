@@ -191,7 +191,7 @@ export default function Declaration() {
                     {eurosCents(data.empty.deficit.totalCents)} au total : {eurosCents(data.empty.deficit.globalCents)} à déduire de votre revenu global (case 4BC), {eurosCents(data.empty.deficit.carriedCents)} à reporter sur vos revenus fonciers des dix années suivantes (case 4BD). {data.empty.deficit.ceilingCents && data.empty.deficit.ceilingCents > 1_070_000 ? `Plafond porté à ${eurosCents(data.empty.deficit.ceilingCents)} grâce à vos travaux de rénovation énergétique (le logement doit passer de E, F ou G à A, B, C ou D ; gardez le DPE avant et après).` : 'Le plafond de 10 700 € monte jusqu’à 21 400 € si le déficit vient de travaux de rénovation énergétique : classez-les « Rénovation énergétique ».'}
                   </Callout>
                 ) : null}
-                {p.unclassifiedCents ? <span style={{ fontSize: 14, color: BAI.caramelInk }}>{eurosCents(p.unclassifiedCents)} de dépenses sont classées « autre » : précisez leur catégorie dans l’onglet Argent pour les déduire.</span> : null}
+                {p.unclassifiedCents ? <span style={{ fontSize: 14, color: BAI.accentInk }}>{eurosCents(p.unclassifiedCents)} de dépenses sont classées « autre » : précisez leur catégorie dans l’onglet Argent pour les déduire.</span> : null}
               </Card>
             ))}
           {data.furnished ? (
@@ -285,7 +285,7 @@ function StructureSheets({ list, year }: { list: StructureSheet[]; year: number 
                 <li key={step.title} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <strong style={{ fontSize: 16 }}>{step.title}</strong>
                   {step.form ? <span style={{ fontSize: 15 }}>Formulaire : {step.form}.</span> : null}
-                  {step.deadline ? <span style={{ fontSize: 15, color: BAI.caramelInk, fontWeight: 600 }}>À déposer avant le {step.deadline}.</span> : null}
+                  {step.deadline ? <span style={{ fontSize: 15, color: BAI.accentInk, fontWeight: 600 }}>À déposer avant le {step.deadline}.</span> : null}
                   {step.lines.map((l) => (
                     <Line key={l.label} label={l.label} value={l.cents !== undefined ? eurosCents(l.cents) : l.text ?? ''} />
                   ))}
@@ -350,7 +350,7 @@ function Filing({ guides, contacts, year }: { guides: FilingGuide[]; contacts: C
           <strong style={{ fontSize: 18 }}>{g.title}</strong>
           {g.alternative ? <span style={{ fontSize: 14, color: BAI.inkMid }}>Moins avantageux d’après vos chiffres : à suivre si vous avez déjà choisi ce régime.</span> : null}
           <span style={{ fontSize: 15, lineHeight: 1.5 }}>{g.summary}</span>
-          {g.deadline ? <span style={{ fontSize: 15, color: BAI.caramelInk, fontWeight: 600, lineHeight: 1.5 }}>Date limite : {g.deadline}.</span> : null}
+          {g.deadline ? <span style={{ fontSize: 15, color: BAI.accentInk, fontWeight: 600, lineHeight: 1.5 }}>Date limite : {g.deadline}.</span> : null}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Documents à réunir</h3>

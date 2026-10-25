@@ -95,7 +95,7 @@ export default function AccesPartages() {
               <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <span style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                   <strong style={{ fontSize: 16 }}>{a.email}</strong>
-                  <Pill tone={a.status === 'ACTIVE' ? 'green' : 'caramel'}>{a.status === 'ACTIVE' ? 'Actif' : a.status === 'PENDING' ? 'Invitation envoyée' : 'Invitation expirée'}</Pill>
+                  <Pill tone={a.status === 'ACTIVE' ? 'green' : 'accent'}>{a.status === 'ACTIVE' ? 'Actif' : a.status === 'PENDING' ? 'Invitation envoyée' : 'Invitation expirée'}</Pill>
                 </span>
                 <span style={{ fontSize: 14, color: BAI.inkMid }}>
                   {a.roleLabel} · {a.properties.map((p) => p.name).join(', ')}

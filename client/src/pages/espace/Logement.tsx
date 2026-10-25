@@ -77,13 +77,13 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
   const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length - toAdd
   const diagValue = [toAdd ? `${toAdd} à fournir` : '', expired ? `${expired} à refaire` : ''].filter(Boolean).join(', ') || 'À jour'
   const parking = p.nature === 'PARKING'
-  const rows: Array<{ label: string; value: string; to: string; tone?: 'caramel' }> = parking ? [
-    { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
+  const rows: Array<{ label: string; value: string; to: string; tone?: 'accent' }> = parking ? [
+    { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
   ] : [
-    { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'caramel' : undefined },
-    { label: 'Diagnostics', value: diagValue, to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: toAdd + expired ? 'caramel' : undefined },
+    { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
+    { label: 'Diagnostics', value: diagValue, to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: toAdd + expired ? 'accent' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
     { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
@@ -93,7 +93,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
       {rows.map((r) => (
         <Link key={r.label} to={r.to} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '13px 0', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
           <span style={{ fontWeight: 600 }}>{r.label}</span>
-          <span style={{ color: r.tone === 'caramel' ? BAI.caramelInk : BAI.owner, fontWeight: 600 }}>{r.value}</span>
+          <span style={{ color: r.tone === 'accent' ? BAI.accentInk : BAI.owner, fontWeight: 600 }}>{r.value}</span>
         </Link>
       ))}
       <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} compact />
@@ -138,14 +138,14 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
         <Card dark title={`En ${p.year.year}, ce ${p.nature === 'PARKING' ? 'garage' : 'logement'}`} style={{ gap: 12 }}>
           <Line dark label="a rapporté" value={eurosCents(p.year.incomeCents)} />
           <Line dark label="a coûté" value={eurosCents(p.year.expensesCents)} />
-          <Line dark border label="reste" value={<span style={{ color: BAI.caramel, fontWeight: 700 }}>{eurosCents(p.year.incomeCents - p.year.expensesCents)}</span>} />
+          <Line dark border label="reste" value={<span style={{ color: BAI.accent, fontWeight: 700 }}>{eurosCents(p.year.incomeCents - p.year.expensesCents)}</span>} />
         </Card>
       </div>
       <Card pad={28} style={{ flex: '1 1 0', gap: 4 }} title={<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, width: '100%', flexWrap: 'wrap', paddingBottom: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Chronologie</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout ce qui s’est passé dans ce {p.nature === 'PARKING' ? 'garage' : 'logement'}</span></div>}>
         {events.length ? (
           events.map((e, i) => (
             <div key={i} style={{ display: 'flex', gap: 18, padding: '14px 0', borderTop: `1px solid ${BAI.timeline}` }}>
-              <span style={{ width: 72, flexShrink: 0, fontSize: 14, fontWeight: 700, color: BAI.caramelInk }}>{dateShort(e.date)}</span>
+              <span style={{ width: 72, flexShrink: 0, fontSize: 14, fontWeight: 700, color: BAI.accentInk }}>{dateShort(e.date)}</span>
               <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                 <span style={{ fontSize: 16, fontWeight: 600 }}>{e.title}</span>
                 <span style={{ fontSize: 14, color: BAI.inkMid }}>{e.detail}</span>
@@ -168,7 +168,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
   )
 }
 
-const EVENT_TONE: Record<string, Tone> = { Travaux: 'caramel', Loyer: 'green', Impôt: 'owner', Bail: 'ink', Dépense: 'caramel' }
+const EVENT_TONE: Record<string, Tone> = { Travaux: 'accent', Loyer: 'green', Impôt: 'owner', Bail: 'ink', Dépense: 'accent' }
 
 const addYears = (iso: string, years: number) => {
   const d = new Date(`${iso}T00:00:00Z`)
@@ -205,7 +205,7 @@ function LeaseTab({ p }: { p: PropertyView }) {
       <div className="grow">
         {p.leases.length ? (
           p.leases.map((l) => (
-            <Card key={l.id} title={l.tenantName || 'Locataire à compléter'} action={<Pill tone={l.status === 'ACTIVE' || l.status === 'IMPORTED' ? 'green' : l.status === 'DRAFT' ? 'caramel' : 'muted'}>{l.status === 'DRAFT' ? 'En préparation' : l.status === 'ENDED' ? 'Terminé' : 'En cours'}</Pill>}>
+            <Card key={l.id} title={l.tenantName || 'Locataire à compléter'} action={<Pill tone={l.status === 'ACTIVE' || l.status === 'IMPORTED' ? 'green' : l.status === 'DRAFT' ? 'accent' : 'muted'}>{l.status === 'DRAFT' ? 'En préparation' : l.status === 'ENDED' ? 'Terminé' : 'En cours'}</Pill>}>
               <Line label="Type" value={KIND_LABEL[l.kind]} />
               <Line label="Période" value={`${dateNum(l.startDate)} au ${dateNum(l.endDate)}`} />
               <Line label="Loyer" value={`${eurosCents(l.rentCents)} + ${eurosCents(l.chargesCents)} de charges`} />

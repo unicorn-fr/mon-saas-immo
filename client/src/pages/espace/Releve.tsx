@@ -29,7 +29,7 @@ interface Result {
 const LEVEL: Record<Match['level'], { label: string; tone: Tone }> = {
   SURE: { label: 'Reconnu', tone: 'green' },
   LIKELY: { label: 'Probable', tone: 'owner' },
-  CHECK: { label: 'À vérifier', tone: 'caramel' },
+  CHECK: { label: 'À vérifier', tone: 'accent' },
 }
 const fr = (d: string) => d.split('-').reverse().join('/')
 const month = (p: string) => {

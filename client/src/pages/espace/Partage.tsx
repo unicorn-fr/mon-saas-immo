@@ -1,3 +1,4 @@
+import { Logo } from '../../components/Logo'
 import { BAI } from '../../constants/bailio-tokens'
 import { Card, Empty, LoadError, Loader, Pill, TextLink, useLoad } from '../../components/kit'
 import { display } from '../../components/ui'
@@ -11,7 +12,7 @@ interface SharedView {
   properties: Array<{ id: string; name: string; address: string; access: string | null; tenants: Array<{ name: string; phone: string | null }>; interventions: Array<{ id: string; title: string; description: string | null; status: string; date: string | null }> }>
 }
 
-const STATUS: Record<string, { label: string; tone: 'caramel' | 'owner' | 'green' }> = { TODO: { label: 'À organiser', tone: 'caramel' }, PLANNED: { label: 'Prévue', tone: 'owner' }, DONE: { label: 'Terminée', tone: 'green' } }
+const STATUS: Record<string, { label: string; tone: 'accent' | 'owner' | 'green' }> = { TODO: { label: 'À organiser', tone: 'accent' }, PLANNED: { label: 'Prévue', tone: 'owner' }, DONE: { label: 'Terminée', tone: 'green' } }
 
 /** Intervenant : le logement, le contact du locataire et les interventions. Rien d'autre (données minimales). */
 export default function Partage() {
@@ -20,7 +21,7 @@ export default function Partage() {
   return (
     <main id="contenu" tabIndex={-1} style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, padding: 'clamp(24px, 5vw, 56px) 16px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <span style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink }}>Bailio</span>
+        <Logo size={28} to={null} />
         {loading && !data ? (
           <Loader />
         ) : error || !data ? (

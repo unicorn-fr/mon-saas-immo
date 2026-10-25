@@ -7,8 +7,8 @@ import { Spinner, display } from './ui'
 import { useAddressSuggestions, type AddressSuggestion } from './AddressField'
 
 /**
- * Composants de l'espace propriétaire, repris de la maquette : cartes blanches à bord crème,
- * étiquettes arrondies, boutons de 44 à 60 px, champs de 50 px, encadrés d'information.
+ * Composants de l'espace propriétaire (direction « Midi ») : cartes blanches à grands coins arrondis,
+ * étiquettes et boutons en pilule de 38 à 60 px, champs de 50 px, encadrés d'information.
  */
 
 // ── Mise en page ─────────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ export function Card({ title, action, children, style, dark, pad = 24, id }: { t
         background: dark ? BAI.night : BAI.surface,
         border: dark ? 'none' : `1px solid ${BAI.divider}`,
         color: dark ? BAI.surface : BAI.ink,
-        borderRadius: 20,
+        borderRadius: BAI.radius,
         padding: `clamp(18px, 3vw, ${pad}px)`,
         display: 'flex',
         flexDirection: 'column',
@@ -82,8 +82,8 @@ export function Crumbs({ items }: { items: Array<{ label: string; to?: string }>
 }
 
 /** Ligne « intitulé … valeur ». */
-export function Line({ label, value, tone, dark, strong, border }: { label: ReactNode; value: ReactNode; tone?: 'green' | 'error' | 'caramel'; dark?: boolean; strong?: boolean; border?: boolean }) {
-  const color = tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? (dark ? BAI.caramel : BAI.caramelInk) : dark ? BAI.surface : BAI.ink
+export function Line({ label, value, tone, dark, strong, border }: { label: ReactNode; value: ReactNode; tone?: 'green' | 'error' | 'accent'; dark?: boolean; strong?: boolean; border?: boolean }) {
+  const color = tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'accent' ? (dark ? BAI.accent : BAI.accentInk) : dark ? BAI.surface : BAI.ink
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, fontSize: 15, ...(border ? { borderTop: `1px solid ${dark ? BAI.nightLine : BAI.dividerSoft}`, paddingTop: 12 } : {}) }}>
       <span style={{ color: dark ? BAI.onDarkMuted : BAI.inkSoft }}>{label}</span>
@@ -92,27 +92,27 @@ export function Line({ label, value, tone, dark, strong, border }: { label: Reac
   )
 }
 
-export type Tone = 'error' | 'owner' | 'caramel' | 'green' | 'ink' | 'muted'
+export type Tone = 'error' | 'owner' | 'accent' | 'green' | 'ink' | 'muted'
 
 const PILL: Record<Tone, { color: string; bg: string }> = {
   error: { color: BAI.error, bg: BAI.errorTint },
   owner: { color: BAI.owner, bg: BAI.ownerTint },
-  caramel: { color: BAI.caramelDark, bg: BAI.caramelLight },
+  accent: { color: BAI.accentDark, bg: BAI.accentLight },
   green: { color: BAI.green, bg: BAI.greenLight },
   ink: { color: BAI.ink, bg: BAI.inkTint },
   muted: { color: BAI.inkSoft, bg: BAI.dividerSoft },
 }
 
 export function Pill({ tone = 'owner', children, style }: { tone?: Tone; children: ReactNode; style?: CSSProperties }) {
-  const p = PILL[tone]
+  const p = PILL[tone] ?? PILL.muted
   return <span style={{ fontSize: 13, fontWeight: 700, color: p.color, background: p.bg, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', alignSelf: 'flex-start', ...style }}>{children}</span>
 }
 
-export const toneColor = (tone: string | undefined) => (tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'caramel' ? BAI.caramelInk : tone === 'owner' ? BAI.owner : BAI.inkSoft)
+export const toneColor = (tone: string | undefined) => (tone === 'green' ? BAI.green : tone === 'error' ? BAI.error : tone === 'accent' ? BAI.accentInk : tone === 'owner' ? BAI.owner : BAI.inkSoft)
 
 export function Avatar({ text, size = 40, dark }: { text: string; size?: number; dark?: boolean }) {
   return (
-    <span aria-hidden style={{ width: size, height: size, borderRadius: size / 2, flexShrink: 0, background: dark ? BAI.nightSoft : BAI.ownerTint, color: dark ? BAI.caramel : BAI.owner, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.36 }}>
+    <span aria-hidden style={{ width: size, height: size, borderRadius: size / 2, flexShrink: 0, background: dark ? BAI.nightSoft : BAI.ownerTint, color: dark ? BAI.accent : BAI.owner, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.36 }}>
       {text}
     </span>
   )
@@ -128,14 +128,14 @@ export function Progress({ percent, height = 6, label = 'Avancement' }: { percen
 
 // ── Boutons ──────────────────────────────────────────────────────────────────
 
-type BtnVariant = 'primary' | 'outline' | 'ghost' | 'dark' | 'caramel' | 'danger' | 'light'
+type BtnVariant = 'primary' | 'outline' | 'ghost' | 'dark' | 'accent' | 'danger' | 'light'
 
 const BTN: Record<BtnVariant, CSSProperties> = {
-  primary: { background: BAI.owner, color: BAI.surface, border: `1.5px solid ${BAI.owner}` },
+  primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
   outline: { background: BAI.surface, color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
   ghost: { background: 'transparent', color: BAI.inkMid, border: '1.5px solid transparent' },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
-  caramel: { background: BAI.caramel, color: BAI.night, border: `1.5px solid ${BAI.caramel}` },
+  accent: { background: BAI.accent, color: BAI.night, border: `1.5px solid ${BAI.accent}` },
   danger: { background: BAI.surface, color: BAI.error, border: `1.5px solid ${BAI.errorTint}` },
   light: { background: 'transparent', color: BAI.surface, border: `1.5px solid ${BAI.nightLine}` },
 }
@@ -159,7 +159,8 @@ interface BtnProps {
 }
 
 export function btnStyle(variant: BtnVariant = 'primary', size: 'sm' | 'md' | 'lg' = 'md', full = false): CSSProperties {
-  const dims = size === 'lg' ? { height: 60, padding: '0 32px', borderRadius: 14, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 14px', borderRadius: 10, fontSize: 14 } : { minHeight: 46, padding: '10px 18px', borderRadius: 10, fontSize: 15 }
+  // Boutons en pilule (direction « Midi ») : bords entièrement arrondis.
+  const dims = size === 'lg' ? { height: 60, padding: '0 32px', borderRadius: 999, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 16px', borderRadius: 999, fontSize: 14 } : { minHeight: 46, padding: '10px 22px', borderRadius: 999, fontSize: 15 }
   return {
     ...dims,
     ...BTN[variant],
@@ -183,7 +184,7 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, newT
   const s = { ...btnStyle(variant, size, full), ...style }
   if (to) {
     return (
-      <Link to={to} style={s} title={title}>
+      <Link to={to} className={`btn btn-${variant}`} style={s} title={title}>
         {icon}
         {children}
       </Link>
@@ -191,7 +192,7 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, newT
   }
   if (href) {
     return (
-      <a href={href} style={s} title={title} {...(newTab ? { target: '_blank', rel: 'noreferrer' } : {})}>
+      <a href={href} className={`btn btn-${variant}`} style={s} title={title} {...(newTab ? { target: '_blank', rel: 'noreferrer' } : {})}>
         {icon}
         {children}
       </a>
@@ -202,6 +203,7 @@ export function Btn({ children, variant = 'primary', size = 'md', to, href, newT
     <button
       type={type}
       title={title}
+      className={`btn btn-${variant}`}
       disabled={disabled || running}
       aria-busy={running || undefined}
       onClick={async () => {
@@ -242,7 +244,7 @@ export function TextLink({ to, onClick, children, style }: { to?: string; onClic
 
 const CALLOUT = {
   info: { bg: BAI.ownerTint, stroke: BAI.owner, path: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></> },
-  tip: { bg: BAI.caramelLight, stroke: BAI.caramelInk, path: <><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z" /></> },
+  tip: { bg: BAI.accentLight, stroke: BAI.accentInk, path: <><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z" /></> },
   warn: { bg: BAI.errorTint, stroke: BAI.error, path: <><path d="M12 3 2 20h20z" /><path d="M12 10v4M12 17h.01" /></> },
   ok: { bg: BAI.greenLight, stroke: BAI.green, path: <path d="M20 6 9 17l-5-5" /> },
 } as const
@@ -266,7 +268,7 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
 export function Computed({ title = 'Calculé par Bailio', rows }: { title?: string; rows: Array<[ReactNode, ReactNode]> }) {
   return (
     <div style={{ background: BAI.night, borderRadius: 14, padding: '14px 18px 6px' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel, paddingBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accent, paddingBottom: 8 }}>{title}</div>
       {rows.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '9px 0', borderTop: `1px solid ${BAI.nightLine}`, fontSize: 14 }}>
           <span style={{ color: BAI.onDarkMuted }}>{k}</span>
@@ -282,7 +284,7 @@ export function Known({ title = 'Bailio sait déjà', items }: { title?: string;
   if (!items.length) return null
   return (
     <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {title ? <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>{title}</span> : null}
+      {title ? <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>{title}</span> : null}
       {items.map((it, i) => (
         <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, lineHeight: 1.45 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BAI.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 2 }}>
@@ -802,7 +804,7 @@ export function Empty({ title, text, action }: { title: string; text?: ReactNode
 export function Stat({ value, label, accent }: { value: ReactNode; label: string; accent?: boolean }) {
   return (
     <div className="stat" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={display(40, { lineHeight: 1, color: accent ? BAI.caramel : BAI.surface })}>{value}</span>
+      <span style={display(40, { lineHeight: 1, color: accent ? BAI.accent : BAI.surface })}>{value}</span>
       <span style={{ fontSize: 14, color: BAI.onDarkMuted }}>{label}</span>
     </div>
   )

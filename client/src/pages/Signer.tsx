@@ -96,7 +96,7 @@ export default function Signer() {
   return (
     <Shell>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Signature électronique</span>
+        <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>Signature électronique</span>
         <h1 style={display('clamp(32px, 5vw, 46px)')}>{data.document}</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>
           {data.landlord} vous invite à signer, en tant que {data.roleLabel.toLowerCase()}, {guarantor ? 'l’acte de cautionnement du bail' : 'le bail'} du logement situé {data.property}.

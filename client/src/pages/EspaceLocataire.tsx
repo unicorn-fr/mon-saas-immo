@@ -328,7 +328,7 @@ function Issues({ code, info, onDone, open, setOpen }: { code: string; info: Lin
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{i.title}</span>
                 <span style={{ fontSize: 13, color: BAI.inkSoft }}>Signalé le {dateNum(i.reportedAt)}</span>
               </span>
-              <Pill tone={i.status === 'DONE' ? 'green' : i.status === 'PLANNED' ? 'owner' : 'caramel'}>{i.progress}</Pill>
+              <Pill tone={i.status === 'DONE' ? 'green' : i.status === 'PLANNED' ? 'owner' : 'accent'}>{i.progress}</Pill>
             </li>
           ))}
         </ul>
@@ -461,7 +461,7 @@ function InventoryComplement({ code, info, onDone, open, setOpen }: { code: stri
             <li key={c.id} style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 4 }}>
               <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{c.heating ? 'Chauffage' : 'Demande'} du {dateNum(c.at)}</span>
-                <Pill tone={c.status === 'ACCEPTED' ? 'green' : c.status === 'REFUSED' ? 'error' : 'caramel'}>{status[c.status]}</Pill>
+                <Pill tone={c.status === 'ACCEPTED' ? 'green' : c.status === 'REFUSED' ? 'error' : 'accent'}>{status[c.status]}</Pill>
               </span>
               {c.status === 'REFUSED' ? (
                 <span style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.45 }}>

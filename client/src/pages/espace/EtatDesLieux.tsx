@@ -104,7 +104,7 @@ function Launch({ l }: { l: LeaseView }) {
             <>
               <span style={display(34, { color: BAI.surface, lineHeight: 1.05 })}>Déjà signé</span>
               <span style={{ fontSize: 16, color: BAI.onDark }}>L’état des lieux {kind === 'ENTRY' ? 'd’entrée' : 'de sortie'} est signé{existing.date ? ` depuis le ${dateNum(existing.date)}` : ''}. Il ne peut plus être modifié.</span>
-              <Btn variant="caramel" onClick={() => openDoc(`/inventories/${existing.id}/pdf`).catch(toast.error)}>
+              <Btn variant="accent" onClick={() => openDoc(`/inventories/${existing.id}/pdf`).catch(toast.error)}>
                 Ouvrir le PDF
               </Btn>
             </>
@@ -115,7 +115,7 @@ function Launch({ l }: { l: LeaseView }) {
               {inv ? <QrCode text={inv.url} /> : <div style={{ width: 180, height: 180, borderRadius: 16, background: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{preparing ? <Spinner size={26} /> : null}</div>}
               <span style={{ fontSize: 14, color: BAI.onDarkMuted }}>Scannez ce code avec l’appareil photo. Il reste valable 20 minutes.</span>
               {inv ? (
-                <Link to={`/edl/${inv.id}`} className="tap" style={{ color: BAI.caramel, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
+                <Link to={`/edl/${inv.id}`} className="tap" style={{ color: BAI.accent, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}>
                   Ou continuer sur cet appareil
                 </Link>
               ) : null}

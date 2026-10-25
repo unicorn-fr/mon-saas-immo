@@ -3,6 +3,7 @@ import { AccountNotice } from '../components/DataNotice'
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { safePath } from '../lib/safePath'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Logo } from '../components/Logo'
 import { BAI } from '../constants/bailio-tokens'
 import { Callout, Input } from '../components/kit'
 import { MailLinks } from '../components/MailLinks'
@@ -25,9 +26,9 @@ export function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink, display: 'flex' }} className="col-md">
       <div className="auth-side" style={{ width: 'min(600px, 42vw)', background: BAI.night, boxSizing: 'border-box', padding: 'clamp(28px, 4vw, 48px) clamp(24px, 5vw, 72px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 32 }}>
-        <Link to="/" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 30, color: BAI.caramel, alignSelf: 'flex-start', padding: '6px 0' }}>
-          Bailio
-        </Link>
+        <div style={{ alignSelf: 'flex-start' }}>
+          <Logo size={30} onDark />
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div style={display('clamp(38px, 4vw, 56px)', { lineHeight: 1, color: BAI.surface })}>Vos locations, sans la paperasse.</div>
           <div style={{ fontSize: 17, color: BAI.onDark }}>Bail, quittances, rappels, factures.</div>

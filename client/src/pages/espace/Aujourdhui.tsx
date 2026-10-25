@@ -87,7 +87,7 @@ function TodayContent() {
             <Card dark title="Prochaines échéances" style={{ gap: 16 }}>
               {data.upcoming.map((u, i) => (
                 <div key={i} style={{ display: 'flex', gap: 14 }}>
-                  <span style={{ width: 56, flexShrink: 0, color: BAI.caramel, fontWeight: 700, fontSize: 14 }}>{u.date}</span>
+                  <span style={{ width: 56, flexShrink: 0, color: BAI.accent, fontWeight: 700, fontSize: 14 }}>{u.date}</span>
                   <span style={{ fontSize: 14, lineHeight: 1.45 }}>{u.label}</span>
                 </div>
               ))}
@@ -326,7 +326,7 @@ function SetupSteps({ counts }: { counts: TodayView['counts'] }) {
       <aside className="aside">
         <Link to="/importer" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <span style={{ width: 52, height: 52, borderRadius: 14, background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Upload color={BAI.caramel} size={26} />
+            <Upload color={BAI.accent} size={26} />
           </span>
           <span style={{ fontSize: 20, fontWeight: 700 }}>J’ai déjà un bail signé</span>
           <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Prenez-le en photo ou déposez le PDF : Bailio remplit le logement, le locataire et le bail en une fois.</span>
@@ -364,7 +364,7 @@ function FollowUpBanner() {
     toast.show('Rappels activés : vous serez prévenu par email.')
   }
   return (
-    <div style={{ background: BAI.caramelLight, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+    <div style={{ background: BAI.accentLight, borderRadius: 16, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
       <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Les rappels par email sont désactivés.</span>
         <span style={{ fontSize: 14, color: BAI.inkMid }}>Loyer en retard, révision, attestation d’assurance, fin du bail : activez-les pour ne rien manquer.</span>

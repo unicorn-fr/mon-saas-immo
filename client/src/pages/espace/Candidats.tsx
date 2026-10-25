@@ -134,11 +134,11 @@ export default function Candidats() {
                       </span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <span style={{ alignSelf: 'flex-start' }}>
-                          <Pill tone={c.review.level === 'SOLID' ? 'green' : c.review.level === 'CORRECT' ? 'owner' : 'caramel'}>{c.review.label}</Pill>
+                          <Pill tone={c.review.level === 'SOLID' ? 'green' : c.review.level === 'CORRECT' ? 'owner' : 'accent'}>{c.review.label}</Pill>
                         </span>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid }}>
                           {c.review.criteria.map((x) => (
-                            <li key={x.key} style={{ color: x.mark === 'WEAK' ? BAI.caramelInk : undefined }}>
+                            <li key={x.key} style={{ color: x.mark === 'WEAK' ? BAI.accentInk : undefined }}>
                               {x.text}
                             </li>
                           ))}

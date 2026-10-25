@@ -53,7 +53,7 @@ export function Journey({ propertyId, steps: initial }: { propertyId: string; st
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
               <span style={{ display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 16, fontWeight: 700, color: isDone || s.state === 'LOCKED' ? BAI.inkMid : BAI.ink }}>{s.title}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: s.state === 'TODO' ? BAI.caramelInk : s.state === 'WAITING' ? BAI.owner : BAI.inkSoft }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: s.state === 'TODO' ? BAI.accentInk : s.state === 'WAITING' ? BAI.owner : BAI.inkSoft }}>
                   {STATE_LABEL[s.state]}
                   {s.optional && s.state !== 'SKIPPED' ? ', facultatif' : ''}
                 </span>

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Logo } from './Logo'
 import { BAI } from '../constants/bailio-tokens'
 import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -92,10 +93,10 @@ function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; o
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || ''
   return (
     <nav aria-label="Navigation principale" className="sidebar" style={{ width: 248, flexShrink: 0, background: BAI.night, display: 'flex', flexDirection: 'column', gap: 32, padding: '32px 20px', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box' }}>
-      <Link to="/espace" style={{ textDecoration: 'none', fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 32, color: BAI.caramel, padding: '0 10px' }}>
-        Bailio
-      </Link>
-      <button type="button" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 12, background: BAI.caramel, color: BAI.night, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
+      <div style={{ padding: '0 10px' }}>
+        <Logo size={30} onDark to="/espace" />
+      </div>
+      <button type="button" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 999, background: BAI.surface, color: BAI.night, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
         <Plus />
         Ajouter
       </button>
@@ -105,19 +106,19 @@ function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; o
             key={n.to}
             to={n.to}
             end={n.end}
-            style={({ isActive }) => ({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.nightActive : 'transparent', color: isActive ? BAI.surface : BAI.onDarkNav })}
+            style={({ isActive }) => ({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 999, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.nightActive : 'transparent', color: isActive ? BAI.surface : BAI.onDarkNav })}
           >
             <span>{n.label}</span>
-            {n.end && taskCount ? <span style={{ background: BAI.caramel, color: BAI.night, fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
+            {n.end && taskCount ? <span style={{ background: BAI.accent, color: BAI.night, fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
           </NavLink>
         ))}
       </div>
       <div style={{ flexGrow: 1 }} />
-      <button type="button" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderRadius: 10, background: 'transparent', border: `1px solid ${BAI.nightSoft}`, color: BAI.onDarkNav, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
+      <button type="button" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${BAI.nightLine}`, color: BAI.onDarkNav, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
         Votre avis
       </button>
       <Link to="/espace/compte" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 10px 0', borderTop: `1px solid ${BAI.nightSoft}`, textDecoration: 'none' }}>
-        <span style={{ width: 40, height: 40, borderRadius: 20, background: BAI.nightSoft, color: BAI.caramel, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
+        <span style={{ width: 40, height: 40, borderRadius: 20, background: BAI.nightSoft, color: BAI.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           <span style={{ color: BAI.surface, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
           <span style={{ color: BAI.onDarkMuted, fontSize: 13 }}>Mon compte</span>
@@ -133,9 +134,7 @@ function MobileHeader() {
   const round = { width: 44, height: 44, borderRadius: 22, border: `1px solid ${BAI.border}`, background: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BAI.ink, textDecoration: 'none' } as const
   return (
     <header className="mobile-only" style={{ padding: '20px 22px 4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Link to="/espace" style={{ fontFamily: BAI.fontDisplay, fontStyle: 'italic', fontWeight: 700, fontSize: 28, color: BAI.ink, textDecoration: 'none', display: 'inline-block', padding: '6px 0' }}>
-        Bailio
-      </Link>
+      <Logo size={26} to="/espace" />
       <div style={{ display: 'flex', gap: 8 }}>
         <Link to="/espace/locataires" aria-label="Locataires" style={round}>
           <People size={20} />
@@ -157,13 +156,13 @@ function BottomNav({ onAdd }: { onAdd: () => void }) {
           <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 13, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
             {({ isActive }) => (
               <>
-                <n.icon color={isActive ? BAI.caramel : 'currentColor'} />
+                <n.icon color={isActive ? BAI.accent : 'currentColor'} />
                 {n.label}
               </>
             )}
           </NavLink>
         ) : (
-          <button key="add" type="button" aria-label="Ajouter" onClick={onAdd} style={{ width: 56, height: 56, borderRadius: 28, background: BAI.caramel, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -24, cursor: 'pointer', color: BAI.night }}>
+          <button key="add" type="button" aria-label="Ajouter" onClick={onAdd} style={{ width: 56, height: 56, borderRadius: 28, background: BAI.accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -24, cursor: 'pointer', color: BAI.night }}>
             <Plus size={26} strokeWidth={2.4} />
           </button>
         ),

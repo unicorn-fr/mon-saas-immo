@@ -72,7 +72,8 @@ export function StepNav({ back, next, nextLabel = 'Continuer', loading, disabled
           next()
         }}
         disabled={loading || disabled}
-        style={{ background: BAI.owner, color: BAI.surface, height: 60, padding: '0 40px', borderRadius: 14, fontWeight: 600, fontSize: 17, border: 'none', display: 'flex', alignItems: 'center', gap: 10, opacity: disabled ? 0.5 : 1 }}
+        className="btn btn-primary"
+        style={{ background: BAI.cta, color: BAI.ctaInk, height: 60, padding: '0 40px', borderRadius: 999, fontWeight: 600, fontSize: 17, border: 'none', display: 'flex', alignItems: 'center', gap: 10, opacity: disabled ? 0.5 : 1 }}
       >
         {loading ? <Spinner color={BAI.surface} /> : null}
         {nextLabel}

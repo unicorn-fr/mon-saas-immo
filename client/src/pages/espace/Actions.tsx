@@ -151,7 +151,7 @@ export default function Actions() {
                             </TextLink>
                           ) : null}
                         </span>
-                        {r.blocked ? <span style={{ width: '100%', fontSize: 13, color: BAI.caramelInk }}>{r.blocked}</span> : null}
+                        {r.blocked ? <span style={{ width: '100%', fontSize: 13, color: BAI.accentInk }}>{r.blocked}</span> : null}
                         {res && !res.ok ? <span style={{ width: '100%', fontSize: 13, color: BAI.error }}>{res.text}</span> : null}
                       </div>
                     )

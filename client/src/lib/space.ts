@@ -226,7 +226,7 @@ export interface Task {
   id: string
   type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT'
   tag: string
-  tone: 'error' | 'owner' | 'caramel' | 'green'
+  tone: 'error' | 'owner' | 'accent' | 'green'
   place: string
   title: string
   text?: string
@@ -249,7 +249,7 @@ export interface TodayView {
   stats: { rentsExpected: number; rentsReceived: number; cashedCents: number; month: string }
   tasks: Task[]
   upcoming: Array<{ date: string; label: string }>
-  properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'caramel' | 'muted' } }>
+  properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'accent' | 'muted' } }>
   counts: { properties: number; tenants: number; leases: number; signedLeases?: number }
 }
 

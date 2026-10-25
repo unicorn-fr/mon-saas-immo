@@ -30,7 +30,7 @@ export function LoanCard({ propertyId, compact }: { propertyId: string; compact?
     <Card title="Emprunt et trésorerie" action={<TextLink to={to} style={{ fontSize: 14 }}>Détail</TextLink>}>
       <Line label="Mensualité et assurance" value={eurosCents(data.now.paymentCents + data.now.insuranceCents)} />
       <Line label="Capital restant dû" value={eurosCents(data.now.remainingCents)} />
-      <Line label={cf.netCents >= 0 ? 'Il vous reste chaque mois' : 'Effort d’épargne par mois'} value={eurosCents(Math.abs(cf.netCents))} tone={cf.netCents >= 0 ? 'green' : 'caramel'} strong border />
+      <Line label={cf.netCents >= 0 ? 'Il vous reste chaque mois' : 'Effort d’épargne par mois'} value={eurosCents(Math.abs(cf.netCents))} tone={cf.netCents >= 0 ? 'green' : 'accent'} strong border />
     </Card>
   )
 }

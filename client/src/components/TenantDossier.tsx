@@ -35,7 +35,7 @@ export function TenantDossier({ tenantId, email }: { tenantId: string; email?: s
     }
   }
   return (
-    <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Dossier</h2>{data.missing.length ? <Pill tone="caramel">{data.missing.length} à compléter</Pill> : <Pill tone="green">Complet</Pill>}</div>}>
+    <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Dossier</h2>{data.missing.length ? <Pill tone="accent">{data.missing.length} à compléter</Pill> : <Pill tone="green">Complet</Pill>}</div>}>
       {data.toReview ? (
         <Callout tone="warn" title={`${data.toReview} élément${data.toReview > 1 ? 's' : ''} envoyé${data.toReview > 1 ? 's' : ''} par le locataire, à vérifier`}>
           Comparez avec ses justificatifs avant de vous en servir.{' '}

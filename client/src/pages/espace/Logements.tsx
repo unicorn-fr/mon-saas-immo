@@ -115,7 +115,7 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
   return (
     <Link to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: available ? `1.5px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ height: 150, background: bg, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>
-        {available ? <Pill tone="caramel">{p.lease?.status === 'DRAFT' ? 'Bail en préparation' : 'Disponible'}</Pill> : <Pill tone="green">Loué</Pill>}
+        {available ? <Pill tone="accent">{p.lease?.status === 'DRAFT' ? 'Bail en préparation' : 'Disponible'}</Pill> : <Pill tone="green">Loué</Pill>}
       </div>
       <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

@@ -67,7 +67,7 @@ export default function RecevoirStep() {
   return (
     <div className="col-md" style={{ minHeight: '100vh', display: 'flex', background: BAI.bg }}>
       <div className="stack hide-lg" style={{ width: '47%', maxWidth: 680, background: BAI.night, padding: '48px 72px', gap: 40 }}>
-        <Logo size={28} color={BAI.caramel} />
+        <Logo size={28} onDark />
         <div aria-hidden className="stack" style={{ alignSelf: 'center', position: 'relative', overflowWrap: 'anywhere', width: 400, maxWidth: '100%', height: 520, background: BAI.surface, borderRadius: 6, padding: '40px 36px', gap: 12, overflow: 'hidden' }}>
           <div style={{ fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase', color: BAI.inkSoft, textAlign: 'center' }}>{imported ? 'Bail signé' : 'Contrat de location'}</div>
           <div style={{ fontFamily: BAI.fontDisplay, fontWeight: 700, fontSize: 24, textAlign: 'center', lineHeight: 1.1 }}>

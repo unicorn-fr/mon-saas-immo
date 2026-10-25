@@ -48,7 +48,11 @@ BRANCH=main
 if git -C "$APP" ls-remote --exit-code --heads origin production >/dev/null 2>&1; then BRANCH=production; fi
 git -C "$APP" fetch -q origin "$BRANCH:refs/remotes/origin/$BRANCH"
 if [ "$(git -C "$APP" rev-parse HEAD)" = "$(git -C "$APP" rev-parse "origin/$BRANCH")" ]; then
-  exit 0
+  # Même sans nouvelle version : une fois par semaine, reconstruction avec les dernières images de base
+  # (correctifs de sécurité de Node, PostgreSQL et Caddy).
+  LAST="$(cat /var/tmp/bailio-last-update 2>/dev/null || echo 0)"
+  if [ $(( $(date +%s) - LAST )) -lt 604800 ]; then exit 0; fi
+  echo "Mise à jour de sécurité hebdomadaire des images de base…"
 fi
 echo "Nouvelle version $(git -C "$APP" rev-parse --short "origin/$BRANCH") ($BRANCH) : mise à jour…"
 BAILIO_BRANCH="$BRANCH" "$DIR/update.sh"

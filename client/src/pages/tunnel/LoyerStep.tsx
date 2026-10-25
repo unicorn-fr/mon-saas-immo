@@ -19,7 +19,7 @@ function CalcRow({ label, value, note }: { label: string; value: ReactNode; note
 }
 
 const small = { ...inputStyle(), height: 44, fontSize: 16, width: 120, padding: '0 12px' }
-const editLink = { background: 'none', border: 'none', padding: 0, color: BAI.caramel, fontWeight: 600, fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 3 } as const
+const editLink = { background: 'none', border: 'none', padding: 0, color: BAI.accent, fontWeight: 600, fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 3 } as const
 
 /** Date du jour décalée de quelques années, AAAA-MM-JJ. */
 const shiftYears = (n: number) => {
@@ -119,7 +119,7 @@ export default function LoyerStep() {
       <TextField label="Date d'entrée du locataire" name="startDate" type="date" value={startDate} error={errors.startDate} onChange={(e) => setStartDate(e.target.value)} />
 
       <div className="stack" style={{ background: BAI.night, borderRadius: 20, padding: '24px 26px 10px' }} aria-live="polite">
-        <span style={{ fontSize: 15, fontWeight: 700, color: BAI.caramel, paddingBottom: 12 }}>Calculé pour vous</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: BAI.accent, paddingBottom: 12 }}>Calculé pour vous</span>
         <CalcRow label="Total par mois" value={rentCents ? euros(rentCents + chargesCents) : '—'} note="Loyer et charges" />
         <CalcRow
           label="Dépôt de garantie"
@@ -147,7 +147,7 @@ export default function LoyerStep() {
           note={
             <>
               {depositTooHigh ? (
-                <span style={{ color: BAI.caramel }}>Au-dessus du maximum légal ({euros(maxDeposit)})</span>
+                <span style={{ color: BAI.accent }}>Au-dessus du maximum légal ({euros(maxDeposit)})</span>
               ) : deposit.trim() && depositCents !== maxDeposit ? (
                 `Maximum légal : ${euros(maxDeposit)}`
               ) : (

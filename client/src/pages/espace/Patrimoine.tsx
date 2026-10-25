@@ -70,7 +70,7 @@ export default function Patrimoine() {
               <Link key={`${a.propertyId}-${a.kind}-${i}`} to={`/espace/logements/${a.propertyId}`} style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '12px 0 0', borderTop: i ? `1px solid ${BAI.dividerSoft}` : 'none', textDecoration: 'none', color: BAI.ink }}>
                 <span style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                   <span style={{ fontSize: 16, fontWeight: 700 }}>{a.title}</span>
-                  <Pill tone={a.level === 1 ? 'error' : a.level === 2 ? 'caramel' : 'owner'}>{names[a.propertyId]}</Pill>
+                  <Pill tone={a.level === 1 ? 'error' : a.level === 2 ? 'accent' : 'owner'}>{names[a.propertyId]}</Pill>
                 </span>
                 <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.45 }}>{a.text}</span>
               </Link>

@@ -228,7 +228,7 @@ export default function CreationBail() {
                   onClick={() => setTenantIds(tenantIds.includes(t.id) ? tenantIds.filter((x) => x !== t.id) : [...tenantIds, t.id])}
                   title={t.name}
                   sub={t.property ? `Rattaché à ${t.property.name}` : t.email ?? undefined}
-                  badge={t.completion >= 100 ? <Pill tone="green">Fiche complète</Pill> : <Pill tone="caramel">Fiche à {t.completion} %</Pill>}
+                  badge={t.completion >= 100 ? <Pill tone="green">Fiche complète</Pill> : <Pill tone="accent">Fiche à {t.completion} %</Pill>}
                 />
               ))}
             </div>
@@ -257,7 +257,7 @@ export default function CreationBail() {
           ) : null}
           {parking ? null : <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />}
           <div style={{ background: BAI.night, borderRadius: 18, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, color: BAI.surface }}>
-            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramel }}>Il reste quelques questions</span>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accent }}>Il reste quelques questions</span>
             <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer. Un garage loué seul a son propre contrat, plus simple qu’un bail d’habitation.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
           </div>
         </>

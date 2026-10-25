@@ -39,7 +39,7 @@ export interface Task {
   id: string
   type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT'
   tag: string
-  tone: 'error' | 'owner' | 'caramel' | 'green'
+  tone: 'error' | 'owner' | 'accent' | 'green'
   place: string
   title: string
   text?: string
@@ -105,7 +105,7 @@ router.get('/today', async (req, res) => {
       tasks.push({ id: `late-${l.id}`, type: 'LATE_RENT', tag: many ? 'Loyers en retard' : 'Loyer en retard', tone: 'error', place: propertyName(l.property), title: many ? `${who} doit ${formatEuros(st.unpaidCents)} : ${st.unpaidPeriods.length} loyers non réglés depuis ${monthYearFr(oy, om)}` : `Le loyer de ${who} n’est pas arrivé (attendu le ${short(oldestDue)})`, text: many ? 'Suivez les étapes dans l’ordre : relance, mise en demeure, caution. Chaque courrier est déjà rempli.' : 'Une relance amiable, polie et courte, est rédigée. Vous pouvez la relire avant l’envoi.', leaseId: l.id, amountCents: st.unpaidCents, period: st.unpaidPeriods[0] })
     } else if (st.key === 'PARTIAL') {
       const paid = l.payments.find((p) => p.period === period)?.amountCents ?? 0
-      tasks.push({ id: `partial-${l.id}`, type: 'PARTIAL_RENT', tag: 'Paiement partiel', tone: 'caramel', place: propertyName(l.property), title: `${who} a payé ${formatEuros(paid)} sur ${formatEuros(l.rentCents + l.chargesCents)}`, text: 'Un reçu a été établi. Il reste à recevoir le solde.', leaseId: l.id, period })
+      tasks.push({ id: `partial-${l.id}`, type: 'PARTIAL_RENT', tag: 'Paiement partiel', tone: 'accent', place: propertyName(l.property), title: `${who} a payé ${formatEuros(paid)} sur ${formatEuros(l.rentCents + l.chargesCents)}`, text: 'Un reçu a été établi. Il reste à recevoir le solde.', leaseId: l.id, period })
     }
   }
 
@@ -130,14 +130,14 @@ router.get('/today', async (req, res) => {
       const expires = t ? readTenant(t).insurance?.expiresAt : null
       // Attestation reçue et encore valable plus d'un mois : rien à demander.
       if (expires && new Date(`${expires}T00:00:00Z`) > new Date(r.dueDate.getTime() + 30 * DAY)) continue
-      tasks.push({ id: r.id, type: 'INSURANCE', tag: 'Assurance', tone: 'caramel', place, title: expires ? `L’attestation d’assurance de ${who} expire le ${short(new Date(`${expires}T00:00:00Z`))}` : `Demander l’attestation d’assurance de ${who}`, leaseId: l.id, reminderId: r.id })
+      tasks.push({ id: r.id, type: 'INSURANCE', tag: 'Assurance', tone: 'accent', place, title: expires ? `L’attestation d’assurance de ${who} expire le ${short(new Date(`${expires}T00:00:00Z`))}` : `Demander l’attestation d’assurance de ${who}`, leaseId: l.id, reminderId: r.id })
     } else if (r.type === 'INVENTORY_ENTRY' && r.dueDate <= new Date(today.getTime() + 10 * DAY)) {
       const inv = inventories.find((i) => i.leaseId === l.id && i.kind === 'ENTRY')
       if (inv?.status === 'SIGNED') continue
       tasks.push({ id: r.id, type: 'INVENTORY', tag: 'État des lieux', tone: 'owner', place, title: `État des lieux d’entrée avec ${who} le ${short(r.dueDate)}`, text: 'Les pièces, les compteurs et les clés sont déjà prêts : il suffit de le faire sur votre téléphone.', leaseId: l.id, reminderId: r.id, inventoryId: inv?.id })
     } else if (r.type === 'LEASE_END' && r.dueDate <= in30) {
       const notice = landlordNoticeMonthsFor(leaseKindOf(l), readTerms(l))
-      tasks.push({ id: r.id, type: 'LEASE_END', tag: 'Fin du bail', tone: 'caramel', place, title: `Le bail de ${who} arrive à échéance le ${short(l.endDate)}`, text: notice ? `Pour donner congé, il faut l’envoyer au moins ${notice} mois avant. Sans rien faire, le bail est reconduit.` : 'Le bail prendra fin à cette date.', leaseId: l.id, reminderId: r.id })
+      tasks.push({ id: r.id, type: 'LEASE_END', tag: 'Fin du bail', tone: 'accent', place, title: `Le bail de ${who} arrive à échéance le ${short(l.endDate)}`, text: notice ? `Pour donner congé, il faut l’envoyer au moins ${notice} mois avant. Sans rien faire, le bail est reconduit.` : 'Le bail prendra fin à cette date.', leaseId: l.id, reminderId: r.id })
     } else if (r.type === 'CHARGES_REGULARIZATION' && r.dueDate <= in30) {
       tasks.push({ id: r.id, type: 'CHARGES', tag: 'Charges', tone: 'owner', place, title: 'Régularisation annuelle des charges', text: 'Comparez les provisions versées aux charges réelles de l’année : Bailio prépare le décompte.', leaseId: l.id, reminderId: r.id })
     }
@@ -170,7 +170,7 @@ router.get('/today', async (req, res) => {
         id: `settle-${l.id}`,
         type: 'SETTLEMENT',
         tag: 'Dépôt de garantie',
-        tone: limit < today ? 'error' : 'caramel',
+        tone: limit < today ? 'error' : 'accent',
         place,
         title: damages ? `Faire le point sur ${damages > 1 ? `les ${damages} éléments abîmés` : 'l’élément abîmé'} avant de rendre le dépôt de ${who}` : `Envoyer le solde de tout compte à ${who}${limit < today ? ' : la date limite est passée' : ` avant le ${short(limit)}`}`,
         text: limit < today
@@ -187,7 +187,7 @@ router.get('/today', async (req, res) => {
     if (l.status === 'ACTIVE' && heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(heating.energy)) && !snoozed('BOILER')) {
       const last = [facts.boilerServiceDate ? new Date(`${facts.boilerServiceDate}T00:00:00Z`) : null, heating.lastMaintenance ? new Date(`${heating.lastMaintenance}T00:00:00Z`) : null, lastLetter(l.id, 'BOILER')].filter((d): d is Date => Boolean(d)).sort((a, b) => b.getTime() - a.getTime())[0] ?? l.startDate
       if (today.getTime() - last.getTime() >= 365 * DAY)
-        tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'caramel', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
+        tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'accent', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
     }
   }
 
@@ -202,7 +202,7 @@ router.get('/today', async (req, res) => {
       id: `complement-${inv.id}`,
       type: 'INVENTORY_COMPLEMENT',
       tag: 'État des lieux',
-      tone: 'caramel',
+      tone: 'accent',
       place: propertyName(l.property),
       title: `${label.charAt(0).toUpperCase()}${label.slice(1)} demande à compléter l’état des lieux d’entrée`,
       text: `« ${pending[0].text.replace(/\s+/g, ' ').slice(0, 160)}${pending[0].text.length > 160 ? '…' : ''} » Acceptez pour l’ajouter, ou refusez en indiquant pourquoi.`,
@@ -222,7 +222,7 @@ router.get('/today', async (req, res) => {
       id: `issue-${i.id}`,
       type: 'ISSUE',
       tag: d?.urgent ? 'Urgent, signalé par le locataire' : 'Signalé par le locataire',
-      tone: d?.urgent ? 'error' : 'caramel',
+      tone: d?.urgent ? 'error' : 'accent',
       place: propertyName(i.property),
       title: `${who} signale : ${i.title.charAt(0).toLowerCase()}${i.title.slice(1)}`,
       text: desc ? `« ${desc.length > 180 ? `${desc.slice(0, 177)}…` : desc} »` : undefined,
@@ -249,11 +249,11 @@ router.get('/today', async (req, res) => {
     const same = nextSteps.filter((x) => x.st.key === key)
     if (same.length >= 3) {
       const { st } = same[0]
-      tasks.push({ id: `step-many-${key}`, type: 'STEP', tag: 'Mise en location', tone: key === 'PROPERTY' || key === 'TENANT' ? 'caramel' : 'owner', place: `${same.length} logements`, title: `${st.title} : ${same.length} logements`, text: same.map((x) => propertyName(x.p)).join(', '), step: { key: st.key, label: 'Voir les logements', to: '/espace/logements', optional: false } })
+      tasks.push({ id: `step-many-${key}`, type: 'STEP', tag: 'Mise en location', tone: key === 'PROPERTY' || key === 'TENANT' ? 'accent' : 'owner', place: `${same.length} logements`, title: `${st.title} : ${same.length} logements`, text: same.map((x) => propertyName(x.p)).join(', '), step: { key: st.key, label: 'Voir les logements', to: '/espace/logements', optional: false } })
       continue
     }
     for (const { p, st } of same) {
-      tasks.push({ id: `step-${p.id}-${st.key}`, type: 'STEP', tag: st.optional ? 'Mise en location, facultatif' : 'Mise en location', tone: st.key === 'PROPERTY' || st.key === 'TENANT' ? 'caramel' : 'owner', place: propertyName(p), title: st.title, text: st.text, propertyId: p.id, step: { key: st.key, label: st.action!.label, to: st.action!.to, optional: Boolean(st.optional) } })
+      tasks.push({ id: `step-${p.id}-${st.key}`, type: 'STEP', tag: st.optional ? 'Mise en location, facultatif' : 'Mise en location', tone: st.key === 'PROPERTY' || st.key === 'TENANT' ? 'accent' : 'owner', place: propertyName(p), title: st.title, text: st.text, propertyId: p.id, step: { key: st.key, label: st.action!.label, to: st.action!.to, optional: Boolean(st.optional) } })
     }
   }
 
@@ -308,7 +308,7 @@ router.get('/today', async (req, res) => {
         const current = ls.find((l) => (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now) ?? ls.find((l) => l.status === 'ACTIVE' && l.startDate > now)
         const draft = ls.find((l) => l.status === 'DRAFT')
         const st = current ? rentStatus(current, current.payments, now) : null
-        const status = current ? (st!.key === 'PAID' ? { label: 'Payé', tone: 'green' } : st!.key === 'LATE' ? { label: 'En retard', tone: 'error' } : st!.key === 'UPCOMING' ? { label: 'Entrée à venir', tone: 'owner' } : { label: st!.label, tone: 'muted' }) : draft ? { label: 'Bail en préparation', tone: 'caramel' } : { label: 'Disponible', tone: 'muted' }
+        const status = current ? (st!.key === 'PAID' ? { label: 'Payé', tone: 'green' } : st!.key === 'LATE' ? { label: 'En retard', tone: 'error' } : st!.key === 'UPCOMING' ? { label: 'Entrée à venir', tone: 'owner' } : { label: st!.label, tone: 'muted' }) : draft ? { label: 'Bail en préparation', tone: 'accent' } : { label: 'Disponible', tone: 'muted' }
         return { id: p.id, name: propertyName(p), status }
       }),
       counts: { properties: properties.length, tenants: tenants.length, leases: leases.length, signedLeases: leases.filter((l) => l.status !== 'DRAFT').length },

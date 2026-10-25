@@ -93,7 +93,7 @@ export function StepFlow({
             </div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               {extra}
-              <button type="submit" disabled={nextDisabled || busy} aria-busy={busy || undefined} style={{ border: 'none', background: BAI.owner, color: BAI.surface, fontFamily: 'inherit', height: 60, padding: '0 clamp(24px, 4vw, 40px)', borderRadius: 14, fontWeight: 600, fontSize: 17, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: nextDisabled ? 'not-allowed' : 'pointer', opacity: nextDisabled ? 0.5 : 1 }}>
+              <button type="submit" disabled={nextDisabled || busy} aria-busy={busy || undefined} className="btn btn-primary" style={{ border: 'none', background: BAI.cta, color: BAI.ctaInk, fontFamily: 'inherit', height: 60, padding: '0 clamp(24px, 4vw, 40px)', borderRadius: 999, fontWeight: 600, fontSize: 17, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: nextDisabled ? 'not-allowed' : 'pointer', opacity: nextDisabled ? 0.5 : 1 }}>
                 {busy ? <Spinner size={18} color={BAI.surface} /> : null}
                 {nextLabel}
               </button>
@@ -255,10 +255,10 @@ export function FicheSection({ id, n, kicker, title, intro, children, reference,
       </section>
     )
   return (
-    <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.caramel : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
+    <section ref={ref} id={id} style={{ background: BAI.surface, border: `${target && !done ? 2 : 1}px solid ${target && !done ? BAI.accent : BAI.divider}`, borderRadius: 20, padding: 'clamp(18px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18, scrollMarginTop: 100 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>{kicker ?? `Étape ${n}`}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>{kicker ?? `Étape ${n}`}</span>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{title}</h2>
         </div>
         {done ? <span style={{ fontSize: 13, fontWeight: 700, color: BAI.green, background: BAI.greenLight, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Rempli</span> : null}

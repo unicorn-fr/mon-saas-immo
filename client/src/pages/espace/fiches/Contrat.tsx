@@ -379,7 +379,7 @@ export default function Contrat() {
         {view.annexes.map((a) => (
           <div key={a.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
             <span>{a.label}</span>
-            <Pill tone={a.done ? 'green' : 'caramel'}>{a.status}</Pill>
+            <Pill tone={a.done ? 'green' : 'accent'}>{a.status}</Pill>
           </div>
         ))}
       </FicheSection>

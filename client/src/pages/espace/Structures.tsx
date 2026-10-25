@@ -32,7 +32,7 @@ export default function Structures() {
             <span style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Pill tone="owner">{KIND_OPTIONS.find((k) => k.value === (s.file.kind ?? 'PERSON'))?.label}</Pill>
               {s.file.kind === 'SCI' && s.file.sciFamily ? <Pill tone="green">Familiale</Pill> : null}
-              <Pill tone="caramel">{TAX_LABEL[s.taxRegime]}</Pill>
+              <Pill tone="accent">{TAX_LABEL[s.taxRegime]}</Pill>
             </span>
             <ul style={{ margin: 0, paddingLeft: 20, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
               {s.effects.map((e) => (
@@ -190,7 +190,7 @@ export function StructureFiche() {
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
               <TextLink onClick={() => set({ associates: [...associates, {}] })}>Ajouter {company ? 'un associé' : 'une personne'}</TextLink>
               {associates.length ? <TextLink onClick={() => set({ associates: associates.slice(0, -1) })}>Retirer la dernière ligne</TextLink> : null}
-              {associates.length ? <span style={{ fontSize: 14, color: Math.abs(total - 100) < 0.01 ? BAI.green : BAI.caramelInk, fontWeight: 600 }}>Total : {total.toLocaleString('fr-FR')} %</span> : null}
+              {associates.length ? <span style={{ fontSize: 14, color: Math.abs(total - 100) < 0.01 ? BAI.green : BAI.accentInk, fontWeight: 600 }}>Total : {total.toLocaleString('fr-FR')} %</span> : null}
             </div>
           </>
         ) : null}
@@ -223,7 +223,7 @@ function Section({ k, title, summary, todo, children, open, setOpen, save, busy 
         <button type="button" aria-expanded={open === k} onClick={() => setOpen(open === k ? null : k)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', background: 'none', border: 'none', padding: '18px 0', fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer', color: BAI.ink }}>
           <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
-            {open !== k ? <span style={{ fontSize: 14, fontWeight: 400, color: todo ? BAI.caramelInk : BAI.inkMid }}>{summary}</span> : null}
+            {open !== k ? <span style={{ fontSize: 14, fontWeight: 400, color: todo ? BAI.accentInk : BAI.inkMid }}>{summary}</span> : null}
           </span>
           <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, flexShrink: 0 }}>{open === k ? 'Fermer' : 'Modifier'}</span>
         </button>

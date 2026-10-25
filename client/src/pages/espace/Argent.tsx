@@ -116,7 +116,7 @@ function Total({ label, value, dark }: { label: string; value: string; dark?: bo
   return (
     <div style={{ background: dark ? BAI.night : BAI.surface, border: dark ? 'none' : `1px solid ${BAI.divider}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <span style={{ fontSize: 14, color: dark ? BAI.onDarkMuted : BAI.inkSoft }}>{label}</span>
-      <span style={display('clamp(34px, 4vw, 44px)', { color: dark ? BAI.caramel : BAI.ink })}>{value}</span>
+      <span style={display('clamp(34px, 4vw, 44px)', { color: dark ? BAI.accent : BAI.ink })}>{value}</span>
     </div>
   )
 }

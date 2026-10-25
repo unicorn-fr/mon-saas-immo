@@ -16,7 +16,7 @@ export default function Locataires() {
   )
 }
 
-const TONE = { 'À jour': 'green', 'Loyer en retard': 'error', 'Paiement partiel': 'caramel', 'Bail à signer': 'caramel', 'Sans bail': 'muted' } as const
+const TONE = { 'À jour': 'green', 'Loyer en retard': 'error', 'Paiement partiel': 'accent', 'Bail à signer': 'accent', 'Sans bail': 'muted' } as const
 
 function List({ items }: { items: TenantSummary[] }) {
   const toSign = items.filter((t) => t.situation === 'Bail à signer').length
