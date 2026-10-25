@@ -74,16 +74,16 @@ const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': 
 
 /** Gabarit sobre : un titre, quelques paragraphes, un bouton. */
 export function layout(opts: { title: string; paragraphs: string[]; cta?: { label: string; url: string } }): { html: string; text: string } {
-  const p = opts.paragraphs.map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#45455a">${escape(x)}</p>`).join('')
+  const p = opts.paragraphs.map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#3a4542">${escape(x)}</p>`).join('')
   const cta = opts.cta
-    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#1a3270;color:#ffffff;text-decoration:none;font-weight:600;padding:14px 24px;border-radius:12px">${escape(opts.cta.label)}</a></p>`
+    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#0f5257;color:#ffffff;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:999px">${escape(opts.cta.label)}</a></p>`
     : ''
-  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#faf7f2;font-family:Helvetica,Arial,sans-serif;color:#1a1a2e">
+  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f4f4f0;font-family:Helvetica,Arial,sans-serif;color:#16201e">
 <div style="max-width:560px;margin:0 auto;padding:40px 24px">
-<p style="margin:0 0 32px;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:28px">Bailio</p>
-<h1 style="margin:0 0 20px;font-family:Georgia,serif;font-style:italic;font-size:30px;line-height:1.15">${escape(opts.title)}</h1>
+<p style="margin:0 0 32px;font-family:Georgia,serif;font-weight:700;font-size:28px;color:#0f5257">Bailio</p>
+<h1 style="margin:0 0 20px;font-family:Georgia,serif;font-weight:400;font-size:30px;line-height:1.15">${escape(opts.title)}</h1>
 ${p}${cta}
-<p style="margin:40px 0 0;font-size:13px;color:#8a8aa0">Bailio · le suivi de vos locations</p>
+<p style="margin:40px 0 0;font-size:13px;color:#525d5a">Bailio · le suivi de vos locations</p>
 </div></body></html>`
   const text = [opts.title, '', ...opts.paragraphs, ...(opts.cta ? ['', `${opts.cta.label} : ${opts.cta.url}`] : [])].join('\n')
   return { html, text }

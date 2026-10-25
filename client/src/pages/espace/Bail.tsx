@@ -26,9 +26,9 @@ export default function Bail() {
   )
 }
 
-const STATUS: Record<string, { label: string; tone: 'owner' | 'green' | 'caramel' | 'muted' }> = {
+const STATUS: Record<string, { label: string; tone: 'owner' | 'green' | 'accent' | 'muted' }> = {
   READY: { label: 'Prêt à signer', tone: 'owner' },
-  DRAFT: { label: 'En préparation', tone: 'caramel' },
+  DRAFT: { label: 'En préparation', tone: 'accent' },
   ACTIVE: { label: 'Signé', tone: 'green' },
   IMPORTED: { label: 'Signé, importé', tone: 'green' },
   ENDED: { label: 'Terminé', tone: 'muted' },

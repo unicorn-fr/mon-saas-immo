@@ -1,59 +1,69 @@
 /**
- * Design system Bailio — tokens issus de la maquette « refonte propriétaire ».
+ * Design system Bailio, direction « Midi » (octobre 2026) : docs/design/direction-artistique.md.
+ * Pierre claire de Montpellier pour le fond, bleu canard des persiennes pour l'action, framboise du
+ * laurier-rose pour l'accent, olive pour ce qui est validé. Aplats de couleur unie, pas de dégradé.
  * Toute couleur passe par BAI : aucune valeur hexadécimale en dur dans les composants.
+ * Contrastes vérifiés (WCAG 2.1 AA) : voir le tableau de la direction artistique.
  */
 export const BAI = {
   // Fonds
-  bg: '#faf7f2', // fond de page (crème)
+  bg: '#f4f4f0', // fond de page (pierre claire)
   surface: '#ffffff',
-  night: '#1a1a2e', // encre principale, blocs sombres, CTA secondaires
-  nightLine: '#34344f', // séparateurs sur fond sombre
-  nightActive: '#2c2c48', // entrée active du menu latéral
-  nightSoft: '#2e2e4a', // pastille et séparateur du menu latéral
+  night: '#0d2a2c', // canard nuit : blocs sombres, menu latéral, CTA secondaires
+  nightLine: '#2a4a4c', // séparateurs sur fond sombre
+  nightActive: '#1a3d40', // entrée active du menu latéral
+  nightSoft: '#22474a', // pastille et séparateur du menu latéral
   // Texte
-  ink: '#1a1a2e',
-  inkMid: '#45455a',
-  inkSoft: '#5a5a6e',
-  onDark: '#d6d1e0',
-  onDarkMuted: '#b9b3c9',
-  onDarkNav: '#c9c4d6', // liens du menu latéral
+  ink: '#16201e',
+  inkMid: '#3a4542',
+  inkSoft: '#525d5a',
+  onDark: '#d6e4e2',
+  onDarkMuted: '#b3c7c4',
+  onDarkNav: '#c7d9d6', // liens du menu latéral
   // Bordures
-  border: '#e3dccf',
-  borderStrong: '#8a8274', // bord des champs et boutons à choix : contraste 3:1 minimum (WCAG 1.4.11)
-  divider: '#ebe4d8',
-  dividerSoft: '#efe9df',
-  rule: '#ddd5c7',
-  skeleton: '#efeae2',
-  dashed: '#c9bfae', // cadre pointillé, étape non remplie
-  timeline: '#f0ebe2',
-  inkTint: '#ece8f2', // étiquette neutre
-  photoWarm: '#d9cfc0', // fond d'une vignette sans photo
-  photoCool: '#c9d0de',
-  photoSand: '#e7e1d6',
-  // Accent propriétaire (bleu) — CTA principal
-  owner: '#1a3270',
-  ownerHover: '#0f1f4a',
-  ownerLight: '#eef1f8',
-  ownerTint: '#e8ecf6',
-  ownerBorder: '#cfd6e6',
-  // Caramel
-  caramel: '#c4976a',
-  caramelInk: '#8a5f36',
-  caramelDark: '#7a5230',
-  caramelLight: '#f5ece1',
-  // Vert (validé, enregistré)
-  green: '#1b5e3b',
-  greenLight: '#e6f0ea',
-  greenOnDark: '#9fd3b4',
-  greenDarkBg: '#2c4a3a',
-  // Erreur / avertissement
-  error: '#9a3412',
-  errorLight: '#fdf1ea',
-  errorTint: '#fbeee4', // étiquette et encadré d'alerte
-  overlay: 'rgba(26, 26, 46, 0.45)', // fond derrière une fenêtre
-  // Typographies
-  fontDisplay: "'Cormorant Garamond', Georgia, serif",
-  fontBody: "'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif",
+  border: '#dde1dc',
+  borderStrong: '#78837f', // bord des champs et boutons à choix : contraste 3:1 minimum (WCAG 1.4.11)
+  divider: '#e4e7e2',
+  dividerSoft: '#ecefea',
+  rule: '#d5dad4',
+  skeleton: '#eaede8',
+  dashed: '#b5bdb7', // cadre pointillé, étape non remplie
+  timeline: '#edf0eb',
+  inkTint: '#e6ebe9', // étiquette neutre
+  photoWarm: '#e2ddd2', // fond d'une vignette sans photo
+  photoCool: '#d3e0de',
+  photoSand: '#e9e6dc',
+  // Bleu canard (persiennes) : action principale
+  owner: '#0f5257',
+  ownerHover: '#0a3a3e',
+  ownerLight: '#e7f0ef',
+  ownerTint: '#dcebea',
+  ownerBorder: '#b7d1cf',
+  // Framboise (laurier-rose) : accent. `accent` seulement sur fond sombre ; sur fond clair `accentInk`.
+  accent: '#f59bb4',
+  accentInk: '#a3264d',
+  accentDark: '#8a1f41',
+  accentLight: '#fce3ea',
+  // Olive (validé, enregistré)
+  green: '#3b6a1d',
+  greenLight: '#e9f0dc',
+  greenOnDark: '#b8da8f',
+  greenDarkBg: '#2b4a1c',
+  // Aplats de section (texte `ink` ou `owner` dessus)
+  pistache: '#d6e29c',
+  rose: '#f8c9d5',
+  // Erreur : le rouge ne sert qu'aux erreurs
+  error: '#b42318',
+  errorLight: '#fdecea',
+  errorTint: '#fbe1dd', // étiquette et encadré d'alerte
+  overlay: 'rgba(13, 42, 44, 0.5)', // fond derrière une fenêtre
+  // Typographies : Fraunces (titres, accroches courtes), Figtree (tout le reste)
+  fontDisplay: "'Fraunces Variable', Georgia, serif",
+  fontBody: "'Figtree', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif",
+  // Formes : rayon des cartes, du coin replié (module « page de bail »), des champs
+  radius: 24,
+  radiusField: 14,
+  fold: 28,
   // Points de rupture
   bpMd: 768,
   bpLg: 1024,

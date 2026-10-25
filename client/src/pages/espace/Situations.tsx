@@ -103,11 +103,11 @@ interface JourneyView {
   lease: { id: string; tenantName: string; address: string }
 }
 
-const STATUS: Record<StepStatus, { label: string; tone: 'green' | 'owner' | 'muted' | 'caramel' }> = {
+const STATUS: Record<StepStatus, { label: string; tone: 'green' | 'owner' | 'muted' | 'accent' }> = {
   DONE: { label: 'Fait', tone: 'green' },
   TODO: { label: 'À faire', tone: 'owner' },
   LATER: { label: 'Plus tard', tone: 'muted' },
-  OPTIONAL: { label: 'Si besoin', tone: 'caramel' },
+  OPTIONAL: { label: 'Si besoin', tone: 'accent' },
   NA: { label: 'Pas nécessaire', tone: 'muted' },
 }
 
@@ -162,7 +162,7 @@ export function Parcours() {
                       <Pill tone={st.tone}>{s.status === 'DONE' && s.doneAt ? `Fait le ${dateNum(s.doneAt)}` : st.label}</Pill>
                     </div>
                     <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{s.text}</span>
-                    {s.due && s.status !== 'DONE' && s.status !== 'NA' ? <span style={{ fontSize: 14, fontWeight: 600, color: BAI.caramelInk }}>Au plus tard le {dateNum(s.due)}</span> : null}
+                    {s.due && s.status !== 'DONE' && s.status !== 'NA' ? <span style={{ fontSize: 14, fontWeight: 600, color: BAI.accentInk }}>Au plus tard le {dateNum(s.due)}</span> : null}
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', paddingTop: 2 }}>
                       {s.action.type === 'MANUAL' ? (
                         s.status === 'DONE' ? (

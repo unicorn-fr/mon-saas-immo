@@ -67,7 +67,7 @@ export function ESignCard({ leaseId, ready, amendment = false, onChange }: { lea
                 </Btn>
               ) : (
                 <>
-                  <Pill tone={s.linkExpired ? 'error' : 'caramel'}>{s.linkExpired ? 'Lien expiré' : 'En attente'}</Pill>
+                  <Pill tone={s.linkExpired ? 'error' : 'accent'}>{s.linkExpired ? 'Lien expiré' : 'En attente'}</Pill>
                   <TextLink style={{ fontSize: 13 }} onClick={() => remind(s.id)().catch(toast.error)}>
                     {s.linkExpired ? 'Envoyer un nouveau lien' : 'Renvoyer le lien'}
                   </TextLink>

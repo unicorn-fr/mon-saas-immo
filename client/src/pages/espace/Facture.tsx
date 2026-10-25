@@ -169,7 +169,7 @@ function Verify({ e }: { e: ExpenseDetails }) {
               { value: 'OTHER', label: 'Autre' },
             ]}
           />
-          <fieldset style={{ margin: 0, border: `1px solid ${reading?.tenantRepairHint ? BAI.caramel : BAI.border}`, background: reading?.tenantRepairHint ? BAI.errorLight : BAI.surface, borderRadius: 16, padding: '14px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <fieldset style={{ margin: 0, border: `1px solid ${reading?.tenantRepairHint ? BAI.accent : BAI.border}`, background: reading?.tenantRepairHint ? BAI.errorLight : BAI.surface, borderRadius: 16, padding: '14px 20px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <legend style={{ fontSize: 14, fontWeight: 700, color: reading?.tenantRepairHint ? BAI.error : BAI.ink, padding: '0 6px' }}>{reading?.tenantRepairHint ? 'À vérifier : qui paie cette dépense ?' : 'Qui paie cette dépense ?'}</legend>
             {reading?.tenantRepairHint ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>{reading.tenantRepairHint} Suggestion de Bailio, à confirmer selon la situation.</span> : null}
             <div className="grid-2" style={{ gap: 10 }}>

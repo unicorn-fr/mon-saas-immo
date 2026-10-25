@@ -21,9 +21,9 @@ interface AidsView {
   aids: Aid[]
 }
 
-const STATUS: Record<AidStatus, { label: string; tone: 'green' | 'owner' | 'caramel' | 'muted' }> = {
+const STATUS: Record<AidStatus, { label: string; tone: 'green' | 'owner' | 'accent' | 'muted' }> = {
   LIKELY: { label: 'Semble possible', tone: 'green' },
-  CHECK: { label: 'À vérifier', tone: 'caramel' },
+  CHECK: { label: 'À vérifier', tone: 'accent' },
   INFO: { label: 'Bon à savoir', tone: 'owner' },
   NOT: { label: 'Ne s’applique pas', tone: 'muted' },
 }
@@ -66,7 +66,7 @@ export default function Aides() {
                 <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>{a.summary}</span>
                 {a.reasons.length ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Pour votre logement</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>Pour votre logement</span>
                     {a.reasons.map((r) => (
                       <span key={r} style={{ fontSize: 15, lineHeight: 1.5 }}>
                         {r}
@@ -75,7 +75,7 @@ export default function Aides() {
                   </div>
                 ) : null}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Comment faire</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>Comment faire</span>
                   <ol style={{ margin: 0, paddingLeft: 20, fontSize: 15, lineHeight: 1.6 }}>
                     {a.steps.map((s) => (
                       <li key={s}>{s}</li>

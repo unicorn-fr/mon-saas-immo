@@ -216,7 +216,7 @@ export default function Degradations() {
                     {l.entryState ?? '?'} → {l.exitState ?? '?'}
                   </span>
                 </span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: l.missing ? BAI.caramelInk : BAI.inkMid }}>{l.missing ? 'À décider' : l.decision === 'WEAR' ? 'Usure normale' : eurosCents(l.retainedCents)}</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: l.missing ? BAI.accentInk : BAI.inkMid }}>{l.missing ? 'À décider' : l.decision === 'WEAR' ? 'Usure normale' : eurosCents(l.retainedCents)}</span>
               </button>
             ))}
           </Card>

@@ -153,7 +153,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
             </Card>
           ) : null}
           {lease ? (
-            <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Son bail</h2><Pill tone={lease.status === 'DRAFT' ? 'caramel' : lease.status === 'ENDED' ? 'muted' : 'green'}>{lease.status === 'DRAFT' ? 'En préparation' : lease.status === 'ENDED' ? 'Terminé' : 'En cours'}</Pill></div>}>
+            <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Son bail</h2><Pill tone={lease.status === 'DRAFT' ? 'accent' : lease.status === 'ENDED' ? 'muted' : 'green'}>{lease.status === 'DRAFT' ? 'En préparation' : lease.status === 'ENDED' ? 'Terminé' : 'En cours'}</Pill></div>}>
               <Line label="Type" value={KIND_LABEL[lease.kind]} />
               <Line label="Période" value={`${dateNum(lease.startDate)} au ${dateNum(lease.endDate)}`} />
               <Line label="Loyer" value={`${euros(lease.rentCents)} + ${euros(lease.chargesCents)} de charges`} />

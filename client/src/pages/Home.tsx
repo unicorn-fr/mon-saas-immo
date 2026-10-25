@@ -1,19 +1,17 @@
 import { ADD_PARKING_PATH } from '../lib/contract'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
-import '@fontsource/young-serif/latin-400.css'
-import '@fontsource/source-serif-4/latin-400.css'
-import '@fontsource/source-serif-4/latin-600.css'
 import './home.css'
 import { Logo } from '../components/Logo'
+import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../config'
 
 /**
- * Accueil. Direction « split stage » (taste-skill) : la carte et le bail en direct défilent à gauche,
- * les grands lieux de Montpellier restent à droite et changent quand la section change. « Tout le dossier »
- * montre des aperçus de l'application (HTML, pas d'image). Photos fournies par l'éditeur
- * (public/accueil/credits.json).
+ * Accueil, direction « Midi » (docs/design/direction-artistique.md) : système de modules « page de bail »
+ * (grands coins arrondis, un coin replié), photos de Montpellier dans des modules arrondis et blocs de
+ * couleur unie posés en bas, par-dessus. « Tout le dossier » montre des aperçus de l'application (HTML,
+ * pas d'image). Photos fournies par l'éditeur (public/accueil/credits.json).
  */
 
 type Kind = 'VIDE' | 'MEUBLE' | 'GARAGE'
@@ -163,82 +161,142 @@ function MockMonth() {
   )
 }
 
-const STAGE_PHOTOS = [
-  { src: '/accueil/arbre-blanc.webp', place: 'L’Arbre Blanc', alt: 'L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier' },
-  { src: '/accueil/comedie.webp', place: 'Place de la Comédie', alt: 'La fontaine des Trois Grâces devant l’opéra Comédie, à Montpellier' },
-]
+/** Les couleurs de la page viennent des tokens BAI (une seule source), passées au CSS en variables. */
+const VARS = {
+  '--bg': BAI.surface,
+  '--stone': BAI.bg,
+  '--ink': BAI.ink,
+  '--muted': BAI.inkSoft,
+  '--owner': BAI.owner,
+  '--owner-hover': BAI.ownerHover,
+  '--owner-light': BAI.ownerLight,
+  '--night': BAI.night,
+  '--on-dark': BAI.onDark,
+  '--accent': BAI.accent,
+  '--accent-ink': BAI.accentInk,
+  '--pistache': BAI.pistache,
+  '--rose': BAI.rose,
+  '--paper': BAI.surface,
+  '--line': BAI.divider,
+  '--display': BAI.fontDisplay,
+  '--text': BAI.fontBody,
+} as CSSProperties
+
+/** Flèche des boutons d'action (trait fin, bouts arrondis). */
+function Arrow() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable="false">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+
+/** Coche dans une pastille, à la place des puces. */
+function Check() {
+  return (
+    <span className="tick" aria-hidden>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12.5 10 17 19 7" />
+      </svg>
+    </span>
+  )
+}
+
+const FIELDS = ['rose', 'pistache', 'night'] as const
 
 export default function Home() {
   const { user } = useAuth()
   const root = useRef<HTMLDivElement>(null)
   const [kind, setKind] = useState<Kind>('VIDE')
   const [rent, setRent] = useState(780)
-  const [photo, setPhoto] = useState(0)
   const current = KINDS.find((k) => k.id === kind)!
 
-  // Entrées des sections et photo de la scène qui change avec la section.
+  // Entrées des sections : seulement quand le script tourne, jamais de contenu caché sinon.
   useEffect(() => {
     const el = root.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
-    el.classList.add('hm-js')
+    if (!el) return
     const previous = document.body.style.background
-    document.body.style.background = '#e8e8e3'
+    document.body.style.background = BAI.surface
+    if (typeof IntersectionObserver === 'undefined') return () => void (document.body.style.background = previous)
+    el.classList.add('hm-js')
     const reveal = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && (e.target.classList.add('is-in'), reveal.unobserve(e.target))),
       { threshold: 0.15 },
     )
     el.querySelectorAll('[data-section]').forEach((s) => reveal.observe(s))
-    const stage = new IntersectionObserver((entries) => entries.forEach((e) => e.isIntersecting && setPhoto(Number((e.target as HTMLElement).dataset.photo ?? 0))), { threshold: 0.5 })
-    el.querySelectorAll('[data-photo]').forEach((s) => stage.observe(s))
     return () => {
       document.body.style.background = previous
       reveal.disconnect()
-      stage.disconnect()
     }
   }, [])
 
   return (
-    <div className="hm" ref={root}>
-      <main>
-        <div className="stage">
-          <div className="stage-col">
-            <section className="card" data-photo="0" data-section>
-              <div className="card-body">
-                <span data-in style={{ ['--i' as string]: 0 }}>
-                  <Logo size={28} color="var(--accent)" to={null} />
-                </span>
-                <h1 data-in style={{ ['--i' as string]: 1 }}>
-                  Le bail <span className="hl">juste</span>, du premier coup.
-                </h1>
-                <p className="card-lead" data-in style={{ ['--i' as string]: 2 }}>
-                  Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
-                </p>
-                <span>
-                  <Link to="/commencer" className="btn">
-                    Créer mon bail gratuit
-                  </Link>
-                </span>
-              </div>
-              <nav aria-label="Menu" className="card-foot">
-                <Link to="/importer">J’ai déjà un bail</Link>
-                <a href="#tarifs">Tarif</a>
-                {user ? <Link to="/espace">Mon espace</Link> : <Link to="/connexion">Se connecter</Link>}
-              </nav>
-            </section>
+    <div className="hm" ref={root} style={VARS}>
+      <header className="bar">
+        <Logo size={28} />
+        <nav aria-label="Menu">
+          <Link to="/importer" className="bar-link hide-md">
+            J’ai déjà un bail
+          </Link>
+          <a href="#tarifs" className="bar-link hide-md">
+            Tarif
+          </a>
+          {user ? (
+            <Link to="/espace" className="bar-link">
+              Mon espace
+            </Link>
+          ) : (
+            <Link to="/connexion" className="bar-link">
+              Se connecter
+            </Link>
+          )}
+          <Link to="/commencer" className="btn btn--sm hide-md">
+            Créer mon bail
+          </Link>
+        </nav>
+      </header>
 
-            <section className="live" data-photo="1" data-section aria-labelledby="live-title">
-              <div className="tabs-live" role="group" aria-label="Type de location" data-in style={{ ['--i' as string]: 0 }}>
-                {KINDS.map((k) => (
-                  <button key={k.id} type="button" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
-                    {k.label}
-                  </button>
-                ))}
-              </div>
-              <h2 id="live-title" data-in style={{ ['--i' as string]: 1 }}>
-                {current.title}, <span className="hl">déjà calculé</span>.
-              </h2>
-              <div className="rent" data-in style={{ ['--i' as string]: 2 }}>
-                <label htmlFor="live-rent">Loyer hors charges</label>
+      <main>
+        <section className="hero" data-section>
+          <div className="hero-photo">
+            <img src="/accueil/arbre-blanc.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={960} height={1200} fetchPriority="high" />
+          </div>
+          <div className="hero-block fold fold--lg fold--ear">
+            <h1 data-in style={{ ['--i' as string]: 0 }}>
+              Le bail juste,
+              <br />
+              <em>du premier coup.</em>
+            </h1>
+            <p className="hero-lead" data-in style={{ ['--i' as string]: 1 }}>
+              Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
+            </p>
+            <div className="hero-actions" data-in style={{ ['--i' as string]: 2 }}>
+              <Link to="/commencer" className="btn btn--paper">
+                Créer mon bail gratuit
+                <Arrow />
+              </Link>
+              <Link to="/importer" className="hero-link">
+                J’ai déjà un bail
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        <section className="live" data-section aria-labelledby="live-title">
+          <div className="live-form">
+            <div className="tabs-live" role="group" aria-label="Type de location" data-in style={{ ['--i' as string]: 0 }}>
+              {KINDS.map((k) => (
+                <button key={k.id} type="button" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
+                  {k.label}
+                </button>
+              ))}
+            </div>
+            <h2 id="live-title" data-in style={{ ['--i' as string]: 1 }}>
+              {current.title}, <em>déjà calculé.</em>
+            </h2>
+            <div className="rent" data-in style={{ ['--i' as string]: 2 }}>
+              <label htmlFor="live-rent">Loyer hors charges</label>
+              <span className="rent-field">
                 <input
                   id="live-rent"
                   inputMode="numeric"
@@ -247,54 +305,57 @@ export default function Home() {
                   aria-describedby="live-terms"
                 />
                 <span aria-hidden>€ par mois</span>
-              </div>
-              <dl className="terms" id="live-terms" aria-live="polite" data-in style={{ ['--i' as string]: 3 }}>
+              </span>
+            </div>
+            <div className="live-actions" data-in style={{ ['--i' as string]: 3 }}>
+              <Link to={kind === 'GARAGE' ? '/inscription' : '/commencer'} state={kind === 'GARAGE' ? { from: ADD_PARKING_PATH } : undefined} className="btn">
+                Créer ce bail
+                <Arrow />
+              </Link>
+              <Link to="/importer" className="btn btn--line">
+                Importer le mien
+              </Link>
+            </div>
+          </div>
+          <div className="live-visual">
+            <div className="live-photo">
+              <img src="/accueil/comedie.webp" alt="La fontaine des Trois Grâces devant l’opéra Comédie, à Montpellier" width={960} height={1200} loading="lazy" decoding="async" />
+            </div>
+            <div className="terms-block fold fold--ear" data-in style={{ ['--i' as string]: 2 }}>
+              <p className="terms-title">Ce que la loi fixe</p>
+              <dl className="terms" id="live-terms" aria-live="polite">
                 {termsFor(kind, rent).map(([k, v]) => (
-                  <div key={k} style={{ display: 'contents' }}>
+                  <div key={k}>
                     <dt>{k}</dt>
                     <dd>{v}</dd>
                   </div>
                 ))}
               </dl>
-              <p className="terms-note" data-in style={{ ['--i' as string]: 3 }}>
+              <p className="terms-note">
                 Dépôt de garantie : somme versée à l’entrée, rendue à la sortie. Préavis : délai pour prévenir avant la fin du bail.
                 {kind === 'VIDE' ? ' Zone tendue : grande ville où les logements manquent.' : ''}
               </p>
-              <div className="live-actions">
-                <Link to={kind === 'GARAGE' ? '/inscription' : '/commencer'} state={kind === 'GARAGE' ? { from: ADD_PARKING_PATH } : undefined} className="btn btn--ink">
-                  Créer ce bail
-                </Link>
-                <Link to="/importer" className="btn btn--paper">
-                  Importer le mien
-                </Link>
-              </div>
-            </section>
+            </div>
           </div>
-
-          <div className="stage-photo">
-            {STAGE_PHOTOS.map((p, i) => (
-              <img key={p.src} src={p.src} alt={i === photo ? p.alt : ''} aria-hidden={i !== photo} className={i === photo ? 'is-on' : undefined} width={960} height={1200} />
-            ))}
-            <p className="stage-place">{STAGE_PHOTOS[photo].place}, Montpellier</p>
-          </div>
-        </div>
+        </section>
 
         <section className="dossier" data-section aria-labelledby="dossier-title">
-          <h2 id="dossier-title">Tout le dossier.</h2>
-          <div className="dossier-rows">
-            {ROWS.map((r) => (
-              <article key={r.title} className="drow" data-section>
-                <h3 data-in>{r.title}</h3>
-                <div className="drow-body">
-                  <div data-in style={{ ['--i' as string]: 1 }} className="mock-wrap">
-                    {r.mock === 'ad' ? <MockAd /> : r.mock === 'lease' ? <MockLease /> : <MockMonth />}
-                  </div>
-                  <ul data-in style={{ ['--i' as string]: 2 }}>
-                    {r.items.map((it) => (
-                      <li key={it}>{it}</li>
-                    ))}
-                  </ul>
-                </div>
+          <h2 id="dossier-title" data-in>
+            Tout le dossier, <em>au même endroit.</em>
+          </h2>
+          <div className="dossier-grid">
+            {ROWS.map((r, i) => (
+              <article key={r.title} className={`drow drow--${FIELDS[i]}${i === 2 ? ' fold fold--ear' : ''}`} data-in style={{ ['--i' as string]: i + 1 }}>
+                <h3>{r.title}</h3>
+                <div className="mock-wrap">{r.mock === 'ad' ? <MockAd /> : r.mock === 'lease' ? <MockLease /> : <MockMonth />}</div>
+                <ul>
+                  {r.items.map((it) => (
+                    <li key={it}>
+                      <Check />
+                      {it}
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
@@ -313,13 +374,13 @@ export default function Home() {
         <section className="itin" data-section aria-labelledby="itin-title">
           <div className="itin-intro">
             <h2 id="itin-title" data-in>
-              Louer, montre en main.
+              Louer, <em>montre en main.</em>
             </h2>
             <p data-in style={{ ['--i' as string]: 1 }}>
               Ce que vous faites, et le temps que ça vous prend.
             </p>
           </div>
-          <div className="slip" data-in style={{ ['--i' as string]: 2 }}>
+          <div className="slip fold fold--ear" data-in style={{ ['--i' as string]: 2 }}>
             {[
               ['Avant l’entrée', [['Décrire le logement', '5 min'], ['Publier l’annonce', '2 min'], ['Choisir un candidat', 'à votre rythme']]],
               ['Le jour de l’entrée', [['Signer le bail en ligne', '3 min'], ['État des lieux en photos', '30 min']]],
@@ -344,17 +405,18 @@ export default function Home() {
         </section>
 
         <section id="tarifs" className="plans" aria-label="Tarif">
-          <div className="plan plan--free">
+          <div className="plan plan--free" data-section>
             <h2>Premier bail</h2>
             <p className="plan-for">Pour louer un logement, une fois.</p>
             <div className="plan-foot">
-              <span className="plan-price hl">0 €</span>
-              <Link to="/commencer" className="btn btn--ink">
+              <span className="plan-price">0 €</span>
+              <Link to="/commencer" className="btn">
                 Créer mon bail
+                <Arrow />
               </Link>
             </div>
           </div>
-          <div className="plan plan--full">
+          <div className="plan plan--full fold fold--lg fold--ear" data-section>
             <h2>Tout inclus</h2>
             <p className="plan-for">Pour suivre la location, mois après mois.</p>
             <p className="plan-note">
@@ -365,8 +427,9 @@ export default function Home() {
                 <span className="plan-price">{priceLabel()}</span>
                 {MONTHLY_PRICE ? <span>par mois</span> : null}
               </span>
-              <Link to="/commencer" className="btn">
+              <Link to="/commencer" className="btn btn--accent">
                 Essayer
+                <Arrow />
               </Link>
             </div>
           </div>
@@ -386,17 +449,20 @@ export default function Home() {
         </section>
 
         <section className="last" data-section aria-labelledby="last-title">
-          <img src="/accueil/peyrou.webp" alt="La promenade du Peyrou, la statue de Louis XIV et le château d’eau, à Montpellier" width={1920} height={1080} loading="lazy" decoding="async" />
-          <div className="last-text">
+          <div className="last-photo">
+            <img src="/accueil/peyrou.webp" alt="La promenade du Peyrou, la statue de Louis XIV et le château d’eau, à Montpellier" width={1920} height={1080} loading="lazy" decoding="async" />
+          </div>
+          <div className="last-block fold fold--lg fold--ear">
             <h2 id="last-title" data-in>
-              Votre premier bail est offert.
+              Votre premier bail <em>est offert.</em>
             </h2>
             <p data-in style={{ ['--i' as string]: 1 }}>
               Cinq minutes de questions pour le préparer. Bailio vous dit ensuite ce qu’il manque (diagnostics, équipements) avant de le faire signer.
             </p>
-            <span>
-              <Link to="/commencer" className="btn btn--paper">
+            <span data-in style={{ ['--i' as string]: 2 }}>
+              <Link to="/commencer" className="btn">
                 Créer mon bail
+                <Arrow />
               </Link>
             </span>
           </div>
@@ -404,9 +470,8 @@ export default function Home() {
       </main>
 
       <footer className="foot">
-        <img src="/accueil/rue-foch.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
         <div className="foot-menu">
-          <Logo size={28} color="var(--accent)" />
+          <Logo size={28} onDark />
           <nav aria-label="Pied de page">
             <ul>
               <li>
@@ -446,6 +511,9 @@ export default function Home() {
               ))}
             </ul>
           </div>
+        </div>
+        <div className="foot-photo">
+          <img src="/accueil/rue-foch.webp" alt="" width={960} height={1200} loading="lazy" decoding="async" />
         </div>
       </footer>
     </div>

@@ -17,7 +17,7 @@ export function MissingList({ items, title = 'Avant de signer, il manque :' }: {
   const later = items.filter((m) => m.level === 'RECOMMENDED')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {essential.length ? <Group items={essential} title={title} text="Ces informations sont primordiales : sans elles, le bail ne peut pas être signé. Cliquez pour les ajouter : vous revenez ensuite ici." tone={BAI.caramelLight} /> : null}
+      {essential.length ? <Group items={essential} title={title} text="Ces informations sont primordiales : sans elles, le bail ne peut pas être signé. Cliquez pour les ajouter : vous revenez ensuite ici." tone={BAI.accentLight} /> : null}
       {later.length ? (
         <Group
           items={later}

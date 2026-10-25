@@ -181,7 +181,7 @@ export default function Bienvenue() {
               </div>
             </div>
           ))}
-          <div className="stack" style={{ marginTop: 20, background: BAI.caramel, borderRadius: 18, padding: 22, gap: 12 }}>
+          <div className="stack" style={{ marginTop: 20, background: BAI.accent, borderRadius: 18, padding: 22, gap: 12 }}>
             {followUpActive ? (
               <>
                 <span style={{ fontSize: 17, fontWeight: 700, color: BAI.night }}>Le suivi est activé. Vous recevrez un email avant chaque échéance.</span>

@@ -98,7 +98,7 @@ export function Interventions({ propertyId }: { propertyId: string }) {
                 {[i.issue ? `Signalé par le locataire le ${dateNum(i.issue.reportedAt)}` : null, i.contact?.name, i.date ? dateNum(i.date) : null, i.costCents ? eurosCents(i.costCents) : null].filter(Boolean).join(' · ') || 'À organiser'}
               </span>
             </span>
-            <Pill tone={i.status === 'DONE' ? 'green' : i.status === 'PLANNED' ? 'owner' : i.issue?.urgent ? 'error' : 'caramel'}>{i.status === 'TODO' && i.issue?.urgent ? 'Urgent' : INTERVENTION_STATUS[i.status]}</Pill>
+            <Pill tone={i.status === 'DONE' ? 'green' : i.status === 'PLANNED' ? 'owner' : i.issue?.urgent ? 'error' : 'accent'}>{i.status === 'TODO' && i.issue?.urgent ? 'Urgent' : INTERVENTION_STATUS[i.status]}</Pill>
           </button>
         ))
       ) : (

@@ -22,10 +22,10 @@ interface BinderView {
   missing: number
 }
 
-const STATE: Record<BinderItem['state'], { label: string; tone: 'green' | 'caramel' | 'muted' | 'owner' }> = {
+const STATE: Record<BinderItem['state'], { label: string; tone: 'green' | 'accent' | 'muted' | 'owner' }> = {
   OK: { label: 'Rangé', tone: 'green' },
   AUTO: { label: 'Fait par Bailio', tone: 'green' },
-  MISSING: { label: 'À ajouter', tone: 'caramel' },
+  MISSING: { label: 'À ajouter', tone: 'accent' },
   LATER: { label: 'Plus tard', tone: 'muted' },
 }
 

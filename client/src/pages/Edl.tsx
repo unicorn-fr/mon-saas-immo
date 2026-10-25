@@ -135,7 +135,7 @@ function Flow({ inv }: { inv: InventoryView }) {
         {screen.s === 'start' ? (
           <Page action={<Btn size="lg" full onClick={() => go({ s: 'meters' })}>Commencer</Btn>}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>
+              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>
                 {exit ? 'Sortie' : 'Entrée'}
                 {data.date ? ` · ${dateFr(data.date)}` : ''}
               </span>
@@ -499,7 +499,7 @@ function Complements({ invId, items, onDecided }: { invId: string; items: Comple
     <>
       {pending ? (
         <Box gap={12}>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.caramelInk }}>Demande de votre locataire</span>
+          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>Demande de votre locataire</span>
           <span style={{ fontSize: 15, fontWeight: 700 }}>
             {pending.heating ? 'Compléter le chauffage' : 'Compléter l’état des lieux'}, le {dateFr(pending.at.slice(0, 10))}
           </span>
@@ -556,7 +556,7 @@ function EntryLine({ e, exitState }: { e: EntryItem | null; exitState: ItemState
           À l’entrée : <strong>{e.entryState}</strong>
           {e.entryNote ? `, ${e.entryNote}` : ''}
         </span>
-        {change === 'WORSE' ? <Pill tone="caramel">À regarder</Pill> : change === 'SAME' ? <Pill tone="green">Identique</Pill> : change === 'BETTER' ? <Pill tone="green">Meilleur</Pill> : null}
+        {change === 'WORSE' ? <Pill tone="accent">À regarder</Pill> : change === 'SAME' ? <Pill tone="green">Identique</Pill> : change === 'BETTER' ? <Pill tone="green">Meilleur</Pill> : null}
       </div>
       {e.entryPhotoIds.length ? (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
