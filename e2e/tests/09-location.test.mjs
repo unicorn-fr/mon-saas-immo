@@ -123,8 +123,12 @@ test('déclaration de revenus : loyers encaissés repris, intérêts d’emprunt
   await page.goto(`${BASE}/espace/argent`)
   await page.getByRole('link', { name: /^Déclaration/ }).click()
   await page.getByRole('button', { name: String(year) }).click()
-  await page.getByText('Case 4BE de la déclaration 2042').waitFor()
+  // Parcours guidé en tête (intérêts déjà connus, régularisation de copropriété demandée), puis le détail replié.
+  await page.getByRole('button', { name: /Vérifier vos chiffres/ }).waitFor()
+  await page.getByText('Studio Sète : régularisation de copropriété').waitFor()
   await shot(page, 'declaration')
+  await page.getByText('Le détail des calculs, logement par logement').click()
+  await page.getByText('Case 4BE de la déclaration 2042').waitFor()
   await ctx.close()
   assert.deepEqual(errors, [])
 })

@@ -24,7 +24,9 @@ export interface CopyGroup {
   id: 'VIDE_MICRO' | 'VIDE_2044' | 'VIDE_2042' | 'MEUBLE_MICRO' | 'MEUBLE_REEL'
   form: '2042' | '2044' | '2042-C-PRO'
   title: string
-  /** Ce qu'il faut cocher ou ouvrir avant de saisir, dans l'ordre. */
+  /** Rubrique à cocher à l'étape « Revenus et charges » de la déclaration en ligne (absent pour un simple report). */
+  rubric?: string
+  /** Ce qu'il faut faire sur l'écran de saisie, dans l'ordre (la connexion est guidée à part). */
   steps: string[]
   entries: CopyEntry[]
   note?: string
@@ -42,8 +44,6 @@ export interface CopyPlanInput {
 /** Euros entiers, arrondis au plus proche (les formulaires de l'administration n'ont pas de centimes). */
 export const wholeEuros = (cents: number) => Math.round(cents / 100)
 
-const OPEN = 'Connectez-vous à votre espace particulier sur impots.gouv.fr, puis « Déclarer mes revenus ».'
-
 export function copyPlan(i: CopyPlanInput): CopyGroup[] {
   const groups: CopyGroup[] = []
   const empty = i.summary.empty
@@ -54,7 +54,8 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
         id: 'VIDE_MICRO',
         form: '2042',
         title: 'Location vide : micro-foncier',
-        steps: [OPEN, 'À l’étape « Revenus et charges », cochez « Revenus fonciers ».', 'À l’étape suivante, remplissez la case ci-dessous. L’abattement de 30 % est calculé par l’administration.'],
+        rubric: 'Revenus fonciers',
+        steps: ['Remplissez la case ci-dessous, sans rien retirer : l’abattement de 30 % est calculé par l’administration.'],
         entries: [{ box: '4BE', label: 'Loyers bruts encaissés, hors charges, de tous vos logements loués vides', cents: empty.grossRentCents }],
       })
     } else {
@@ -72,7 +73,8 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
         id: 'VIDE_2044',
         form: '2044',
         title: 'Location vide : déclaration des revenus fonciers 2044',
-        steps: [OPEN, 'À l’étape « Revenus et charges », cochez « Revenus fonciers », puis la déclaration 2044 (régime réel).', 'Remplissez une colonne par logement avec les lignes ci-dessous. Les totaux et le résultat se calculent seuls.'],
+        rubric: 'Revenus fonciers, puis la déclaration annexe 2044 (régime réel)',
+        steps: ['Vos logements de l’an dernier sont souvent déjà là : vérifiez leur adresse. Les totaux et le résultat se calculent seuls.'],
         entries,
         note: 'Remplir une 2044 alors que vos loyers ne dépassent pas 15 000 € vaut choix du régime réel pour trois ans.',
       })
@@ -97,14 +99,15 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
   const furnished = i.summary.furnished
   if (furnished) {
     const real = !furnished.microAllowed || i.lmnp?.better === 'REAL'
-    const open = 'À l’étape « Revenus et charges », cochez la rubrique des locations meublées non professionnelles (déclaration complémentaire 2042-C-PRO).'
+    const rubric = 'Revenus des locations meublées non professionnelles (déclaration complémentaire 2042-C-PRO)'
     groups.push(
       real
         ? {
             id: 'MEUBLE_REEL',
             form: '2042-C-PRO',
             title: 'Location meublée : régime réel',
-            steps: [OPEN, open, 'Reportez le résultat de votre liasse 2031, établie par votre expert-comptable ou un logiciel agréé.'],
+            rubric,
+            steps: ['Reportez le résultat de votre liasse 2031, établie par votre expert-comptable ou un logiciel agréé.'],
             entries: [
               i.lmnp && i.lmnp.taxableCents > 0
                 ? { box: '5NA', label: 'Bénéfice imposable (estimation de Bailio : la liasse 2031 fait foi)', cents: i.lmnp.taxableCents, hint: '5OA pour le second déclarant.' }
@@ -115,7 +118,8 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
             id: 'MEUBLE_MICRO',
             form: '2042-C-PRO',
             title: 'Location meublée : micro-BIC',
-            steps: [OPEN, open, 'Remplissez la case ci-dessous, sans rien retirer : l’abattement de 50 % est calculé par l’administration.'],
+            rubric,
+            steps: ['Remplissez la case ci-dessous, sans rien retirer : l’abattement de 50 % est calculé par l’administration.'],
             entries: [{ box: '5NI', label: 'Recettes brutes de l’année, charges comprises (« autres locations meublées »)', cents: furnished.receiptsCents, hint: '5OI si le logement est au nom du second déclarant, 5PI pour une personne à charge.' }],
           },
     )

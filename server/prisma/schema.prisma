@@ -62,6 +62,8 @@ model User {
   profile         Json      @default("{}")
   notifyWeekly    Boolean   @default(true) // récapitulatif du lundi
   notifyUrgent    Boolean   @default(true) // alertes urgentes (loyer en retard…)
+  // Déclaration des revenus : où en est le propriétaire, par année (domain/taxGuide.ts, taxProgressSchema).
+  taxProgress     Json      @default("{}")
   createdAt       DateTime  @default(now())
 
   sessions      Session[]
