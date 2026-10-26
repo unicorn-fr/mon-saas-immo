@@ -25,6 +25,15 @@ test('régime réel : colonnes de la 2044 par logement, puis report sur la 2042 
   assert.equal(plan[1].entries[0].cents, 720000 - 2000 - 90000 + 3000 - 500000)
 })
 
+test('subventions et indemnités (lignes 213, 214) s’ajoutent aux loyers ; déficits antérieurs à recopier case 4BD', () => {
+  const p = vide({ extra: { subsidyCents: 100000, indemnityCents: 50000 } })
+  const summary = taxSummary(2026, [p])
+  assert.equal(summary.empty!.realResultCents, 720000 + 150000 - 2000)
+  const plan = copyPlan({ year: 2026, summary: { ...summary, empty: { ...summary.empty!, better: 'REAL' } }, addresses: {}, lmnp: null, priorDeficitCents: 300000 })
+  assert.deepEqual(plan.find((g) => g.id === 'VIDE_2044')!.entries.map((e) => e.box), ['Immeuble 1', '211', '213', '214', '222'])
+  assert.deepEqual(plan.find((g) => g.id === 'VIDE_4BD')!.entries.map((e) => [e.box, e.cents]), [['4BD', 300000]])
+})
+
 test('déficit foncier : 4BC pour le revenu global, 4BB pour la part reportée (jamais 4BD)', () => {
   const p = vide({ expenses: [{ category: 'REPAIR', amountCents: 2_000_000, recoverableCents: 0 }] })
   const plan = copyPlan({ year: 2026, summary: taxSummary(2026, [p]), addresses: {}, lmnp: null })

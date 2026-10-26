@@ -242,6 +242,9 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
         if (t.propertyId) actions.push({ label: 'Voir toutes les étapes', variant: 'ghost', onClick: () => navigate(`/espace/logements/${t.propertyId}`) })
       }
       break
+    case 'TAX_DECLARE':
+      actions = [{ label: 'Déclarer aux impôts', onClick: () => navigate(`/espace/baux/${t.leaseId}/impots${t.mode ? `?mode=${t.mode}` : ''}`) }]
+      break
     case 'INVENTORY_COMPLEMENT':
       actions = [{ label: 'Répondre à la demande', onClick: () => navigate(`/edl/${t.inventoryId}`) }]
       break

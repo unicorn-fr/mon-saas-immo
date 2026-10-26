@@ -10,7 +10,8 @@ import { upgradeLegacyLeases } from '../services/upgrade.js'
 import { leaseKindOf, propertyName, readTenant, readTerms, tenantName } from '../services/contract.js'
 import { formatEuros, monthYearFr } from '../domain/lease.js'
 import { depositDeadline, revisedRent } from '../domain/letters.js'
-import { landlordNoticeMonthsFor, rentRevisionAllowed } from '../domain/rules.js'
+import { isFurnished, isHousing, landlordNoticeMonthsFor, rentRevisionAllowed } from '../domain/rules.js'
+import { leaseTaxMode } from '../domain/leaseTax.js'
 import { iso } from './helpers.js'
 import { leaseTenantLabel, rentStatus } from './space.js'
 import { publicUser } from './auth.js'
@@ -37,7 +38,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT' | 'TAX_DECLARE'
   tag: string
   tone: 'error' | 'owner' | 'accent' | 'green'
   place: string
@@ -55,6 +56,8 @@ export interface Task {
   period?: string
   /** Étape de la mise en location (type STEP) : bouton vers la bonne page, et « je n'en ai pas besoin » si facultative. */
   step?: { key: string; label: string; to: string; optional: boolean }
+  /** Déclaration aux impôts (type TAX_DECLARE) : arrivée ou départ du locataire. */
+  mode?: 'ARRIVAL' | 'DEPARTURE'
 }
 
 router.get('/today', async (req, res) => {
@@ -189,6 +192,21 @@ router.get('/today', async (req, res) => {
       if (today.getTime() - last.getTime() >= 365 * DAY)
         tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'accent', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
     }
+    // Arrivée ou départ du locataire : à signaler aux impôts (occupation du logement), sans attendre le printemps.
+    const taxMode = leaseTaxMode({ status: l.status, startDate: iso(l.startDate)!, endDate: iso(l.endDate)!, housing: isHousing(leaseKindOf(l)) }, iso(today)!)
+    const declared = (l.data as { taxDeclared?: Record<string, { occupancy?: string }> } | null)?.taxDeclared
+    if (taxMode && !declared?.[taxMode]?.occupancy)
+      tasks.push({
+        id: `tax-${l.id}-${taxMode}`,
+        type: 'TAX_DECLARE',
+        tag: 'Impôts',
+        tone: 'owner',
+        place,
+        title: taxMode === 'ARRIVAL' ? `Signaler l’arrivée de ${who} aux impôts` : `Signaler le départ de ${who} aux impôts`,
+        text: taxMode === 'ARRIVAL' && isFurnished(leaseKindOf(l)) ? 'Une déclaration en ligne de quelques minutes, tout est prêt à copier. Pour une première location meublée : le SIRET et la CFE, guidés aussi.' : 'Une déclaration en ligne de quelques minutes : tout est prêt à copier.',
+        leaseId: l.id,
+        mode: taxMode,
+      })
   }
 
   // Demandes du locataire pour compléter l'état des lieux d'entrée (article 3-2) : à accepter ou refuser.
@@ -283,7 +301,7 @@ router.get('/today', async (req, res) => {
   const july = new Date(Date.UTC(y, 6, 1))
   if (now < july && occupancyDeclarationDue(y, changes)) upcoming.push({ date: short(july), label: 'Déclarer l’occupation de vos logements sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: july.getTime() - 1 })
   const recent = changes.some((d) => d <= iso(today)! && d >= iso(new Date(today.getTime() - 30 * DAY))!)
-  if (recent) upcoming.push({ date: 'ce mois-ci', label: 'Nouvel occupant ou logement libéré : à signaler sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: today.getTime() })
+  if (recent && !tasks.some((t) => t.type === 'TAX_DECLARE')) upcoming.push({ date: 'ce mois-ci', label: 'Nouvel occupant ou logement libéré : à signaler sur impots.gouv.fr (Gérer mes biens immobiliers)', sort: today.getTime() })
   // Location meublée : cotisation foncière des entreprises (CFE) le 15 décembre, sauf recettes de 5 000 € ou moins.
   if (now.getUTCMonth() >= 9 && leases.some((l) => l.type === 'FURNISHED' && (l.status === 'ACTIVE' || l.status === 'IMPORTED'))) {
     const cfe = new Date(Date.UTC(y, 11, 15))

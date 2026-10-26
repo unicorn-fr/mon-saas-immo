@@ -35,7 +35,7 @@ export interface TaxProperty {
   payments: { rentCents: number; chargesCents: number }[]
   expenses: { category: string; amountCents: number; recoverableCents: number }[]
   /** Saisis par le propriétaire pour l'année : intérêts d'emprunt, frais d'administration (honoraires…). */
-  extra?: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null } | null
+  extra?: { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null; subsidyCents?: number | null; indemnityCents?: number | null } | null
 }
 
 export interface TaxLine {
@@ -83,6 +83,8 @@ export interface TaxSummary {
 }
 
 const sum = <T>(xs: T[], f: (x: T) => number) => xs.reduce((a, x) => a + f(x), 0)
+/** Lignes de revenus de la 2044 (loyers, subventions de l'Anah, indemnités d'assurance). */
+export const INCOME_LINES = ['211', '213', '214']
 
 export function propertyTax(p: TaxProperty): PropertyTax {
   const rent = sum(p.payments, (x) => x.rentCents)
@@ -92,6 +94,8 @@ export function propertyTax(p: TaxProperty): PropertyTax {
     ? []
     : [
         { line: '211', label: 'Loyers bruts encaissés (hors charges)', cents: rent },
+        { line: '213', label: 'Subventions reçues de l’Anah', cents: p.extra?.subsidyCents ?? 0 },
+        { line: '214', label: 'Indemnités d’assurance reçues (perte de loyers)', cents: p.extra?.indemnityCents ?? 0 },
         { line: '221', label: 'Frais d’administration et de gestion', cents: p.extra?.adminFeesCents ?? 0 },
         { line: '222', label: 'Autres frais de gestion (forfait de 20 € par logement)', cents: rent > 0 ? MANAGEMENT_FLAT_CENTS : 0 },
         { line: '223', label: 'Primes d’assurance', cents: owner(['INSURANCE']) },
@@ -101,7 +105,9 @@ export function propertyTax(p: TaxProperty): PropertyTax {
         { line: '230', label: 'Régularisation des provisions de l’année précédente (à déduire)', cents: -(p.extra?.coproRegularizationCents ?? 0) },
         { line: '250', label: 'Intérêts d’emprunt', cents: p.extra?.loanInterestCents ?? 0 },
       ]
-  const deductions = sum(lines.filter((l) => l.line !== '211'), (l) => l.cents)
+  // Lignes 211 à 214 : revenus ; les suivantes : frais et charges déduits.
+  const incomes = sum(lines.filter((l) => INCOME_LINES.includes(l.line)), (l) => l.cents)
+  const deductions = sum(lines.filter((l) => !INCOME_LINES.includes(l.line)), (l) => l.cents)
   return {
     id: p.id,
     name: p.name,
@@ -111,12 +117,14 @@ export function propertyTax(p: TaxProperty): PropertyTax {
     unclassifiedCents: sum(p.expenses.filter((e) => e.category === 'OTHER'), (e) => e.amountCents),
     nonDeductibleCents: sum(p.expenses.filter((e) => e.category === 'EXTENSION'), (e) => e.amountCents),
     lines,
-    resultCents: p.furnished ? rent + charges : rent - deductions,
+    resultCents: p.furnished ? rent + charges : incomes - deductions,
   }
 }
 
 export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
   const properties = input.map(propertyTax).filter((p) => p.rentCents || p.chargesCents || p.lines.some((l) => l.cents && l.line !== '222'))
+  // Revenus bruts de la 2044 : loyers, subventions et indemnités (le micro-foncier ne retient que les loyers, case 4BE).
+  const incomes = sum(properties.filter((p) => !p.furnished), (p) => sum(p.lines.filter((l) => INCOME_LINES.includes(l.line)), (l) => l.cents))
   const empty = properties.filter((p) => !p.furnished)
   const furnished = properties.filter((p) => p.furnished)
   const gross = sum(empty, (p) => p.rentCents)
@@ -135,7 +143,7 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
           microTaxableCents: microTaxable,
           realResultCents: real,
           better: gross <= MICRO_FONCIER_CEILING_CENTS ? (real < microTaxable ? 'REAL' : 'MICRO') : 'REAL',
-          deficit: foncierDeficit(gross, interest, gross - real - interest, energyWorks),
+          deficit: foncierDeficit(incomes, interest, incomes - real - interest, energyWorks),
         }
       : null,
     furnished: furnished.length ? { receiptsCents: receipts, microAllowed: receipts <= microBicCeilingCents(year), microTaxableCents: Math.round(receipts * 0.5) } : null,

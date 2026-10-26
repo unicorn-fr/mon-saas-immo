@@ -53,6 +53,16 @@ Gestion par une agence : le propriétaire déclare lui-même ; loyers bruts (ava
 | Ouverture de la déclaration en ligne : mi-avril (date indicative du parcours : 10 avril) | Calendriers des campagnes 2024 à 2026 | À vérifier chaque année |
 | Liasse 2031 du meublé au réel : télétransmise depuis l'espace professionnel ou par un partenaire EDI | impots.gouv.fr, dépliant « Loueurs en meublé » et FAQ LMNP 2026 | Vérifié ; possibilité de saisie directe (EFI) non confirmée par une source officielle, non annoncée |
 
+## Questions posées et bail déclaré dès la signature (octobre 2026)
+
+| Élément | Source | Statut |
+|---|---|---|
+| 2044 ligne 213 (subventions de l'Anah) et 214 (indemnités d'assurance) : revenus bruts, ligne 215 = 211 + 212 + 213 + 214 | Formulaire 2044 de 2026 | Vérifié sur le formulaire |
+| Case 4BD : déficits antérieurs non encore imputés ; montant « déficits restant à reporter » de l'avis d'impôt | Notice 2044 de 2026, ligne 451 | Vérifié ; calcul proposé simplifié (sans l'expiration à dix ans) |
+| 1447-C-SD : page 1, case 7 « inscription au registre des métiers » (non pour un loueur en meublé), lieu, date et signature | Formulaire `1447-c-sd_5568.pdf` | Vérifié |
+| Déclaration d'occupation : tout changement d'occupant, au plus tard le 30 juin de l'année suivante ; 150 € par local (CGI art. 1770 terdecies) ; espace particulier, ou professionnel pour une société | impots.gouv.fr, « Gérer mes biens immobiliers » ; CGI art. 1418 | Vérifié |
+| Début d'activité en meublé : guichet unique de l'INPI dans les 15 jours, SIRET ; CFE initiale 1447-C-SD avant le 31 décembre | impots.gouv.fr (question SIRET du loueur en meublé), FAQ LMNP mars 2026 | Vérifié |
+
 ## Contacts
 
 | Contact | Statut |

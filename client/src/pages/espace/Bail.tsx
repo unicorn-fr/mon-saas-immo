@@ -355,6 +355,13 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             </Card>
           ) : null}
 
+          {l.status !== 'DRAFT' && l.kind !== 'PARKING' ? (
+            <Card title="Impôts">
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'ENDED' ? 'Le départ du locataire se signale aux impôts.' : 'L’arrivée du locataire se signale aux impôts, et une première location meublée s’enregistre. Tout est prêt à copier.'}</span>
+              <TextLink to={`/espace/baux/${l.id}/impots`}>Déclarer ce bail aux impôts</TextLink>
+            </Card>
+          ) : null}
+
           {l.documents.length ? (
             <Card title="Documents de ce bail">
               {l.documents.map((d) => (
