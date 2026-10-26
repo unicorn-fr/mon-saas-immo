@@ -125,3 +125,14 @@ img { max-width: 100%; }
   .tabs [role='tab'] { min-height: 44px; display: inline-flex; align-items: flex-end; }
   .filters button { min-height: 44px; }
 }
+
+/* Déclaration : une case à recopier par ligne ; sur téléphone, case, montant et bouton en haut, intitulé dessous. */
+.copy-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto auto; grid-template-areas: 'box label value btn'; align-items: center; gap: 14px; }
+.copy-box { grid-area: box; }
+.copy-label { grid-area: label; }
+.copy-value { grid-area: value; }
+.copy-btn { grid-area: btn; }
+@media (max-width: 768px) {
+  .copy-row { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'box value btn' 'label label label'; gap: 6px 12px; }
+  .copy-row--text { grid-template-areas: 'box box btn' 'value value value' 'label label label'; }
+}

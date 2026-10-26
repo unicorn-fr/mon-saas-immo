@@ -18,7 +18,16 @@ test('déclaration : fiche « Préparer votre dépôt », liens officiels et PDF
   assert.deepEqual(ids.slice(0, 2), ['MEUBLE_DEBUT', 'MEUBLE_MICRO'])
   assert.ok(ids.includes('OCCUPATION'))
   assert.ok(view.contacts.some((c) => c.value === '0 809 401 401'))
+  // À recopier : la case 5NI du micro-BIC, en euros entiers ; la 1447-C-SD pré-remplie est proposée pour ce meublé.
+  assert.deepEqual(view.copy.map((g) => g.id), ['MEUBLE_MICRO'])
+  assert.deepEqual(view.copy[0].entries.map((e) => [e.box, e.cents]), [['5NI', 56000]])
+  assert.equal(view.forms.cfe.length, 1)
+  const cfe = await fetch(`${API}/money/tax/1447-c-sd.pdf?propertyId=${view.forms.cfe[0].propertyId}`, { headers: { Authorization: `Bearer ${token}` } })
+  assert.equal(cfe.status, 200)
+  assert.equal(Buffer.from(await cfe.arrayBuffer()).subarray(0, 4).toString(), '%PDF')
 
+  // Location vide sans loyer : pas de 2044 à remplir.
+  assert.equal((await fetch(`${API}/money/tax/2044.pdf?year=${year}`, { headers: { Authorization: `Bearer ${token}` } })).status, 404)
   const pdf = await fetch(`${API}/money/tax/fiche.pdf?year=${year}`, { headers: { Authorization: `Bearer ${token}` } })
   assert.equal(pdf.status, 200)
   assert.equal(pdf.headers.get('content-type'), 'application/pdf')
@@ -29,8 +38,14 @@ test('déclaration : fiche « Préparer votre dépôt », liens officiels et PDF
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
+  page.setDefaultTimeout(15000)
   await page.goto(`${BASE}/espace/argent/declaration`)
   await page.getByRole('button', { name: String(year) }).click()
+  await page.getByRole('heading', { name: '2. À recopier sur impots.gouv.fr' }).waitFor()
+  await page.locator('.copy-row', { hasText: 'Case 5NI' }).getByRole('button', { name: 'Copier' }).waitFor()
+  const cfeDownload = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Télécharger la 1447-C-SD' }).click()
+  assert.equal((await cfeDownload).suggestedFilename(), '1447-c-sd.pdf')
   await page.getByRole('heading', { name: 'Préparer votre dépôt' }).waitFor()
   await page.locator('strong', { hasText: 'Première année en meublé : les formalités' }).waitFor()
   assert.equal(await page.getByRole('link', { name: /Guichet unique des formalités/ }).first().getAttribute('href'), 'https://procedures.inpi.fr/')

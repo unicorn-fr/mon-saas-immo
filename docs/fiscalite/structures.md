@@ -32,7 +32,7 @@ Sources :
 |---|---|---|---|
 | Micro-foncier | Loyers bruts du foyer ≤ 15 000 €, abattement 30 % | 2042, case 4BE | Vérifié (déjà codé) |
 | Réel | Sur option (3 ans) ou obligatoire au-delà de 15 000 € | 2044, lignes 211 à 250, report 4BA / 4BB / 4BC / 4BD | Vérifié (déjà codé) |
-| Déficit foncier | 10 700 € sur le revenu global (21 400 € pour la rénovation énergétique 2023-2027), reste reporté 10 ans | 4BC, 4BD | Vérifié (déjà codé) |
+| Déficit foncier | 10 700 € sur le revenu global (21 400 € pour la rénovation énergétique 2023-2027), reste reporté 10 ans | 4BC (revenu global), 4BB (part reportée de l'année) ; 4BD = déficits des années précédentes | Vérifié sur la notice 2044 de 2026 (lignes 436 à 451), corrigé le 26 octobre 2026 (avant : part reportée en 4BD, faux) |
 
 Source : service-public F1991 ; brochure pratique IR 2026 (impots.gouv.fr).
 
@@ -40,7 +40,7 @@ Source : service-public F1991 ; brochure pratique IR 2026 (impots.gouv.fr).
 
 | Régime | Condition | Où déclarer | Statut |
 |---|---|---|---|
-| Micro-BIC, location longue durée | Recettes ≤ 77 700 €, abattement 50 % (minimum 305 €) | 2042-C-PRO, **case 5NI** (5OI second déclarant, 5PI personne à charge) | Vérifié, corrigé le 5 octobre 2026 (avant : 5ND, faux) |
+| Micro-BIC, location longue durée | Recettes ≤ 77 700 € (revenus 2025), 83 600 € (revenus 2026 à 2028, BOFiP), abattement 50 % (minimum 305 €) | 2042-C-PRO, **case 5NI** (5OI second déclarant, 5PI personne à charge) | Vérifié, corrigé le 5 octobre 2026 (avant : 5ND, faux) |
 | Micro-BIC, meublé de tourisme non classé | Recettes ≤ 15 000 €, abattement 30 % | 5NH | Vérifié (hors périmètre aujourd'hui) |
 | Micro-BIC, meublé de tourisme classé, chambres d'hôtes | | 5NG | Vérifié (hors périmètre aujourd'hui) |
 | Réel (LMNP) | Sur option, ou obligatoire après deux années de suite au-delà du seuil | Liasse 2031 + 2033 (expert-comptable ou logiciel agréé), résultat en **5NA** (bénéfice) ou **5NY** (déficit) | Vérifié |
