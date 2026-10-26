@@ -7,7 +7,7 @@ import { useAuth } from '../lib/auth'
 import { initialsOf } from '../lib/contract'
 import type { TodayView } from '../lib/space'
 import { ROLE_LABEL, ROLE_RIGHTS, getSpace, switchSpace } from '../lib/shared'
-import { Euro, Home, Page, People, Plus, Sun, Signpost, Book } from './Icons'
+import { Euro, Home, Page, People, Plus, Sun, Signpost, Book, TabIcon, type TabName } from './Icons'
 import { Modal } from './kit'
 import { FeedbackModal } from './Feedback'
 
@@ -147,26 +147,45 @@ function MobileHeader() {
   )
 }
 
+/**
+ * Barre du bas (téléphone) : barre claire, cinq onglets de même construction (icône puis libellé). L'onglet actif
+ * prend une pastille de couleur douce derrière son icône ; « Ajouter », l'action principale, est la seule en orange.
+ */
+const TABS: Array<{ to: string; label: string; end?: boolean; icon: TabName }> = [
+  { to: '/espace', label: 'Aujourd’hui', end: true, icon: 'today' },
+  { to: '/espace/logements', label: 'Logements', icon: 'homes' },
+  { to: '/espace/documents', label: 'Documents', icon: 'docs' },
+  { to: '/espace/argent', label: 'Argent', icon: 'money' },
+]
+
+const tabStyle = { flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 56, textDecoration: 'none', fontSize: 12, letterSpacing: '0.01em', background: 'none', border: 'none', fontFamily: 'inherit', cursor: 'pointer', padding: 0 } as const
+const pill = (active: boolean, accent = false) => ({ width: 56, height: 32, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: accent ? BAI.cta : active ? BAI.ownerTint : 'transparent', color: accent ? BAI.ctaInk : active ? BAI.owner : BAI.inkSoft, transition: 'background-color .18s ease, color .18s ease' })
+
 function BottomNav({ onAdd }: { onAdd: () => void }) {
-  const items = [NAV[0], NAV[1], null, NAV[3], NAV[4]]
-  return (
-    <nav aria-label="Navigation principale" className="mobile-only bottom-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40, height: 'calc(76px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)', boxSizing: 'border-box', background: BAI.night, display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
-      {items.map((n) =>
-        n ? (
-          <NavLink key={n.to} to={n.to} end={n.end} style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? BAI.surface : BAI.onDarkMuted, fontSize: 13, fontWeight: isActive ? 700 : 500, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, minWidth: 60, minHeight: 56 })}>
-            {({ isActive }) => (
-              <>
-                <n.icon color={isActive ? BAI.accent : 'currentColor'} />
-                {n.label}
-              </>
-            )}
-          </NavLink>
-        ) : (
-          <button key="add" type="button" aria-label="Ajouter" onClick={onAdd} style={{ width: 56, height: 56, borderRadius: 28, background: BAI.accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -24, cursor: 'pointer', color: BAI.night }}>
-            <Plus size={26} strokeWidth={2.4} />
-          </button>
-        ),
+  const tab = (t: (typeof TABS)[number]) => (
+    <NavLink key={t.to} to={t.to} end={t.end} style={({ isActive }) => ({ ...tabStyle, color: isActive ? BAI.owner : BAI.inkSoft, fontWeight: isActive ? 700 : 500 })}>
+      {({ isActive }) => (
+        <>
+          <span style={pill(isActive)}>
+            <TabIcon name={t.icon} active={isActive} />
+          </span>
+          {t.label}
+        </>
       )}
+    </NavLink>
+  )
+  return (
+    <nav aria-label="Navigation principale" className="mobile-only bottom-nav" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40, paddingBottom: 'env(safe-area-inset-bottom)', boxSizing: 'border-box', background: BAI.surface, borderTop: `1px solid ${BAI.divider}`, display: 'flex', alignItems: 'stretch', padding: '6px 6px calc(6px + env(safe-area-inset-bottom))' }}>
+      {tab(TABS[0])}
+      {tab(TABS[1])}
+      <button type="button" onClick={onAdd} style={{ ...tabStyle, color: BAI.ink, fontWeight: 600 }}>
+        <span style={pill(false, true)}>
+          <TabIcon name="add" />
+        </span>
+        Ajouter
+      </button>
+      {tab(TABS[2])}
+      {tab(TABS[3])}
     </nav>
   )
 }
