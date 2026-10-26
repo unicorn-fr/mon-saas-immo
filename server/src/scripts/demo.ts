@@ -2,7 +2,7 @@
  * Compte de démonstration : remplit un compte avec des données fictives (logements, locataires, baux, loyers,
  * dépenses, intervention) pour essayer Bailio comme un vrai propriétaire.
  *
- * Sur le serveur :  ./deploy/vps/demo.sh adresse@exemple.fr
+ * Sur le serveur :  sudo ./deploy/vps/demo.sh adresse@exemple.fr
  * En local :        npm --prefix server run demo -- adresse@exemple.fr
  *
  * Tout passe par l'API (mêmes règles et mêmes contrôles qu'à l'écran), avec une session créée pour l'occasion puis
