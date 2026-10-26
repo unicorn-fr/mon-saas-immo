@@ -121,3 +121,13 @@ Générez d'abord une phrase secrète : `openssl rand -base64 32`. **Notez-la ai
 
 Dans les deux cas, testez tout de suite : `sudo /opt/bailio/deploy/vps/backup.sh` doit afficher
 « copie hors serveur OK ». Journal : `/var/log/bailio-backup.log`.
+
+## Compte de démonstration
+
+Pour essayer Bailio avec des données fictives (trois logements, un bail signé avec un loyer en retard, un bail à faire signer, des dépenses et une intervention) :
+
+```bash
+cd /opt/bailio/deploy/vps && ./demo.sh adresse@exemple.fr
+```
+
+Le compte est créé s'il n'existe pas ; un compte qui a déjà des logements est refusé (sauf `--force`). Les locataires fictifs ont des adresses `@example.com` et l'envoi automatique des quittances est coupé : aucun email ne part vers une vraie personne. Connectez-vous ensuite sur le site avec cette adresse.
