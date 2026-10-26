@@ -97,3 +97,50 @@ export const Signpost = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 
 export const Book = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
   <svg {...base(size, color, strokeWidth)}><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h11M9 8h6" /></svg>
 )
+
+/**
+ * Icônes de la barre du bas (téléphone) : même grille de 24, même trait arrondi de 1,75. Au repos, le trait seul ;
+ * l'onglet actif prend la couleur de la marque et une forme pleine en teinte claire. Documents reprend la page au coin
+ * replié du logo.
+ */
+export type TabName = 'today' | 'homes' | 'docs' | 'money' | 'add'
+
+export function TabIcon({ name, active = false, size = 24 }: { name: TabName; active?: boolean; size?: number }) {
+  const fill = active ? BAI.ownerTint : 'none'
+  const sw = active ? 1.9 : 1.75
+  const p = { ...base(size, 'currentColor', sw) }
+  if (name === 'today')
+    return (
+      <svg {...p}>
+        <path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-11A2.5 2.5 0 0 1 6.5 5Z" fill={fill} />
+        <path d="M4 10h16M8.5 3v3.5M15.5 3v3.5" />
+        <path d="m9.2 15.3 1.9 1.9 3.9-4" />
+      </svg>
+    )
+  if (name === 'homes')
+    return (
+      <svg {...p}>
+        <path d="M4 10.6 12 4l8 6.6V19a2 2 0 0 1-2 2h-3.5v-5a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v5H6a2 2 0 0 1-2-2Z" fill={fill} />
+      </svg>
+    )
+  if (name === 'docs')
+    return (
+      <svg {...p}>
+        <path d="M7 3h6.8L19 8.2V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill={fill} />
+        <path d="M13.5 3.3V7a1.5 1.5 0 0 0 1.5 1.5h3.7M8.5 13h7M8.5 16.5h4.5" />
+      </svg>
+    )
+  if (name === 'money')
+    return (
+      <svg {...p}>
+        <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H16a2 2 0 0 1 2 2v1h.5A1.5 1.5 0 0 1 20 9.5v9a1.5 1.5 0 0 1-1.5 1.5h-12A2.5 2.5 0 0 1 4 17.5Z" fill={fill} />
+        <path d="M4 7.5A2.5 2.5 0 0 0 6.5 10H20" />
+        <circle cx="16" cy="15" r="1.15" fill="currentColor" stroke="none" />
+      </svg>
+    )
+  return (
+    <svg {...p} strokeWidth={2.2}>
+      <path d="M12 6.5v11M6.5 12h11" />
+    </svg>
+  )
+}

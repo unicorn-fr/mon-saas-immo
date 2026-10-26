@@ -17,6 +17,8 @@ import { sheetKind, structureTaxSheet } from '../domain/structureTax.js'
 import { CONTACTS, filingGuides } from '../domain/taxFiling.js'
 import { occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { renderTaxFilingPdf } from '../pdf/taxFiling.js'
+import { copyPlan } from '../domain/taxForms.js'
+import { filled1447, filled2044 } from '../services/taxForms.js'
 import { defaultTaxRegime, structureName } from '../domain/structure.js'
 import { renderLeasePdf } from '../services/annexes.js'
 import { renderGuaranteePdf } from '../pdf/guarantee.js'
@@ -366,6 +368,55 @@ router.get('/money/tax/fiche.pdf', async (req, res) => {
   sendPdf(res, pdf, `bailio-declaration-${year}.pdf`, req.query.download === '1')
 })
 
+// Formulaires officiels pré-remplis (services/taxForms.ts) : 2044 des logements loués vides, 1447-C-SD d'un meublé.
+const ownerOf = (user: User) => {
+  const profile = readProfile(user)
+  return {
+    owner: [profile.firstNames, profile.lastName].filter(Boolean).join(' '),
+    ownerAddress: [profile.address, [profile.postalCode, profile.city].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+  }
+}
+
+router.get('/money/tax/2044.pdf', async (req, res) => {
+  const user = req.user!
+  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear() - 1).parse(req.query.year)
+  const view = await taxView(user, year)
+  if (!view.empty) throw new HttpError(404, `Aucune location vide avec des loyers en ${year} : pas de 2044 à remplir.`)
+  // Nom du locataire de chaque logement : le dernier bail signé de l'année.
+  const leases = await prisma.lease.findMany({ where: { userId: user.id, status: { not: 'DRAFT' }, startDate: { lt: new Date(Date.UTC(year + 1, 0, 1)) } }, orderBy: { startDate: 'desc' } })
+  const tenantRows = await prisma.tenant.findMany({ where: { userId: user.id, id: { in: leases.flatMap((l) => l.tenantIds) } } })
+  const tenants: Record<string, string> = {}
+  for (const l of leases) {
+    if (tenants[l.propertyId]) continue
+    tenants[l.propertyId] = l.tenantIds.map((id) => tenantRows.find((t) => t.id === id)).filter((t) => t !== undefined).map((t) => tenantName(readTenant(t))).join(', ')
+  }
+  const pdf = await filled2044({ year, ...ownerOf(user), summary: view, addresses: view.addresses, tenants })
+  sendPdf(res, Buffer.from(pdf), `2044-revenus-${year}.pdf`, req.query.download === '1')
+})
+
+router.get('/money/tax/1447-c-sd.pdf', async (req, res) => {
+  const user = req.user!
+  const propertyId = z.uuid().parse(req.query.propertyId)
+  const p = await prisma.property.findFirst({ where: { id: propertyId, userId: user.id } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const lease = (await prisma.lease.findMany({ where: { userId: user.id, propertyId, status: { not: 'DRAFT' } }, orderBy: { startDate: 'asc' } })).find((l) => isFurnished(leaseKindOf(l)))
+  if (!lease) throw new HttpError(404, 'Aucun bail meublé signé pour ce logement.')
+  const file = readProperty(p)
+  // Le SIRET arrive après l'inscription au guichet unique : le propriétaire le complète à la main.
+  const pdf = await filled1447({
+    ...ownerOf(user),
+    propertyAddress: file.address ?? p.address,
+    postalCode: file.postalCode ?? p.postalCode,
+    city: file.city ?? p.city,
+    floorDoor: file.floorDoor,
+    house: file.habitat === 'INDIVIDUAL',
+    surface: file.surface ?? p.surface,
+    startDate: iso(lease.startDate)!,
+    yearlyReceiptsCents: (lease.rentCents + lease.chargesCents) * 12,
+  })
+  sendPdf(res, Buffer.from(pdf), `1447-c-sd-${fileSlug(propertyName(p))}.pdf`, req.query.download === '1')
+})
+
 async function taxView(user: User, year: number) {
   const userId = user.id
   const from = new Date(Date.UTC(year, 0, 1))
@@ -459,7 +510,18 @@ async function taxView(user: User, year: number) {
     occupancy: occupancyDeclarationDue(year + 1, changes),
     structures: structures.filter((st) => properties.some((p) => p.structureId === st.id)).map((st) => ({ name: structureName(fileOf.get(st.id)!), kind: sheetKind(fileOf.get(st.id)!) })),
   })
-  return { ...summary, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
+  const addresses = Object.fromEntries(properties.map((p) => [p.id, p.address]))
+  const copy = copyPlan({ year, summary, addresses, lmnp: lmnp ? { better: lmnp.better, taxableCents: lmnp.taxableCents, deficitCents: lmnp.deficitCents } : null })
+  // Formulaires pré-remplis proposés : la 2044 au régime réel, la 1447-C-SD des meublés commencés dans l'année ou après.
+  const cfe = properties
+    .filter((p) => personal(p.id))
+    .filter((p) => {
+      const first = leases.filter((l) => l.propertyId === p.id && isFurnished(leaseKindOf(l))).map((l) => l.startDate.getUTCFullYear()).sort()[0]
+      return first !== undefined && first >= year
+    })
+    .map((p) => ({ propertyId: p.id, name: propertyName(p) }))
+  const forms = { f2044: Boolean(summary.empty && (summary.empty.better === 'REAL' || !summary.empty.microAllowed)), cfe }
+  return { ...summary, copy, forms, addresses, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
 }
 
 /** Ligne 250 : le montant saisi pour l'année, sinon celui calculé depuis les emprunts du logement. */

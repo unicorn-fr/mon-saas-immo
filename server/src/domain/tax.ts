@@ -9,7 +9,12 @@
  */
 
 export const MICRO_FONCIER_CEILING_CENTS = 15_000_00
+/**
+ * Plafond du micro-BIC pour la location meublée de longue durée (CGI, art. 50-0) : 77 700 € jusqu'aux revenus 2025,
+ * 83 600 € pour les revenus 2026 à 2028 (revalorisation triennale, BOFiP BIC-DECLA-10-10-10).
+ */
 export const MICRO_BIC_CEILING_CENTS = 77_700_00
+export const microBicCeilingCents = (year: number) => (year >= 2026 ? 83_600_00 : MICRO_BIC_CEILING_CENTS)
 /** Ligne 222 de la 2044 : forfait de frais de gestion par local. */
 export const MANAGEMENT_FLAT_CENTS = 20_00
 /** Déficit foncier imputable sur le revenu global (hors intérêts d'emprunt), par an. */
@@ -64,7 +69,10 @@ export interface TaxSummary {
     realResultCents: number
     /** Régime le plus favorable d'après les sommes enregistrées. */
     better: 'MICRO' | 'REAL' | null
-    /** Régime réel en déficit : part imputable sur le revenu global (case 4BC) et part reportée sur les revenus fonciers (case 4BD). */
+    /**
+     * Régime réel en déficit : part imputable sur le revenu global (case 4BC) et part reportée sur les revenus fonciers
+     * des dix années suivantes (case 4BB ; la case 4BD reçoit les déficits des années précédentes, notice 2044 de 2026).
+     */
     deficit: { totalCents: number; globalCents: number; carriedCents: number } | null
   } | null
   furnished: {
@@ -130,7 +138,7 @@ export function taxSummary(year: number, input: TaxProperty[]): TaxSummary {
           deficit: foncierDeficit(gross, interest, gross - real - interest, energyWorks),
         }
       : null,
-    furnished: furnished.length ? { receiptsCents: receipts, microAllowed: receipts <= MICRO_BIC_CEILING_CENTS, microTaxableCents: Math.round(receipts * 0.5) } : null,
+    furnished: furnished.length ? { receiptsCents: receipts, microAllowed: receipts <= microBicCeilingCents(year), microTaxableCents: Math.round(receipts * 0.5) } : null,
   }
 }
 

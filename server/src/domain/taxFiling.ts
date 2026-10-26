@@ -163,7 +163,7 @@ function meubleMicro(i: FilingInput): FilingGuide {
   return {
     id: 'MEUBLE_MICRO',
     title: 'Location meublée au micro-BIC',
-    summary: 'Location meublée non professionnelle (LMNP) : recettes jusqu’à 77 700 € par an. Une seule case sur la déclaration complémentaire 2042-C-PRO.',
+    summary: `Location meublée non professionnelle (LMNP) : recettes jusqu’à ${i.year >= 2026 ? '83 600' : '77 700'} € par an. Une seule case sur la déclaration complémentaire 2042-C-PRO.`,
     deadline: personalDeadline(i.year, i.postalCode),
     documents: [ACCESS, { ...RENTS, label: 'Le total encaissé, charges comprises' }, { label: 'Votre numéro SIRET', detail: 'Reçu après la déclaration de début d’activité.' }],
     steps: [

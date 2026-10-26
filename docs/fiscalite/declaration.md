@@ -21,6 +21,24 @@
 | SCI à l'IR | Espace professionnel (SIREN, code d'activation par courrier), « Déclarer » puis « Revenus SCI non soumises IS », 2072-S en mode simplifié ; associés : 4BA ou paragraphe 110 de la 2044 | `resultDeadline` | Vérifié |
 | Société à l'IR, IS | 2031 ou 2065 + liasse par l'expert-comptable (EDI) | `resultDeadline` | Vérifié dans son principe |
 
+## Cases à recopier et formulaires pré-remplis (octobre 2026)
+
+> Code : `server/src/domain/taxForms.ts` (`copyPlan`, testé dans `taxForms.test.ts`), `server/src/services/taxForms.ts`
+> (formulaires officiels remplis, testé dans `src/pdf/officialForms.test.ts`), fichiers vierges dans `server/assets/forms`,
+> `GET /money/tax` (champs `copy` et `forms`), `GET /money/tax/2044.pdf?year=`, `GET /money/tax/1447-c-sd.pdf?propertyId=`.
+
+| Élément | Source relue | Statut |
+|---|---|---|
+| 2044 : lignes 211 à 263 par immeuble (8 colonnes), totaux E, F, G, I ; 420 résultat ; 431 à 442 répartition du déficit | Formulaire et notice 2044 de 2026 (revenus 2025), impots.gouv.fr, fichiers `2044_5483.pdf` et `2044_5487.pdf` | Vérifié |
+| Déficit : 4BC = part imputable sur le revenu global (ligne 436 ou 441) ; 4BB = part reportée de l'année (ligne 439 ou 442) ; 4BD = déficits antérieurs (ligne 451) | Notice 2044 de 2026, paragraphes 430 à 450 | Vérifié, corrige l'ancienne mention « 4BD » |
+| 2042-C-PRO : micro-BIC « autres locations meublées » 5NI / 5OI / 5PI ; tourisme classé 5NG ; non classé 5NH ; réel 5NA, déficit 5NY | Brochure pratique IR 2026, page « 2042 C PRO » | Vérifié |
+| Plafond micro-BIC : 77 700 € (revenus 2025), 83 600 € (revenus 2026 à 2028) | BOFiP (revalorisation triennale, loi de finances pour 2026) | Vérifié par la recherche, à revoir en 2029 |
+| Montants en euros entiers (« N'inscrivez pas les centimes ») | Formulaire 2044 | Vérifié |
+| 1447-C-SD (CFE 2027, création en 2026) : champs a1 (département), a2 (commune), a5 (nom), a6 (activité), a7 (adresse), a8 (adresse de l'avis), a9 (SIRET, 14 chiffres), a10 (NACE, 5 caractères : 6820A), cac2 (création d'établissement), date1, b14 (recettes estimées), c1 à c11 (le bien), cac8 n° 1 (propriétaire), cac11 n° 3 (autre local loué meublé) | Formulaire `1447-c-sd_5568.pdf`, champs relevés un à un | Vérifié ; le SIRET reste à saisir par le propriétaire |
+| 2044 pré-remplie : écrite aux coordonnées des cases (formulaire sans champs) | Relevé sur l'édition 2026 | À refaire à chaque nouvelle édition (avril) |
+
+Gestion par une agence : le propriétaire déclare lui-même ; loyers bruts (avant honoraires) ligne 211 ou case 4BE, honoraires de gestion ligne 221 (« rémunérations, honoraires et commissions versées à un tiers », formulaire 2044). Vérifié sur le libellé de la ligne 221.
+
 ## Contacts
 
 | Contact | Statut |
@@ -47,4 +65,5 @@
 
 - Dates de la déclaration en ligne (`DECLARATION_DATES`, `fiscalCalendar.ts`) dès leur publication en avril.
 - Liens des notices millésimées (2044, 2072-S, 2072-C) : l'adresse change chaque année.
-- Seuils (15 000 €, 77 700 €, 23 000 €, 5 000 € de CFE) à chaque loi de finances.
+- Seuils (15 000 €, 77 700 € puis 83 600 €, 23 000 €, 5 000 € de CFE) à chaque loi de finances.
+- Fichiers vierges de `server/assets/forms` (2044, 1447-C-SD) et coordonnées de la 2044 dans `services/taxForms.ts` dès la nouvelle édition.

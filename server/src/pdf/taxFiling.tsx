@@ -63,7 +63,7 @@ export function TaxFilingDocument(i: TaxFilingInput) {
         {i.furnished ? (
           <>
             <Sub>Location meublée en votre nom (LMNP)</Sub>
-            {i.furnished.microAllowed ? <Row label="Micro-BIC, case 5NI (2042-C-PRO)">{`${eur(i.furnished.receiptsCents)} (imposé sur ${eur(i.furnished.microTaxableCents)} après 50 %)`}</Row> : <Row label="Micro-BIC">Non disponible : plus de 77 700 € de recettes</Row>}
+            {i.furnished.microAllowed ? <Row label="Micro-BIC, case 5NI (2042-C-PRO)">{`${eur(i.furnished.receiptsCents)} (imposé sur ${eur(i.furnished.microTaxableCents)} après 50 %)`}</Row> : <Row label="Micro-BIC">{`Non disponible : plus de ${i.year >= 2026 ? '83 600' : '77 700'} € de recettes`}</Row>}
             {i.lmnp ? <Row label="Régime réel, résultat estimé">{eur(i.lmnp.taxableCents)}</Row> : null}
             {i.lmnp ? <Row label="Le plus avantageux d’après Bailio">{i.lmnp.better === 'MICRO' ? 'Micro-BIC' : 'Régime réel'}</Row> : null}
           </>
