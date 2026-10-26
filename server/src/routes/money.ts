@@ -18,6 +18,8 @@ import { CONTACTS, filingGuides } from '../domain/taxFiling.js'
 import { occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { renderTaxFilingPdf } from '../pdf/taxFiling.js'
 import { copyPlan } from '../domain/taxForms.js'
+import { chooseRegime, declarationStatus, dueMonths, mergeProgress, readProgress, taxChecks, taxProgressSchema } from '../domain/taxGuide.js'
+import { PDFDocument } from 'pdf-lib'
 import { filled1447, filled2044 } from '../services/taxForms.js'
 import { defaultTaxRegime, structureName } from '../domain/structure.js'
 import { renderLeasePdf } from '../services/annexes.js'
@@ -349,12 +351,9 @@ router.get('/money/tax', async (req, res) => {
 })
 
 // Fiche « Préparer votre dépôt » en PDF : montants de l'année, documents à réunir, étapes, liens et contacts.
-router.get('/money/tax/fiche.pdf', async (req, res) => {
-  const user = req.user!
-  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear() - 1).parse(req.query.year)
-  const view = await taxView(user, year)
+async function ficheFor(user: User, year: number, view: Awaited<ReturnType<typeof taxView>>) {
   const profile = readProfile(user)
-  const pdf = await renderTaxFilingPdf({
+  return renderTaxFilingPdf({
     year,
     owner: [profile.firstNames, profile.lastName].filter(Boolean).join(' '),
     empty: view.empty,
@@ -365,6 +364,13 @@ router.get('/money/tax/fiche.pdf', async (req, res) => {
     guides: view.filing,
     contacts: CONTACTS,
   })
+}
+
+const yearOf = (q: unknown) => z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear() - 1).parse(q)
+
+router.get('/money/tax/fiche.pdf', async (req, res) => {
+  const year = yearOf(req.query.year)
+  const pdf = await ficheFor(req.user!, year, await taxView(req.user!, year))
   sendPdf(res, pdf, `bailio-declaration-${year}.pdf`, req.query.download === '1')
 })
 
@@ -377,12 +383,8 @@ const ownerOf = (user: User) => {
   }
 }
 
-router.get('/money/tax/2044.pdf', async (req, res) => {
-  const user = req.user!
-  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear() - 1).parse(req.query.year)
-  const view = await taxView(user, year)
-  if (!view.empty) throw new HttpError(404, `Aucune location vide avec des loyers en ${year} : pas de 2044 à remplir.`)
-  // Nom du locataire de chaque logement : le dernier bail signé de l'année.
+/** 2044 pré-remplie : une colonne par logement loué vide, avec le nom du locataire (dernier bail signé de l'année). */
+async function pdf2044(user: User, year: number, view: Awaited<ReturnType<typeof taxView>>) {
   const leases = await prisma.lease.findMany({ where: { userId: user.id, status: { not: 'DRAFT' }, startDate: { lt: new Date(Date.UTC(year + 1, 0, 1)) } }, orderBy: { startDate: 'desc' } })
   const tenantRows = await prisma.tenant.findMany({ where: { userId: user.id, id: { in: leases.flatMap((l) => l.tenantIds) } } })
   const tenants: Record<string, string> = {}
@@ -390,17 +392,15 @@ router.get('/money/tax/2044.pdf', async (req, res) => {
     if (tenants[l.propertyId]) continue
     tenants[l.propertyId] = l.tenantIds.map((id) => tenantRows.find((t) => t.id === id)).filter((t) => t !== undefined).map((t) => tenantName(readTenant(t))).join(', ')
   }
-  const pdf = await filled2044({ year, ...ownerOf(user), summary: view, addresses: view.addresses, tenants })
-  sendPdf(res, Buffer.from(pdf), `2044-revenus-${year}.pdf`, req.query.download === '1')
-})
+  return filled2044({ year, ...ownerOf(user), summary: view, addresses: view.addresses, tenants })
+}
 
-router.get('/money/tax/1447-c-sd.pdf', async (req, res) => {
-  const user = req.user!
-  const propertyId = z.uuid().parse(req.query.propertyId)
+/** 1447-C-SD pré-remplie d'un logement meublé ; null s'il n'a aucun bail meublé signé. */
+async function pdf1447(user: User, propertyId: string) {
   const p = await prisma.property.findFirst({ where: { id: propertyId, userId: user.id } })
   if (!p) throw new HttpError(404, 'Logement introuvable.')
   const lease = (await prisma.lease.findMany({ where: { userId: user.id, propertyId, status: { not: 'DRAFT' } }, orderBy: { startDate: 'asc' } })).find((l) => isFurnished(leaseKindOf(l)))
-  if (!lease) throw new HttpError(404, 'Aucun bail meublé signé pour ce logement.')
+  if (!lease) return null
   const file = readProperty(p)
   // Le SIRET arrive après l'inscription au guichet unique : le propriétaire le complète à la main.
   const pdf = await filled1447({
@@ -414,7 +414,51 @@ router.get('/money/tax/1447-c-sd.pdf', async (req, res) => {
     startDate: iso(lease.startDate)!,
     yearlyReceiptsCents: (lease.rentCents + lease.chargesCents) * 12,
   })
-  sendPdf(res, Buffer.from(pdf), `1447-c-sd-${fileSlug(propertyName(p))}.pdf`, req.query.download === '1')
+  return { pdf, name: propertyName(p) }
+}
+
+router.get('/money/tax/2044.pdf', async (req, res) => {
+  const user = req.user!
+  const year = yearOf(req.query.year)
+  const view = await taxView(user, year)
+  if (!view.empty) throw new HttpError(404, `Aucune location vide avec des loyers en ${year} : pas de 2044 à remplir.`)
+  sendPdf(res, Buffer.from(await pdf2044(user, year, view)), `2044-revenus-${year}.pdf`, req.query.download === '1')
+})
+
+router.get('/money/tax/1447-c-sd.pdf', async (req, res) => {
+  const out = await pdf1447(req.user!, z.uuid().parse(req.query.propertyId))
+  if (!out) throw new HttpError(404, 'Aucun bail meublé signé pour ce logement.')
+  sendPdf(res, Buffer.from(out.pdf), `1447-c-sd-${fileSlug(out.name)}.pdf`, req.query.download === '1')
+})
+
+// Tout le dossier de l'année en un seul PDF : la fiche Bailio, puis les formulaires officiels pré-remplis qui concernent
+// le propriétaire (2044 au régime réel, 1447-C-SD d'un premier meublé).
+router.get('/money/tax/dossier.pdf', async (req, res) => {
+  const user = req.user!
+  const year = yearOf(req.query.year)
+  const view = await taxView(user, year)
+  const parts: Uint8Array[] = [await ficheFor(user, year, view)]
+  if (view.forms.f2044) parts.push(await pdf2044(user, year, view))
+  for (const c of view.forms.cfe) {
+    const out = await pdf1447(user, c.propertyId)
+    if (out) parts.push(out.pdf)
+  }
+  const merged = await PDFDocument.create()
+  merged.setTitle(`Bailio : dossier de déclaration des revenus ${year}`)
+  for (const part of parts) {
+    const doc = await PDFDocument.load(part, { ignoreEncryption: true })
+    for (const page of await merged.copyPages(doc, doc.getPageIndices())) merged.addPage(page)
+  }
+  sendPdf(res, Buffer.from(await merged.save()), `bailio-dossier-declaration-${year}.pdf`, req.query.download === '1')
+})
+
+// Où en est le propriétaire dans sa déclaration (régime choisi, cases recopiées, démarches, signature), par année.
+router.put('/money/tax/progress', async (req, res) => {
+  const { year, ...patch } = taxProgressSchema.extend({ year: z.number().int().min(2000).max(2100) }).parse(req.body)
+  const fresh = await prisma.user.findUniqueOrThrow({ where: { id: req.user!.id }, select: { taxProgress: true } })
+  const next = mergeProgress(fresh.taxProgress, year, patch)
+  await prisma.user.update({ where: { id: req.user!.id }, data: { taxProgress: next } })
+  res.json({ success: true, data: next[String(year)] })
 })
 
 async function taxView(user: User, year: number) {
@@ -496,22 +540,30 @@ async function taxView(user: User, year: number) {
       )
     : null
   const summary = taxSummary(year, input)
+  // Régime retenu : le choix du propriétaire s'il est permis, sinon le plus avantageux. Il décide des cases à recopier,
+  // des fiches et des formulaires proposés.
+  const progress = readProgress(user.taxProgress, year)
+  const regimes = {
+    vide: summary.empty ? chooseRegime(summary.empty.better ?? 'MICRO', summary.empty.microAllowed, progress.regime?.vide) : null,
+    meuble: summary.furnished ? chooseRegime(lmnp?.better ?? 'MICRO', summary.furnished.microAllowed, progress.regime?.meuble) : null,
+  }
+  const retained = { ...summary, empty: summary.empty && regimes.vide ? { ...summary.empty, better: regimes.vide.chosen } : summary.empty }
   // Fiche de dépôt : régime conseillé, début d'activité en meublé, changement d'occupant (au 1er janvier suivant).
-  const leases = await prisma.lease.findMany({ where: { userId, status: { not: 'DRAFT' } }, select: { type: true, data: true, startDate: true, endDate: true, status: true, propertyId: true } })
+  const leases = await prisma.lease.findMany({ where: { userId, status: { not: 'DRAFT' } }, select: { id: true, type: true, data: true, startDate: true, endDate: true, status: true, propertyId: true, paymentDay: true } })
   const personalLeases = leases.filter((l) => personal(l.propertyId))
   const firstFurnished = personalLeases.filter((l) => isFurnished(leaseKindOf(l))).map((l) => l.startDate.getUTCFullYear()).sort()[0]
   const changes = leases.flatMap((l) => [iso(l.startDate)!, ...(l.status === 'ENDED' ? [iso(l.endDate)!] : [])])
   const filing = filingGuides({
     year,
     postalCode: readProfile(user).postalCode,
-    vide: summary.empty ? { regime: summary.empty.better ?? 'MICRO', microAllowed: summary.empty.microAllowed } : null,
-    meuble: summary.furnished ? { regime: lmnp?.better ?? 'MICRO', microAllowed: summary.furnished.microAllowed } : null,
+    vide: regimes.vide ? { regime: regimes.vide.chosen, microAllowed: regimes.vide.microAllowed } : null,
+    meuble: regimes.meuble ? { regime: regimes.meuble.chosen, microAllowed: regimes.meuble.microAllowed } : null,
     furnishedStart: firstFurnished !== undefined && firstFurnished >= year,
     occupancy: occupancyDeclarationDue(year + 1, changes),
     structures: structures.filter((st) => properties.some((p) => p.structureId === st.id)).map((st) => ({ name: structureName(fileOf.get(st.id)!), kind: sheetKind(fileOf.get(st.id)!) })),
   })
   const addresses = Object.fromEntries(properties.map((p) => [p.id, p.address]))
-  const copy = copyPlan({ year, summary, addresses, lmnp: lmnp ? { better: lmnp.better, taxableCents: lmnp.taxableCents, deficitCents: lmnp.deficitCents } : null })
+  const copy = copyPlan({ year, summary: retained, addresses, lmnp: lmnp ? { better: regimes.meuble?.chosen ?? lmnp.better, taxableCents: lmnp.taxableCents, deficitCents: lmnp.deficitCents } : null })
   // Formulaires pré-remplis proposés : la 2044 au régime réel, la 1447-C-SD des meublés commencés dans l'année ou après.
   const cfe = properties
     .filter((p) => personal(p.id))
@@ -520,8 +572,49 @@ async function taxView(user: User, year: number) {
       return first !== undefined && first >= year
     })
     .map((p) => ({ propertyId: p.id, name: propertyName(p) }))
-  const forms = { f2044: Boolean(summary.empty && (summary.empty.better === 'REAL' || !summary.empty.microAllowed)), cfe }
-  return { ...summary, copy, forms, addresses, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
+  const forms = { f2044: regimes.vide?.chosen === 'REAL', cfe }
+  // Vérifications avant la saisie : loyers non enregistrés, et au régime réel ce qui manque pour déduire les dépenses.
+  const today = new Date().toISOString().slice(0, 10)
+  const periodPays = await prisma.payment.findMany({ where: { userId, period: { startsWith: `${year}-` } }, select: { leaseId: true, period: true } })
+  const paid = new Set(periodPays.map((x) => `${x.leaseId}:${x.period}`))
+  const missingRents = personalLeases
+    .map((l) => ({ leaseId: l.id, name: propertyName(properties.find((p) => p.id === l.propertyId)!), periods: dueMonths(year, { startDate: iso(l.startDate)!, endDate: l.status === 'ENDED' ? iso(l.endDate) : null, paymentDay: l.paymentDay }, today).filter((m) => !paid.has(`${l.id}:${m}`)) }))
+    .filter((m) => m.periods.length)
+  const realVide = regimes.vide?.chosen === 'REAL'
+  const realMeuble = regimes.meuble?.chosen === 'REAL'
+  const profile = readProfile(user)
+  const personalPays = payments.filter((x) => personal(x.lease.propertyId))
+  const checks = taxChecks({
+    year,
+    rents: { count: personalPays.length, cents: personalPays.reduce((a, x) => a + x.amountCents, 0) },
+    missingRents,
+    unassignedCents: realVide || realMeuble ? unassigned : 0,
+    unclassified: summary.properties.filter((p) => p.unclassifiedCents && (p.furnished ? realMeuble : realVide)).map((p) => ({ propertyId: p.id, name: p.name, cents: p.unclassifiedCents })),
+    real: realVide
+      ? summary.properties
+          .filter((p) => !p.furnished)
+          .map((p) => {
+            const row = properties.find((x) => x.id === p.id)!
+            const file = readProperty(row)
+            const extra = file.tax?.[String(year)] ?? {}
+            const mine = expenses.filter((e) => e.propertyId === p.id)
+            return {
+              id: p.id,
+              name: p.name,
+              copro: file.legalRegime === 'COPRO',
+              loanKnown: (extra.loanInterestCents ?? null) !== null || loansDeductible(file.loans ?? [], year) > 0,
+              coproKnown: (extra.coproRegularizationCents ?? null) !== null,
+              feesKnown: (extra.adminFeesCents ?? null) !== null,
+              agent: Boolean(profile.agent?.enabled),
+              hasTax: mine.some((e) => e.category === 'TAX'),
+              hasInsurance: mine.some((e) => e.category === 'INSURANCE'),
+            }
+          })
+      : [],
+    lmnpMissingPurchase: realMeuble && Boolean(lmnp?.missingPurchase),
+  })
+  const status = declarationStatus(year, today, profile.postalCode, progress.filedAt)
+  return { ...summary, copy, forms, progress, regimes, checks, status, addresses, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
 }
 
 /** Ligne 250 : le montant saisi pour l'année, sinon celui calculé depuis les emprunts du logement. */

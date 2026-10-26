@@ -3,10 +3,11 @@ import { test } from 'node:test'
 import { API, BASE, api, completeLease, launch, newAccount, shot, signedInContext, watch } from '../lib.mjs'
 
 /**
- * Préparer le dépôt : la page de déclaration donne, situation par situation, les documents à réunir, les étapes,
- * les liens officiels et les contacts ; la même fiche se télécharge en PDF, montants compris.
+ * Déclarer sans prise de tête : un parcours guidé (vérifier, déclarer sur impots.gouv.fr case par case, autres
+ * démarches), la progression gardée pour l'année, tout le dossier en un PDF ; puis les fiches pratiques, situation par
+ * situation, avec les documents à réunir, les liens officiels et les contacts.
  */
-test('déclaration : fiche « Préparer votre dépôt », liens officiels et PDF', async () => {
+test('déclaration : parcours guidé, progression gardée, dossier PDF et fiches pratiques', async () => {
   const { token } = await newAccount()
   const { leaseId } = await completeLease(token, { furnished: true })
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
@@ -32,22 +33,54 @@ test('déclaration : fiche « Préparer votre dépôt », liens officiels et PDF
   assert.equal(pdf.status, 200)
   assert.equal(pdf.headers.get('content-type'), 'application/pdf')
   assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 4).toString(), '%PDF')
+  // Tout le dossier en un seul fichier : la fiche puis la 1447-C-SD pré-remplie.
+  const dossier = await fetch(`${API}/money/tax/dossier.pdf?year=${year}`, { headers: { Authorization: `Bearer ${token}` } })
+  assert.equal(dossier.status, 200)
+  assert.equal(Buffer.from(await dossier.arrayBuffer()).subarray(0, 4).toString(), '%PDF')
+  // Parcours : l'année n'est pas finie ; rien ne manque au micro ; le régime peut se choisir (meublé sous le plafond).
+  assert.equal(view.status.phase, 'EARLY')
+  assert.equal(view.regimes.meuble.chosen, 'MICRO')
+  assert.ok(view.checks.some((c) => c.id === 'rents' && c.tone === 'OK'))
+  assert.equal(view.copy[0].rubric, 'Revenus des locations meublées non professionnelles (déclaration complémentaire 2042-C-PRO)')
 
   const browser = await launch()
   const ctx = await signedInContext(browser, token)
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(BASE).origin })
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
   page.setDefaultTimeout(15000)
   await page.goto(`${BASE}/espace/argent/declaration`)
   await page.getByRole('button', { name: String(year) }).click()
-  await page.getByRole('heading', { name: '2. À recopier sur impots.gouv.fr' }).waitFor()
-  await page.locator('.copy-row', { hasText: 'Case 5NI' }).getByRole('button', { name: 'Copier' }).waitFor()
+  // Rien ne manque : « Vérifier vos chiffres » est déjà fait, le parcours s'ouvre sur le choix du régime (meublé).
+  await page.getByRole('button', { name: /Vérifier vos chiffres/ }).waitFor()
+  await page.getByText('Vos revenus 2026 se déclarent au printemps 2027').waitFor()
+  await page.getByRole('button', { name: /Micro-BIC/, pressed: true }).waitFor()
+  await page.getByRole('button', { name: 'Garder ce choix et continuer' }).click()
+  // Déclarer : la rubrique à cocher, puis « Copier » coche la case ; elle reste cochée au retour sur la page.
+  await page.getByText('Revenus des locations meublées non professionnelles (déclaration complémentaire 2042-C-PRO)', { exact: true }).waitFor()
+  await page.locator('.copy-row', { hasText: 'Case 5NI' }).getByRole('button', { name: 'Copier' }).click()
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), '560')
+  await page.locator('.copy-row', { hasText: 'Case 5NI' }).getByRole('button', { name: 'Copiée' }).waitFor()
+  await shot(page, 'declaration-parcours')
+  await page.reload()
+  await page.getByRole('button', { name: String(year) }).click()
+  await page.getByRole('button', { name: /Déclarer sur impots/ }).waitFor()
+  await page.locator('.copy-row', { hasText: 'Case 5NI' }).getByRole('button', { name: 'Copiée' }).waitFor()
+  await page.getByRole('button', { name: 'J’ai signé ma déclaration' }).click()
+  // Autres démarches : SIRET et CFE du premier meublé, occupation ; cochées une à une.
+  await page.getByText('Première année en meublé : les formalités').first().waitFor()
+  await page.getByRole('checkbox', { name: 'C’est fait' }).first().check()
+  const saved = await api(`/money/tax?year=${year}`, { token })
+  assert.deepEqual(saved.progress.done, ['MEUBLE_MICRO:5NI:0'])
+  assert.ok(saved.progress.filedAt)
+  assert.deepEqual(saved.progress.tasks.sort(), ['MEUBLE_DEBUT:', 'regime'])
+  assert.equal(saved.status.phase, 'FILED')
   const cfeDownload = page.waitForEvent('download')
   await page.getByRole('button', { name: 'Télécharger la 1447-C-SD' }).click()
   assert.equal((await cfeDownload).suggestedFilename(), '1447-c-sd.pdf')
-  await page.getByRole('heading', { name: 'Préparer votre dépôt' }).waitFor()
-  await page.locator('strong', { hasText: 'Première année en meublé : les formalités' }).waitFor()
+  await page.getByRole('heading', { name: 'Fiches pratiques, situation par situation' }).waitFor()
+  await page.locator('#depot strong', { hasText: 'Première année en meublé : les formalités' }).waitFor()
   assert.equal(await page.getByRole('link', { name: /Guichet unique des formalités/ }).first().getAttribute('href'), 'https://procedures.inpi.fr/')
   // Une situation à la fois : le micro-BIC et sa case 5NI.
   await page.getByRole('button', { name: 'Location meublée au micro-BIC', exact: true }).click()

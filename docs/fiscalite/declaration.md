@@ -39,6 +39,20 @@
 
 Gestion par une agence : le propriétaire déclare lui-même ; loyers bruts (avant honoraires) ligne 211 ou case 4BE, honoraires de gestion ligne 221 (« rémunérations, honoraires et commissions versées à un tiers », formulaire 2044). Vérifié sur le libellé de la ligne 221.
 
+## Parcours guidé (octobre 2026)
+
+> Code : `server/src/domain/taxGuide.ts` (testé dans `taxGuide.test.ts`), `client/src/pages/espace/DeclarationGuide.tsx`,
+> `PUT /money/tax/progress`, `GET /money/tax/dossier.pdf`. Test de bout en bout : `e2e/tests/33-fiche-depot.test.mjs`.
+
+| Élément | Source | Statut |
+|---|---|---|
+| Déclaration en ligne obligatoire ; papier seulement si impossible ; annexes (2044) remplies en ligne, avec reprise des informations de l'an dernier ; correction possible jusqu'à la date limite | economie.gouv.fr (Bercy infos, « Déclaration de revenus : les réponses ») | Vérifié |
+| Aucun dépôt de fichier par un particulier : la déclaration se saisit en ligne | Même source ; aucune téléprocédure de fichier pour les particuliers | Vérifié |
+| Service de correction en ligne des revenus 2025 : du 29 juillet au 30 novembre 2026 ; ensuite, réclamation | impots.gouv.fr, actualité « Ouverture du service de correction » | Vérifié, à compléter chaque année (`CORRECTION_DATES`) |
+| Retard : majoration de 10 % des droits (CGI art. 1728), 40 % après mise en demeure non suivie dans les 30 jours | CGI art. 1728 | Vérifié |
+| Ouverture de la déclaration en ligne : mi-avril (date indicative du parcours : 10 avril) | Calendriers des campagnes 2024 à 2026 | À vérifier chaque année |
+| Liasse 2031 du meublé au réel : télétransmise depuis l'espace professionnel ou par un partenaire EDI | impots.gouv.fr, dépliant « Loueurs en meublé » et FAQ LMNP 2026 | Vérifié ; possibilité de saisie directe (EFI) non confirmée par une source officielle, non annoncée |
+
 ## Contacts
 
 | Contact | Statut |
