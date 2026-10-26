@@ -66,8 +66,8 @@ const IDENTITY_Y = [739, 724, 709, 694, 679, 664, 649, 634]
 export function lines2044(p: PropertyTax): Record<string, number> {
   const get = (line: string) => p.lines.find((l) => l.line === line)?.cents ?? 0
   const out: Record<string, number> = {}
-  for (const l of ['211', '221', '222', '223', '224', '227', '229']) out[l] = get(l)
-  out['215'] = out['211']
+  for (const l of ['211', '213', '214', '221', '222', '223', '224', '227', '229']) out[l] = get(l)
+  out['215'] = out['211'] + out['213'] + out['214']
   out['230'] = -get('230')
   out['240'] = out['221'] + out['222'] + out['223'] + out['224'] + out['227'] + out['229'] - out['230']
   out['250'] = get('250')
@@ -169,6 +169,10 @@ export interface CfeInput {
   startDate: string
   /** Recettes annuelles estimées (loyer et charges sur douze mois). */
   yearlyReceiptsCents: number
+  /** Lieu et date de la signature (page 1, « À … le … »). */
+  signedAt?: { place: string | null; date: string } | null
+  /** Signature du profil (image PNG en data URL), posée dans le cadre « Signature ». */
+  signaturePng?: string | null
 }
 
 export async function filled1447(i: CfeInput): Promise<Uint8Array> {
@@ -185,13 +189,15 @@ export async function filled1447(i: CfeInput): Promise<Uint8Array> {
     }
   }
   const fr = (iso: string) => iso.split('-').reverse().join('/')
+  // Adresse du logement : la ville n'est ajoutée que si l'adresse saisie ne la contient pas déjà.
+  const place = i.city && i.propertyAddress.toLowerCase().includes(i.city.toLowerCase()) ? i.propertyAddress : [i.propertyAddress, [i.postalCode, i.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   const dept = (i.postalCode ?? '').trim().slice(0, i.postalCode?.startsWith('97') ? 3 : 2)
   // Page 1 : lieu d'imposition, identité, activité.
   set('a1', dept)
   set('a2', i.city)
   set('a5', i.owner)
   set('a6', 'Location de logement meublé (loueur en meublé non professionnel)')
-  set('a7', [i.propertyAddress, [i.postalCode, i.city].filter(Boolean).join(' ')].filter(Boolean).join(', '))
+  set('a7', place)
   set('a8', i.ownerAddress)
   set('a9', i.siret?.replace(/\s/g, ''))
   set('a10', '6820A') // NACE 68.20A, location de logements
@@ -205,14 +211,33 @@ export async function filled1447(i: CfeInput): Promise<Uint8Array> {
   set('b14', wholeEuros(i.yearlyReceiptsCents))
   // Page 3 : le logement.
   set('c1', i.house ? 'Maison louée meublée' : 'Appartement loué meublé')
-  set('c2', [i.propertyAddress, [i.postalCode, i.city].filter(Boolean).join(' ')].filter(Boolean).join(', '))
+  set('c2', place)
   set('c3', i.floorDoor)
   set('c6', fr(i.startDate))
   set('c7', i.surface ? Math.round(i.surface) : null)
   set('c11', i.surface ? Math.round(i.surface) : null)
   checkOption(form, 'cac8', 0) // Vous êtes : propriétaire
   checkOption(form, 'cac11', 2) // Autre local loué meublé
+  const first = doc.getPages()[0]
+  // Inscription au registre des métiers : non. Le formulaire n'a de champ que pour « oui » : la croix est dessinée.
+  first.drawText('X', { x: 450.5, y: 197.5, size: 10, font: bold, color: INK })
+  // Lieu, date et signature (page 1, cadre du bas).
+  if (i.signedAt) {
+    set('a19', i.signedAt.place)
+    set('a20', fr(i.signedAt.date))
+  }
+  if (i.signaturePng?.startsWith('data:image/png;base64,')) {
+    try {
+      const img = await doc.embedPng(Buffer.from(i.signaturePng.split(',')[1], 'base64'))
+      const h = 26
+      const w = Math.min(200, (img.width / img.height) * h)
+      first.drawImage(img, { x: 330, y: 34, width: w, height: (w / ((img.width / img.height) * h)) * h })
+    } catch {
+      /* signature illisible : le propriétaire signe à la main */
+    }
+  }
   form.updateFieldAppearances(font)
-  stamp(doc.getPages()[0], bold, 'Pré-remplie par Bailio : vérifiez, complétez le SIRET, datez et signez.')
+  const missing = [i.siret ? null : 'le SIRET', i.signaturePng ? null : 'votre signature'].filter(Boolean)
+  stamp(first, bold, missing.length ? `Pré-remplie par Bailio : vérifiez, ajoutez ${missing.join(' et ')}.` : 'Pré-remplie par Bailio : relisez avant de l’envoyer.')
   return doc.save()
 }

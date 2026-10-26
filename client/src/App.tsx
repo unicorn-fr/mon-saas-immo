@@ -67,6 +67,7 @@ const Structures = page('Structures')
 const StructureFiche = page('StructureFiche')
 const Emprunt = page('Emprunt')
 const Degradations = page('Degradations')
+const ImpotsBail = page('ImpotsBail')
 const Aides = page('Aides')
 const Patrimoine = page('Patrimoine')
 const Pilotage = page('Pilotage')
@@ -228,6 +229,7 @@ function Pages() {
               <Route path="/espace/logements/:id/fiche" element={<RequireAuth><FicheLogement /></RequireAuth>} />
               <Route path="/espace/logements/:id/emprunt" element={<RequireAuth><Emprunt /></RequireAuth>} />
               <Route path="/espace/baux/:id/degradations" element={<RequireAuth><Degradations /></RequireAuth>} />
+              <Route path="/espace/baux/:id/impots" element={<RequireAuth><ImpotsBail /></RequireAuth>} />
               <Route path="/espace/logements/:id/aides" element={<RequireAuth><Aides /></RequireAuth>} />
               <Route path="/espace/patrimoine" element={<RequireAuth><Patrimoine /></RequireAuth>} />
               <Route path="/espace/pilotage" element={<RequireAuth><Pilotage /></RequireAuth>} />

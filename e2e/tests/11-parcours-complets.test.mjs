@@ -177,9 +177,10 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   await op.getByText(/envoyés? par le locataire, à vérifier/).waitFor()
   await op.getByText('Vérifier maintenant').click()
   const row = op.locator('div').filter({ has: op.getByText('Pièce d’identité', { exact: true }) }).filter({ has: op.getByRole('button', { name: 'Conforme' }) }).last()
-  await row.getByRole('button', { name: 'Conforme' }).click()
+  // Chaque réponse est enregistrée avant de passer à la suivante (sinon la page se ferme avant l'envoi).
+  await Promise.all([op.waitForResponse((r) => r.url().includes(`/tenants/${tenantId}/review`) && r.request().method() === 'POST'), row.getByRole('button', { name: 'Conforme' }).click()])
   const birth = op.locator('div').filter({ has: op.getByText('Lieu de naissance', { exact: true }) }).filter({ has: op.getByRole('button', { name: 'À corriger' }) }).last()
-  await birth.getByRole('button', { name: 'À corriger' }).click()
+  await Promise.all([op.waitForResponse((r) => r.url().includes(`/tenants/${tenantId}/review`) && r.request().method() === 'POST'), birth.getByRole('button', { name: 'À corriger' }).click()])
   await shot(op, 'verification-dossier')
   await octx.close()
   const left = await api(`/tenants/${tenantId}/review`, { token })

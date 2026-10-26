@@ -21,7 +21,7 @@ export interface CopyEntry {
 }
 
 export interface CopyGroup {
-  id: 'VIDE_MICRO' | 'VIDE_2044' | 'VIDE_2042' | 'MEUBLE_MICRO' | 'MEUBLE_REEL'
+  id: 'VIDE_MICRO' | 'VIDE_2044' | 'VIDE_4BD' | 'VIDE_2042' | 'MEUBLE_MICRO' | 'MEUBLE_REEL'
   form: '2042' | '2044' | '2042-C-PRO'
   title: string
   /** Rubrique à cocher à l'étape « Revenus et charges » de la déclaration en ligne (absent pour un simple report). */
@@ -39,10 +39,14 @@ export interface CopyPlanInput {
   addresses: Record<string, string>
   /** Meublé au réel : estimation de Bailio (le résultat de la liasse 2031 fait foi). */
   lmnp: { better: 'MICRO' | 'REAL'; taxableCents: number; deficitCents: number } | null
+  /** Déficits fonciers des années précédentes pas encore déduits (case 4BD), indiqués par le propriétaire. */
+  priorDeficitCents?: number | null
 }
 
 /** Euros entiers, arrondis au plus proche (les formulaires de l'administration n'ont pas de centimes). */
 export const wholeEuros = (cents: number) => Math.round(cents / 100)
+
+const RUBRIC_2044 = 'Revenus fonciers, puis la déclaration annexe 2044 (régime réel)'
 
 export function copyPlan(i: CopyPlanInput): CopyGroup[] {
   const groups: CopyGroup[] = []
@@ -73,11 +77,20 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
         id: 'VIDE_2044',
         form: '2044',
         title: 'Location vide : déclaration des revenus fonciers 2044',
-        rubric: 'Revenus fonciers, puis la déclaration annexe 2044 (régime réel)',
+        rubric: RUBRIC_2044,
         steps: ['Vos logements de l’an dernier sont souvent déjà là : vérifiez leur adresse. Les totaux et le résultat se calculent seuls.'],
         entries,
         note: 'Remplir une 2044 alors que vos loyers ne dépassent pas 15 000 € vaut choix du régime réel pour trois ans.',
       })
+      if (i.priorDeficitCents)
+        groups.push({
+          id: 'VIDE_4BD',
+          form: '2042',
+          title: 'Déficits fonciers des années précédentes',
+          rubric: RUBRIC_2044,
+          steps: ['Sur la déclaration principale, rubrique des revenus fonciers.'],
+          entries: [{ box: '4BD', label: 'Déficits des années précédentes pas encore déduits', cents: i.priorDeficitCents, hint: 'Le montant de votre dernier avis d’impôt, « déficits restant à reporter ».' }],
+        })
       const result = empty.realResultCents
       const report: CopyEntry[] =
         result >= 0
@@ -92,7 +105,7 @@ export function copyPlan(i: CopyPlanInput): CopyGroup[] {
         title: 'Report sur la déclaration 2042',
         steps: ['Une fois la 2044 validée, ces cases se remplissent seules sur la 2042 : vérifiez qu’elles portent bien ces montants.'],
         entries: report,
-        note: 'Case 4BD : déficits fonciers des années précédentes pas encore déduits. Vous les trouvez colonne C de votre 2044 de l’an dernier.',
+        note: i.priorDeficitCents ? 'Les déficits des années précédentes (case 4BD) se déduisent ensuite de votre bénéfice foncier : l’administration fait le calcul.' : 'Case 4BD : déficits fonciers des années précédentes pas encore déduits. Vous les trouvez sur votre dernier avis d’impôt.',
       })
     }
   }

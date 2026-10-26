@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
 import { Check as CheckIcon } from '../../components/Icons'
-import { Btn, Callout, Card, Check, Money, Pill, Progress, TextLink, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Check, Input, Money, Pill, Progress, TextLink, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
 import { downloadDoc } from '../../lib/docs'
 
@@ -23,9 +23,17 @@ interface TaxCheck {
   title: string
   detail?: string
   propertyId?: string
-  field?: 'loanInterestCents' | 'coproRegularizationCents' | 'adminFeesCents'
+  fields?: CheckField[]
   none?: string
-  link?: { to: string; label: string }
+  link?: { to: string; label: string; external?: boolean }
+}
+interface CheckField {
+  key: string
+  label: string
+  kind: 'MONEY' | 'TEXT'
+  scope: 'PROPERTY' | 'YEAR' | 'INFO'
+  suggested?: number | null
+  hint?: string
 }
 interface CopyEntry {
   box: string
@@ -54,6 +62,7 @@ interface FilingGuide {
   deadline: string | null
   documents: Array<{ label: string; detail?: string; bailio?: boolean }>
   steps: Array<{ title: string; detail?: string; link?: Link }>
+  watch?: string[]
   structure?: string
   alternative?: boolean
 }
@@ -71,7 +80,6 @@ export interface GuideData {
 }
 
 type StepId = 'check' | 'regime' | 'declare' | 'others' | 'after'
-type ExtraPatch = { loanInterestCents?: number | null; adminFeesCents?: number | null; coproRegularizationCents?: number | null }
 
 const euros = (cents: number) => `${Math.round(cents / 100).toLocaleString('fr-FR')} €`
 export const boxLabel = (box: string) => (/^[45][A-Z]{2}$/.test(box) ? `Case ${box}` : /^\d/.test(box) ? `Ligne ${box}` : box)
@@ -89,7 +97,7 @@ const taskKey = (g: FilingGuide) => `${g.id}:${g.structure ?? ''}`
  * impots.gouv.fr écran par écran (un clic copie la case et la coche). La progression est gardée pour l'année.
  * L'administration n'accepte aucun fichier d'un particulier : la déclaration en ligne se remplit à la main.
  */
-export function DeclarationGuide({ data, year, onExtra, reload }: { data: GuideData; year: number; onExtra: (propertyId: string, patch: ExtraPatch) => void; reload: () => void }) {
+export function DeclarationGuide({ data, year, reload }: { data: GuideData; year: number; reload: () => void }) {
   const toast = useToast()
   const [progress, setProgress] = useState<TaxProgress>(data.progress ?? {})
   useEffect(() => setProgress(data.progress ?? {}), [data.progress])
@@ -98,6 +106,8 @@ export function DeclarationGuide({ data, year, onExtra, reload }: { data: GuideD
   const toCheck = groups.filter((g) => !g.rubric)
   const entryKeys = toCopy.flatMap((g) => g.entries.map((e, k) => `${g.id}:${e.box}:${k}`))
   const others = (data.filing ?? []).filter((g) => !g.alternative && !PERSONAL.includes(g.id))
+  // Fiches de la déclaration elle-même (régime retenu) : documents à avoir sous la main et pièges, repris à l'étape « Déclarer ».
+  const personal = (data.filing ?? []).filter((g) => !g.alternative && PERSONAL.includes(g.id))
   const checks = data.checks ?? []
   const todo = checks.filter((c) => c.tone === 'TODO')
   const regimes = data.regimes ?? { vide: null, meuble: null }
@@ -114,7 +124,7 @@ export function DeclarationGuide({ data, year, onExtra, reload }: { data: GuideD
   const markCopied = (key: string, on = true) => save({ done: on ? [...new Set([...done, key])] : [...done].filter((d) => d !== key) })
 
   const steps: Array<{ id: StepId; title: string; done: boolean; hint: string }> = [
-    { id: 'check', title: 'Vérifier vos chiffres', done: !todo.length || tasks.has('check'), hint: todo.length ? `${todo.length} point${todo.length > 1 ? 's' : ''} à compléter` : 'Tout est prêt' },
+    { id: 'check', title: 'Vérifier vos chiffres', done: !todo.length || tasks.has('check'), hint: todo.length ? `${todo.length} question${todo.length > 1 ? 's' : ''} pour compléter` : 'Tout est prêt' },
     ...(hasChoice ? [{ id: 'regime' as const, title: 'Choisir votre régime', done: tasks.has('regime'), hint: 'Bailio a comparé pour vous' }] : []),
     ...(groups.length ? [{ id: 'declare' as const, title: 'Déclarer sur impots.gouv.fr', done: Boolean(progress.filedAt), hint: entryKeys.length ? `${entryKeys.length} case${entryKeys.length > 1 ? 's' : ''} à recopier` : 'À vérifier' }] : []),
     ...(others.length ? [{ id: 'others' as const, title: 'Vos autres démarches', done: others.every((g) => tasks.has(taskKey(g))), hint: `${others.length} démarche${others.length > 1 ? 's' : ''}` }] : []),
@@ -161,10 +171,10 @@ export function DeclarationGuide({ data, year, onExtra, reload }: { data: GuideD
         </div>
       </Card>
 
-      <ol aria-label="Les étapes de votre déclaration" style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <ol id="depot" aria-label="Les étapes de votre déclaration" style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
         {steps.map((s, i) => (
           <Step key={s.id} id={s.id} n={i + 1} title={s.title} hint={s.hint} done={s.done} open={shown === s.id} onToggle={() => setOpen(shown === s.id ? 'none' : s.id)}>
-            {s.id === 'check' ? <CheckStep year={year} checks={checks} onExtra={onExtra} reload={reload} onDone={() => {
+            {s.id === 'check' ? <CheckStep year={year} checks={checks} reload={reload} onDone={() => {
                   if (todo.length) void toggleTask('check', true)
                   next('check')
                 }} /> : null}
@@ -172,7 +182,7 @@ export function DeclarationGuide({ data, year, onExtra, reload }: { data: GuideD
                   void toggleTask('regime', true)
                   next('regime')
                 }} /> : null}
-            {s.id === 'declare' ? <DeclareStep toCopy={toCopy} toCheck={toCheck} done={done} filedAt={progress.filedAt ?? null} liasse={others.some((g) => g.id === 'MEUBLE_REEL')} onCopied={markCopied} onFiled={(d) => save({ filedAt: d }).then(reload)} onNext={() => next('declare')} /> : null}
+            {s.id === 'declare' ? <DeclareStep prepare={personal} toCopy={toCopy} toCheck={toCheck} done={done} filedAt={progress.filedAt ?? null} liasse={others.some((g) => g.id === 'MEUBLE_REEL')} onCopied={markCopied} onFiled={(d) => save({ filedAt: d }).then(reload)} onNext={() => next('declare')} /> : null}
             {s.id === 'others' ? <OthersStep guides={others} tasks={tasks} onToggle={toggleTask} /> : null}
           </Step>
         ))}
@@ -241,48 +251,126 @@ function Step({ id, n, title, hint, done, open, onToggle, children }: { id: Step
   )
 }
 
-function CheckStep({ year, checks, onExtra, reload, onDone }: { year: number; checks: TaxCheck[]; onExtra: (propertyId: string, patch: ExtraPatch) => void; reload: () => void; onDone: () => void }) {
-  const toast = useToast()
-  const todo = checks.filter((c) => c.tone === 'TODO').length
-  const none = (c: TaxCheck) =>
-    api(`/properties/${c.propertyId}/tax/${year}`, { method: 'PUT', body: { [c.field!]: 0 } })
-      .then(reload)
-      .catch(toast.error)
+/**
+ * Vérifier et compléter : une question à la fois (« Question 2 sur 5 »), avec la réponse proposée quand Bailio la
+ * connaît (l'an dernier, ou calculée). Chaque réponse est gardée : avec le logement pour l'année, avec l'année, ou une fois
+ * pour toutes (SIRET). « Plus tard » passe à la suivante. Puis ce qui mérite un coup d'œil, et ce qui est juste.
+ */
+function CheckStep({ year, checks, reload, onDone }: { year: number; checks: TaxCheck[]; reload: () => void; onDone: () => void }) {
+  const questions = checks.filter((c) => c.tone === 'TODO')
+  const rest = checks.filter((c) => c.tone !== 'TODO')
+  const [skipped, setSkipped] = useState(0)
+  const q = skipped < questions.length ? questions[skipped] : null
   return (
     <>
-      <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{todo ? 'Bailio a repris vos loyers et vos dépenses. Il lui manque seulement ceci : répondez, les montants à recopier se mettent à jour.' : 'Bailio a repris vos loyers et vos dépenses : rien ne manque.'}</span>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {checks.map((c) => (
-          <li key={c.id} style={{ border: `1px solid ${c.tone === 'TODO' ? BAI.borderStrong : BAI.dividerSoft}`, background: c.tone === 'OK' ? BAI.bg : BAI.surface, borderRadius: 16, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <Pill tone={c.tone === 'TODO' ? 'accent' : c.tone === 'TIP' ? 'muted' : 'green'}>{c.tone === 'TODO' ? 'À compléter' : c.tone === 'TIP' ? 'À regarder' : 'Vérifié'}</Pill>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                <strong style={{ fontSize: 15 }}>{c.title}</strong>
-                {c.detail ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{c.detail}</span> : null}
+      <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
+        {questions.length ? `Bailio a repris vos loyers et vos dépenses. Il lui reste ${questions.length > 1 ? `${questions.length} questions` : 'une question'}, une à la fois : vos réponses complètent les cases et les formulaires, et sont gardées pour l’an prochain.` : 'Bailio a repris vos loyers et vos dépenses : rien ne manque.'}
+      </span>
+      {q ? (
+        <Question key={q.id} q={q} n={skipped + 1} total={questions.length} year={year} reload={reload} onLater={() => setSkipped(skipped + 1)} />
+      ) : questions.length ? (
+        <span style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', fontSize: 15 }}>
+          {questions.length > 1 ? `${questions.length} questions mises de côté.` : 'Une question mise de côté.'}
+          <TextLink onClick={() => setSkipped(0)}>Y revenir</TextLink>
+        </span>
+      ) : null}
+      {rest.length ? (
+        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {rest.map((c) => (
+            <li key={c.id} style={{ border: `1px solid ${BAI.dividerSoft}`, background: c.tone === 'OK' ? BAI.bg : BAI.surface, borderRadius: 16, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <Pill tone={c.tone === 'TIP' ? 'muted' : 'green'}>{c.tone === 'TIP' ? 'À regarder' : 'Vérifié'}</Pill>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <strong style={{ fontSize: 15 }}>{c.title}</strong>
+                  {c.detail ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{c.detail}</span> : null}
+                </span>
               </span>
-            </span>
-            {c.field && c.propertyId ? (
-              <div className="col-md" style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Money label="Montant de l’année" cents={null} onChange={(v) => onExtra(c.propertyId!, { [c.field!]: v })} />
-                </div>
-                {c.none ? (
-                  <Btn variant="outline" onClick={() => none(c)}>
-                    {c.none}
-                  </Btn>
-                ) : null}
-              </div>
-            ) : null}
-            {c.link ? <TextLink to={c.link.to} style={{ fontSize: 14 }}>{c.link.label}</TextLink> : null}
-          </li>
-        ))}
-      </ul>
+              {c.link ? <CheckLink link={c.link} /> : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div>
         <Btn variant="outline" onClick={onDone}>
-          {todo ? 'Continuer sans compléter' : 'C’est juste, continuer'}
+          {questions.length ? 'Continuer sans répondre' : 'C’est juste, continuer'}
         </Btn>
       </div>
     </>
+  )
+}
+
+function CheckLink({ link }: { link: NonNullable<TaxCheck['link']> }) {
+  return link.external ? (
+    <a href={link.to} {...ext} style={{ ...linkStyle, fontSize: 14 }}>
+      {link.label} <span aria-hidden>↗</span>
+      <span className="sr-only"> (nouvelle fenêtre)</span>
+    </a>
+  ) : (
+    <TextLink to={link.to} style={{ fontSize: 14 }}>
+      {link.label}
+    </TextLink>
+  )
+}
+
+function Question({ q, n, total, year, reload, onLater }: { q: TaxCheck; n: number; total: number; year: number; reload: () => void; onLater: () => void }) {
+  const toast = useToast()
+  const fields = q.fields ?? []
+  const [money, setMoney] = useState<Record<string, number | null>>(() => Object.fromEntries(fields.filter((f) => f.kind === 'MONEY').map((f) => [f.key, f.suggested ?? null])))
+  const [text, setText] = useState<Record<string, string>>({})
+  const save = async (zero: boolean) => {
+    const property: Record<string, number> = {}
+    const progress: Record<string, unknown> = {}
+    for (const f of fields) {
+      if (f.kind === 'TEXT') {
+        const v = (text[f.key] ?? '').replace(/\s/g, '')
+        if (f.key === 'siret' && !/^\d{14}$/.test(v)) return toast.show('Le SIRET compte 14 chiffres.', 'error')
+        progress.info = { [f.key]: v }
+        continue
+      }
+      const v = zero ? 0 : money[f.key] ?? 0
+      if (f.scope === 'PROPERTY') property[f.key] = v
+      else progress[f.key] = v
+    }
+    try {
+      if (Object.keys(property).length) await api(`/properties/${q.propertyId}/tax/${year}`, { method: 'PUT', body: property })
+      if (Object.keys(progress).length) await api('/money/tax/progress', { method: 'PUT', body: { year, ...progress } })
+      toast.show('C’est noté.')
+      reload()
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  return (
+    <section aria-label={`Question ${n} sur ${total}`} style={{ border: `2px solid ${BAI.owner}`, borderRadius: 20, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: BAI.owner }}>
+        Question {n} sur {total}
+      </span>
+      <strong style={{ fontSize: 18, lineHeight: 1.35 }}>{q.title}</strong>
+      {q.detail ? <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{q.detail}</span> : null}
+      {fields.map((f) =>
+        f.kind === 'MONEY' ? (
+          <Money key={f.key} label={f.label} cents={money[f.key] ?? null} onChange={(v) => setMoney((m) => ({ ...m, [f.key]: v }))} hint={f.hint ?? (f.suggested ? `Repris de l’an dernier : ${euros(f.suggested)}. Vérifiez-le.` : undefined)} />
+        ) : (
+          <Input key={f.key} label={f.label} value={text[f.key] ?? ''} onChange={(v) => setText((t) => ({ ...t, [f.key]: v }))} inputMode="numeric" />
+        ),
+      )}
+      {q.link ? <CheckLink link={q.link} /> : null}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        {fields.length ? (
+          <Btn variant="dark" onClick={() => save(false)}>
+            Valider
+          </Btn>
+        ) : null}
+        {q.none ? (
+          <Btn variant="outline" onClick={() => save(true)}>
+            {q.none}
+          </Btn>
+        ) : null}
+        <TextLink onClick={onLater} style={{ fontSize: 14 }}>
+          {n < total ? 'Plus tard, question suivante' : 'Plus tard'}
+        </TextLink>
+      </div>
+    </section>
   )
 }
 
@@ -345,7 +433,7 @@ function RegimePick({ legend, choice, onChoose, micro, real }: { legend: string;
   )
 }
 
-function DeclareStep({ toCopy, toCheck, done, filedAt, liasse, onCopied, onFiled, onNext }: { toCopy: CopyGroup[]; toCheck: CopyGroup[]; done: Set<string>; filedAt: string | null; liasse: boolean; onCopied: (key: string, on?: boolean) => void; onFiled: (d: string | null) => void; onNext: () => void }) {
+function DeclareStep({ prepare, toCopy, toCheck, done, filedAt, liasse, onCopied, onFiled, onNext }: { prepare: FilingGuide[]; toCopy: CopyGroup[]; toCheck: CopyGroup[]; done: Set<string>; filedAt: string | null; liasse: boolean; onCopied: (key: string, on?: boolean) => void; onFiled: (d: string | null) => void; onNext: () => void }) {
   const toast = useToast()
   const rubrics = toCopy.map((g) => g.rubric!).filter((r, i, a) => a.indexOf(r) === i)
   const total = toCopy.reduce((a, g) => a + g.entries.length, 0)
@@ -360,6 +448,9 @@ function DeclareStep({ toCopy, toCheck, done, filedAt, liasse, onCopied, onFiled
       toast.show('Sélectionnez le montant puis copiez-le.', 'error')
     }
   }
+  // Documents et pièges des fiches retenues, sans doublon.
+  const docs = prepare.flatMap((g) => g.documents).filter((d, i, a) => a.findIndex((x) => x.label === d.label) === i)
+  const watch = [...new Set(prepare.flatMap((g) => g.watch ?? []))]
   let n = 0
   const sub = (title: string, children: ReactNode) => (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: n++ ? `1px solid ${BAI.dividerSoft}` : 'none', paddingTop: n > 1 ? 14 : 0 }}>
@@ -372,6 +463,22 @@ function DeclareStep({ toCopy, toCheck, done, filedAt, liasse, onCopied, onFiled
   return (
     <>
       {liasse ? <Callout tone="tip">Location meublée au réel : la liasse 2031 se dépose d’abord (voir vos autres démarches). Son résultat fait foi pour la case à recopier.</Callout> : null}
+      {docs.length
+        ? sub(
+            'Ayez sous la main',
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {docs.map((d) => (
+                <li key={d.label} style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 15, lineHeight: 1.5 }}>
+                  <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <strong>{d.label}</strong>
+                    {d.bailio ? <Pill tone="owner">Déjà dans Bailio</Pill> : null}
+                  </span>
+                  {d.detail ? <span style={{ fontSize: 14, color: BAI.inkMid }}>{d.detail}</span> : null}
+                </li>
+              ))}
+            </ul>,
+          )
+        : null}
       {sub(
         'Ouvrez votre espace sur impots.gouv.fr',
         <>
@@ -441,6 +548,15 @@ function DeclareStep({ toCopy, toCheck, done, filedAt, liasse, onCopied, onFiled
           ))}
         </>,
       )}
+      {watch.length ? (
+        <Callout tone="tip" title="Les pièges à éviter">
+          <ul style={{ margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {watch.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </Callout>
+      ) : null}
       {sub(
         'Vérifiez le récapitulatif',
         <>
@@ -532,6 +648,13 @@ function OthersStep({ guides, tasks, onToggle }: { guides: FilingGuide[]; tasks:
                 <p style={{ margin: '10px 0 0', fontSize: 14, color: BAI.inkMid, lineHeight: 1.6 }}>
                   À réunir : {g.documents.map((d) => d.label.charAt(0).toLowerCase() + d.label.slice(1)).join(' ; ')}.
                 </p>
+              ) : null}
+              {g.watch?.length ? (
+                <ul style={{ margin: '10px 0 0', paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>
+                  {g.watch.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
               ) : null}
             </details>
             <Check checked={tasks.has(key)} onChange={(v) => onToggle(key, v)} label="C’est fait" />

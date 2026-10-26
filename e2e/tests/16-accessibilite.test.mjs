@@ -75,3 +75,15 @@ test('signature en ligne : aucune violation WCAG 2.1 AA', async () => {
   await browser.close()
   assert.deepEqual(problems, [], problems.join('\n'))
 })
+
+test('déclaration aux impôts d’un bail signé : aucune violation WCAG 2.1 AA', async () => {
+  const { token } = await newAccount()
+  const { leaseId } = await completeLease(token)
+  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  const browser = await launch()
+  const ctx = await signedInContext(browser, token)
+  const page = await ctx.newPage()
+  const problems = [...(await audit(page, `/espace/baux/${leaseId}/impots`))]
+  await browser.close()
+  assert.deepEqual(problems, [], problems.join('\n'))
+})

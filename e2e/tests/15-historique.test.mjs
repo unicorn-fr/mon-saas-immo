@@ -43,7 +43,10 @@ test('échéances fiscales : occupation des logements après un nouveau bail, CF
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
   const today = await api('/today', { token })
   const labels = today.upcoming.map((u) => u.label).join(' | ')
-  assert.match(labels, /Gérer mes biens immobiliers/)
+  // Le nouvel occupant devient une tâche « Signaler l'arrivée … aux impôts », qui ouvre la page du bail.
+  assert.ok(today.tasks.some((t) => t.type === 'TAX_DECLARE' && t.leaseId === leaseId && t.mode === 'ARRIVAL'))
+  const tax = await api(`/money/leases/${leaseId}/tax`, { token })
+  assert.match(tax.items[0].steps.join(' '), /Biens immobiliers/)
   if (new Date().getUTCMonth() >= 9) assert.match(labels, /CFE de la location meublée/)
 })
 
