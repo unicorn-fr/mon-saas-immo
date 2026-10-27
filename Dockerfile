@@ -3,8 +3,9 @@
 # corrigé en 22.23.4). update.sh reconstruit avec --pull : chaque mise à jour reprend le dernier correctif de Node 22.
 FROM node:22-slim
 # openssl : Prisma. tesseract-ocr(-fra) et poppler-utils : lecture des baux importés, sur le serveur.
+# fonts-dejavu-core : police du filigrane posé sur les justificatifs (services/watermark.ts).
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends openssl tesseract-ocr tesseract-ocr-fra poppler-utils \
+  && apt-get install -y --no-install-recommends openssl tesseract-ocr tesseract-ocr-fra poppler-utils fonts-dejavu-core \
   && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/server
 COPY server/package.json server/package-lock.json ./

@@ -71,10 +71,22 @@ test('candidature : formulaire public sans compte, choix du candidat, fiche loca
   await page.getByRole('button', { name: 'Envoyer ma candidature' }).click()
   await page.getByText('Candidature envoyée.').waitFor()
   // Pièces demandées : déposées juste après, sans compte
-  await page.getByLabel('Pièce d’identité (vous)').setInputFiles({ name: 'cni.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n%%EOF\n') })
+  await page.getByLabel('Pièce d’identité (vous)').setInputFiles({ name: 'cni.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n') })
   await page.getByText('Reçu').first().waitFor()
   await shot(page, 'candidature-pieces')
   await page.getByRole('button', { name: 'Terminer' }).click()
+  // Pièces cachées au propriétaire tant que le candidat n'a pas confirmé la visite.
+  const locked = (await api(`/properties/${propertyId}/candidates`, { token })).candidates[0]
+  assert.equal(locked.docsLocked, true)
+  assert.equal(locked.documents[0].fileId, null)
+  await assert.rejects(api(`/candidates/${locked.id}/choose`, { method: 'POST', token }), /409/)
+  // Le candidat confirme la visite depuis son lien de suivi.
+  await page.getByRole('link', { name: 'Suivre ma candidature' }).click()
+  await page.getByRole('button', { name: 'Confirmer la visite' }).waitFor()
+  await page.getByText('J’ai visité ce logement ou rencontré son propriétaire en personne.').click()
+  await page.getByRole('button', { name: 'Confirmer la visite' }).click()
+  await page.getByText(/Visite confirmée le/).waitFor()
+  await shot(page, 'suivi-candidature')
   await visitor.close()
   assert.deepEqual(errors, [])
   // Le propriétaire choisit
@@ -82,6 +94,7 @@ test('candidature : formulaire public sans compte, choix du candidat, fiche loca
   assert.equal(list.candidates.length, 1)
   assert.equal(list.candidates[0].rentShare, 23)
   assert.equal(list.candidates[0].documents[0].category, 'identity')
+  assert.equal(list.candidates[0].docsLocked, false)
   const ctx = await signedInContext(browser, token)
   const owner = await ctx.newPage()
   owner.on('dialog', (d) => d.accept())

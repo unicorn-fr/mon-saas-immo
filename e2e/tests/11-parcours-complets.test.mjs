@@ -91,7 +91,8 @@ test('ajouter un logement : appartement meublé en copropriété, toutes les men
   assert.ok((await api('/contacts', { token })).some((c) => c.kind === 'SYNDIC' && c.name === 'Cabinet Lagarde'))
 })
 
-const pdf = (name) => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n') })
+// Un vrai PDF d'une page : les justificatifs reçoivent un filigrane, un fichier illisible est refusé.
+const pdf = (name) => ({ name, mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n') })
 
 test('ajouter un locataire : ce qui manque est demandé par email, le locataire complète son dossier sans compte', async () => {
   const { token } = await newAccount()

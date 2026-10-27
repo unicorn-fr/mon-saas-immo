@@ -7,12 +7,15 @@ import { Fields } from '../components/FlowLayout'
 import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast, AddressInput } from '../components/kit'
 import { Spinner, display } from '../components/ui'
 import { api } from '../lib/api'
+import { PublicPhoto } from '../components/media'
 import { SITUATION_LABEL, type Situation } from '../lib/contract'
 
 type Person = Record<string, string | number | null | Array<Record<string, string | null>>>
 interface View {
   landlord: string
   property: string | null
+  /** Le logement a une photo (la première de sa fiche). */
+  hasPhoto?: boolean
   guarantee: 'CAUTION' | 'VISALE' | 'GLI' | 'NONE' | null
   tenant: Person
   guarantor: Person | null
@@ -67,6 +70,7 @@ export default function Dossier() {
           </Card>
         ) : (
           <>
+            {v.hasPhoto ? <PublicPhoto src={`/api/dossier/${encodeURIComponent(code)}/photo`} alt={v.property ? `Photo du logement : ${v.property}` : 'Photo du logement'} /> : null}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {v.property ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>{v.property}</span> : null}
               <h1 style={display('clamp(32px, 5vw, 46px)')}>Votre dossier de location</h1>
@@ -123,11 +127,11 @@ function HowTo({ hasGuarantor }: { hasGuarantor: boolean }) {
         <a href={DOSSIER_FACILE} target="_blank" rel="noreferrer">
           DossierFacile
         </a>
-        , le service de l’État. Vos pièces y sont vérifiées une fois pour toutes ; collez ensuite le lien de partage de votre dossier plus bas. Sinon, prenez vos pièces en photo ou en PDF. Pour éviter qu’elles soient réutilisées, ajoutez-y un filigrane avec{' '}
+        , le service de l’État. Vos pièces y sont vérifiées une fois pour toutes ; collez ensuite le lien de partage de votre dossier plus bas. Sinon, prenez vos pièces en photo ou en PDF : Bailio y ajoute un filigrane (« Uniquement pour louer un logement à… », avec la date), comme{' '}
         <a href={FILIGRANE_FACILE} target="_blank" rel="noreferrer">
           Filigrane Facile
-        </a>{' '}
-        (service de l’État, gratuit).
+        </a>
+        , le service de l’État. Seule la copie filigranée est gardée : elle ne peut pas resservir ailleurs.
       </>,
     ],
     ['Remplissez la rubrique « Vous »', 'Identité, coordonnées, situation et revenus. Cliquez sur « Enregistrer » : rien n’est perdu si vous revenez plus tard.'],

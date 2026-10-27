@@ -4,6 +4,8 @@ import sharp from 'sharp'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
 import { sha256 } from '../lib/tokens.js'
+import { watermarkImage, watermarkPdf } from '../services/watermark.js'
+import { readProperty } from '../services/contract.js'
 
 export const iso = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : null)
 
@@ -45,7 +47,11 @@ const ALLOWED = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/we
  * Enregistre un fichier déposé. Les photos sont réduites (1 800 px, JPEG) : lisibles à l'impression,
  * légères à stocker. Les PDF sont conservés tels quels.
  */
-export async function storeFile(userId: string, f: Express.Multer.File): Promise<{ id: string; mimeType: string; sizeBytes: number; name: string }> {
+/**
+ * Enregistre un fichier envoyé. `watermark` : justificatif d'un candidat ou d'un locataire, enregistré seulement avec
+ * son filigrane (services/watermark.ts) ; l'original n'est jamais gardé.
+ */
+export async function storeFile(userId: string, f: Express.Multer.File, opts: { watermark?: string } = {}): Promise<{ id: string; mimeType: string; sizeBytes: number; name: string }> {
   if (!ALLOWED.has(f.mimetype)) throw new HttpError(400, 'Format non pris en charge. Utilisez une photo (JPEG, PNG) ou un PDF.')
   // Le type annoncé par le navigateur ne suffit pas : un « PDF » doit vraiment en être un (les images, elles, sont réencodées).
   if (f.mimetype === 'application/pdf' && !isPdf(f.buffer)) throw new HttpError(400, 'Ce fichier n’est pas un PDF valide.')
@@ -61,6 +67,7 @@ export async function storeFile(userId: string, f: Express.Multer.File): Promise
       throw new HttpError(400, 'Cette image ne peut pas être lue. Essayez une autre photo.')
     }
   }
+  if (opts.watermark) data = mimeType === 'application/pdf' ? await watermarkPdf(data, opts.watermark) : await watermarkImage(data, opts.watermark)
   const row = await prisma.fileBlob.create({ data: { userId, name, mimeType, sizeBytes: data.length, data: new Uint8Array(data) } })
   return { id: row.id, mimeType, sizeBytes: data.length, name }
 }
@@ -128,4 +135,12 @@ export function mergeFile<T extends Record<string, unknown>>(current: T, patch: 
     }
   }
   return out as T
+}
+
+/** Photo principale d'un logement, pour une page publique (candidat, locataire) : la première de la fiche. */
+export async function sendPropertyPhoto(res: Response, p: Parameters<typeof readProperty>[0]) {
+  const id = readProperty(p).photos?.[0]
+  const f = id ? await prisma.fileBlob.findFirst({ where: { id, userId: p.userId, mimeType: { startsWith: 'image/' } } }) : null
+  if (!f) throw new HttpError(404, 'Aucune photo pour ce logement.')
+  sendFile(res, Buffer.from(f.data), f.mimeType, f.name, false)
 }

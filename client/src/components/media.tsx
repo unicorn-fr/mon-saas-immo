@@ -56,6 +56,16 @@ export function CoverPhoto({ id, alt, style, children }: { id: string; alt: stri
   )
 }
 
+/**
+ * Photo principale d'un logement sur une page publique (candidat, locataire), servie par l'API sans session.
+ * Masquée si elle ne charge pas, pour ne jamais laisser un cadre vide.
+ */
+export function PublicPhoto({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return <img src={src} alt={alt} onError={() => setFailed(true)} style={{ width: '100%', height: 'clamp(180px, 34vw, 300px)', objectFit: 'cover', borderRadius: 24, display: 'block', background: BAI.skeleton }} />
+}
+
 /** Bouton appareil photo : ouvre la caméra arrière sur téléphone, la galerie sinon. */
 export function PhotoButton({ onPhotos, label = 'Photo', count = 0, dark = true }: { onPhotos: (ids: string[]) => void; label?: string; count?: number; dark?: boolean }) {
   const toast = useToast()
