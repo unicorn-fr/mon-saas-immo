@@ -89,14 +89,26 @@ export function AuthImage({ id, size = 72, onRemove, alt = 'Photo' }: { id: stri
   )
 }
 
+type PadMode = 'PRESS' | 'TRACKPAD_ARMED' | 'TRACKPAD' | 'PHONE'
+
 /**
- * Zone de signature au doigt ou à la souris. Renvoie une image PNG (data URL), ou null si effacée.
+ * Zone de signature. Trois façons de signer :
+ * - au doigt sur un écran tactile, ou à la souris en gardant le bouton appuyé ;
+ * - au pavé tactile, sans cliquer (comme Aperçu sur Mac) : un clic dans le cadre pour commencer, le doigt glisse sur le
+ *   pavé et trace la signature, un clic ou une touche pour terminer ;
+ * - avec son téléphone : un QR code ouvre une page où l'on signe au doigt, la signature revient ici toute seule
+ *   (relais de 10 minutes, `routes/signatureRelay.ts`).
  */
 export function SignaturePad({ value, onChange, height = 150, label = 'Signez avec le doigt' }: { value: string | null | undefined; onChange: (dataUrl: string | null) => void; height?: number; label?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const drawing = useRef(false)
   const dirty = useRef(false)
   const last = useRef<{ x: number; y: number } | null>(null)
+  const [mode, setMode] = useState<PadMode>('PRESS')
+  const modeRef = useRef<PadMode>('PRESS')
+  modeRef.current = mode
+  // Pavé tactile et téléphone : proposés sur un ordinateur (pointeur précis qui survole).
+  const [desktop] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches)
 
   // Taille réelle du canevas = taille affichée × densité de l'écran, pour un trait net.
   useEffect(() => {
@@ -112,23 +124,53 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.strokeStyle = BAI.night
-    if (value) {
-      const img = new Image()
-      img.onload = () => ctx.drawImage(img, 0, 0, w, height)
-      img.src = value
-    }
+    if (value) paint(value)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [height])
+
+  /** Dessine une image de signature dans le cadre, sans la déformer. */
+  const paint = (dataUrl: string) => {
+    const c = canvas.current
+    if (!c) return
+    const ctx = c.getContext('2d')!
+    const img = new Image()
+    img.onload = () => {
+      const w = c.clientWidth
+      const scale = Math.min(w / img.width, height / img.height)
+      const dw = img.width * scale
+      const dh = img.height * scale
+      ctx.clearRect(0, 0, c.width, c.height)
+      ctx.drawImage(img, (w - dw) / 2, (height - dh) / 2, dw, dh)
+    }
+    img.src = dataUrl
+  }
 
   const pos = (e: React.PointerEvent) => {
     const r = canvas.current!.getBoundingClientRect()
     return { x: e.clientX - r.left, y: e.clientY - r.top }
+  }
+  const line = (p: { x: number; y: number }) => {
+    if (!last.current) {
+      last.current = p
+      return
+    }
+    const ctx = canvas.current!.getContext('2d')!
+    ctx.beginPath()
+    ctx.moveTo(last.current.x, last.current.y)
+    ctx.lineTo(p.x, p.y)
+    ctx.stroke()
+    last.current = p
+    dirty.current = true
   }
   const end = () => {
     if (!drawing.current) return
     drawing.current = false
     last.current = null
     if (dirty.current) onChange(canvas.current!.toDataURL('image/png'))
+  }
+  const finishTrackpad = () => {
+    end()
+    setMode('PRESS')
   }
   const clear = () => {
     const c = canvas.current!
@@ -137,40 +179,151 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     onChange(null)
   }
 
+  // Pavé tactile : une touche du clavier termine la signature.
+  useEffect(() => {
+    if (mode !== 'TRACKPAD') return
+    const onKey = (e: KeyboardEvent) => {
+      e.preventDefault()
+      finishTrackpad()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode])
+
+  const startTrackpad = () => {
+    clear()
+    setMode('TRACKPAD_ARMED')
+  }
+
+  // Dans le cadre : l'invitation à signer, ou au pavé tactile le clic pour commencer. Pendant le tracé, la consigne
+  // passe sous le cadre pour ne pas gêner la signature.
+  const hint = mode === 'TRACKPAD_ARMED' ? 'Cliquez une fois dans ce cadre pour commencer' : mode === 'PRESS' && !value ? label : null
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ position: 'relative' }}>
         <canvas
           ref={canvas}
           aria-label={label}
-          style={{ width: '100%', height, display: 'block', background: BAI.surface, border: `1.5px dashed ${BAI.dashed}`, borderRadius: 14, touchAction: 'none', cursor: 'crosshair' }}
+          style={{ width: '100%', height, display: 'block', background: BAI.surface, border: `1.5px ${mode === 'PRESS' || mode === 'PHONE' ? 'dashed' : 'solid'} ${mode === 'PRESS' || mode === 'PHONE' ? BAI.dashed : BAI.owner}`, borderRadius: 14, touchAction: 'none', cursor: 'crosshair' }}
           onPointerDown={(e) => {
+            const m = modeRef.current
+            if (m === 'TRACKPAD_ARMED') {
+              // Premier clic : la signature commence là où se trouve le curseur, sans garder le bouton appuyé.
+              setMode('TRACKPAD')
+              drawing.current = true
+              last.current = pos(e)
+              return
+            }
+            if (m === 'TRACKPAD') return finishTrackpad()
             ;(e.target as HTMLCanvasElement).setPointerCapture(e.pointerId)
             drawing.current = true
             last.current = pos(e)
           }}
           onPointerMove={(e) => {
-            if (!drawing.current || !last.current) return
-            const p = pos(e)
-            const ctx = canvas.current!.getContext('2d')!
-            ctx.beginPath()
-            ctx.moveTo(last.current.x, last.current.y)
-            ctx.lineTo(p.x, p.y)
-            ctx.stroke()
-            last.current = p
-            dirty.current = true
+            if (!drawing.current) return
+            line(pos(e))
           }}
-          onPointerUp={end}
+          onPointerUp={() => {
+            if (modeRef.current === 'PRESS') end()
+          }}
           onPointerCancel={end}
-          onPointerLeave={end}
+          onPointerLeave={() => {
+            // Au pavé tactile, sortir du cadre lève le stylo sans terminer ; revenir reprend un nouveau trait.
+            if (modeRef.current === 'TRACKPAD') last.current = null
+            else end()
+          }}
         />
-        {!value ? <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: BAI.inkSoft, pointerEvents: 'none' }}>{label}</span> : null}
+        {hint ? (
+          <span aria-live="polite" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 16px', fontSize: 14, color: mode === 'PRESS' ? BAI.inkSoft : BAI.owner, fontWeight: mode === 'PRESS' ? 400 : 600, pointerEvents: 'none' }}>
+            {hint}
+          </span>
+        ) : null}
       </div>
-      {value ? (
-        <button type="button" onClick={clear} style={{ alignSelf: 'flex-end', background: 'none', border: 'none', color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
-          Effacer
-        </button>
+      {mode === 'TRACKPAD' ? (
+        <span aria-live="polite" style={{ fontSize: 14, color: BAI.owner, fontWeight: 600, lineHeight: 1.5 }}>
+          Glissez le doigt sur le pavé tactile, sans appuyer. Pour finir, cliquez ou appuyez sur une touche.
+        </span>
       ) : null}
+      <div style={{ display: 'flex', gap: '6px 18px', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+        {desktop && mode === 'PRESS' ? (
+          <>
+            <PadLink onClick={startTrackpad}>Signer au pavé tactile, sans cliquer</PadLink>
+            <PadLink onClick={() => setMode('PHONE')}>Signer avec mon téléphone</PadLink>
+          </>
+        ) : null}
+        {mode === 'TRACKPAD' || mode === 'TRACKPAD_ARMED' ? <PadLink onClick={finishTrackpad}>Terminé</PadLink> : null}
+        {value && mode === 'PRESS' ? <PadLink onClick={clear}>Effacer</PadLink> : null}
+      </div>
+      {mode === 'PHONE' ? (
+        <PhoneSignature
+          onImage={(img) => {
+            paint(img)
+            dirty.current = true
+            onChange(img)
+            setMode('PRESS')
+          }}
+          onCancel={() => setMode('PRESS')}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+function PadLink({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick} style={{ background: 'none', border: 'none', color: BAI.owner, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '4px 0', minHeight: 32 }}>
+      {children}
+    </button>
+  )
+}
+
+/** Signer avec son téléphone : QR code et lien, puis la signature arrive ici dès qu'elle est envoyée. */
+function PhoneSignature({ onImage, onCancel }: { onImage: (dataUrl: string) => void; onCancel: () => void }) {
+  const [code, setCode] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const asked = useRef(false)
+  const done = useRef(onImage)
+  done.current = onImage
+  // Un seul relais par ouverture (même si l'écran se monte deux fois), puis on attend la signature toutes les 2 s.
+  useEffect(() => {
+    if (asked.current) return
+    asked.current = true
+    api<{ code: string }>('/signature-relay', { method: 'POST' })
+      .then((r) => setCode(r.code))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+  }, [])
+  useEffect(() => {
+    if (!code) return
+    let stop = false
+    let timer = 0
+    const poll = () =>
+      api<{ image: string | null }>(`/signature-relay/${code}`)
+        .then((r) => {
+          if (stop) return
+          if (r.image) done.current(r.image)
+          else timer = window.setTimeout(poll, 2000)
+        })
+        .catch((e) => !stop && setError(e instanceof Error ? e.message : String(e)))
+    timer = window.setTimeout(poll, 2000)
+    return () => {
+      stop = true
+      window.clearTimeout(timer)
+    }
+  }, [code])
+  const link = code ? `${window.location.origin}/signature/${code}` : ''
+  return (
+    <div style={{ border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: 16, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+      {code ? <QrCode text={link} size={150} /> : <Spinner />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 200 }}>
+        <strong style={{ fontSize: 16 }}>Scannez ce code avec l’appareil photo de votre téléphone</strong>
+        <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Signez au doigt sur le téléphone, puis touchez « Envoyer ». La signature apparaît ici toute seule. Le lien sert une seule fois et expire dans 10 minutes.</span>
+        {error ? <span role="alert" style={{ fontSize: 14, color: BAI.error }}>{error}</span> : code ? <span style={{ fontSize: 14, color: BAI.owner, fontWeight: 600 }}>En attente de votre signature…</span> : null}
+        <span style={{ alignSelf: 'flex-start' }}>
+          <PadLink onClick={onCancel}>Annuler</PadLink>
+        </span>
+      </div>
     </div>
   )
 }

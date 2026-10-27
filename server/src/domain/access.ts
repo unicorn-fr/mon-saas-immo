@@ -24,7 +24,7 @@ export interface Scope {
 }
 
 /** Adresses qui concernent toujours la personne connectée elle-même : l'en-tête d'espace y est ignoré. */
-export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo', '/admin', '/feedback']
+export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo', '/admin', '/feedback', '/signature-relay']
 
 export const isSelfPath = (path: string) => SELF_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 

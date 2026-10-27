@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '26 octobre 2026'
+const UPDATED = '27 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -257,6 +257,7 @@ export function Confidentialite() {
         <li>Les structures qui détiennent vos logements : nature (en votre nom, à plusieurs, SCI, société), régime fiscal, nom des autres propriétaires, dénomination, siège, SIREN et représentant de la société, nom et part des associés, et, si vous l'indiquez, le compte qui reçoit les loyers. Ils servent au bail et à l'aide à la déclaration ;</li>
         <li>Vos locataires et leurs garants : identité, date et lieu de naissance, coordonnées, justificatifs que vous déposez, attestation d'assurance ;</li>
         <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
+        <li>Si vous signez avec votre téléphone : la signature dessinée passe par notre serveur le temps d'arriver sur votre ordinateur, en mémoire seulement, puis elle est effacée (10 minutes au plus). Elle n'est gardée que si vous la validez ;</li>
         <li>Pour l'aide à la déclaration des revenus : année par année, le régime choisi, les cases déjà recopiées, les démarches cochées, la date de signature, vos déficits des années précédentes, les subventions et indemnités reçues ; une fois pour toutes, votre numéro SIRET de loueur en meublé, s'il y a lieu. Ils complètent vos formulaires et sont repris l'année suivante ;</li>
         <li>Si vous déposez un relevé de compte pour retrouver vos loyers : il est lu sur notre serveur, le temps de vous proposer les loyers reconnus, puis oublié. Seuls les loyers que vous validez (montant et date) sont enregistrés ;</li>
         <li>
