@@ -37,6 +37,7 @@ import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } 
 import { isFurnished, isHousing } from '../domain/rules.js'
 import { leaseTaxItems, type LeaseTaxItemId } from '../domain/leaseTax.js'
 import { HOLDING_ORDER, HOLDING_RULES, holdingForm } from '../domain/holdingForms.js'
+import { candidateFileLocked } from './candidates.js'
 
 /** Dépenses, factures lues automatiquement, tableau « Argent », documents et fichiers du propriétaire. */
 const router = Router()
@@ -920,6 +921,8 @@ router.post('/files', upload.array('files', 10), async (req, res) => {
 router.get('/files/:id', async (req, res) => {
   const f = await prisma.fileBlob.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
   if (!f) throw new HttpError(404, 'Fichier introuvable.')
+  // Pièce d'un candidat qui n'a pas confirmé la visite : cachée, même à qui connaît son identifiant.
+  if (await candidateFileLocked(req.user!.id, f.id)) throw new HttpError(403, 'Cette pièce reste cachée jusqu’à ce que le candidat confirme la visite du logement.')
   sendFile(res, Buffer.from(f.data), f.mimeType, f.name, req.query.download === '1')
 })
 

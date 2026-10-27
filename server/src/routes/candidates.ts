@@ -6,14 +6,15 @@ import { env } from '../env.js'
 import { layout, sendEmail } from '../lib/email.js'
 import { HttpError } from '../lib/http.js'
 import { limitPerVisitor } from '../lib/rateLimit.js'
-import { newToken } from '../lib/tokens.js'
+import { newToken, sha256 } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
 import { propertyName, readProfile, readProperty } from '../services/contract.js'
 import { buildAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
-import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, rentShare, reviewCandidate, tenantFromCandidate, type CandidateData, type CandidateDoc } from '../domain/candidates.js'
+import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, docsLocked, rentShare, reviewCandidate, tenantFromCandidate, type CandidateData, type CandidateDoc, type CandidateFollow } from '../domain/candidates.js'
 import { TENANT_DOCUMENTS, tenantFileSchema } from '../domain/contract.js'
-import { storeFile, upload } from './helpers.js'
+import { sendPropertyPhoto, storeFile, upload } from './helpers.js'
+import { watermarkText } from '../domain/watermark.js'
 
 /**
  * Candidatures : lien public par logement (sans compte), à donner aux personnes qui répondent à une annonce
@@ -51,8 +52,30 @@ function publicOffer(p: Awaited<ReturnType<typeof ownProperty>>, agent = false) 
     allowedDocuments: ALLOWED_DOCUMENTS,
     requestedDocs: requested(file).map((k) => ({ key: k, label: TENANT_DOCUMENTS[k as keyof typeof TENANT_DOCUMENTS] })),
     guarantorDocs: file.ad?.guarantorDocs !== false,
+    city: file.city ?? null,
+    hasPhoto: Boolean(file.photos?.length),
   }
 }
+
+type Stored = CandidateData & CandidateFollow & { documents?: CandidateDoc[]; uploadToken?: string; uploadUntil?: string }
+
+const followUrl = (token: string) => `${env.CLIENT_URL}/suivi-candidature/${token}`
+
+/** Email au candidat : son lien de suivi, pour confirmer la visite (ses pièces deviennent alors visibles) ou retirer sa candidature. */
+function sendFollowEmail(to: string, place: string, token: string, again = false) {
+  const mail = layout({
+    title: again ? 'Avez-vous visité le logement ?' : 'Votre candidature est bien envoyée',
+    paragraphs: [
+      again ? `Le propriétaire du logement ${place} vous demande de confirmer la visite.` : `Votre candidature pour le logement ${place} est bien arrivée.`,
+      'Pour vous protéger des fausses annonces, vos pièces portent un filigrane et restent cachées au propriétaire tant que vous n’avez pas confirmé avoir visité le logement ou rencontré le propriétaire.',
+      'Ne confirmez qu’après une vraie visite. Ne versez jamais d’argent avant d’avoir visité le logement et signé le bail.',
+    ],
+    cta: { label: again ? 'Confirmer la visite' : 'Suivre ma candidature', url: followUrl(token) },
+  })
+  sendEmail({ to, subject: again ? `Confirmez votre visite, logement ${place}` : `Candidature envoyée, logement ${place}`, ...mail }).catch(() => undefined)
+}
+
+const placeOf = (file: ReturnType<typeof readProperty>) => (file.city ? `à ${file.city}` : 'que vous avez choisi')
 
 // ── Public ───────────────────────────────────────────────────────────────────
 
@@ -72,14 +95,17 @@ router.post('/candidature/:code', limitPerVisitor(60, 5), async (req, res) => {
   if (recent >= 50) throw new HttpError(429, 'Ce logement a reçu beaucoup de candidatures aujourd’hui. Réessayez demain.')
   // Jeton remis au candidat pour déposer ses pièces juste après (valable 24 heures).
   const uploadToken = newToken()
-  const created = await prisma.candidate.create({ data: { userId: p.userId, propertyId: p.id, data: { ...data, documents: [], uploadToken, uploadUntil: new Date(Date.now() + 86_400_000).toISOString() } } })
+  // Lien de suivi du candidat (gardé en empreinte) : confirmer la visite, retirer sa candidature.
+  const followToken = newToken()
+  const created = await prisma.candidate.create({ data: { userId: p.userId, propertyId: p.id, data: { ...data, documents: [], uploadToken, uploadUntil: new Date(Date.now() + 86_400_000).toISOString(), followHashes: [sha256(followToken)] } } })
+  sendFollowEmail(data.email, placeOf(readProperty(p)), followToken)
   const mail = layout({
     title: 'Nouvelle candidature',
     paragraphs: [`${data.firstNames} ${data.lastName} a envoyé une candidature pour ${propertyName(p)}.`, 'Retrouvez-la dans Bailio, avec les autres candidatures reçues.'],
     cta: { label: 'Voir les candidatures', url: `${env.CLIENT_URL}/espace/logements/${p.id}/candidats` },
   })
   sendEmail({ to: p.user.email, subject: `Nouvelle candidature, ${propertyName(p)}`, ...mail }).catch(() => undefined)
-  res.status(201).json({ success: true, data: { received: true, candidateId: created.id, uploadToken } })
+  res.status(201).json({ success: true, data: { received: true, candidateId: created.id, uploadToken, followToken } })
 })
 
 /** Le candidat dépose une pièce demandée (photo ou PDF), avec le jeton reçu à l'envoi de sa candidature. */
@@ -95,13 +121,83 @@ router.post('/candidature/:code/document', limitPerVisitor(60, 40), upload.singl
   if (!req.file) throw new HttpError(400, 'Ajoutez le fichier (photo ou PDF).')
   const docs = d.documents ?? []
   if (docs.length >= 12) throw new HttpError(400, 'Toutes les pièces ont déjà été déposées.')
-  const stored = await storeFile(p.userId, req.file)
+  // Enregistrée seulement avec son filigrane : l'original n'est jamais gardé.
+  const stored = await storeFile(p.userId, req.file, { watermark: watermarkText({ city: readProperty(p).city }) })
   const old = docs.filter((x) => x.category === body.category && x.who === body.who)
   if (old.length) await prisma.fileBlob.deleteMany({ where: { id: { in: old.map((x) => x.fileId) } } })
   const next = [...docs.filter((x) => !(x.category === body.category && x.who === body.who)), { category: body.category, who: body.who, fileId: stored.id, label: stored.name.slice(0, 150) }]
   await prisma.candidate.update({ where: { id: c.id }, data: { data: { ...d, documents: next } as unknown as Prisma.InputJsonObject } })
   res.status(201).json({ success: true, data: { documents: next.map((x) => ({ category: x.category, who: x.who })) } })
 })
+
+// Photo principale du logement, montrée au candidat (la même que dans l'annonce).
+router.get('/candidature/:code/photo', async (req, res) => {
+  const p = await prisma.property.findUnique({ where: { applyCode: String(req.params.code) } })
+  if (!p) throw new HttpError(404, 'Ce lien de candidature n’est plus actif.')
+  await sendPropertyPhoto(res, p)
+})
+
+// ── Suivi par le candidat (lien reçu par email, sans compte) ─────────────────
+
+async function byFollow(token: string) {
+  if (!/^[A-Za-z0-9_-]{20,200}$/.test(token)) throw new HttpError(404, 'Ce lien de suivi n’est plus actif.')
+  const c = await prisma.candidate.findFirst({ where: { data: { path: ['followHashes'], array_contains: [sha256(token)] } }, include: { property: true } })
+  if (!c) throw new HttpError(404, 'Ce lien de suivi n’est plus actif : la candidature a été retirée, retenue ou effacée.')
+  return c
+}
+
+function followView(c: Awaited<ReturnType<typeof byFollow>>) {
+  const d = c.data as unknown as Stored
+  const file = readProperty(c.property)
+  return {
+    firstNames: d.firstNames,
+    city: file.city ?? null,
+    hasPhoto: Boolean(file.photos?.length),
+    sentAt: c.createdAt.toISOString(),
+    documents: (d.documents ?? []).map((x) => `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}`),
+    visitConfirmedAt: d.visitConfirmedAt ?? null,
+    keepDays: KEEP_DAYS,
+  }
+}
+
+router.get('/suivi-candidature/:token', limitPerVisitor(10, 60), async (req, res) => {
+  res.json({ success: true, data: followView(await byFollow(String(req.params.token))) })
+})
+
+router.get('/suivi-candidature/:token/photo', limitPerVisitor(10, 60), async (req, res) => {
+  await sendPropertyPhoto(res, (await byFollow(String(req.params.token))).property)
+})
+
+// Le candidat confirme avoir visité le logement ou rencontré le propriétaire : ses pièces deviennent visibles.
+router.post('/suivi-candidature/:token/visit', limitPerVisitor(60, 10), async (req, res) => {
+  const c = await byFollow(String(req.params.token))
+  const d = c.data as unknown as Stored
+  if (!d.visitConfirmedAt) {
+    await prisma.candidate.update({ where: { id: c.id }, data: { data: { ...d, visitConfirmedAt: new Date().toISOString() } as unknown as Prisma.InputJsonObject } })
+    const owner = await prisma.user.findUniqueOrThrow({ where: { id: c.userId } })
+    const mail = layout({
+      title: 'Visite confirmée',
+      paragraphs: [`${d.firstNames} ${d.lastName} confirme avoir visité ${propertyName(c.property)}.`, d.documents?.length ? 'Ses pièces sont maintenant visibles dans Bailio, avec leur filigrane.' : 'Sa candidature vous attend dans Bailio.'],
+      cta: { label: 'Voir les candidatures', url: `${env.CLIENT_URL}/espace/logements/${c.propertyId}/candidats` },
+    })
+    sendEmail({ to: owner.email, subject: `Visite confirmée : ${d.firstNames} ${d.lastName}`, ...mail }).catch(() => undefined)
+  }
+  res.json({ success: true, data: followView(await byFollow(String(req.params.token))) })
+})
+
+// Le candidat retire sa candidature : elle est effacée tout de suite, pièces comprises.
+router.delete('/suivi-candidature/:token', limitPerVisitor(60, 10), async (req, res) => {
+  const c = await byFollow(String(req.params.token))
+  await deleteCandidateFiles([c])
+  await prisma.candidate.delete({ where: { id: c.id } })
+  res.json({ success: true, data: { deleted: true } })
+})
+
+/** Pièce d'un candidat qui n'a pas encore confirmé la visite : jamais servie au propriétaire (routes/money.ts, /files/:id). */
+export async function candidateFileLocked(userId: string, fileId: string): Promise<boolean> {
+  const c = await prisma.candidate.findFirst({ where: { userId, data: { path: ['documents'], array_contains: [{ fileId }] } } })
+  return Boolean(c && docsLocked(c.data as unknown as Stored))
+}
 
 // ── Propriétaire ─────────────────────────────────────────────────────────────
 
@@ -117,7 +213,8 @@ router.get('/properties/:id/candidates', requireUser, async (req, res) => {
       forbiddenDocuments: FORBIDDEN_DOCUMENTS,
       keepDays: KEEP_DAYS,
       candidates: rows.map((r) => {
-        const d = r.data as CandidateData
+        const d = r.data as unknown as Stored
+        const locked = docsLocked(d)
         return {
           id: r.id,
           status: r.status,
@@ -136,7 +233,11 @@ router.get('/properties/:id/candidates', requireUser, async (req, res) => {
           rentShare: offer.rentWithChargesCents ? rentShare(offer.rentWithChargesCents, d.monthlyIncomeCents) : null,
           // Aide au tri sur des critères objectifs seulement (domain/candidates.ts, reviewCandidate).
           review: reviewCandidate(d as CandidateData & { documents?: CandidateDoc[] }, { rentWithChargesCents: offer.rentWithChargesCents, requestedDocs: offer.requestedDocs.map((x) => x.key), availableFrom: adSettings(p, p.leases).availableFrom ?? null }),
-          documents: ((d as CandidateData & { documents?: CandidateDoc[] }).documents ?? []).map((x) => ({ category: x.category, who: x.who, fileId: x.fileId, label: `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}` })),
+          // Pièces cachées tant que le candidat n'a pas confirmé la visite (docsLocked).
+          visitConfirmedAt: d.visitConfirmedAt ?? null,
+          visitRequestedAt: d.visitRequestedAt ?? null,
+          docsLocked: locked,
+          documents: (d.documents ?? []).map((x) => ({ category: x.category, who: x.who, fileId: locked ? null : x.fileId, label: `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}` })),
         }
       }),
     },
@@ -172,9 +273,24 @@ router.delete('/candidates/:id', requireUser, async (req, res) => {
   res.json({ success: true, data: { deleted: true } })
 })
 
+// Le propriétaire demande au candidat de confirmer la visite (une fois par jour au plus) : nouveau lien de suivi.
+router.post('/candidates/:id/visit-request', requireUser, async (req, res) => {
+  const c = await ownCandidate(req.user!.id, String(req.params.id))
+  const d = c.data as unknown as Stored
+  if (!docsLocked(d)) return res.json({ success: true, data: { sent: false } })
+  if (d.visitRequestedAt && Date.now() - new Date(d.visitRequestedAt).getTime() < 86_400_000) throw new HttpError(429, 'Une demande est déjà partie aujourd’hui. Le candidat peut aussi confirmer depuis le lien reçu avec sa candidature.')
+  const p = await prisma.property.findUniqueOrThrow({ where: { id: c.propertyId } })
+  const followToken = newToken()
+  await prisma.candidate.update({ where: { id: c.id }, data: { data: { ...d, followHashes: [...(d.followHashes ?? []), sha256(followToken)].slice(-5), visitRequestedAt: new Date().toISOString() } as unknown as Prisma.InputJsonObject } })
+  sendFollowEmail(d.email, placeOf(readProperty(p)), followToken, true)
+  res.json({ success: true, data: { sent: true } })
+})
+
 // « Choisir ce candidat » : sa fiche de locataire est créée, déjà remplie ; la candidature est effacée.
 router.post('/candidates/:id/choose', requireUser, async (req, res) => {
   const c = await ownCandidate(req.user!.id, String(req.params.id))
+  const cd = c.data as unknown as Stored
+  if (docsLocked(cd) && cd.documents?.length) throw new HttpError(409, 'Le candidat n’a pas encore confirmé la visite : ses pièces restent cachées. Demandez-lui de la confirmer, puis choisissez-le.')
   const tenant = await prisma.tenant.create({ data: { userId: c.userId, propertyId: c.propertyId, data: tenantFileSchema.parse(tenantFromCandidate(c.data as unknown as CandidateData & { documents?: CandidateDoc[] })) } })
   await prisma.candidate.delete({ where: { id: c.id } })
   res.status(201).json({ success: true, data: { tenantId: tenant.id, propertyId: c.propertyId } })

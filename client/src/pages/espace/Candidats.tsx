@@ -28,7 +28,11 @@ interface CandidateRow {
   rentShare: number | null
   /** Aide au tri : ressources, garantie, dossier, date d'entrée (server/src/domain/candidates.ts). */
   review: { level: 'SOLID' | 'CORRECT' | 'INCOMPLETE'; label: string; points: number; criteria: Array<{ key: string; mark: 'GOOD' | 'MEDIUM' | 'WEAK'; text: string }> }
-  documents: Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string; label: string }>
+  /** Pièces cachées tant que le candidat n'a pas confirmé la visite (fileId absent). */
+  docsLocked?: boolean
+  visitConfirmedAt?: string | null
+  visitRequestedAt?: string | null
+  documents: Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string | null; label: string }>
 }
 interface CandidatesView {
   applyCode: string | null
@@ -149,8 +153,20 @@ export default function Candidats() {
                         {c.email}
                         {c.phone ? ` · ${c.phone}` : ''}
                       </span>
-                      {c.documents.length ? (
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {c.documents.length && c.docsLocked ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, background: BAI.bg, border: `1.5px dashed ${BAI.borderStrong}`, borderRadius: 14, padding: '10px 12px' }}>
+                          <span style={{ fontSize: 14, lineHeight: 1.5 }}>
+                            <strong>{c.documents.length} pièce{c.documents.length > 1 ? 's' : ''} déposée{c.documents.length > 1 ? 's' : ''}</strong> ({c.documents.map((d) => d.label.toLowerCase()).join(', ')}). Elles s’ouvrent dès que le candidat confirme avoir visité le logement : une protection contre les fausses annonces.
+                          </span>
+                          <span>
+                            <TextLink onClick={() => void act(() => api(`/candidates/${c.id}/visit-request`, { method: 'POST' }), 'Demande envoyée au candidat.')} style={{ fontSize: 14 }}>
+                              {c.visitRequestedAt ? 'Lui redemander de confirmer la visite' : 'Lui demander de confirmer la visite'}
+                            </TextLink>
+                          </span>
+                        </div>
+                      ) : c.documents.length ? (
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                          {c.visitConfirmedAt ? <span style={{ fontSize: 14, color: BAI.green, fontWeight: 600 }}>Visite confirmée le {dateNum(c.visitConfirmedAt)}</span> : null}
                           {c.documents.map((d) => (
                             <TextLink key={`${d.who}-${d.category}`} onClick={() => void openDoc(`/files/${d.fileId}`).catch(toast.error)} style={{ fontSize: 14 }}>
                               {d.label}
@@ -168,9 +184,11 @@ export default function Candidats() {
                         )}
                       </div>
                       <div className="col-md" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Btn size="sm" variant={i === 0 ? 'primary' : 'outline'} onClick={() => void choose(c)}>
-                          Choisir ce candidat
-                        </Btn>
+                        {c.docsLocked && c.documents.length ? null : (
+                          <Btn size="sm" variant={i === 0 ? 'primary' : 'outline'} onClick={() => void choose(c)}>
+                            Choisir ce candidat
+                          </Btn>
+                        )}
                         {c.status !== 'SHORTLIST' ? (
                           <Btn size="sm" variant="outline" onClick={() => void act(() => api(`/candidates/${c.id}`, { method: 'PATCH', body: { status: 'SHORTLIST' } }))}>
                             Retenir
@@ -196,6 +214,20 @@ export default function Candidats() {
               )}
             </div>
             <aside className="aside">
+              <Card title="Des dossiers sûrs, pour vous et pour eux">
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <li>Chaque pièce reçue porte un filigrane : la ville du logement, la date et Bailio. Elle ne peut pas resservir ailleurs.</li>
+                  <li>Les pièces s’ouvrent quand le candidat confirme la visite. Profitez-en pour comparer sa pièce d’identité avec la personne.</li>
+                  <li>
+                    Vérifiez un avis d’imposition sur le{' '}
+                    <a href="https://cfsmsp.impots.gouv.fr/secavis/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
+                      service de vérification des impôts
+                    </a>{' '}
+                    (numéro fiscal et référence de l’avis).
+                  </li>
+                  <li>Une pièce qui porte le filigrane d’un autre site ou d’une autre location : demandez-en l’explication.</li>
+                </ul>
+              </Card>
               <Card title="Lien de candidature">
                 {link ? (
                   <>
@@ -262,7 +294,7 @@ function ReplyMessage({ link, title, docs, landlord }: { link: string; title: st
       link,
       '',
       `Vous pourrez y déposer : ${docs.map((d) => TENANT_DOCUMENTS[d].toLowerCase()).join(', ')}. Si vous avez un garant, les mêmes pièces le concernant.`,
-      'Vos documents ne seront visibles que par moi. Ils sont effacés au plus tard trois mois après votre candidature si elle n’est pas retenue.',
+      'Vos documents reçoivent un filigrane et ne me sont visibles qu’après la visite du logement, quand vous la confirmez. Ils sont effacés au plus tard trois mois après votre candidature si elle n’est pas retenue.',
       '',
       'Je reviens vers vous rapidement.',
       'Bien cordialement,',

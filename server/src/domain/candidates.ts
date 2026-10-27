@@ -161,3 +161,20 @@ export function reviewCandidate(
   const level: CandidateReview['level'] = criteria.some((x) => x.mark === 'WEAK') ? 'INCOMPLETE' : points >= max - 1 ? 'SOLID' : 'CORRECT'
   return { level, label: LEVEL_LABEL[level], points: Math.round((points / max) * 100), criteria }
 }
+
+/** Suivi d'une candidature : ce que Bailio garde à côté des réponses du candidat. */
+export interface CandidateFollow {
+  /** Empreintes des liens de suivi remis au candidat (à l'envoi, puis à chaque demande du propriétaire) ; les liens eux-mêmes ne sont jamais gardés. */
+  followHashes?: string[]
+  /** Le candidat a confirmé avoir visité le logement ou rencontré le propriétaire. */
+  visitConfirmedAt?: string
+  /** Dernière demande de confirmation envoyée par le propriétaire (une par jour au plus). */
+  visitRequestedAt?: string
+}
+
+/**
+ * Pièces d'un candidat cachées au propriétaire tant que le candidat n'a pas confirmé la visite : un faux propriétaire,
+ * qui publie une annonce sans logement pour récolter des dossiers, ne les voit jamais. Les candidatures reçues avant ce
+ * suivi (sans lien de suivi) restent visibles comme avant.
+ */
+export const docsLocked = (d: CandidateFollow) => Boolean(d.followHashes?.length) && !d.visitConfirmedAt

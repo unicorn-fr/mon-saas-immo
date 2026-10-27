@@ -1,12 +1,14 @@
 import { ThirdPartyNotice } from '../components/DataNotice'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
 import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, NumberField, Select, TextArea, useLoad, useToast, AddressInput } from '../components/kit'
 import { display } from '../components/ui'
 import { api } from '../lib/api'
+import { PublicPhoto } from '../components/media'
+import { SafetyNote } from './SuiviCandidature'
 
 interface Offer {
   title: string
@@ -15,6 +17,8 @@ interface Offer {
   allowedDocuments: Array<{ title: string; items: string[] }>
   requestedDocs: Array<{ key: string; label: string }>
   guarantorDocs: boolean
+  city?: string | null
+  hasPhoto?: boolean
 }
 
 type Situation = 'EMPLOYEE' | 'SELF_EMPLOYED' | 'STUDENT' | 'APPRENTICE' | 'RETIRED' | 'OTHER'
@@ -49,6 +53,8 @@ export default function Candidature() {
   const [sent, setSent] = useState(false)
   // Après l'envoi : dépôt des pièces demandées, avec le jeton remis par le serveur.
   const [upload, setUpload] = useState<{ candidateId: string; uploadToken: string } | null>(null)
+  // Lien de suivi (aussi envoyé par email) : confirmer la visite, retirer la candidature.
+  const [follow, setFollow] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const set = (patch: Partial<typeof f>) => setF({ ...f, ...patch })
 
@@ -58,10 +64,11 @@ export default function Candidature() {
     if (!f.consent) return toast.show('Cochez la case pour envoyer votre candidature.', 'error')
     setBusy(true)
     try {
-      const r = await api<{ candidateId?: string; uploadToken?: string }>(`/candidature/${encodeURIComponent(code)}`, {
+      const r = await api<{ candidateId?: string; uploadToken?: string; followToken?: string }>(`/candidature/${encodeURIComponent(code)}`, {
         method: 'POST',
         body: { ...f, guarantor: f.guarantee === 'CAUTION' ? f.guarantor : null, moveInDate: f.moveInDate || null, dossierFacileUrl: f.dossierFacileUrl.trim() || null },
       })
+      if (r.followToken) setFollow(r.followToken)
       if (r.candidateId && r.uploadToken && data?.requestedDocs.length) setUpload({ candidateId: r.candidateId, uploadToken: r.uploadToken })
       else setSent(true)
     } catch (e) {
@@ -87,9 +94,20 @@ export default function Candidature() {
           <Card>
             <h1 style={display('clamp(32px, 5vw, 44px)')}>Candidature envoyée.</h1>
             <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>Le propriétaire a bien reçu votre candidature. S’il la retient, il vous contactera directement par email ou par téléphone.</span>
+            <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
+              Vos pièces restent cachées au propriétaire jusqu’à ce que vous confirmiez avoir visité le logement. Le lien pour le faire vous a été envoyé par email.
+            </span>
+            {follow ? (
+              <div>
+                <Link to={`/suivi-candidature/${follow}`} style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>
+                  Suivre ma candidature
+                </Link>
+              </div>
+            ) : null}
           </Card>
         ) : (
           <>
+            {data.hasPhoto ? <PublicPhoto src={`/api/candidature/${encodeURIComponent(code)}/photo`} alt={`Photo du logement : ${data.title}`} /> : null}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontSize: 14, color: BAI.inkSoft }}>Candidature</span>
               <h1 style={display('clamp(32px, 5vw, 46px)')}>{data.title}</h1>
@@ -179,6 +197,7 @@ export default function Candidature() {
               <Check checked={f.consent} onChange={(v) => set({ consent: v })} label="J’ai compris que ces informations sont transmises au propriétaire pour étudier ma candidature." />
               <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement (Bailio l’aide à trier les dossiers sur vos ressources, votre garantie, vos pièces et votre date d’entrée ; il décide lui-même)" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
             </Card>
+            <SafetyNote />
             <Callout tone="tip">Le propriétaire ne peut pas vous demander de photo, de relevés bancaires, de carte Vitale ni de chèque de réservation. La loi interdit aussi toute discrimination.</Callout>
             <div>
               <Btn onClick={() => void send()} disabled={busy}>
@@ -246,10 +265,13 @@ function UploadDocs({ code, upload, docs, guarantor, onDone }: { code: string; u
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h1 style={display('clamp(32px, 5vw, 44px)')}>Candidature envoyée.</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>Dernière étape : déposez les pièces demandées par le propriétaire (photo ou PDF). Vous pouvez masquer les informations inutiles à leur vérification.</span>
+        <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
+          Chaque pièce reçoit un filigrane (« Uniquement pour louer un logement à… », avec la date) : seule cette copie est gardée. Le propriétaire ne la voit qu’après votre confirmation de la visite.
+        </span>
       </div>
       <Card title="Vos pièces">{rows('TENANT')}</Card>
       {guarantor ? <Card title="Les pièces de votre garant">{rows('GUARANTOR')}</Card> : null}
-      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Elles ne sont visibles que du propriétaire et sont effacées au plus tard trois mois après votre candidature si elle n’est pas retenue.</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Elles ne sont visibles que du propriétaire, après la visite, et sont effacées au plus tard trois mois après votre candidature si elle n’est pas retenue.</span>
       <div>
         <Btn onClick={onDone}>{done.length ? 'Terminer' : 'Terminer sans pièce'}</Btn>
       </div>

@@ -77,6 +77,7 @@ const AccesPartages = page('AccesPartages')
 const Partage = page('Partage')
 const Invitation = page('Invitation')
 const Candidature = page('Candidature')
+const SuiviCandidature = page('SuiviCandidature')
 const EtatDesLieux = page('EtatDesLieux')
 const Compte = page('Compte')
 const Edl = page('Edl')
@@ -251,6 +252,7 @@ function Pages() {
               <Route path="/signer/:token" element={<Signer />} />
               <Route path="/signature/:code" element={<SignatureTelephone />} />
               <Route path="/candidature/:code" element={<Candidature />} />
+              <Route path="/suivi-candidature/:token" element={<SuiviCandidature />} />
               <Route path="/locataire/:code" element={<EspaceLocataire />} />
               <Route path="/dossier/:code" element={<Dossier />} />
               <Route path="/mentions-legales" element={<MentionsLegales />} />

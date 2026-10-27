@@ -8,12 +8,13 @@ import { layout, sendEmail } from '../lib/email.js'
 import { limitPerVisitor } from '../lib/rateLimit.js'
 import { newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
-import { propertyName, readProfile, readTenant, tenantName } from '../services/contract.js'
+import { propertyName, readProfile, readProperty, readTenant, tenantName } from '../services/contract.js'
 import { TENANT_DOCUMENTS, guarantorSchema, tenantFileSchema, type TenantFile } from '../domain/contract.js'
 import { DOC_KEYS, GUARANTOR_EDITABLE, TENANT_EDITABLE, applyReview, pendingReview, tenantLeaseMissing, tenantMissing } from '../domain/tenantFile.js'
 import { landlordName } from '../pdf/labels.js'
 import { renderLetterPdf } from '../pdf/letter.js'
-import { sendPdf, storeFile, upload } from './helpers.js'
+import { sendPdf, sendPropertyPhoto, storeFile, upload } from './helpers.js'
+import { watermarkText } from '../domain/watermark.js'
 
 /**
  * Dossier du locataire : ce que le propriétaire n'a pas, il le demande au locataire par email ou par courrier.
@@ -141,6 +142,8 @@ function publicView(t: TenantWithProperty & { user: User }) {
   return {
     landlord: landlordName(readProfile(t.user)) || 'Votre bailleur',
     property: t.property ? propertyName(t.property) : null,
+    // Photo principale du logement (fiche, « Photos ») : le locataire reconnaît tout de suite le logement.
+    hasPhoto: Boolean(t.property && readProperty(t.property).photos?.length),
     guarantee: f.guarantee ?? null,
     tenant: pick(f as Record<string, unknown>, TENANT_EDITABLE),
     guarantor: f.guarantee === 'CAUTION' ? pick(f.guarantor as Record<string, unknown>, GUARANTOR_EDITABLE) : null,
@@ -153,6 +156,12 @@ function publicView(t: TenantWithProperty & { user: User }) {
 
 router.get('/dossier/:code', async (req, res) => {
   res.json({ success: true, data: publicView(await byCode(String(req.params.code))) })
+})
+
+router.get('/dossier/:code/photo', async (req, res) => {
+  const t = await byCode(String(req.params.code))
+  if (!t.property) throw new HttpError(404, 'Aucune photo pour ce logement.')
+  await sendPropertyPhoto(res, t.property)
 })
 
 const tenantPatch = tenantFileSchema.pick(Object.fromEntries(TENANT_EDITABLE.map((k) => [k, true])) as { [K in (typeof TENANT_EDITABLE)[number]]: true }).partial()
@@ -188,7 +197,8 @@ router.post('/dossier/:code/document', limitPerVisitor(60, 40), upload.single('f
   if (!req.file) throw new HttpError(400, 'Ajoutez le fichier (photo ou PDF).')
   const f = readTenant(t)
   if (who === 'GUARANTOR' && f.guarantee !== 'CAUTION') throw new HttpError(400, 'Aucun garant n’est prévu pour ce dossier.')
-  const stored = await storeFile(t.userId, req.file)
+  // Justificatif enregistré seulement avec son filigrane (location concernée, date) : l'original n'est jamais gardé.
+  const stored = await storeFile(t.userId, req.file, { watermark: watermarkText({ city: t.property ? readProperty(t.property).city : null }) })
   const entry = { category, received: true, fileId: stored.id, label: stored.name.slice(0, 150), source: 'TENANT' as const }
   const next: TenantFile =
     who === 'GUARANTOR'
