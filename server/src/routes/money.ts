@@ -36,6 +36,7 @@ import { emailLetter, patchLeaseData } from './leases.js'
 import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } from './helpers.js'
 import { isFurnished, isHousing } from '../domain/rules.js'
 import { leaseTaxItems, type LeaseTaxItemId } from '../domain/leaseTax.js'
+import { HOLDING_ORDER, HOLDING_RULES, holdingForm } from '../domain/holdingForms.js'
 
 /** Dépenses, factures lues automatiquement, tableau « Argent », documents et fichiers du propriétaire. */
 const router = Router()
@@ -686,7 +687,16 @@ async function taxView(user: User, year: number) {
     signatureMissing: cfe.length > 0 && !profile.signature,
   })
   const status = declarationStatus(year, today, profile.postalCode, progress.filedAt)
-  return { ...summary, copy, forms, progress, info: readInfo(user.taxProgress), regimes, checks, status, addresses, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
+  // Sous quelle forme chaque logement loué est détenu, et ce que cela change (micro possible ou non, impôt, formulaires).
+  const holdings = structures
+    .filter((st) => properties.some((p) => p.structureId === st.id))
+    .map((st) => {
+      const file = fileOf.get(st.id)!
+      const form = holdingForm({ kind: file.kind, taxRegime: file.taxRegime ?? defaultTaxRegime(file), companyForm: file.company?.form })
+      return { id: st.id, name: structureName(file), form, rules: HOLDING_RULES[form], properties: properties.filter((p) => p.structureId === st.id).map(propertyName) }
+    })
+  const holdingForms = HOLDING_ORDER.map((f) => ({ form: f, ...HOLDING_RULES[f] }))
+  return { ...summary, copy, forms, progress, info: readInfo(user.taxProgress), regimes, checks, status, holdings, holdingForms, addresses, filing, contacts: CONTACTS, lmnp, lmnpSettings: Object.fromEntries(furnishedProps.map((p) => { const f = readProperty(p); return [p.id, { name: propertyName(p), purchase: f.purchase ?? null, landSharePercent: f.lmnp?.landSharePercent ?? null, furnitureCents: f.lmnp?.furnitureCents ?? null }] })), unassignedExpensesCents: unassigned, extras: Object.fromEntries(properties.map((p) => [p.id, readProperty(p).tax?.[String(year)] ?? {}])), loanComputed: Object.fromEntries(properties.map((p) => [p.id, loansDeductible(readProperty(p).loans ?? [], year)])), structures: sheets }
 }
 
 /** Ligne 250 : le montant saisi pour l'année, sinon celui calculé depuis les emprunts du logement. */

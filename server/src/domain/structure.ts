@@ -46,10 +46,13 @@ export type StructureFile = z.infer<typeof structureSchema>
 
 export const isCompanyKind = (k: StructureFile['kind']) => k === 'SCI' || k === 'COMPANY'
 
-/** Régime fiscal par défaut : une SCI et les personnes à l'impôt sur le revenu, une autre société à l'impôt sur les sociétés. */
+/**
+ * Régime fiscal par défaut : une SCI et les personnes à l'impôt sur le revenu ; la SARL de famille (sur option) et l'EURL
+ * dont l'associé unique est une personne physique aussi (CGI art. 8) ; une autre société à l'impôt sur les sociétés.
+ */
 export function defaultTaxRegime(s: Pick<StructureFile, 'kind' | 'company'>): TaxRegime {
   if (s.kind !== 'COMPANY') return 'IR'
-  return /famille/i.test(s.company?.form ?? '') ? 'IR' : 'IS'
+  return /famille|eurl/i.test(s.company?.form ?? '') ? 'IR' : 'IS'
 }
 
 /** Première structure d'un compte, reprise du profil du bailleur tel qu'il était rempli. */

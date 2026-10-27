@@ -92,3 +92,14 @@ Source : brochure pratique IR 2026, chapitre « Revenus non salariaux » (impots
 - Chaque logement appartient à une structure (liste déroulante à la création, ou « Créer une nouvelle structure ») ; la première est créée à l'inscription à partir du profil actuel.
 - Le bail reprend le bailleur de la structure : durée (3 ou 6 ans), congé pour reprise permis ou non, mention dans le PDF.
 - Tests : `lease.test.ts` (durées, congé), puis `tax.test.ts` par structure à l'étape 4.
+
+## Formes de détention et micro (octobre 2026, `server/src/domain/holdingForms.ts`)
+
+| Forme | Impôt | Micro | Source | Statut |
+|---|---|---|---|---|
+| En nom propre, à plusieurs | IR | Oui (micro-foncier, micro-BIC) | CGI art. 32 et 50-0 | Vérifié |
+| SCI à l'IR | IR (associés) | Non : résultat au réel (2072) ; pas de micro-foncier pour un associé qui n'a que des parts | Notice 2044 de 2026 | Vérifié |
+| SCI à l'IS, société à l'IS (SAS, SASU, SARL, EURL sur option) | IS : 15 % sur une première tranche pour une PME, 25 % au-delà | Non | CGI art. 219 ; seuil de la tranche à 15 % à vérifier après la loi de finances pour 2026 | À vérifier (seuil) |
+| SARL de famille (option IR, art. 239 bis AA) | IR (associés), BIC au réel | Non : le micro est fermé aux sociétés | CGI art. 50-0 | Vérifié par la recherche |
+| EURL à l'IR (art. 8) | IR (associé unique) | Possible si l'associé unique est une personne physique et le gérant (loi Sapin II du 9 décembre 2016) | Réponse ministérielle n° 11036 (Assemblée nationale) | Vérifié par la recherche |
+| SAS, SASU, SARL à l'IR | IR sur option, cinq ans au plus, jeune société seulement | Non | CGI art. 239 bis AB | Vérifié dans son principe |
