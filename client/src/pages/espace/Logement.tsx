@@ -6,6 +6,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
 import { OwnerCard } from '../../components/StructurePicker'
 import { LoanCard } from '../../components/LoanCard'
+import { CoverPhoto } from '../../components/media'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { UploadModal } from '../../components/UploadModal'
@@ -54,6 +55,7 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
           </Btn>
         }
       />
+      {tab === 'overview' ? <PropertyPhotos p={p} /> : null}
       {p.journey?.length && !p.journey.every((s) => s.state === 'DONE' || s.state === 'SKIPPED') && tab === 'overview' ? <Journey key={JSON.stringify(p.journey)} propertyId={p.id} steps={p.journey} /> : null}
       <Tabs label="Sections du logement" tabs={p.nature === 'PARKING' ? TABS.filter((t) => t.value !== 'diagnostics').map((t) => (t.value === 'binder' ? { ...t, label: 'Dossier du garage' } : t.value === 'lease' ? { ...t, label: 'Contrat et locataire' } : t)) : TABS} value={tab} onChange={(v) => setParams(v === 'overview' ? {} : { onglet: v }, { replace: true })} />
       {tab === 'overview' ? <Overview p={p} reload={reload} /> : null}
@@ -64,6 +66,35 @@ function PropertyPage({ p, reload }: { p: PropertyView; reload: () => void }) {
       {tab === 'inventories' ? <InventoriesTab p={p} /> : null}
       <CreateDocument open={createOpen} onClose={() => setCreateOpen(false)} p={p} onSaved={reload} />
     </>
+  )
+}
+
+/** Photos du logement (fiche, « Photos ») : la première en grand, les suivantes en vignettes. */
+function PropertyPhotos({ p }: { p: PropertyView }) {
+  const ids = p.photoIds ?? []
+  const to = `/espace/logements/${p.id}/fiche#photos`
+  if (!ids.length)
+    return (
+      <p style={{ margin: '0 0 18px', fontSize: 15 }}>
+        <TextLink to={to}>Ajouter des photos du logement</TextLink>
+      </p>
+    )
+  return (
+    <section aria-label="Photos du logement" style={{ marginBottom: 22 }}>
+      <div className="grid-photos" style={{ display: 'grid', gridTemplateColumns: ids.length > 1 ? '2fr 1fr' : '1fr', gap: 10 }}>
+        <CoverPhoto id={ids[0]} alt={`Photo principale : ${p.name}`} style={{ height: 'clamp(200px, 32vw, 320px)', borderRadius: 24 }} />
+        {ids.length > 1 ? (
+          <div style={{ display: 'grid', gridTemplateRows: ids.length > 2 ? '1fr 1fr' : '1fr', gap: 10 }}>
+            {ids.slice(1, 3).map((id, i) => (
+              <CoverPhoto key={id} id={id} alt={`Photo ${i + 2} : ${p.name}`} style={{ borderRadius: 24, minHeight: 95 }} />
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <p style={{ margin: '10px 0 0', fontSize: 14 }}>
+        <TextLink to={to}>{ids.length > 3 ? `Voir les ${ids.length} photos ou les changer` : 'Ajouter ou changer les photos'}</TextLink>
+      </p>
+    </section>
   )
 }
 

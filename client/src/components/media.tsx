@@ -30,6 +30,32 @@ export async function uploadPhotos(files: File[]): Promise<string[]> {
   return out.map((x) => x.id)
 }
 
+/**
+ * Photo de couverture (fichier protégé, chargé avec la session) qui remplit son cadre, recadrée sans déformation.
+ * `children` se pose par-dessus (étiquette « Loué », par exemple).
+ */
+export function CoverPhoto({ id, alt, style, children }: { id: string; alt: string; style?: React.CSSProperties; children?: React.ReactNode }) {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let u: string | null = null
+    pdfUrl(`/files/${id}`)
+      .then((x) => {
+        u = x
+        setUrl(x)
+      })
+      .catch(() => undefined)
+    return () => {
+      if (u) URL.revokeObjectURL(u)
+    }
+  }, [id])
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', background: BAI.skeleton, ...style }}>
+      {url ? <img src={url} alt={alt} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+      {children ? <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>{children}</div> : null}
+    </div>
+  )
+}
+
 /** Bouton appareil photo : ouvre la caméra arrière sur téléphone, la galerie sinon. */
 export function PhotoButton({ onPhotos, label = 'Photo', count = 0, dark = true }: { onPhotos: (ids: string[]) => void; label?: string; count?: number; dark?: boolean }) {
   const toast = useToast()

@@ -6,6 +6,7 @@ import { Btn, Empty, LoadError, Loader, PageHead, Pill, Stat, useLoad } from '..
 import { api } from '../../lib/api'
 import { eurosCents, monthName, plural } from '../../lib/format'
 import type { PropertySummary } from '../../lib/space'
+import { CoverPhoto } from '../../components/media'
 
 /** Liste des logements. Maquette « Logements ». */
 export default function Logements() {
@@ -107,6 +108,10 @@ function List({ items }: { items: PropertySummary[] }) {
   )
 }
 
+function StatusPill({ p }: { p: PropertySummary }) {
+  return p.status === 'AVAILABLE' ? <Pill tone="accent">{p.lease?.status === 'DRAFT' ? 'Bail en préparation' : 'Disponible'}</Pill> : <Pill tone="green">Loué</Pill>
+}
+
 function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
   const available = p.status === 'AVAILABLE'
   const rent = p.lease?.rent
@@ -114,9 +119,15 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
   const facts = [p.kindLabel, p.surface ? `${String(p.surface).replace('.', ',')} m²` : null, p.city].filter(Boolean).join(' · ')
   return (
     <Link to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: available ? `1.5px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 150, background: bg, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>
-        {available ? <Pill tone="accent">{p.lease?.status === 'DRAFT' ? 'Bail en préparation' : 'Disponible'}</Pill> : <Pill tone="green">Loué</Pill>}
-      </div>
+      {p.photoIds?.[0] ? (
+        <CoverPhoto id={p.photoIds[0]} alt={`Photo : ${p.name}`} style={{ height: 150 }}>
+          <StatusPill p={p} />
+        </CoverPhoto>
+      ) : (
+        <div style={{ height: 150, background: bg, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>
+          <StatusPill p={p} />
+        </div>
+      )}
       <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 19, fontWeight: 700 }}>{p.name}</span>
