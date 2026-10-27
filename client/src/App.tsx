@@ -81,6 +81,7 @@ const EtatDesLieux = page('EtatDesLieux')
 const Compte = page('Compte')
 const Edl = page('Edl')
 const Signer = page('Signer')
+const SignatureTelephone = page('SignatureTelephone')
 const EspaceLocataire = page('EspaceLocataire')
 const Dossier = page('Dossier')
 const Bienvenue = page('Bienvenue')
@@ -248,6 +249,7 @@ function Pages() {
               <Route path="/espace/locataires/:id/caution" element={<RequireAuth><ActeCaution /></RequireAuth>} />
               <Route path="/espace/baux/:id/contrat" element={<RequireAuth><Contrat /></RequireAuth>} />
               <Route path="/signer/:token" element={<Signer />} />
+              <Route path="/signature/:code" element={<SignatureTelephone />} />
               <Route path="/candidature/:code" element={<Candidature />} />
               <Route path="/locataire/:code" element={<EspaceLocataire />} />
               <Route path="/dossier/:code" element={<Dossier />} />
