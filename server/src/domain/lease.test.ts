@@ -107,6 +107,8 @@ test('structure : première structure reprise du profil, nom et régime fiscal',
   assert.equal(defaultTaxRegime({ kind: 'SCI' }), 'IR')
   assert.equal(defaultTaxRegime({ kind: 'COMPANY', company: { form: 'SAS' } }), 'IS')
   assert.equal(defaultTaxRegime({ kind: 'COMPANY', company: { form: 'SARL de famille' } }), 'IR')
+  assert.equal(defaultTaxRegime({ kind: 'COMPANY', company: { form: 'EURL' } }), 'IR')
+  assert.equal(defaultTaxRegime({ kind: 'COMPANY', company: { form: 'SASU' } }), 'IS')
 })
 
 test('structure : parts des associés', () => {

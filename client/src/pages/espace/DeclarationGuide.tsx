@@ -66,7 +66,20 @@ interface FilingGuide {
   structure?: string
   alternative?: boolean
 }
+type HoldingFormId = 'PERSON' | 'COUPLE' | 'SCI_IR' | 'SCI_IS' | 'SARL_FAMILLE' | 'EURL_IR' | 'COMPANY_IS' | 'COMPANY_IR'
+interface HoldingRules {
+  label: string
+  tax: 'IR' | 'IS'
+  micro: 'YES' | 'NO' | 'CONDITIONS'
+  how: string
+  forms: string
+  note: string
+}
 export interface GuideData {
+  /** Structures qui détiennent les logements loués, avec ce que leur forme change pour l'impôt. */
+  holdings?: Array<{ id: string; name: string; form: HoldingFormId; rules: HoldingRules; properties: string[] }>
+  /** Toutes les formes de détention, pour comparer. */
+  holdingForms?: Array<HoldingRules & { form: HoldingFormId }>
   empty: { grossRentCents: number; microAllowed: boolean; microTaxableCents: number; realResultCents: number } | null
   furnished: { receiptsCents: number; microAllowed: boolean; microTaxableCents: number } | null
   lmnp?: { taxableCents: number; deficitCents: number; microTaxableCents: number } | null
@@ -112,6 +125,8 @@ export function DeclarationGuide({ data, year, reload }: { data: GuideData; year
   const todo = checks.filter((c) => c.tone === 'TODO')
   const regimes = data.regimes ?? { vide: null, meuble: null }
   const hasChoice = Boolean(regimes.vide?.microAllowed || regimes.meuble?.microAllowed)
+  // Une SCI ou une société : l'étape montre aussi ce que sa forme change (réel obligatoire, impôt sur les sociétés…).
+  const companies = (data.holdings ?? []).filter((h) => h.form !== 'PERSON' && h.form !== 'COUPLE')
   const tasks = new Set(progress.tasks ?? [])
   const done = new Set(progress.done ?? [])
 
@@ -125,7 +140,7 @@ export function DeclarationGuide({ data, year, reload }: { data: GuideData; year
 
   const steps: Array<{ id: StepId; title: string; done: boolean; hint: string }> = [
     { id: 'check', title: 'Vérifier vos chiffres', done: !todo.length || tasks.has('check'), hint: todo.length ? `${todo.length} question${todo.length > 1 ? 's' : ''} pour compléter` : 'Tout est prêt' },
-    ...(hasChoice ? [{ id: 'regime' as const, title: 'Choisir votre régime', done: tasks.has('regime'), hint: 'Bailio a comparé pour vous' }] : []),
+    ...(hasChoice || companies.length ? [{ id: 'regime' as const, title: 'Votre forme et votre régime', done: tasks.has('regime'), hint: hasChoice ? 'Bailio a comparé pour vous' : 'Ce que votre société change' }] : []),
     ...(groups.length ? [{ id: 'declare' as const, title: 'Déclarer sur impots.gouv.fr', done: Boolean(progress.filedAt), hint: entryKeys.length ? `${entryKeys.length} case${entryKeys.length > 1 ? 's' : ''} à recopier` : 'À vérifier' }] : []),
     ...(others.length ? [{ id: 'others' as const, title: 'Vos autres démarches', done: others.every((g) => tasks.has(taskKey(g))), hint: `${others.length} démarche${others.length > 1 ? 's' : ''}` }] : []),
   ]
@@ -374,10 +389,19 @@ function Question({ q, n, total, year, reload, onLater }: { q: TaxCheck; n: numb
   )
 }
 
+const MICRO_LABEL = { YES: 'Micro possible', NO: 'Réel obligatoire', CONDITIONS: 'Micro sous conditions' } as const
+
+/**
+ * Votre forme et votre régime : le régime dépend d'abord de la façon dont les logements sont détenus. En votre nom ou à
+ * plusieurs, le micro et le réel sont comparés avec vos chiffres ; une SCI ou une société a ses règles (réel obligatoire,
+ * impôt sur les sociétés), rappelées avec ses logements. Puis toutes les formes, pour comparer.
+ */
 function RegimeStep({ data, regimes, onChoose, onDone }: { data: GuideData; regimes: NonNullable<GuideData['regimes']>; onChoose: (r: { vide?: Regime; meuble?: Regime }) => void; onDone: () => void }) {
-  return (
+  const holdings = data.holdings ?? []
+  const personal = holdings.filter((h) => h.form === 'PERSON' || h.form === 'COUPLE')
+  const companies = holdings.filter((h) => h.form !== 'PERSON' && h.form !== 'COUPLE')
+  const picks = (
     <>
-      <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio a calculé les deux régimes avec vos chiffres. Le plus avantageux est choisi ; changez seulement si vous avez déjà opté pour l’autre.</span>
       {regimes.vide && regimes.vide.microAllowed && data.empty ? (
         <RegimePick
           legend="Location vide"
@@ -396,12 +420,80 @@ function RegimeStep({ data, regimes, onChoose, onDone }: { data: GuideData; regi
           real={{ title: 'Régime réel (estimation)', amount: data.lmnp?.taxableCents ?? 0, deficit: data.lmnp?.deficitCents ?? 0, text: 'Charges et amortissements déduits. Une liasse comptable (2031) à faire chaque année, en général avec un expert-comptable.' }}
         />
       ) : null}
+    </>
+  )
+  const hasPicks = Boolean((regimes.vide?.microAllowed && data.empty) || (regimes.meuble?.microAllowed && data.furnished))
+  return (
+    <>
+      <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
+        Le régime dépend d’abord de la façon dont vos logements sont détenus : en votre nom, à plusieurs, en SCI ou en société. Bailio le déduit de vos structures{hasPicks ? ', puis compare les régimes possibles avec vos chiffres' : ''}.
+      </span>
+      {personal.length || hasPicks ? (
+        <HoldingCard title={personal.map((h) => h.name).join(', ') || 'En votre nom'} rules={personal[0]?.rules} properties={personal.flatMap((h) => h.properties)}>
+          {hasPicks ? (
+            <>
+              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Le plus avantageux est choisi. Changez seulement si vous avez déjà opté pour l’autre.</span>
+              {picks}
+            </>
+          ) : null}
+        </HoldingCard>
+      ) : null}
+      {companies.map((h) => (
+        <HoldingCard key={h.id} title={h.name} rules={h.rules} properties={h.properties} structureId={h.id} />
+      ))}
+      {data.holdingForms?.length ? (
+        <details style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 16, fontWeight: 700, color: BAI.ink, minHeight: 32 }}>Comparer les formes de détention (SCI, SARL de famille, EURL, SAS, SASU…)</summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            {data.holdingForms.map((f) => (
+              <div key={f.form} style={{ border: `1px solid ${BAI.divider}`, borderRadius: 16, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: 15 }}>{f.label}</strong>
+                  <Pill tone={f.tax === 'IS' ? 'ink' : 'owner'}>{f.tax === 'IS' ? 'Impôt sur les sociétés' : 'Impôt sur le revenu'}</Pill>
+                  <Pill tone={f.micro === 'NO' ? 'muted' : 'green'}>{MICRO_LABEL[f.micro]}</Pill>
+                </span>
+                <span style={{ fontSize: 14, lineHeight: 1.5 }}>{f.how}</span>
+                <span style={{ fontSize: 13, color: BAI.inkMid, lineHeight: 1.5 }}>{f.note}</span>
+              </div>
+            ))}
+            <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Changer de forme (créer une SCI ou une société, y apporter un logement) a un coût : frais, droits, plus-value. Cela se décide avec un notaire ou un expert-comptable.</span>
+          </div>
+        </details>
+      ) : null}
       <div>
         <Btn variant="outline" onClick={onDone}>
-          Garder ce choix et continuer
+          {hasPicks ? 'Garder ce choix et continuer' : 'C’est noté, continuer'}
         </Btn>
       </div>
     </>
+  )
+}
+
+function HoldingCard({ title, rules, properties, structureId, children }: { title: string; rules?: HoldingRules; properties: string[]; structureId?: string; children?: ReactNode }) {
+  return (
+    <section style={{ border: `1px solid ${BAI.divider}`, borderRadius: 20, padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <strong style={{ fontSize: 17 }}>{title}</strong>
+        {rules ? <Pill tone={rules.tax === 'IS' ? 'ink' : 'owner'}>{rules.label}</Pill> : null}
+        {rules ? <Pill tone={rules.micro === 'NO' ? 'muted' : 'green'}>{MICRO_LABEL[rules.micro]}</Pill> : null}
+      </span>
+      {properties.length ? <span style={{ fontSize: 14, color: BAI.inkMid }}>{properties.join(', ')}</span> : null}
+      {rules ? (
+        <>
+          <span style={{ fontSize: 15, lineHeight: 1.5 }}>{rules.how}</span>
+          <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>
+            <strong>À déposer :</strong> {rules.forms}
+          </span>
+          {!children ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{rules.note}</span> : null}
+        </>
+      ) : null}
+      {children}
+      {structureId ? (
+        <TextLink to={`/espace/structures/${structureId}`} style={{ fontSize: 14 }}>
+          Forme ou régime à corriger ? Modifier la structure
+        </TextLink>
+      ) : null}
+    </section>
   )
 }
 

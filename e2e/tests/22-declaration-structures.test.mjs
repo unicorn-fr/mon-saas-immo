@@ -37,6 +37,14 @@ test('déclaration : logements de la SCI à part, fiche 2072 et parts des associ
   await page.getByRole('heading', { name: 'SCI Les Tilleuls' }).waitFor()
   await page.getByText('Aide à vérifier').waitFor()
   await page.getByText(/Formulaire : 2072-S/).waitFor()
+  // Sa forme d'abord : SCI à l'impôt sur le revenu, réel obligatoire, 2072 ; puis les autres formes pour comparer.
+  await page.getByRole('button', { name: /Votre forme et votre régime/ }).waitFor()
+  await page.locator('#depot').getByText('Réel obligatoire').first().waitFor()
+  await page.locator('#depot').getByText(/La SCI dépose la 2072/).waitFor()
+  await page.getByText(/Comparer les formes de détention/).click()
+  await page.getByText('SARL de famille', { exact: true }).waitFor()
+  await shot(page, 'declaration-formes')
+  await page.getByRole('button', { name: 'C’est noté, continuer' }).click()
   // La SCI dans « Vos autres démarches » : espace professionnel, 2072-S, part de chaque associé.
   await page.getByText('SCI Les Tilleuls : SCI à l’impôt sur le revenu').waitFor()
   await page.locator('#depot').getByText('Comment faire').first().click()

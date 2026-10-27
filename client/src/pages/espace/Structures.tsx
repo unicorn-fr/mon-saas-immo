@@ -154,7 +154,12 @@ export function StructureFiche() {
           <span style={{ fontSize: 15, color: BAI.inkMid }}>Le bail indique sa dénomination, son siège et qui signe pour elle (loi du 6 juillet 1989, art. 3).</span>
           <Fields>
             <Input label="Dénomination" value={c.name} onChange={(v) => set({ company: { ...c, name: v } })} />
-            <Input label="Forme" value={c.form} onChange={(v) => set({ company: { ...c, form: v } })} placeholder={f.kind === 'SCI' ? 'SCI' : 'SARL de famille, SAS…'} />
+            <Input label="Forme" value={c.form} onChange={(v) => set({ company: { ...c, form: v } })} placeholder={f.kind === 'SCI' ? 'SCI' : 'SARL de famille, EURL, SAS…'} list="formes-societe" hint="Elle compte pour l’impôt : en général, la SARL de famille (sur option) et l’EURL d’une personne seule sont à l’impôt sur le revenu, la SAS et la SASU à l’impôt sur les sociétés. Vérifiez le régime plus bas." />
+            <datalist id="formes-societe">
+              {['SARL de famille', 'SARL', 'EURL', 'SAS', 'SASU', 'SCI'].map((x) => (
+                <option key={x} value={x} />
+              ))}
+            </datalist>
           </Fields>
           <Fields>
             <Input label="Numéro SIREN (facultatif)" value={c.siren} inputMode="numeric" maxLength={9} onChange={(v) => set({ company: { ...c, siren: v.replace(/\D/g, '') } })} />
