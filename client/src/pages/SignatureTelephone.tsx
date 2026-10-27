@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
-import { SignaturePad } from '../components/media'
+import { SignaturePad, cropToInk } from '../components/media'
 import { Btn, Card, useToast } from '../components/kit'
 import { display } from '../components/ui'
 import { api } from '../lib/api'
@@ -19,7 +19,7 @@ export default function SignatureTelephone() {
   const send = async () => {
     if (!image) return toast.show('Signez d’abord dans le cadre.', 'error')
     try {
-      await api(`/signature-relay/${encodeURIComponent(code)}`, { method: 'POST', body: { image } })
+      await api(`/signature-relay/${encodeURIComponent(code)}`, { method: 'POST', body: { image: await cropToInk(image) } })
       setSent(true)
     } catch (e) {
       toast.error(e)

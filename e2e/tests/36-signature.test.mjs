@@ -36,10 +36,21 @@ test('signature au pavé tactile sans cliquer, puis avec le téléphone', async 
   await page.getByText('Cliquez une fois dans ce cadre pour commencer').waitFor()
   const box = (await pad.boundingBox())
   await page.mouse.click(box.x + 40, box.y + 100)
-  await page.getByText(/Glissez le doigt sur le pavé tactile/).waitFor()
-  for (const [dx, dy] of [[80, 40], [140, 110], [200, 50], [260, 105], [320, 60]]) await page.mouse.move(box.x + dx, box.y + dy, { steps: 6 })
+  await page.getByText(/glissant le doigt sur le pavé tactile/).waitFor()
+  // Le doigt va bien au-delà du cadre (à droite et en bas) : rien n'est perdu, la signature se cadre toute seule.
+  for (const [dx, dy] of [[300, 260], [700, 40], [1000, 420], [1200, 120]]) await page.mouse.move(box.x + dx, box.y + dy, { steps: 8 })
   await page.keyboard.press('Enter')
   await page.getByRole('button', { name: 'Effacer' }).waitFor()
+  const ink = await page.evaluate(() => {
+    const c = document.querySelector('canvas[aria-label="Signez ici avec la souris ou le doigt"]')
+    const { data, width, height } = c.getContext('2d').getImageData(0, 0, c.width, c.height)
+    let minX = width, maxX = -1, minY = height, maxY = -1
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) if (data[(y * width + x) * 4 + 3] > 16) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y) }
+    return { width, height, minX, maxX, minY, maxY }
+  })
+  // Tracé entier dans le cadre, centré, et qui le remplit (en largeur ou en hauteur).
+  assert.ok(ink.maxX > 0 && ink.minX > 0 && ink.maxX < ink.width - 1 && ink.minY > 0 && ink.maxY < ink.height - 1, JSON.stringify(ink))
+  assert.ok((ink.maxX - ink.minX) / ink.width > 0.5 || (ink.maxY - ink.minY) / ink.height > 0.5, JSON.stringify(ink))
   await wait(1500)
   const saved = (await api('/profile', { token })).profile.signature
   assert.match(saved, /^data:image\/png;base64,/)

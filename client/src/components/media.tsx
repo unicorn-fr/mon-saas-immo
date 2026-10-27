@@ -30,6 +30,32 @@ export async function uploadPhotos(files: File[]): Promise<string[]> {
   return out.map((x) => x.id)
 }
 
+/**
+ * Photo de couverture (fichier protégé, chargé avec la session) qui remplit son cadre, recadrée sans déformation.
+ * `children` se pose par-dessus (étiquette « Loué », par exemple).
+ */
+export function CoverPhoto({ id, alt, style, children }: { id: string; alt: string; style?: React.CSSProperties; children?: React.ReactNode }) {
+  const [url, setUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let u: string | null = null
+    pdfUrl(`/files/${id}`)
+      .then((x) => {
+        u = x
+        setUrl(x)
+      })
+      .catch(() => undefined)
+    return () => {
+      if (u) URL.revokeObjectURL(u)
+    }
+  }, [id])
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', background: BAI.skeleton, ...style }}>
+      {url ? <img src={url} alt={alt} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
+      {children ? <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>{children}</div> : null}
+    </div>
+  )
+}
+
 /** Bouton appareil photo : ouvre la caméra arrière sur téléphone, la galerie sinon. */
 export function PhotoButton({ onPhotos, label = 'Photo', count = 0, dark = true }: { onPhotos: (ids: string[]) => void; label?: string; count?: number; dark?: boolean }) {
   const toast = useToast()
@@ -104,6 +130,11 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
   const drawing = useRef(false)
   const dirty = useRef(false)
   const last = useRef<{ x: number; y: number } | null>(null)
+  // Pavé tactile : le tracé est relevé sans limite (déplacements relatifs), puis recadré dans le cadre.
+  const strokes = useRef<Array<Array<{ x: number; y: number }>>>([])
+  const pen = useRef({ x: 0, y: 0 })
+  const frame = useRef(0)
+  const startedAt = useRef(0)
   const [mode, setMode] = useState<PadMode>('PRESS')
   const modeRef = useRef<PadMode>('PRESS')
   modeRef.current = mode
@@ -168,8 +199,50 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     last.current = null
     if (dirty.current) onChange(canvas.current!.toDataURL('image/png'))
   }
+  /**
+   * Pavé tactile : la signature entière, où que le doigt soit allé, est mise à l'échelle et centrée dans le cadre
+   * (sans déformation, marge de 16 px), à chaque mouvement.
+   */
+  const renderFitted = () => {
+    const c = canvas.current
+    if (!c) return
+    const ctx = c.getContext('2d')!
+    const w = c.clientWidth
+    ctx.clearRect(0, 0, c.width, c.height)
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    for (const st of strokes.current)
+      for (const p of st) {
+        minX = Math.min(minX, p.x)
+        minY = Math.min(minY, p.y)
+        maxX = Math.max(maxX, p.x)
+        maxY = Math.max(maxY, p.y)
+      }
+    if (!Number.isFinite(minX)) return
+    const pad = 16
+    const scale = Math.min((w - 2 * pad) / Math.max(1, maxX - minX), (height - 2 * pad) / Math.max(1, maxY - minY), 2)
+    const ox = (w - (maxX - minX) * scale) / 2 - minX * scale
+    const oy = (height - (maxY - minY) * scale) / 2 - minY * scale
+    for (const st of strokes.current) {
+      if (st.length < 2) continue
+      ctx.beginPath()
+      ctx.moveTo(st[0].x * scale + ox, st[0].y * scale + oy)
+      for (const p of st.slice(1)) ctx.lineTo(p.x * scale + ox, p.y * scale + oy)
+      ctx.stroke()
+    }
+  }
   const finishTrackpad = () => {
-    end()
+    if (modeRef.current !== 'TRACKPAD' && modeRef.current !== 'TRACKPAD_ARMED') return
+    modeRef.current = 'PRESS'
+    if (document.pointerLockElement) document.exitPointerLock()
+    window.cancelAnimationFrame(frame.current)
+    if (dirty.current && strokes.current.some((st) => st.length > 1)) {
+      renderFitted()
+      onChange(canvas.current!.toDataURL('image/png'))
+    }
+    strokes.current = []
     setMode('PRESS')
   }
   const clear = () => {
@@ -179,15 +252,42 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     onChange(null)
   }
 
-  // Pavé tactile : une touche du clavier termine la signature.
+  // Pavé tactile : le curseur est retenu par le cadre (il disparaît) ; chaque déplacement du doigt prolonge le tracé,
+  // sans bord. Un clic, une touche ou Échap termine.
   useEffect(() => {
     if (mode !== 'TRACKPAD') return
+    const onMove = (e: MouseEvent) => {
+      pen.current = { x: pen.current.x + e.movementX, y: pen.current.y + e.movementY }
+      strokes.current[strokes.current.length - 1]?.push(pen.current)
+      dirty.current = true
+      window.cancelAnimationFrame(frame.current)
+      frame.current = window.requestAnimationFrame(renderFitted)
+    }
+    const onDown = (e: MouseEvent) => {
+      // Le clic qui a lancé la signature arrive ici aussi : il ne la termine pas.
+      if (e.timeStamp - startedAt.current < 300) return
+      e.preventDefault()
+      finishTrackpad()
+    }
     const onKey = (e: KeyboardEvent) => {
       e.preventDefault()
       finishTrackpad()
     }
+    let locked = false
+    const onLock = () => {
+      if (document.pointerLockElement === canvas.current) locked = true
+      else if (locked) finishTrackpad()
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('pointerlockchange', onLock)
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('pointerlockchange', onLock)
+      window.removeEventListener('keydown', onKey)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
@@ -210,19 +310,27 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
           onPointerDown={(e) => {
             const m = modeRef.current
             if (m === 'TRACKPAD_ARMED') {
-              // Premier clic : la signature commence là où se trouve le curseur, sans garder le bouton appuyé.
+              // Premier clic : le cadre retient le curseur, la signature commence, sans garder le bouton appuyé.
+              startedAt.current = e.timeStamp
+              strokes.current = [[{ x: 0, y: 0 }]]
+              pen.current = { x: 0, y: 0 }
+              dirty.current = false
+              modeRef.current = 'TRACKPAD'
               setMode('TRACKPAD')
-              drawing.current = true
-              last.current = pos(e)
+              try {
+                void (canvas.current?.requestPointerLock() as unknown as Promise<void> | undefined)?.catch?.(() => undefined)
+              } catch {
+                /* sans verrouillage, le tracé suit le curseur jusqu'au bord de l'écran */
+              }
               return
             }
-            if (m === 'TRACKPAD') return finishTrackpad()
+            if (m === 'TRACKPAD') return
             ;(e.target as HTMLCanvasElement).setPointerCapture(e.pointerId)
             drawing.current = true
             last.current = pos(e)
           }}
           onPointerMove={(e) => {
-            if (!drawing.current) return
+            if (!drawing.current || modeRef.current !== 'PRESS') return
             line(pos(e))
           }}
           onPointerUp={() => {
@@ -230,9 +338,7 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
           }}
           onPointerCancel={end}
           onPointerLeave={() => {
-            // Au pavé tactile, sortir du cadre lève le stylo sans terminer ; revenir reprend un nouveau trait.
-            if (modeRef.current === 'TRACKPAD') last.current = null
-            else end()
+            if (modeRef.current === 'PRESS') end()
           }}
         />
         {hint ? (
@@ -243,7 +349,7 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
       </div>
       {mode === 'TRACKPAD' ? (
         <span aria-live="polite" style={{ fontSize: 14, color: BAI.owner, fontWeight: 600, lineHeight: 1.5 }}>
-          Glissez le doigt sur le pavé tactile, sans appuyer. Pour finir, cliquez ou appuyez sur une touche.
+          Écrivez votre signature en glissant le doigt sur le pavé tactile, sans appuyer, aussi grand que vous voulez : elle se cadre toute seule. Pour finir, cliquez ou appuyez sur une touche.
         </span>
       ) : null}
       <div style={{ display: 'flex', gap: '6px 18px', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -269,6 +375,42 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
       ) : null}
     </div>
   )
+}
+
+/** Signature recadrée sur le tracé (marge de 12 px) : elle remplit ensuite tout le cadre où on l'affiche. */
+export function cropToInk(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      const c = document.createElement('canvas')
+      c.width = img.width
+      c.height = img.height
+      const ctx = c.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      const { data, width, height } = ctx.getImageData(0, 0, c.width, c.height)
+      let minX = width
+      let minY = height
+      let maxX = -1
+      let maxY = -1
+      for (let y = 0; y < height; y++)
+        for (let x = 0; x < width; x++)
+          if (data[(y * width + x) * 4 + 3] > 16) {
+            if (x < minX) minX = x
+            if (x > maxX) maxX = x
+            if (y < minY) minY = y
+            if (y > maxY) maxY = y
+          }
+      if (maxX < 0) return resolve(dataUrl)
+      const m = 12
+      const out = document.createElement('canvas')
+      out.width = maxX - minX + 1 + 2 * m
+      out.height = maxY - minY + 1 + 2 * m
+      out.getContext('2d')!.drawImage(c, minX, minY, maxX - minX + 1, maxY - minY + 1, m, m, maxX - minX + 1, maxY - minY + 1)
+      resolve(out.toDataURL('image/png'))
+    }
+    img.onerror = () => resolve(dataUrl)
+    img.src = dataUrl
+  })
 }
 
 function PadLink({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {

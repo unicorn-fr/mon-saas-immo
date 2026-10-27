@@ -138,6 +138,8 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
     furnished: f.furnished ?? null,
     nature: f.nature ?? 'HOUSING',
     dpeClass: f.diagnostics?.dpe?.class ?? null,
+    // Photos du logement (fiche, « Photos ») : la première sert de couverture dans la liste et sur sa page.
+    photoIds: f.photos ?? [],
     completion: propertyCompletion(f).percent,
     status: rented ? 'RENTED' : 'AVAILABLE',
     lease: lease

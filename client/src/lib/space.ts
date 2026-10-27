@@ -36,6 +36,8 @@ export interface PropertySummary {
   /** Logement ou garage, box, place loué seul. */
   nature?: 'HOUSING' | 'PARKING'
   dpeClass: string | null
+  /** Photos du logement ; la première sert de couverture. */
+  photoIds?: string[]
   completion: number
   status: 'RENTED' | 'AVAILABLE'
   lease: null | {
