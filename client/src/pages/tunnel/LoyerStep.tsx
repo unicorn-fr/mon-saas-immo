@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { StepNav, TunnelLayout, focusFirstError } from '../../components/TunnelLayout'
+import { QuestionCount, useQuestion } from '../../components/Questions'
 import { TextField, display, inputStyle } from '../../components/ui'
 import { useDraft } from '../../lib/draft'
 import { centsToInput, dateFr, durationLabel, endDate, euros, maxDepositCents, maxDepositLabel, parseEuros } from '../../lib/lease'
@@ -86,22 +87,48 @@ export default function LoyerStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rent, charges, startDate, deposit])
 
-  async function next() {
+  // Une question par écran : le loyer, les charges, la date d'entrée, puis ce que Bailio a calculé.
+  const ids = ['rent', 'charges', 'startDate', 'deposit'] as const
+  const { q, go } = useQuestion(ids.length)
+  const id = ids[q - 1]
+
+  function next() {
     const e = validate()
-    setErrors(e)
-    if (Object.keys(e).length) return focusFirstError()
+    if (e[id]) {
+      setErrors({ [id]: e[id] })
+      return focusFirstError()
+    }
+    setErrors({})
+    if (q < ids.length) go(q + 1)
+    else void finish()
+  }
+
+  async function finish() {
+    const e = validate()
+    const first = ids.find((k) => e[k])
+    if (first) {
+      setErrors({ [first]: e[first] })
+      return go(ids.indexOf(first) + 1)
+    }
     update((prev) => ({ rent: { ...prev.rent, rentCents, chargesCents, startDate, paymentDay } }), 'relecture')
     await flush()
     navigate('/commencer/relecture')
   }
 
   return (
-    <TunnelLayout step="loyer">
-      <h1 style={display('clamp(40px, 5vw, 56px)')}>Quel est le loyer ?</h1>
-      <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-        <TextField label="Loyer hors charges" name="rent" inputMode="decimal" suffix="€" value={rent} error={errors.rent} onChange={(e) => setRent(e.target.value.replace(/[^\d,.\s]/g, ''))} />
-        <TextField label="Charges" name="charges" inputMode="decimal" suffix="€" value={charges} error={errors.charges} placeholder="0" onChange={(e) => setCharges(e.target.value.replace(/[^\d,.\s]/g, ''))} />
-      </div>
+    <TunnelLayout step="loyer" sub={{ q, count: ids.length }}>
+      <div data-question className="stack" style={{ gap: 24 }}>
+      <QuestionCount q={q} count={ids.length} />
+      {id === 'rent' ? (
+        <>
+          <h1 style={display('clamp(34px, 5vw, 50px)')}>Quel est le loyer ?</h1>
+          <TextField label="Loyer hors charges" name="rent" inputMode="decimal" suffix="€" value={rent} error={errors.rent} hint="Par mois, sans les charges." onChange={(e) => setRent(e.target.value.replace(/[^\d,.\s]/g, ''))} />
+        </>
+      ) : null}
+      {id === 'charges' ? (
+        <>
+      <h1 style={display('clamp(34px, 5vw, 50px)')}>Et les charges ?</h1>
+      <TextField label="Charges" name="charges" inputMode="decimal" suffix="€" value={charges} error={errors.charges} placeholder="0" hint="Par mois. Laissez vide s’il n’y en a pas." onChange={(e) => setCharges(e.target.value.replace(/[^\d,.\s]/g, ''))} />
       <div role="group" aria-label="Les charges sont" className="stack" style={{ gap: 8 }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>Les charges sont</span>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -116,8 +143,18 @@ export default function LoyerStep() {
         </div>
         <span style={{ fontSize: 14, color: BAI.inkSoft }}>Provision : une avance sur les dépenses réelles. En location vide, le forfait n’est possible qu’en colocation.</span>
       </div>
-      <TextField label="Date d'entrée du locataire" name="startDate" type="date" value={startDate} error={errors.startDate} onChange={(e) => setStartDate(e.target.value)} />
-
+        </>
+      ) : null}
+      {id === 'startDate' ? (
+        <>
+          <h1 style={display('clamp(34px, 5vw, 50px)')}>Quand entre le locataire ?</h1>
+          <TextField label="Date d'entrée du locataire" name="startDate" type="date" value={startDate} error={errors.startDate} onChange={(e) => setStartDate(e.target.value)} />
+        </>
+      ) : null}
+      {id === 'deposit' ? (
+        <>
+      <h1 style={display('clamp(34px, 5vw, 50px)')}>Tout est juste ?</h1>
+      <span style={{ fontSize: 15, color: BAI.inkMid, marginTop: -8 }}>Bailio a calculé le reste. Modifiez ce qui ne convient pas.</span>
       <div className="stack" style={{ background: BAI.night, borderRadius: 20, padding: '24px 26px 10px' }} aria-live="polite">
         <span style={{ fontSize: 15, fontWeight: 700, color: BAI.accent, paddingBottom: 12 }}>Calculé pour vous</span>
         <CalcRow label="Total par mois" value={rentCents ? euros(rentCents + chargesCents) : '—'} note="Loyer et charges" />
@@ -220,8 +257,11 @@ export default function LoyerStep() {
           {errors.deposit}
         </span>
       ) : null}
+        </>
+      ) : null}
+      </div>
 
-      <StepNav back="/commencer/personnes" next={next} />
+      <StepNav back={q > 1 ? `?q=${q - 1}` : '/commencer/personnes'} next={next} />
     </TunnelLayout>
   )
 }

@@ -113,6 +113,7 @@ test('locataire : photo du logement sur son dossier, pièce filigranée', async 
   watch(page, errors)
   await page.goto(`${BASE}/dossier/${code}`)
   await page.getByAltText(/Photo du logement/).waitFor()
+  await page.getByRole('button', { name: 'Tout voir et corriger' }).click()
   await page.getByText(/Bailio y ajoute un filigrane/).waitFor()
   await shot(page, 'dossier-photo')
   await browser.close()
@@ -142,6 +143,7 @@ test('plusieurs fichiers par pièce (trois bulletins de salaire) et PDF piégé 
   watch(page, errors)
   page.setDefaultTimeout(20000)
   await page.goto(`${BASE}/dossier/${code}`)
+  await page.getByRole('button', { name: 'Tout voir et corriger' }).click()
   const input = page.getByLabel('Justificatifs de ressources (locataire)')
   // Deux bulletins d'un coup, puis le troisième : rien n'est remplacé.
   const slip = (n) => ({ name: `bulletin-${n}.jpg`, mimeType: 'image/jpeg', buffer: jpg })

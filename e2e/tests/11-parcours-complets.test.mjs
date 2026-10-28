@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
-import { BASE, api, launch, newAccount, shot, signedInContext, watch } from '../lib.mjs'
+import { BASE, api, launch, newAccount, shot, signedInContext, tunnelLogement, watch } from '../lib.mjs'
 
 /** Parcours complets : tout ce que le bail exige est demandé dans l'ordre, une étape à la fois. */
 let browser
@@ -141,20 +141,38 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   watch(tp, terrors)
   await tp.goto(`${BASE}/dossier/${code}`)
   await tp.getByRole('heading', { name: 'Votre dossier de location' }).waitFor()
-  const me = tp.locator('section').filter({ has: tp.getByRole('heading', { name: 'Vous', exact: true }) })
-  await me.getByLabel('Date de naissance').fill('1994-02-03')
-  await me.getByLabel('Lieu de naissance').fill('Montpellier')
-  await me.getByLabel('Téléphone').fill('06 11 22 33 44')
-  await me.getByLabel('Adresse actuelle').fill('9 rue Saint-Guilhem, 34000 Montpellier')
-  await me.getByRole('button', { name: 'Enregistrer' }).click()
-  await tp.getByText('Enregistré.').first().waitFor()
-  // Attendre la réponse de chaque envoi : le message « Justificatif reçu. » du premier est encore affiché pendant le second.
+  // Parcours guidé : seulement ce qui manque, une question par écran ; « Passer » laisse une question pour plus tard.
+  await tp.getByRole('button', { name: 'Commencer' }).click()
   const uploaded = () => tp.waitForResponse((r) => r.url().includes('/document') && r.request().method() === 'POST' && r.ok())
-  await Promise.all([uploaded(), tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))])
-  await Promise.all([uploaded(), tp.getByLabel('Dernier avis d’imposition (garant)').setInputFiles(pdf('avis.pdf'))])
-  await tp.getByText('Justificatif reçu.').first().waitFor()
-  await shot(tp, 'dossier-locataire')
-  await tp.getByRole('button', { name: 'J’ai terminé' }).click()
+  const asked = []
+  for (let n = 1; n < 30; n++) {
+    await tp.getByText(new RegExp(`^Question ${n} sur \\d+$`)).waitFor()
+    const title = (await tp.locator('[data-question] h2').textContent()).trim()
+    asked.push(title)
+    const cont = () => tp.getByRole('button', { name: 'Continuer', exact: true }).click()
+    if (title === 'Où et quand êtes-vous né(e) ?') {
+      await tp.getByLabel('Date de naissance').fill('1994-02-03')
+      await tp.getByLabel('Lieu de naissance').fill('Montpellier')
+      await cont()
+    } else if (title === 'Comment vous joindre ?') {
+      await tp.getByLabel('Téléphone').fill('06 11 22 33 44')
+      await cont()
+    } else if (title === 'Où habitez-vous aujourd’hui ?') {
+      await tp.getByLabel('Adresse actuelle').fill('9 rue Saint-Guilhem, 34000 Montpellier')
+      await cont()
+    } else if (title === 'Vos justificatifs') {
+      await Promise.all([uploaded(), tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))])
+      await shot(tp, 'dossier-locataire')
+      await cont()
+    } else if (title === 'Les justificatifs de votre garant') {
+      await Promise.all([uploaded(), tp.getByLabel('Dernier avis d’imposition (garant)').setInputFiles(pdf('avis.pdf'))])
+      await cont()
+    } else if (title === 'C’est presque fini' || title === 'Votre dossier est complet') {
+      await tp.getByRole('button', { name: 'J’ai terminé' }).click()
+      break
+    } else await tp.getByRole('button', { name: 'Passer' }).click()
+  }
+  assert.ok(asked.includes('Où et quand êtes-vous né(e) ?') && asked.includes('Vos justificatifs'), asked.join(' | '))
   await tp.getByRole('heading', { name: 'Merci.' }).waitFor()
   await tctx.close()
   assert.deepEqual(terrors, [])
@@ -238,19 +256,10 @@ test('formulaire du début : maison ou appartement, copropriété, construction,
   watch(page, errors, { allow: ['/geo/'] })
   await page.goto(`${BASE}/commencer`)
   await page.getByRole('button', { name: /Vide/ }).click()
-  await page.getByLabel('Adresse', { exact: true }).fill('5 rue des Hortensias, 34200 Sète')
-  await page.getByLabel('Surface habitable').fill('48')
-  await page.getByRole('button', { name: '2', exact: true }).click()
-  await page.getByRole('button', { name: 'Continuer' }).click()
-  await page.getByText('Indiquez s’il s’agit d’un appartement ou d’une maison.').waitFor()
-  await page.getByRole('button', { name: 'Une maison' }).click()
-  await page.getByRole('button', { name: '1975 à 1989' }).click()
-  await page.getByRole('button', { name: 'Individuel', exact: true }).click()
-  await page.getByRole('button', { name: 'Gaz', exact: true }).click()
-  await page.getByRole('button', { name: 'Individuelle', exact: true }).click()
-  await shot(page, 'formulaire-debut-logement')
-  await page.getByRole('button', { name: 'Continuer' }).click()
-  await page.getByRole('heading', { name: 'Qui signe le bail ?' }).waitFor()
+  // Une question par écran : une maison n'a pas de question « Bâtiment, étage, porte ».
+  await tunnelLogement(page, { address: '5 rue des Hortensias, 34200 Sète', habitat: 'Une maison', copro: 'Non', surface: '48', period: '1975 à 1989', energy: 'Gaz' })
+  await page.getByRole('heading', { name: 'Comment vous appelez-vous ?' }).waitFor()
+  await shot(page, 'formulaire-debut-personnes')
   const token = await page.evaluate(() => localStorage.getItem('bailio.draft'))
   const draft = await fetch(`${BASE.replace(/\/$/, '')}/api/drafts/current`, { headers: { 'X-Draft-Token': token } }).then((r) => r.json())
   const p = draft.data.data.property

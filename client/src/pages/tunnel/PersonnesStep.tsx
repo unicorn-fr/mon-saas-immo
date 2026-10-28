@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AddressField } from '../../components/AddressField'
 import { StepNav, TunnelLayout, focusFirstError } from '../../components/TunnelLayout'
-import { TextField, display, overline } from '../../components/ui'
+import { Choices, QuestionCount, useQuestion } from '../../components/Questions'
+import { TextField, display } from '../../components/ui'
 import { useDraft } from '../../lib/draft'
 import type { DraftData } from '../../lib/types'
 
@@ -20,7 +21,6 @@ export default function PersonnesStep() {
   const [landlord, setLandlord] = useState(data.landlord ?? {})
   const [tenants, setTenants] = useState<Tenant[]>(data.tenants?.length ? data.tenants : [{}])
   const [guarantor, setGuarantor] = useState<Guarantor | null>(data.guarantor ?? null)
-  const [adding, setAdding] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -65,108 +65,171 @@ export default function PersonnesStep() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [landlord, tenants, guarantor])
 
-  async function next() {
+  // Une question par écran : vous, votre adresse, chaque locataire, le garant, puis « Quelqu'un d'autre ? ».
+  const ids = ['l.name', 'l.address', ...tenants.flatMap((_, i) => [`t${i}.name`, `t${i}.email`]), ...(guarantor ? ['g.name', 'g.address'] : []), 'others']
+  const { q, go } = useQuestion(ids.length)
+  const id = ids[q - 1]
+  const count = ids.length
+  // Les erreurs de chaque question (clés de validate()).
+  const keysOf = (qid: string) => (qid.endsWith('.name') ? [`${qid.slice(0, -5)}.firstName`, `${qid.slice(0, -5)}.lastName`] : [qid])
+
+  function next() {
     const e = validate()
-    setErrors(e)
-    if (Object.keys(e).length) return focusFirstError()
+    const mine = Object.fromEntries(Object.entries(e).filter(([k]) => keysOf(id).includes(k)))
+    setErrors(mine)
+    if (Object.keys(mine).length) return focusFirstError()
+    if (q < count) go(q + 1)
+    else void finish()
+  }
+
+  async function finish() {
+    const e = validate()
+    const first = ids.find((qid) => keysOf(qid).some((k) => e[k]))
+    if (first) {
+      setErrors(e)
+      return go(ids.indexOf(first) + 1)
+    }
     update({ landlord, tenants: tenants.map((t) => ({ ...t, email: t.email?.trim() || undefined })), guarantor }, 'loyer')
     await flush()
     navigate('/commencer/loyer')
   }
 
+  const back = q > 1 ? `?q=${q - 1}` : '/commencer/logement'
+  const heading = (text: string) => <h1 style={display('clamp(34px, 5vw, 50px)')}>{text}</h1>
+  const ti = id.startsWith('t') ? Number(id.slice(1, id.indexOf('.'))) : -1
+  const t = ti >= 0 ? tenants[ti] : null
+
   return (
-    <TunnelLayout step="personnes">
-      <h1 style={display('clamp(40px, 5vw, 56px)')}>Qui signe le bail ?</h1>
+    <TunnelLayout step="personnes" sub={{ q, count }}>
+      <div data-question className="stack" style={{ gap: 24 }}>
+        <QuestionCount q={q} count={count} />
+        {id === 'l.name' ? (
+          <>
+            {heading('Comment vous appelez-vous ?')}
+            <span style={{ fontSize: 15, color: BAI.inkMid, marginTop: -8 }}>Vous, le propriétaire : votre nom figure dans le bail.</span>
+            <Civility value={landlord.civility} onChange={(v) => save({ landlord: { ...landlord, civility: v } })} />
+            <div className="col-md" style={{ display: 'flex', gap: 16 }}>
+              <TextField maxLength={80} label="Prénom" name="l-first" autoComplete="given-name" value={landlord.firstName ?? ''} error={errors['l.firstName']} onChange={(e) => save({ landlord: { ...landlord, firstName: e.target.value } })} />
+              <TextField maxLength={80} label="Nom" name="l-last" autoComplete="family-name" value={landlord.lastName ?? ''} error={errors['l.lastName']} onChange={(e) => save({ landlord: { ...landlord, lastName: e.target.value } })} />
+            </div>
+          </>
+        ) : null}
 
-      <section className="stack" style={{ gap: 14 }}>
-        <h2 style={{ ...overline, margin: 0 }}>Vous, le propriétaire</h2>
-        <Civility value={landlord.civility} onChange={(v) => save({ landlord: { ...landlord, civility: v } })} />
-        <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-          <TextField maxLength={80} label="Prénom" name="l-first" autoComplete="given-name" value={landlord.firstName ?? ''} error={errors['l.firstName']} onChange={(e) => save({ landlord: { ...landlord, firstName: e.target.value } })} />
-          <TextField maxLength={80} label="Nom" name="l-last" autoComplete="family-name" value={landlord.lastName ?? ''} error={errors['l.lastName']} onChange={(e) => save({ landlord: { ...landlord, lastName: e.target.value } })} />
-        </div>
-        <AddressField
-          label="Votre adresse"
-          value={landlord.address ?? ''}
-          error={errors['l.address']}
-          placeholder="Là où vous recevez votre courrier"
-          onChange={(v) => save({ landlord: { ...landlord, address: v } })}
-          onSelect={(s) => save({ landlord: { ...landlord, address: s.label } })}
-        />
-      </section>
+        {id === 'l.address' ? (
+          <>
+            {heading('Votre adresse ?')}
+            <AddressField
+              label="Votre adresse"
+              value={landlord.address ?? ''}
+              error={errors['l.address']}
+              placeholder="Là où vous recevez votre courrier"
+              onChange={(v) => save({ landlord: { ...landlord, address: v } })}
+              onSelect={(s) => save({ landlord: { ...landlord, address: s.label } })}
+            />
+          </>
+        ) : null}
 
-      {tenants.map((t, i) => (
-        <section key={i} className="stack" style={{ gap: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <h2 style={{ ...overline, margin: 0 }}>{i === 0 ? 'Votre locataire' : `Colocataire ${i + 1}`}</h2>
-            {i > 0 ? (
-              <button type="button" style={{ ...linkButton, color: BAI.error, fontWeight: 500 }} onClick={() => save({ tenants: tenants.filter((_, j) => j !== i) })}>
-                Retirer
+        {t && id.endsWith('.name') ? (
+          <>
+            {heading(ti === 0 ? 'Qui est votre locataire ?' : `Votre colocataire ${ti + 1} ?`)}
+            <Civility value={t.civility} onChange={(v) => setTenant(ti, { civility: v })} />
+            <div className="col-md" style={{ display: 'flex', gap: 16 }}>
+              <TextField maxLength={80} label="Prénom" name={`t${ti}-first`} value={t.firstName ?? ''} error={errors[`t${ti}.firstName`]} onChange={(e) => setTenant(ti, { firstName: e.target.value })} />
+              <TextField maxLength={80} label="Nom" name={`t${ti}-last`} value={t.lastName ?? ''} error={errors[`t${ti}.lastName`]} onChange={(e) => setTenant(ti, { lastName: e.target.value })} />
+            </div>
+            {ti > 0 ? (
+              <button
+                type="button"
+                style={{ ...linkButton, color: BAI.error, fontWeight: 500 }}
+                onClick={() => {
+                  save({ tenants: tenants.filter((_, j) => j !== ti) })
+                  go(ids.indexOf('others') - 1)
+                }}
+              >
+                Retirer ce colocataire
               </button>
             ) : null}
-          </div>
-          <Civility value={t.civility} onChange={(v) => setTenant(i, { civility: v })} />
-          <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-            <TextField maxLength={80} label="Prénom" name={`t${i}-first`} value={t.firstName ?? ''} error={errors[`t${i}.firstName`]} onChange={(e) => setTenant(i, { firstName: e.target.value })} />
-            <TextField maxLength={80} label="Nom" name={`t${i}-last`} value={t.lastName ?? ''} error={errors[`t${i}.lastName`]} onChange={(e) => setTenant(i, { lastName: e.target.value })} />
-          </div>
-          <TextField
-            maxLength={200}
-            label={i === 0 ? 'Son email' : 'Son email (facultatif)'}
-            name={`t${i}-email`}
-            type="email"
-            autoComplete="off"
-            value={t.email ?? ''}
-            error={errors[`t${i}.email`]}
-            hint={i === 0 ? 'Pour lui envoyer ses quittances. Il ne recevra rien sans votre accord.' : undefined}
-            onChange={(e) => setTenant(i, { email: e.target.value })}
-          />
-        </section>
-      ))}
+          </>
+        ) : null}
 
-      {guarantor ? (
-        <section className="stack" style={{ gap: 14 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <h2 style={{ ...overline, margin: 0 }}>Le garant</h2>
-            <button type="button" style={{ ...linkButton, color: BAI.error, fontWeight: 500 }} onClick={() => save({ guarantor: null })}>
-              Retirer
-            </button>
-          </div>
-          <div className="col-md" style={{ display: 'flex', gap: 16 }}>
-            <TextField maxLength={80} label="Prénom" name="g-first" value={guarantor.firstName ?? ''} error={errors['g.firstName']} onChange={(e) => save({ guarantor: { ...guarantor, firstName: e.target.value } })} />
-            <TextField maxLength={80} label="Nom" name="g-last" value={guarantor.lastName ?? ''} error={errors['g.lastName']} onChange={(e) => save({ guarantor: { ...guarantor, lastName: e.target.value } })} />
-          </div>
-          <AddressField
-            label="Son adresse"
-            value={guarantor.address ?? ''}
-            error={errors['g.address']}
-            onChange={(v) => save({ guarantor: { ...guarantor, address: v } })}
-            onSelect={(s) => save({ guarantor: { ...guarantor, address: s.label } })}
-          />
-          <span style={{ fontSize: 14, color: BAI.inkSoft }}>Le garant (ou « caution ») paie à la place du locataire si celui-ci ne paie pas. Il signe un acte de cautionnement, joint au bail.</span>
-        </section>
-      ) : null}
+        {t && id.endsWith('.email') ? (
+          <>
+            {heading(ti === 0 ? 'Son email ?' : 'Son email ?')}
+            <TextField
+              maxLength={200}
+              label={ti === 0 ? 'Son email' : 'Son email (facultatif)'}
+              name={`t${ti}-email`}
+              type="email"
+              autoComplete="off"
+              value={t.email ?? ''}
+              error={errors[`t${ti}.email`]}
+              hint={ti === 0 ? 'Pour lui envoyer ses quittances. Il ne recevra rien sans votre accord.' : undefined}
+              onChange={(e) => setTenant(ti, { email: e.target.value })}
+            />
+          </>
+        ) : null}
 
-      {adding ? (
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          {tenants.length < 6 ? (
-            <button type="button" style={linkButton} onClick={() => { save({ tenants: [...tenants, {}] }); setAdding(false) }}>
-              + Un colocataire
+        {guarantor && id === 'g.name' ? (
+          <>
+            {heading('Qui est le garant ?')}
+            <span style={{ fontSize: 15, color: BAI.inkMid, marginTop: -8 }}>Le garant (ou « caution ») paie à la place du locataire si celui-ci ne paie pas. Il signe un acte de cautionnement, joint au bail.</span>
+            <div className="col-md" style={{ display: 'flex', gap: 16 }}>
+              <TextField maxLength={80} label="Prénom" name="g-first" value={guarantor.firstName ?? ''} error={errors['g.firstName']} onChange={(e) => save({ guarantor: { ...guarantor, firstName: e.target.value } })} />
+              <TextField maxLength={80} label="Nom" name="g-last" value={guarantor.lastName ?? ''} error={errors['g.lastName']} onChange={(e) => save({ guarantor: { ...guarantor, lastName: e.target.value } })} />
+            </div>
+            <button
+              type="button"
+              style={{ ...linkButton, color: BAI.error, fontWeight: 500 }}
+              onClick={() => {
+                save({ guarantor: null })
+                // La question « Quelqu'un d'autre ? » prend la place du garant.
+                go(ids.indexOf('g.name') + 1)
+              }}
+            >
+              Retirer le garant
             </button>
-          ) : null}
-          {!guarantor ? (
-            <button type="button" style={linkButton} onClick={() => { save({ guarantor: {} }); setAdding(false) }}>
-              + Un garant
-            </button>
-          ) : null}
-        </div>
-      ) : tenants.length < 6 || !guarantor ? (
-        <button type="button" style={linkButton} onClick={() => setAdding(true)}>
-          + Ajouter un colocataire ou un garant
-        </button>
-      ) : null}
+          </>
+        ) : null}
 
-      <StepNav back="/commencer/logement" next={next} />
+        {guarantor && id === 'g.address' ? (
+          <>
+            {heading('L’adresse du garant ?')}
+            <AddressField
+              label="Son adresse"
+              value={guarantor.address ?? ''}
+              error={errors['g.address']}
+              onChange={(v) => save({ guarantor: { ...guarantor, address: v } })}
+              onSelect={(s) => save({ guarantor: { ...guarantor, address: s.label } })}
+            />
+          </>
+        ) : null}
+
+        {id === 'others' ? (
+          <>
+            {heading('Quelqu’un d’autre signe le bail ?')}
+            <Choices
+              legend="Quelqu’un d’autre signe le bail ?"
+              columns
+              options={[
+                { value: 'NONE', label: 'Non, c’est tout' },
+                ...(tenants.length < 6 ? [{ value: 'TENANT', label: 'Un colocataire' }] : []),
+                ...(!guarantor ? [{ value: 'GUARANTOR', label: 'Un garant', hint: 'Il paie si le locataire ne paie pas.' }] : []),
+              ]}
+              onPick={(v) => {
+                if (v === 'NONE') return void finish()
+                if (v === 'TENANT') {
+                  save({ tenants: [...tenants, {}] })
+                  return go(2 + tenants.length * 2 + 1)
+                }
+                save({ guarantor: {} })
+                go(2 + tenants.length * 2 + 1)
+              }}
+            />
+          </>
+        ) : null}
+      </div>
+
+      <StepNav back={back} next={next} nextLabel={id === 'others' ? 'Continuer sans autre signataire' : 'Continuer'} />
     </TunnelLayout>
   )
 }

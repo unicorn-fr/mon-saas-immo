@@ -24,8 +24,10 @@ function SaveIndicator() {
   )
 }
 
-export function TunnelLayout({ step, children, width = 640 }: { step: TunnelStep; children: ReactNode; width?: number }) {
+export function TunnelLayout({ step, children, width = 640, sub }: { step: TunnelStep; children: ReactNode; width?: number; sub?: { q: number; count: number } }) {
   const index = TUNNEL_STEPS.indexOf(step) + 1
+  // Une question à la fois : la barre avance aussi à l'intérieur de l'étape.
+  const done = index - 1 + (sub ? (sub.q - 1) / sub.count : 1)
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: BAI.bg }}>
       <header style={{ height: 'clamp(60px, 8vw, 72px)', padding: '0 clamp(20px, 3.3vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: BAI.surface, gap: 12 }}>
@@ -37,7 +39,7 @@ export function TunnelLayout({ step, children, width = 640 }: { step: TunnelStep
         <SaveIndicator />
       </header>
       <div role="progressbar" aria-valuemin={0} aria-valuemax={5} aria-valuenow={index} aria-label="Progression" style={{ height: 4, background: BAI.divider }}>
-        <div style={{ width: `${index * 20}%`, height: '100%', background: BAI.owner, transition: 'width 0.3s ease' }} />
+        <div style={{ width: `${done * 20}%`, height: '100%', background: BAI.owner, transition: 'width 0.3s ease' }} />
       </div>
       <main style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: 'clamp(40px, 6vw, 88px) 20px 64px' }}>
         <div className="stack" style={{ width: '100%', maxWidth: width, gap: 32 }}>

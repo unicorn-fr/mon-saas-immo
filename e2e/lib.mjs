@@ -170,3 +170,73 @@ export async function signAs(browser, url, { name, mobile = false } = {}) {
   await ctx.close()
   return errors
 }
+
+/**
+ * Tunnel du début, une question par écran : chaque question est attendue par son titre, puis on y répond.
+ * Un choix passe tout seul à la suivante ; un champ se valide avec « Continuer ».
+ */
+const ask = (page, title) => page.getByRole('heading', { name: title, exact: true }).waitFor()
+const go = (page) => page.getByRole('button', { name: 'Continuer', exact: true }).click()
+const choose = (page, name) => page.getByRole('button', { name, exact: true }).first().click()
+
+export async function tunnelLogement(page, { address = '12 rue de la Loge, 34000 Montpellier', habitat = 'Un appartement', copro = 'Non', surface = '42', rooms = '2', period = '1990 à 2005', heating = 'Individuel', energy = 'Électricité', hotWater = 'Individuelle' } = {}) {
+  await ask(page, 'Où se trouve le logement ?')
+  await page.getByLabel('Adresse', { exact: true }).fill(address)
+  await go(page)
+  await ask(page, 'C’est un appartement ou une maison ?')
+  await choose(page, habitat)
+  await ask(page, 'Est-il en copropriété ?')
+  await choose(page, copro)
+  await ask(page, 'Quelle est sa surface habitable ?')
+  await page.getByLabel('Surface habitable').fill(surface)
+  await go(page)
+  await ask(page, 'Combien de pièces principales ?')
+  await choose(page, rooms)
+  if (habitat === 'Un appartement') {
+    await ask(page, 'Bâtiment, étage, porte ?')
+    await go(page)
+  }
+  await ask(page, 'Quand a-t-il été construit ?')
+  await choose(page, period)
+  await ask(page, 'Le chauffage est individuel ou collectif ?')
+  await choose(page, heating)
+  await ask(page, 'Il fonctionne à quoi ?')
+  await choose(page, energy)
+  await ask(page, 'Et l’eau chaude ?')
+  await choose(page, hotWater)
+  await go(page)
+}
+
+export async function tunnelPersonnes(page, { landlord = ['Monique', 'Bernard'], address = '3 place de la Comédie, 34000 Montpellier', tenant = ['Karim', 'Haddad'], email = '' } = {}) {
+  await ask(page, 'Comment vous appelez-vous ?')
+  await page.getByLabel('Prénom', { exact: true }).fill(landlord[0])
+  await page.getByLabel('Nom', { exact: true }).fill(landlord[1])
+  await go(page)
+  await ask(page, 'Votre adresse ?')
+  await page.getByLabel('Votre adresse').fill(address)
+  await go(page)
+  await ask(page, 'Qui est votre locataire ?')
+  await page.getByLabel('Prénom', { exact: true }).fill(tenant[0])
+  await page.getByLabel('Nom', { exact: true }).fill(tenant[1])
+  await go(page)
+  await ask(page, 'Son email ?')
+  if (email) await page.getByLabel('Son email').fill(email)
+  await go(page)
+  await ask(page, 'Quelqu’un d’autre signe le bail ?')
+  await choose(page, 'Non, c’est tout')
+}
+
+export async function tunnelLoyer(page, { rent = '780', charges = '60', startDate = '2026-12-01' } = {}) {
+  await ask(page, 'Quel est le loyer ?')
+  await page.getByLabel('Loyer hors charges').fill(rent)
+  await go(page)
+  await ask(page, 'Et les charges ?')
+  await page.getByLabel('Charges', { exact: true }).fill(charges)
+  await page.getByRole('button', { name: 'Une provision' }).click()
+  await go(page)
+  await ask(page, 'Quand entre le locataire ?')
+  await page.getByLabel("Date d'entrée du locataire").fill(startDate)
+  await go(page)
+  await ask(page, 'Tout est juste ?')
+  await go(page)
+}
