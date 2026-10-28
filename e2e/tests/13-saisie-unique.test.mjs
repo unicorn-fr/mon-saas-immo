@@ -55,6 +55,8 @@ test('le locataire remplit lui-même son dossier, avec les mêmes informations q
   watch(v, errors)
   await v.goto(`${BASE}/dossier/${formCode}`)
   await v.getByText('Votre dossier de location').waitFor()
+  // Le parcours guidé ne pose que ce qui manque ; le dossier entier reste à un clic.
+  await v.getByRole('button', { name: 'Tout voir et corriger' }).click()
   await v.getByLabel('Prénom(s)').first().fill('Inès')
   await v.getByLabel('Nom de naissance').fill('Roux')
   await v.getByText('En couple ou en famille').click()

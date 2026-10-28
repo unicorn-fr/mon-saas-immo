@@ -12,6 +12,7 @@ import { useAuth } from '../../lib/auth'
 import { useDraft } from '../../lib/draft'
 import type { User } from '../../lib/types'
 import { missingFields } from './RelectureStep'
+import { stepPath } from '../../components/TunnelLayout'
 
 interface FinishResult {
   status: 'created' | 'check_email'
@@ -30,6 +31,8 @@ export default function RecevoirStep() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Réponse manquante pour créer le bail : l'étape où la donner.
+  const [fixStep, setFixStep] = useState<string | null>(null)
   const [checkEmail, setCheckEmail] = useState<string | null>(null)
   const imported = data.source === 'import'
   // Une fois le bail créé, le brouillon est vidé : il ne faut plus renvoyer vers la relecture.
@@ -49,6 +52,7 @@ export default function RecevoirStep() {
   async function finish(e?: FormEvent) {
     e?.preventDefault()
     setError(null)
+    setFixStep(null)
     setLoading(true)
     try {
       await flush()
@@ -57,6 +61,8 @@ export default function RecevoirStep() {
       else done(res)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Une erreur est survenue.')
+      const step = err instanceof ApiError ? (err.details as { step?: string } | undefined)?.step : undefined
+      if (step) setFixStep(step)
     } finally {
       setLoading(false)
     }
@@ -145,7 +151,19 @@ export default function RecevoirStep() {
             <AccountNotice action={imported ? 'Enregistrer mon bail' : 'Continuer mon bail'} />
           </>
         )}
-        {error ? <Notice tone="warning">{error}</Notice> : null}
+        {error ? (
+          <Notice tone="warning">
+            {error}
+            {fixStep ? (
+              <>
+                {' '}
+                <button type="button" onClick={() => navigate(stepPath(fixStep))} style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: BAI.owner, textDecoration: 'underline', cursor: 'pointer' }}>
+                  Corriger
+                </button>
+              </>
+            ) : null}
+          </Notice>
+        ) : null}
       </main>
     </div>
   )
