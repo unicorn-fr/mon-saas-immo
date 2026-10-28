@@ -108,8 +108,14 @@ test('corrections : garant, reprise après rechargement, étage d’une maison, 
   await page.getByLabel('Bâtiment, étage, porte (facultatif)').fill('Bâtiment B, 2e étage')
   await page.getByRole('button', { name: 'Continuer', exact: true }).click()
   await page.getByRole('heading', { name: 'Quand a-t-il été construit ?' }).waitFor()
+  // Le brouillon est enregistré 0,6 s après la dernière réponse : on attend qu'il existe.
+  await page.waitForFunction(() => localStorage.getItem('bailio.draft'))
   const draftToken = await page.evaluate(() => localStorage.getItem('bailio.draft'))
-  const property = async () => (await fetch(`${base.replace(/\/$/, '')}/api/drafts/current`, { headers: { 'X-Draft-Token': draftToken } }).then((r) => r.json())).data.data.property
+  const property = async () => {
+    const j = await fetch(`${base.replace(/\/$/, '')}/api/drafts/current`, { headers: { 'X-Draft-Token': draftToken } }).then((r) => r.json())
+    if (!j.data) throw new Error(`brouillon illisible (${draftToken ? 'jeton présent' : 'sans jeton'}) : ${JSON.stringify(j)}`)
+    return j.data.data.property ?? {}
+  }
   for (let i = 0; i < 20 && (await property()).floorDoor !== 'Bâtiment B, 2e étage'; i++) await new Promise((r) => setTimeout(r, 250))
   assert.equal((await property()).floorDoor, 'Bâtiment B, 2e étage')
   await page.goto(`${base}/commencer/logement?q=2`)
