@@ -147,7 +147,7 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   const asked = []
   for (let n = 1; n < 30; n++) {
     await tp.getByText(new RegExp(`^Question ${n} sur \\d+$`)).waitFor()
-    const title = (await tp.locator('[data-question] h2').textContent()).trim()
+    const title = (await tp.locator('[data-question] h1').textContent()).trim()
     asked.push(title)
     const cont = () => tp.getByRole('button', { name: 'Continuer', exact: true }).click()
     if (title === 'Où et quand êtes-vous né(e) ?') {
@@ -162,6 +162,11 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
       await cont()
     } else if (title === 'Vos justificatifs') {
       await Promise.all([uploaded(), tp.getByLabel('Pièce d’identité (locataire)').setInputFiles(pdf('cni.pdf'))])
+      // La pièce reste à l'écran après son premier fichier : on peut en ajouter un autre ou le retirer.
+      await tp.getByRole('button', { name: 'Retirer cni.pdf' }).waitFor()
+      await tp.getByLabel('Pièce d’identité (locataire)').waitFor({ state: 'attached' })
+      // La question est le titre de la page, repris dans l'onglet.
+      assert.match(await tp.title(), /^Vos justificatifs · Bailio$/)
       await shot(tp, 'dossier-locataire')
       await cont()
     } else if (title === 'Les justificatifs de votre garant') {

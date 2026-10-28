@@ -21,12 +21,12 @@ import { upgradeLegacyLeases } from './upgrade.js'
 /** Valide un brouillon complet. Le dépôt de garantie prend par défaut le maximum légal. */
 export function draftToLeaseInput(draft: Pick<Draft, 'data'>): LeaseInput {
   // Nombres remis en forme (valeur vide, texte) avant la validation : une saisie « 42,5 » ou un champ vidé ne bloque rien.
-  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft.data))
+  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft.data, { forLease: true }))
   if (!parsed.success) {
     const issue = parsed.error.issues[0]
     // Message clair et étape où répondre, jamais le message technique de validation.
     const custom = issue?.code === 'custom' ? issue.message : null
-    const { message, step } = leaseIssue(issue?.path ?? [])
+    const { message, step } = leaseIssue(issue?.path ?? [], issue?.code)
     console.warn('[brouillon] bail incomplet :', parsed.error.issues.map((i) => i.path.join('.')).join(', '))
     throw new HttpError(400, custom ?? message, { step, fields: parsed.error.issues.map((i) => i.path.join('.')) })
   }

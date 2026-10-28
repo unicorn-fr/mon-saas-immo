@@ -3,6 +3,7 @@
  * choisi en un clic, le numéro lu tel qu'on le tape (espaces, points, tirets, +33).
  */
 
+// Repris tels quels par le formulaire (NEEDS, client/src/components/ContactForm.tsx) : changer les deux ensemble.
 export const CONTACT_NEEDS = {
   LEASE: 'Faire mon bail',
   QUESTION: 'Une question sur Bailio',
@@ -22,7 +23,8 @@ export function readPhone(input: string): { display: string; tel: string } | nul
   const plus = raw.startsWith('+') || raw.startsWith('00')
   let national: string | null = null
   if (!plus && /^0[1-9]\d{8}$/.test(digits)) national = digits.slice(1)
-  else if (plus && /^(00)?33[1-9]\d{8}$/.test(digits)) national = digits.replace(/^(00)?33/, '')
+  // « +33 6… », « 0033 6… », et aussi « +33 (0)6… » ou « 0033 06… » : le 0 national après l'indicatif est retiré.
+  else if (plus && /^(00)?330?[1-9]\d{8}$/.test(digits)) national = digits.replace(/^(00)?330?/, '')
   if (national) return { display: `0${national}`.replace(/(\d{2})(?=\d)/g, '$1 '), tel: `tel:+33${national}` }
   const intl = digits.replace(/^00/, '')
   if (plus && intl.length >= 8 && intl.length <= 15) return { display: `+${intl}`, tel: `tel:+${intl}` }

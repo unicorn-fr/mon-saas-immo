@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { Choices, QuestionScreen, useQuestion } from './Questions'
 import { TextField, display } from './ui'
 
+// Mêmes clés et mêmes libellés que CONTACT_NEEDS (server/src/domain/contact.ts) : le serveur refuse une autre clé.
 const NEEDS = [
   { value: 'LEASE', label: 'Faire mon bail' },
   { value: 'QUESTION', label: 'Une question sur Bailio' },

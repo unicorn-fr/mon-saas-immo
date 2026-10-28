@@ -178,10 +178,12 @@ function num(v: unknown): number | undefined {
 }
 
 /**
- * Remet en forme les nombres d'un brouillon avant de le garder ou d'en faire un bail : une valeur vide (null), un
- * nombre écrit en texte ou illisible ne bloque plus rien. Charges absentes : 0 ; jour de paiement absent : le 5.
+ * Remet en forme les nombres d'un brouillon : une valeur vide (null), un nombre écrit en texte (« 42,5 ») ou illisible
+ * ne bloque plus l'enregistrement. Aucune réponse n'est inventée pendant la saisie. Seulement au moment de créer le bail
+ * (`forLease`), des charges absentes valent 0 (le tunnel et l'import font déjà de même) ; un jour de paiement absent
+ * prend la valeur par défaut du bail (le 5), et un jour hors du 1 au 28 reste refusé avec un message clair.
  */
-export function normalizeDraft(input: unknown): unknown {
+export function normalizeDraft(input: unknown, { forLease = false }: { forLease?: boolean } = {}): unknown {
   if (!input || typeof input !== 'object') return input
   const d = structuredClone(input) as Record<string, Record<string, unknown> | unknown>
   const fix = (obj: unknown, keys: string[], round = false) => {
@@ -201,30 +203,38 @@ export function normalizeDraft(input: unknown): unknown {
     fix(d.irl, ['value'])
     if ((d.irl as Record<string, unknown>).value === undefined) d.irl = null
   }
-  if (d.rent && typeof d.rent === 'object') {
+  if (forLease && d.rent && typeof d.rent === 'object') {
     const r = d.rent as Record<string, unknown>
     if (r.chargesCents === undefined) r.chargesCents = 0
-    if (r.paymentDay === undefined || (r.paymentDay as number) < 1 || (r.paymentDay as number) > 28) r.paymentDay = 5
   }
   return d
 }
 
-/** Ce qui manque pour créer le bail, dit simplement, avec l'étape du parcours où y répondre. */
-export function leaseIssue(path: PropertyKey[]): { message: string; step: 'type' | 'logement' | 'personnes' | 'loyer' | 'relecture' } {
+type LeaseStep = 'type' | 'logement' | 'personnes' | 'loyer' | 'relecture'
+
+/**
+ * Ce qui ne va pas pour créer le bail, dit simplement, avec l'étape du parcours où y répondre. Une réponse absente
+ * (« Indiquez… ») n'a pas le même message qu'une réponse donnée mais hors des limites (« Vérifiez… »).
+ */
+export function leaseIssue(path: PropertyKey[], code?: string): { message: string; step: LeaseStep } {
   const [a, b] = path.map(String)
+  // Après normalizeDraft, un mauvais type veut dire « rien de lisible » : la réponse manque.
+  const wrong = code === 'too_big' || code === 'invalid_format' || (code === 'too_small' && (b === 'surface' || b === 'rooms' || b === 'paymentDay'))
   if (a === 'type') return { message: 'Choisissez une location vide ou meublée.', step: 'type' }
   if (a === 'property') {
-    if (b === 'surface') return { message: 'Indiquez la surface habitable du logement.', step: 'logement' }
-    if (b === 'rooms') return { message: 'Indiquez le nombre de pièces principales.', step: 'logement' }
-    return { message: 'Indiquez l’adresse du logement.', step: 'logement' }
+    if (b === 'surface') return { message: wrong ? 'Vérifiez la surface habitable : elle doit être comprise entre 1 et 2 000 m².' : 'Indiquez la surface habitable du logement.', step: 'logement' }
+    if (b === 'rooms') return { message: wrong ? 'Vérifiez le nombre de pièces principales : de 1 à 30.' : 'Indiquez le nombre de pièces principales.', step: 'logement' }
+    return { message: wrong ? 'Vérifiez l’adresse du logement.' : 'Indiquez l’adresse du logement.', step: 'logement' }
   }
-  if (a === 'landlord') return { message: 'Indiquez vos nom, prénom et adresse.', step: 'personnes' }
-  if (a === 'tenants') return { message: 'Indiquez le prénom et le nom de chaque locataire.', step: 'personnes' }
-  if (a === 'guarantor') return { message: 'Indiquez le nom et l’adresse du garant.', step: 'personnes' }
+  if (a === 'landlord') return { message: wrong ? 'Vérifiez vos nom, prénom et adresse.' : 'Indiquez vos nom, prénom et adresse.', step: 'personnes' }
+  if (a === 'tenants') return { message: wrong ? 'Vérifiez le nom et l’email de chaque locataire.' : 'Indiquez le prénom et le nom de chaque locataire.', step: 'personnes' }
+  if (a === 'guarantor') return { message: wrong ? 'Vérifiez le nom et l’adresse du garant.' : 'Indiquez le nom et l’adresse du garant.', step: 'personnes' }
   if (a === 'rent') {
-    if (b === 'startDate') return { message: 'Indiquez la date d’entrée du locataire.', step: 'loyer' }
+    if (b === 'startDate') return { message: wrong ? 'Vérifiez la date d’entrée du locataire.' : 'Indiquez la date d’entrée du locataire.', step: 'loyer' }
     if (b === 'depositCents') return { message: 'Vérifiez le dépôt de garantie.', step: 'loyer' }
-    return { message: 'Indiquez le loyer hors charges.', step: 'loyer' }
+    if (b === 'paymentDay') return { message: 'Choisissez un jour de paiement du 1 au 28 du mois.', step: 'relecture' }
+    if (b === 'chargesCents') return { message: 'Vérifiez le montant des charges.', step: 'loyer' }
+    return { message: wrong ? 'Vérifiez le loyer hors charges : il paraît trop élevé.' : 'Indiquez le loyer hors charges.', step: 'loyer' }
   }
   return { message: 'Une réponse manque encore dans votre bail.', step: 'relecture' }
 }

@@ -154,7 +154,7 @@ export default function PersonnesStep() {
 
         {t && id.endsWith('.email') ? (
           <>
-            {heading(ti === 0 ? 'Son email ?' : 'Son email ?')}
+            {heading('Son email ?')}
             <TextField
               maxLength={200}
               label={ti === 0 ? 'Son email' : 'Son email (facultatif)'}
