@@ -4,10 +4,11 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useLoad, useToast, AddressInput } from '../components/kit'
-import { Spinner, display } from '../components/ui'
+import { Btn, Callout, Card, Chips, Input, LoadError, Loader, Money, TextLink, useLoad, useToast, AddressInput } from '../components/kit'
+import { display } from '../components/ui'
 import { api } from '../lib/api'
 import { PublicPhoto } from '../components/media'
+import { DocFilesRow, type DocFile } from '../components/DocFiles'
 import { SITUATION_LABEL, type Situation } from '../lib/contract'
 
 type Person = Record<string, string | number | null | Array<Record<string, string | null>>>
@@ -21,6 +22,11 @@ interface View {
   guarantor: Person | null
   documents: Record<string, boolean>
   guarantorDocuments: Record<string, boolean> | null
+  /** Fichiers déjà reçus pour chaque pièce (plusieurs possibles). */
+  files?: Record<string, DocFile[]>
+  guarantorFiles?: Record<string, DocFile[]> | null
+  /** Fichiers attendus d'habitude (3 bulletins de salaire). */
+  suggested?: Record<string, number>
   labels: Record<string, string>
   missing: Array<{ key: string; label: string; who: 'TENANT' | 'GUARANTOR'; kind: 'INFO' | 'DOCUMENT' }>
 }
@@ -88,11 +94,11 @@ export default function Dossier() {
               <Callout tone="tip">Votre dossier est complet. Vous pouvez encore corriger une information.</Callout>
             )}
             <TenantCard code={code} person={v.tenant} onSaved={setView} />
-            <DocsCard title="Vos justificatifs" code={code} who="TENANT" status={v.documents} labels={v.labels} onSaved={setView} />
+            <DocsCard title="Vos justificatifs" code={code} who="TENANT" status={v.documents} files={v.files ?? {}} suggested={v.suggested ?? {}} labels={v.labels} onSaved={setView} />
             {v.guarantor ? (
               <>
                 <GuarantorCard key="guarantor" code={code} person={v.guarantor} onSaved={setView} />
-                <DocsCard title="Justificatifs de votre garant" code={code} who="GUARANTOR" status={v.guarantorDocuments ?? {}} labels={v.labels} onSaved={setView} />
+                <DocsCard title="Justificatifs de votre garant" code={code} who="GUARANTOR" status={v.guarantorDocuments ?? {}} files={v.guarantorFiles ?? {}} suggested={v.suggested ?? {}} labels={v.labels} onSaved={setView} />
               </>
             ) : null}
             <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>
@@ -288,52 +294,48 @@ function GuarantorCard({ code, person, onSaved }: { code: string; person: Person
   )
 }
 
-function DocsCard({ title, code, who, status, labels, onSaved }: { title: string; code: string; who: 'TENANT' | 'GUARANTOR'; status: Record<string, boolean>; labels: Record<string, string>; onSaved: (v: View) => void }) {
+function DocsCard({ title, code, who, status, files, suggested, labels, onSaved }: { title: string; code: string; who: 'TENANT' | 'GUARANTOR'; status: Record<string, boolean>; files: Record<string, DocFile[]>; suggested: Record<string, number>; labels: Record<string, string>; onSaved: (v: View) => void }) {
   const toast = useToast()
-  const [busy, setBusy] = useState<string | null>(null)
-  const send = async (category: string, file: File) => {
-    const form = new FormData()
-    form.append('file', file)
-    form.append('category', category)
-    form.append('who', who)
-    setBusy(category)
+  const base = `/dossier/${encodeURIComponent(code)}/document`
+  // Chaque fichier choisi s'ajoute aux précédents (trois bulletins de salaire : un par un ou tous ensemble).
+  const add = async (category: string, list: File[]) => {
+    let done = 0
+    for (const file of list) {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('category', category)
+      form.append('who', who)
+      try {
+        onSaved(await api<View>(base, { method: 'POST', form, timeout: 90_000 }))
+        done++
+      } catch (e) {
+        toast.error(e)
+        break
+      }
+    }
+    if (done) toast.show(done > 1 ? `${done} fichiers reçus.` : 'Justificatif reçu.')
+  }
+  const remove = async (file: DocFile) => {
     try {
-      onSaved(await api<View>(`/dossier/${encodeURIComponent(code)}/document`, { method: 'POST', form, timeout: 90_000 }))
-      toast.show('Justificatif reçu.')
+      onSaved(await api<View>(`${base}/${file.id}?who=${who}`, { method: 'DELETE' }))
     } catch (e) {
       toast.error(e)
-    } finally {
-      setBusy(null)
     }
   }
   return (
     <Section title={title}>
       {Object.keys(labels).map((k) => (
-        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 15, fontWeight: 600 }}>{labels[k]}</span>
-            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{DOC_HINTS[k]}</span>
-          </span>
-          {status[k] ? (
-            <Pill tone="green">Reçu</Pill>
-          ) : (
-            <label style={{ color: BAI.owner, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}>
-              {busy === k ? <Spinner size={14} /> : null}
-              Ajouter
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                className="sr-only"
-                aria-label={`${labels[k]} (${who === 'GUARANTOR' ? 'garant' : 'locataire'})`}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  e.target.value = ''
-                  if (file) void send(k, file)
-                }}
-              />
-            </label>
-          )}
-        </div>
+        <DocFilesRow
+          key={k}
+          label={labels[k]}
+          hint={DOC_HINTS[k]}
+          files={files[k] ?? []}
+          suggested={suggested[k]}
+          received={status[k]}
+          inputLabel={`${labels[k]} (${who === 'GUARANTOR' ? 'garant' : 'locataire'})`}
+          onAdd={(list) => add(k, list)}
+          onRemove={remove}
+        />
       ))}
     </Section>
   )

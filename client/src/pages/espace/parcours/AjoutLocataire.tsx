@@ -4,8 +4,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { StepFlow, StepNote, StepTitle, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, TextLink, errorMessage, useLoad, useToast, AddressInput } from '../../../components/kit'
-import { Spinner } from '../../../components/ui'
+import { OwnerDocList } from '../../../components/DocFiles'
+import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, TextLink, errorMessage, useLoad, useToast, AddressInput } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type DocEntry, type Situation, type TenantDocKey, type TenantFile } from '../../../lib/contract'
 import { openDoc } from '../../../lib/docs'
@@ -392,51 +392,26 @@ const DOC_HINTS: Record<TenantDocKey, string> = {
   income: 'Trois derniers bulletins de salaire, bourse, pension, allocations…',
 }
 
-function DocList({ docs, onChange }: { docs: DocEntry[]; onChange: (d: DocEntry[]) => void }) {
+function DocList({ docs, onChange, who }: { docs: DocEntry[]; onChange: (d: DocEntry[]) => void; who?: string }) {
   const toast = useToast()
-  const [busy, setBusy] = useState<string | null>(null)
-  const keys = Object.keys(TENANT_DOCUMENTS) as TenantDocKey[]
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {keys.map((k) => {
-        const d = docs.find((x) => x.category === k)
-        return (
-          <div key={k} style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 14, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 16, fontWeight: 600 }}>{TENANT_DOCUMENTS[k]}</span>
-              <span style={{ fontSize: 13, color: BAI.inkSoft }}>{DOC_HINTS[k]}</span>
-            </span>
-            {d?.received ? (
-              <Pill tone="green">Reçu</Pill>
-            ) : (
-              <label style={{ color: BAI.owner, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}>
-                {busy === k ? <Spinner size={14} /> : null}
-                Ajouter
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  className="sr-only"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    e.target.value = ''
-                    if (!file) return
-                    setBusy(k)
-                    try {
-                      const [fileId] = await uploadPhotos([file])
-                      onChange([...docs.filter((x) => x.category !== k), { category: k, received: true, fileId, label: file.name.slice(0, 150) }])
-                    } catch (err) {
-                      toast.error(err)
-                    } finally {
-                      setBusy(null)
-                    }
-                  }}
-                />
-              </label>
-            )}
-          </div>
-        )
-      })}
-    </div>
+    <OwnerDocList
+      docs={docs}
+      onChange={onChange}
+      labels={TENANT_DOCUMENTS}
+      hints={DOC_HINTS}
+      suggested={{ income: 3 }}
+      who={who}
+      view={(id) => void openDoc(`/files/${id}`).catch(toast.error)}
+      upload={async (list) => {
+        try {
+          return await uploadPhotos(list)
+        } catch (e) {
+          toast.error(e)
+          return []
+        }
+      }}
+    />
   )
 }
 
@@ -451,7 +426,7 @@ function Documents({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) =>
       {f.guarantee === 'CAUTION' ? (
         <>
           <span style={{ fontSize: 16, fontWeight: 600, marginTop: 8 }}>Justificatifs du garant</span>
-          <DocList docs={f.guarantor?.documents ?? []} onChange={(documents) => set({ guarantor: { ...f.guarantor, documents } })} />
+          <DocList who="garant" docs={f.guarantor?.documents ?? []} onChange={(documents) => set({ guarantor: { ...f.guarantor, documents } })} />
         </>
       ) : null}
       <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Interdit de demander : relevés bancaires, carte vitale, photo d’identité, attestation de bonne tenue de compte, chèque de réservation, dossier médical, extrait de casier judiciaire.</span>

@@ -4,7 +4,7 @@ import sharp from 'sharp'
 import { prisma } from '../db.js'
 import { HttpError } from '../lib/http.js'
 import { sha256 } from '../lib/tokens.js'
-import { watermarkImage, watermarkPdf } from '../services/watermark.js'
+import { cleanPdf, watermarkImage } from '../services/watermark.js'
 import { readProperty } from '../services/contract.js'
 
 export const iso = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : null)
@@ -44,14 +44,12 @@ export const isPdf = (b: Buffer) => b.subarray(0, 1024).includes('%PDF-')
 const ALLOWED = new Set(['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'])
 
 /**
- * Enregistre un fichier déposé. Les photos sont réduites (1 800 px, JPEG) : lisibles à l'impression,
- * légères à stocker. Les PDF sont conservés tels quels.
+ * Enregistre un fichier déposé. Les photos sont toujours réencodées (1 800 px, JPEG) : lisibles à l'impression, légères,
+ * et sans rien d'autre que l'image (un fichier piégé ne survit pas au réencodage). Les PDF du propriétaire sont gardés
+ * tels quels ; ceux d'un tiers (`external` : candidat, locataire) sont redessinés page par page (`cleanPdf`), sans aucun
+ * code. `watermark` : justificatif enregistré seulement avec son filigrane ; l'original n'est jamais gardé.
  */
-/**
- * Enregistre un fichier envoyé. `watermark` : justificatif d'un candidat ou d'un locataire, enregistré seulement avec
- * son filigrane (services/watermark.ts) ; l'original n'est jamais gardé.
- */
-export async function storeFile(userId: string, f: Express.Multer.File, opts: { watermark?: string } = {}): Promise<{ id: string; mimeType: string; sizeBytes: number; name: string }> {
+export async function storeFile(userId: string, f: Express.Multer.File, opts: { watermark?: string; external?: boolean } = {}): Promise<{ id: string; mimeType: string; sizeBytes: number; name: string }> {
   if (!ALLOWED.has(f.mimetype)) throw new HttpError(400, 'Format non pris en charge. Utilisez une photo (JPEG, PNG) ou un PDF.')
   // Le type annoncé par le navigateur ne suffit pas : un « PDF » doit vraiment en être un (les images, elles, sont réencodées).
   if (f.mimetype === 'application/pdf' && !isPdf(f.buffer)) throw new HttpError(400, 'Ce fichier n’est pas un PDF valide.')
@@ -67,7 +65,8 @@ export async function storeFile(userId: string, f: Express.Multer.File, opts: { 
       throw new HttpError(400, 'Cette image ne peut pas être lue. Essayez une autre photo.')
     }
   }
-  if (opts.watermark) data = mimeType === 'application/pdf' ? await watermarkPdf(data, opts.watermark) : await watermarkImage(data, opts.watermark)
+  if (mimeType === 'application/pdf' && (opts.external || opts.watermark)) data = await cleanPdf(data, opts.watermark)
+  else if (opts.watermark) data = await watermarkImage(data, opts.watermark)
   const row = await prisma.fileBlob.create({ data: { userId, name, mimeType, sizeBytes: data.length, data: new Uint8Array(data) } })
   return { id: row.id, mimeType, sizeBytes: data.length, name }
 }

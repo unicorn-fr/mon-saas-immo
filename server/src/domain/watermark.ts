@@ -13,11 +13,3 @@ export function watermarkText(input: { city?: string | null; date?: Date }): str
   const where = city ? `un logement à ${city}` : 'un logement'
   return `Uniquement pour louer ${where} · ${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · Bailio`
 }
-
-/** Caractères qu'une police PDF standard (WinAnsi) sait écrire : les autres sont remplacés, jamais une erreur. */
-export function winAnsiSafe(text: string): string {
-  return text
-    .normalize('NFC')
-    .replace(/[’‘]/g, "'")
-    .replace(/[^\x20-\x7E -ÿ]/g, (c) => c.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '') || '-')
-}

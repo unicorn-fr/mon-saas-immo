@@ -13,6 +13,7 @@ import { buildAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { ALLOWED_DOCUMENTS, DEFAULT_REQUESTED_DOCS, FORBIDDEN_DOCUMENTS, GUARANTEE_LABEL, SITUATION_LABEL, candidateSchema, docsLocked, rentShare, reviewCandidate, tenantFromCandidate, type CandidateData, type CandidateDoc, type CandidateFollow } from '../domain/candidates.js'
 import { TENANT_DOCUMENTS, tenantFileSchema } from '../domain/contract.js'
+import { MAX_FILES_PER_DOC, SUGGESTED_FILES } from '../domain/tenantFile.js'
 import { sendPropertyPhoto, storeFile, upload } from './helpers.js'
 import { watermarkText } from '../domain/watermark.js'
 
@@ -50,7 +51,7 @@ function publicOffer(p: Awaited<ReturnType<typeof ownProperty>>, agent = false) 
     text: ad.text,
     rentWithChargesCents: settings.rentCents ? settings.rentCents + (settings.chargesCents ?? 0) : null,
     allowedDocuments: ALLOWED_DOCUMENTS,
-    requestedDocs: requested(file).map((k) => ({ key: k, label: TENANT_DOCUMENTS[k as keyof typeof TENANT_DOCUMENTS] })),
+    requestedDocs: requested(file).map((k) => ({ key: k, label: TENANT_DOCUMENTS[k as keyof typeof TENANT_DOCUMENTS], suggested: SUGGESTED_FILES[k as keyof typeof SUGGESTED_FILES] ?? null })),
     guarantorDocs: file.ad?.guarantorDocs !== false,
     city: file.city ?? null,
     hasPhoto: Boolean(file.photos?.length),
@@ -120,14 +121,28 @@ router.post('/candidature/:code/document', limitPerVisitor(60, 40), upload.singl
   if (body.who === 'GUARANTOR' && d.guarantee !== 'CAUTION') throw new HttpError(400, 'Aucun garant n’est indiqué dans la candidature.')
   if (!req.file) throw new HttpError(400, 'Ajoutez le fichier (photo ou PDF).')
   const docs = d.documents ?? []
-  if (docs.length >= 12) throw new HttpError(400, 'Toutes les pièces ont déjà été déposées.')
+  if (docs.length >= 30) throw new HttpError(400, 'Toutes les pièces ont déjà été déposées.')
+  if (docs.filter((x) => x.category === body.category && x.who === body.who).length >= MAX_FILES_PER_DOC) throw new HttpError(400, `${MAX_FILES_PER_DOC} fichiers au plus pour une même pièce. Retirez-en un pour en ajouter un autre.`)
   // Enregistrée seulement avec son filigrane : l'original n'est jamais gardé.
   const stored = await storeFile(p.userId, req.file, { watermark: watermarkText({ city: readProperty(p).city }) })
-  const old = docs.filter((x) => x.category === body.category && x.who === body.who)
-  if (old.length) await prisma.fileBlob.deleteMany({ where: { id: { in: old.map((x) => x.fileId) } } })
-  const next = [...docs.filter((x) => !(x.category === body.category && x.who === body.who)), { category: body.category, who: body.who, fileId: stored.id, label: stored.name.slice(0, 150) }]
+  // Le fichier s'ajoute aux autres de la même pièce (trois bulletins de salaire), sans les remplacer.
+  const next = [...docs, { category: body.category, who: body.who, fileId: stored.id, label: stored.name.slice(0, 150) }]
   await prisma.candidate.update({ where: { id: c.id }, data: { data: { ...d, documents: next } as unknown as Prisma.InputJsonObject } })
-  res.status(201).json({ success: true, data: { documents: next.map((x) => ({ category: x.category, who: x.who })) } })
+  res.status(201).json({ success: true, data: { documents: next.map((x) => ({ category: x.category, who: x.who, fileId: x.fileId, name: x.label })) } })
+})
+
+// Le candidat retire un fichier qu'il vient de déposer (mauvais fichier, doublon), avec le même jeton de 24 heures.
+router.post('/candidature/:code/document/remove', limitPerVisitor(60, 40), async (req, res) => {
+  const p = await prisma.property.findUnique({ where: { applyCode: String(req.params.code) } })
+  if (!p) throw new HttpError(404, 'Ce lien de candidature n’est plus actif.')
+  const body = z.object({ candidateId: z.uuid(), token: z.string().min(20).max(200), fileId: z.uuid() }).parse(req.body)
+  const c = await prisma.candidate.findFirst({ where: { id: body.candidateId, propertyId: p.id } })
+  const d = (c?.data ?? {}) as unknown as Stored
+  if (!c || d.uploadToken !== body.token || !d.uploadUntil || new Date(d.uploadUntil) < new Date()) throw new HttpError(403, 'Le dépôt des pièces n’est plus possible pour cette candidature.')
+  const next = (d.documents ?? []).filter((x) => x.fileId !== body.fileId)
+  await prisma.candidate.update({ where: { id: c.id }, data: { data: { ...d, documents: next } as unknown as Prisma.InputJsonObject } })
+  await prisma.fileBlob.deleteMany({ where: { id: body.fileId, userId: p.userId } })
+  res.json({ success: true, data: { documents: next.map((x) => ({ category: x.category, who: x.who, fileId: x.fileId, name: x.label })) } })
 })
 
 // Photo principale du logement, montrée au candidat (la même que dans l'annonce).
@@ -237,7 +252,12 @@ router.get('/properties/:id/candidates', requireUser, async (req, res) => {
           visitConfirmedAt: d.visitConfirmedAt ?? null,
           visitRequestedAt: d.visitRequestedAt ?? null,
           docsLocked: locked,
-          documents: (d.documents ?? []).map((x) => ({ category: x.category, who: x.who, fileId: locked ? null : x.fileId, label: `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}` })),
+          documents: (d.documents ?? []).map((x, i, all) => {
+            // Plusieurs fichiers pour une pièce : numérotés (« Justificatifs de ressources, 2 sur 3 »).
+            const same = all.filter((y) => y.category === x.category && y.who === x.who)
+            const nth = same.length > 1 ? `, ${same.indexOf(x) + 1} sur ${same.length}` : ''
+            return { category: x.category, who: x.who, fileId: locked ? null : x.fileId, label: `${TENANT_DOCUMENTS[x.category as keyof typeof TENANT_DOCUMENTS]}${x.who === 'GUARANTOR' ? ' du garant' : ''}${nth}` }
+          }),
         }
       }),
     },

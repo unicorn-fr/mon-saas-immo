@@ -289,7 +289,8 @@ const documentsSchema = opt(
         verifiedAt: opt(text(40)),
       }),
     )
-    .max(20),
+    // Plusieurs fichiers par pièce (trois bulletins de salaire…) : MAX_FILES_PER_DOC pour chacune des cinq pièces.
+    .max(40),
 )
 const situationSchema = z.enum(['EMPLOYEE', 'SELF_EMPLOYED', 'STUDENT', 'APPRENTICE', 'RETIRED', 'OTHER'])
 

@@ -85,6 +85,7 @@ interface ReviewItem {
   kind: 'INFO' | 'DOCUMENT'
   value?: string | number | null
   fileId?: string | null
+  fileIds?: string[]
 }
 
 const show = (r: ReviewItem) => {
@@ -130,10 +131,14 @@ function Review({ tenantId, onClose }: { tenantId: string; onClose: () => void }
               <span style={{ fontSize: 15, fontWeight: 600 }}>{r.label}</span>
               {r.kind === 'INFO' ? (
                 <span style={{ fontSize: 14, color: BAI.inkMid }}>{show(r)}</span>
-              ) : r.fileId ? (
-                <TextLink onClick={() => void openDoc(`/files/${r.fileId}`).catch(toast.error)} style={{ fontSize: 13 }}>
-                  Voir le fichier
-                </TextLink>
+              ) : (r.fileIds ?? (r.fileId ? [r.fileId] : [])).length ? (
+                <span style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  {(r.fileIds ?? [r.fileId!]).map((id, i, all) => (
+                    <TextLink key={id} onClick={() => void openDoc(`/files/${id}`).catch(toast.error)} style={{ fontSize: 13 }}>
+                      {all.length > 1 ? `Voir le fichier ${i + 1}` : 'Voir le fichier'}
+                    </TextLink>
+                  ))}
+                </span>
               ) : null}
             </span>
             <span style={{ display: 'flex', gap: 8 }}>

@@ -8,6 +8,7 @@ import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, Numb
 import { display } from '../components/ui'
 import { api } from '../lib/api'
 import { PublicPhoto } from '../components/media'
+import { DocFilesRow } from '../components/DocFiles'
 import { SafetyNote } from './SuiviCandidature'
 
 interface Offer {
@@ -15,7 +16,7 @@ interface Offer {
   text: string
   rentWithChargesCents: number | null
   allowedDocuments: Array<{ title: string; items: string[] }>
-  requestedDocs: Array<{ key: string; label: string }>
+  requestedDocs: Array<{ key: string; label: string; suggested?: number | null }>
   guarantorDocs: boolean
   city?: string | null
   hasPhoto?: boolean
@@ -211,55 +212,49 @@ export default function Candidature() {
   )
 }
 
-/** Dépôt des pièces demandées par le propriétaire, après l'envoi de la candidature. */
-function UploadDocs({ code, upload, docs, guarantor, onDone }: { code: string; upload: { candidateId: string; uploadToken: string }; docs: Array<{ key: string; label: string }>; guarantor: boolean; onDone: () => void }) {
+/** Dépôt des pièces demandées par le propriétaire, après l'envoi de la candidature. Plusieurs fichiers par pièce. */
+function UploadDocs({ code, upload, docs, guarantor, onDone }: { code: string; upload: { candidateId: string; uploadToken: string }; docs: Array<{ key: string; label: string; suggested?: number | null }>; guarantor: boolean; onDone: () => void }) {
   const toast = useToast()
-  const [done, setDone] = useState<string[]>([])
-  const [busy, setBusy] = useState<string | null>(null)
-  const send = async (category: string, who: 'TENANT' | 'GUARANTOR', file: File) => {
-    const form = new FormData()
-    form.append('file', file)
-    form.append('candidateId', upload.candidateId)
-    form.append('token', upload.uploadToken)
-    form.append('category', category)
-    form.append('who', who)
-    setBusy(`${who}-${category}`)
+  const [files, setFiles] = useState<Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string; name: string }>>([])
+  const base = `/candidature/${encodeURIComponent(code)}/document`
+  type Sent = { documents: Array<{ category: string; who: 'TENANT' | 'GUARANTOR'; fileId: string; name: string }> }
+  // Chaque fichier choisi s'ajoute aux précédents (trois bulletins de salaire : un par un ou tous ensemble).
+  const add = async (category: string, who: 'TENANT' | 'GUARANTOR', list: File[]) => {
+    for (const file of list) {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('candidateId', upload.candidateId)
+      form.append('token', upload.uploadToken)
+      form.append('category', category)
+      form.append('who', who)
+      try {
+        setFiles((await api<Sent>(base, { method: 'POST', form, timeout: 90_000 })).documents)
+      } catch (e) {
+        toast.error(e)
+        break
+      }
+    }
+  }
+  const remove = async (fileId: string) => {
     try {
-      await api(`/candidature/${encodeURIComponent(code)}/document`, { method: 'POST', form, timeout: 90_000 })
-      setDone((d) => [...d, `${who}-${category}`])
+      setFiles((await api<Sent>(`${base}/remove`, { method: 'POST', body: { candidateId: upload.candidateId, token: upload.uploadToken, fileId } })).documents)
     } catch (e) {
       toast.error(e)
-    } finally {
-      setBusy(null)
     }
   }
   const rows = (who: 'TENANT' | 'GUARANTOR') =>
-    docs.map((d) => {
-      const k = `${who}-${d.key}`
-      return (
-        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 600 }}>{d.label}</span>
-          {done.includes(k) ? (
-            <span style={{ fontSize: 14, fontWeight: 600, color: BAI.green }}>Reçu</span>
-          ) : (
-            <label style={{ color: BAI.owner, fontSize: 14, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {busy === k ? 'Envoi…' : 'Ajouter'}
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                className="sr-only"
-                aria-label={`${d.label} (${who === 'GUARANTOR' ? 'garant' : 'vous'})`}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  e.target.value = ''
-                  if (file) void send(d.key, who, file)
-                }}
-              />
-            </label>
-          )}
-        </div>
-      )
-    })
+    docs.map((d) => (
+      <DocFilesRow
+        key={`${who}-${d.key}`}
+        label={d.label}
+        files={files.filter((x) => x.who === who && x.category === d.key).map((x) => ({ id: x.fileId, name: x.name }))}
+        suggested={d.suggested}
+        inputLabel={`${d.label} (${who === 'GUARANTOR' ? 'garant' : 'vous'})`}
+        onAdd={(list) => add(d.key, who, list)}
+        onRemove={(f) => remove(f.id)}
+      />
+    ))
+  const done = files.length
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -273,7 +268,7 @@ function UploadDocs({ code, upload, docs, guarantor, onDone }: { code: string; u
       {guarantor ? <Card title="Les pièces de votre garant">{rows('GUARANTOR')}</Card> : null}
       <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.5 }}>Elles ne sont visibles que du propriétaire, après la visite, et sont effacées au plus tard trois mois après votre candidature si elle n’est pas retenue.</span>
       <div>
-        <Btn onClick={onDone}>{done.length ? 'Terminer' : 'Terminer sans pièce'}</Btn>
+        <Btn onClick={onDone}>{done ? 'Terminer' : 'Terminer sans pièce'}</Btn>
       </div>
     </>
   )

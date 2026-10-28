@@ -3,9 +3,8 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
-import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'
+import { PDFDocument } from 'pdf-lib'
 import { HttpError } from '../lib/http.js'
-import { winAnsiSafe } from '../domain/watermark.js'
 
 const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -21,8 +20,9 @@ export async function watermarkImage(image: Buffer, text: string): Promise<Buffe
   const step = size * 5
   const diag = Math.ceil(Math.hypot(width, height))
   const lines: string[] = []
-  for (let y = -diag; y < diag * 2; y += step) {
-    lines.push(`<text x="${-diag}" y="${y}">${escapeXml(`${text}     ${text}     ${text}     ${text}`)}</text>`)
+  for (let y = -diag, i = 0; y < diag * 2; y += step, i++) {
+    // Lignes décalées les unes des autres : la date et la ville se lisent partout, pas seulement sur une colonne.
+    lines.push(`<text x="${-diag + ((i * size * 7) % (size * 21))}" y="${y}">${escapeXml(`${text}     ${text}     ${text}     ${text}`)}</text>`)
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
 <g transform="rotate(-30 ${width / 2} ${height / 2})" font-family="DejaVu Sans, Arial, Helvetica, sans-serif" font-size="${size}" font-weight="700" fill="#3a4a6b" fill-opacity="0.34">${lines.join('')}</g>
@@ -30,56 +30,43 @@ export async function watermarkImage(image: Buffer, text: string): Promise<Buffe
   return sharp(image).composite([{ input: Buffer.from(svg), top: 0, left: 0 }]).jpeg({ quality: 82 }).toBuffer()
 }
 
+/** Pages au plus dans un justificatif envoyé de l'extérieur. */
+export const MAX_PAGES = 12
+
 /**
- * Filigrane sur chaque page d'un PDF. Un PDF que pdf-lib ne sait pas modifier (protégé, abîmé) est converti en images
- * page par page (poppler, déjà utilisé pour l'import des baux), filigranées puis réunies dans un nouveau PDF.
+ * PDF envoyé par un candidat, un locataire ou tout autre tiers : jamais gardé tel quel. Chaque page est redessinée en
+ * image (poppler, déjà utilisé pour l'import des baux), puis un nouveau PDF est construit avec ces seules images.
+ * Tout ce qu'un PDF peut cacher (JavaScript, pièce jointe, lien qui lance un programme, formulaire, contenu caché) disparaît :
+ * le fichier gardé ne contient que des images. Avec `text`, chaque page reçoit aussi le filigrane.
  */
-export async function watermarkPdf(pdf: Buffer, text: string): Promise<Buffer> {
-  try {
-    const doc = await PDFDocument.load(pdf)
-    const pages = doc.getPages()
-    if (!pages.length) throw new Error('aucune page')
-    const font = await doc.embedFont(StandardFonts.HelveticaBold)
-    const safe = winAnsiSafe(text)
-    for (const page of pages) {
-      const { width, height } = page.getSize()
-      const size = Math.max(9, Math.min(width, height) / 34)
-      const step = size * 5
-      for (let y = -height; y < height * 1.6; y += step) {
-        page.drawText(`${safe}     ${safe}     ${safe}`, { x: -width * 0.3, y, size, font, color: rgb(0.23, 0.29, 0.42), opacity: 0.3, rotate: degrees(30) })
-      }
-    }
-    return Buffer.from(await doc.save())
-  } catch {
-    return rasterized(pdf, text)
-  }
-}
-
-const MAX_PAGES = 10
-
-/** PDF converti en images (150 points par pouce), chacune filigranée, réunies dans un nouveau PDF. */
-async function rasterized(pdf: Buffer, text: string): Promise<Buffer> {
-  const dir = await mkdtemp(join(tmpdir(), 'bailio-filigrane-'))
+export async function cleanPdf(pdf: Buffer, text?: string): Promise<Buffer> {
+  const dir = await mkdtemp(join(tmpdir(), 'bailio-piece-'))
+  let pages: string[] = []
   try {
     const src = join(dir, 'piece.pdf')
     await writeFile(src, pdf, { mode: 0o600 })
-    await new Promise<void>((resolve, reject) =>
-      execFile('pdftoppm', ['-r', '150', '-jpeg', '-l', String(MAX_PAGES), src, join(dir, 'page')], { timeout: 60_000 }, (err) => (err ? reject(err) : resolve())),
-    )
-    const pages = (await readdir(dir)).filter((f) => f.startsWith('page')).sort()
-    if (!pages.length) throw new Error('aucune page')
+    try {
+      // Une page de plus que la limite : pour savoir s'il y en a trop, sans tout lire.
+      await new Promise<void>((resolve, reject) =>
+        execFile('pdftoppm', ['-r', '150', '-jpeg', '-jpegopt', 'quality=85', '-l', String(MAX_PAGES + 1), src, join(dir, 'page')], { timeout: 90_000 }, (err) => (err ? reject(err) : resolve())),
+      )
+      pages = (await readdir(dir)).filter((f) => f.startsWith('page')).sort()
+    } catch {
+      pages = []
+    }
+    if (!pages.length) throw new HttpError(400, 'Ce PDF ne peut pas être lu. Envoyez plutôt une photo ou une capture du document.')
+    if (pages.length > MAX_PAGES) throw new HttpError(400, `Ce PDF a plus de ${MAX_PAGES} pages. Envoyez seulement les pages utiles, en plusieurs fichiers si besoin.`)
     const out = await PDFDocument.create()
     for (const name of pages) {
-      const marked = await watermarkImage(await readFile(join(dir, name)), text)
-      const img = await out.embedJpg(marked)
+      const raw = await readFile(join(dir, name))
+      const page = text ? await watermarkImage(raw, text) : raw
+      const img = await out.embedJpg(page)
       // 150 points par pouce lus, 72 dans le PDF : la page garde sa taille d'origine.
       const w = (img.width * 72) / 150
       const h = (img.height * 72) / 150
       out.addPage([w, h]).drawImage(img, { x: 0, y: 0, width: w, height: h })
     }
     return Buffer.from(await out.save())
-  } catch {
-    throw new HttpError(400, 'Ce PDF ne peut pas être lu. Envoyez plutôt une photo ou une capture du document.')
   } finally {
     await rm(dir, { recursive: true, force: true })
   }
