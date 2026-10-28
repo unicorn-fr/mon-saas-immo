@@ -102,6 +102,7 @@ export function QuestionScreen({
   busy,
   hideNext,
   footer,
+  page,
 }: {
   q: number
   count: number
@@ -115,7 +116,10 @@ export function QuestionScreen({
   busy?: boolean
   hideNext?: boolean
   footer?: ReactNode
+  /** La question est le titre de la page (h1, repris dans l'onglet) ; sinon un h2 sous le titre de la page. */
+  page?: boolean
 }) {
+  const Heading = page ? 'h1' : 'h2'
   return (
     <form
       data-question
@@ -130,9 +134,9 @@ export function QuestionScreen({
       <div role="progressbar" aria-label="Progression" aria-valuemin={0} aria-valuemax={count} aria-valuenow={q} style={{ height: 4, background: BAI.divider, borderRadius: 2, marginTop: -12 }}>
         <div style={{ width: `${(q / count) * 100}%`, height: '100%', background: BAI.owner, borderRadius: 2, transition: 'width 0.3s ease' }} />
       </div>
-      <h2 tabIndex={-1} style={display('clamp(28px, 4.4vw, 38px)', { lineHeight: 1.15, outline: 'none' })}>
+      <Heading tabIndex={-1} style={display('clamp(28px, 4.4vw, 38px)', { lineHeight: 1.15, outline: 'none' })}>
         {title}
-      </h2>
+      </Heading>
       {hint ? <div style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55, marginTop: -8 }}>{hint}</div> : null}
       {children}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', paddingTop: 4 }}>

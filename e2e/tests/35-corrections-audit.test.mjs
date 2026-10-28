@@ -32,6 +32,8 @@ test('tunnel : une question à la fois, erreurs, curseur, surface, email mal tap
   await page.getByRole('heading', { name: 'C’est un appartement ou une maison ?' }).waitFor()
   await page.getByRole('button', { name: 'Continuer', exact: true }).click()
   await page.getByText('Indiquez s’il s’agit d’un appartement ou d’une maison.').waitFor()
+  // Question à boutons : le curseur va sur la première réponse (pas de champ à remplir).
+  await page.waitForFunction(() => document.activeElement?.textContent === 'Un appartement')
   await page.getByRole('button', { name: 'Un appartement', exact: true }).click()
   await page.getByRole('heading', { name: 'Est-il en copropriété ?' }).waitFor()
   await page.getByRole('button', { name: 'Non', exact: true }).click()

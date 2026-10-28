@@ -379,6 +379,12 @@ function GuidedDossier({ code, v, onSaved, onAll, onFinish }: { code: string; v:
   const toast = useToast()
   const [started, setStarted] = useState(false)
   const [steps] = useState(() => guidedSteps(v.missing))
+  // Pièces demandées, figées à l'ouverture comme les questions : une pièce reste à l'écran après son premier fichier
+  // (pour ajouter les suivants ou retirer un mauvais fichier).
+  const [docKeys] = useState(() => ({
+    TENANT: v.missing.filter((m) => m.kind === 'DOCUMENT' && m.who === 'TENANT').map((m) => m.key.split('.').pop()!),
+    GUARANTOR: v.missing.filter((m) => m.kind === 'DOCUMENT' && m.who === 'GUARANTOR').map((m) => m.key.split('.').pop()!),
+  }))
   const [t, setT] = useState<Person>(v.tenant)
   const [g, setG] = useState<Person>(v.guarantor ?? {})
   const [busy, setBusy] = useState(false)
@@ -417,7 +423,15 @@ function GuidedDossier({ code, v, onSaved, onAll, onFinish }: { code: string; v:
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
-          <Btn onClick={() => setStarted(true)}>Commencer</Btn>
+          <Btn
+            onClick={() => {
+              // Toujours depuis la première question, même après un rechargement de la page (?q= dans l'adresse).
+              go(1)
+              setStarted(true)
+            }}
+          >
+            Commencer
+          </Btn>
           <TextLink onClick={onAll} style={{ fontSize: 15 }}>
             Tout voir et corriger
           </TextLink>
@@ -425,7 +439,7 @@ function GuidedDossier({ code, v, onSaved, onAll, onFinish }: { code: string; v:
       </>
     )
 
-  const base = { q, count, onBack: back, busy }
+  const base = { q, count, onBack: back, busy, page: true }
   const situations = (Object.keys(SITUATION_LABEL) as Situation[]).map((k) => ({ value: k, label: SITUATION_LABEL[k] }))
   switch (id) {
     case 'name':
@@ -498,7 +512,7 @@ function GuidedDossier({ code, v, onSaved, onAll, onFinish }: { code: string; v:
     case 'docs':
     case 'g.docs': {
       const who = id === 'docs' ? 'TENANT' : 'GUARANTOR'
-      const wanted = v.missing.filter((m) => m.kind === 'DOCUMENT' && m.who === who).map((m) => m.key.split('.').pop()!)
+      const wanted = docKeys[who]
       return (
         <QuestionScreen {...base} title={who === 'TENANT' ? 'Vos justificatifs' : 'Les justificatifs de votre garant'} hint="En photo ou en PDF, plusieurs fichiers par pièce si besoin (trois bulletins de salaire, recto et verso…). Bailio y ajoute un filigrane (« Uniquement pour louer un logement à… », avec la date) : la copie gardée ne peut pas resservir ailleurs." onNext={forward}>
           <DocRows code={code} who={who} keys={wanted.length ? wanted : Object.keys(v.labels)} v={v} onSaved={onSaved} />

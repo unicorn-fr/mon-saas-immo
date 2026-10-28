@@ -1,6 +1,6 @@
 import { ThirdPartyNotice } from '../components/DataNotice'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
@@ -55,6 +55,12 @@ export default function Candidature() {
   const [sent, setSent] = useState(false)
   // L'annonce d'abord, puis les questions une à une.
   const [started, setStarted] = useState(false)
+  // « Postuler » commence toujours à la première question, même après un rechargement de la page (?q= dans l'adresse).
+  const [, setParams] = useSearchParams()
+  const start = () => {
+    setParams({}, { replace: true })
+    setStarted(true)
+  }
   // Après l'envoi : dépôt des pièces demandées, avec le jeton remis par le serveur.
   const [upload, setUpload] = useState<{ candidateId: string; uploadToken: string } | null>(null)
   // Lien de suivi (aussi envoyé par email) : confirmer la visite, retirer la candidature.
@@ -120,7 +126,7 @@ export default function Candidature() {
               <div style={{ whiteSpace: 'pre-wrap', fontSize: 15, lineHeight: 1.6, color: BAI.inkMid }}>{data.text}</div>
             </Card>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <Btn onClick={() => setStarted(true)}>Postuler</Btn>
+              <Btn onClick={start}>Postuler</Btn>
               <span style={{ fontSize: 14, color: BAI.inkSoft }}>Quelques questions courtes, une à la fois. Sans compte.</span>
             </div>
             <SafetyNote />
@@ -181,7 +187,7 @@ function CandidateQuestions({ offer, f, set, busy, onSend, onExit }: { offer: Of
     if (msg) setError(msg)
     else forward()
   }
-  const base = { q, count, onBack: back }
+  const base = { q, count, onBack: back, page: true }
   switch (id) {
     case 'name':
       return (
@@ -271,7 +277,7 @@ function CandidateQuestions({ offer, f, set, busy, onSend, onExit }: { offer: Of
         <QuestionScreen {...base} title="Qui se porte caution ?" onNext={() => check(!f.guarantor.firstNames.trim() || !f.guarantor.lastName.trim() ? 'Indiquez le prénom et le nom de votre garant.' : null)}>
           <Fields>
             <Input label="Prénom du garant" value={f.guarantor.firstNames} onChange={(v) => set({ guarantor: { ...f.guarantor, firstNames: v } })} error={error && !f.guarantor.firstNames.trim() ? error : undefined} />
-            <Input label="Nom du garant" value={f.guarantor.lastName} onChange={(v) => set({ guarantor: { ...f.guarantor, lastName: v } })} />
+            <Input label="Nom du garant" value={f.guarantor.lastName} onChange={(v) => set({ guarantor: { ...f.guarantor, lastName: v } })} error={error && f.guarantor.firstNames.trim() && !f.guarantor.lastName.trim() ? error : undefined} />
           </Fields>
         </QuestionScreen>
       )

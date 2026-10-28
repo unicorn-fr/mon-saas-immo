@@ -53,7 +53,11 @@ export function TunnelLayout({ step, children, width = 640, sub }: { step: Tunne
 
 /** Après un « Continuer » refusé : le curseur va sur le premier champ en erreur (le lecteur d'écran lit son intitulé et son message). */
 export function focusFirstError() {
-  requestAnimationFrame(() => document.querySelector<HTMLElement>('main [aria-invalid="true"]')?.focus())
+  requestAnimationFrame(() => {
+    // Champ en erreur, sinon (question à boutons, sans champ) le premier bouton de réponse de la question affichée.
+    const el = document.querySelector<HTMLElement>('main [aria-invalid="true"]') ?? document.querySelector<HTMLElement>('main [data-question] button[aria-pressed]')
+    el?.focus()
+  })
 }
 
 /** Retour / Continuer, en bas de chaque étape. */

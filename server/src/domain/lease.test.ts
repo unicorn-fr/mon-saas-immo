@@ -134,7 +134,11 @@ test('brouillon : nombres vides ou écrits en texte remis en forme, message clai
     rent: { rentCents: 78000, chargesCents: null, depositCents: null, paymentDay: null, startDate: '2026-12-01' },
     irl: { quarter: '2026-T2', value: null },
   }
-  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft))
+  // Pendant la saisie : rien n'est inventé (les charges vides restent vides).
+  const saved = normalizeDraft(draft) as { rent: Record<string, unknown> }
+  assert.equal('chargesCents' in saved.rent, false)
+  assert.equal('paymentDay' in saved.rent, false)
+  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft, { forLease: true }))
   assert.ok(parsed.success, JSON.stringify(parsed.error?.issues))
   assert.equal(parsed.data!.property.surface, 42.5)
   assert.equal(parsed.data!.rent.chargesCents, 0)
@@ -145,4 +149,14 @@ test('brouillon : nombres vides ou écrits en texte remis en forme, message clai
   assert.deepEqual(leaseIssue(['property', 'rooms']), { message: 'Indiquez le nombre de pièces principales.', step: 'logement' })
   assert.equal(leaseIssue(['rent', 'rentCents']).step, 'loyer')
   assert.equal(leaseIssue(['tenants', 0, 'lastName']).step, 'personnes')
+  // Réponse donnée mais hors des limites : « Vérifiez… », jamais « Indiquez… ».
+  assert.match(leaseIssue(['property', 'surface'], 'too_big').message, /^Vérifiez la surface/)
+  assert.match(leaseIssue(['property', 'surface'], 'invalid_type').message, /^Indiquez la surface/)
+  assert.match(leaseIssue(['rent', 'rentCents'], 'too_big').message, /^Vérifiez le loyer/)
+  assert.match(leaseIssue(['rent', 'startDate'], 'invalid_format').message, /^Vérifiez la date/)
+  // Un jour de paiement hors du 1 au 28 n'est jamais remplacé en silence : il est refusé avec un message clair.
+  const day30 = leaseInputSchema.safeParse(normalizeDraft({ ...draft, rent: { ...draft.rent, chargesCents: 0, paymentDay: 30 } }, { forLease: true }))
+  assert.equal(day30.success, false)
+  assert.deepEqual(day30.error!.issues[0].path, ['rent', 'paymentDay'])
+  assert.match(leaseIssue(['rent', 'paymentDay'], day30.error!.issues[0].code).message, /du 1 au 28/)
 })

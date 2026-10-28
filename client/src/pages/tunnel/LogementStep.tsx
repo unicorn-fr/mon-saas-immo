@@ -199,7 +199,8 @@ export default function LogementStep() {
               value={p.habitat}
               onChange={(v) => {
                 clear('habitat', 'legalRegime')
-                patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })
+                // Une maison n'a ni bâtiment, ni étage, ni porte : une réponse donnée pour un appartement est retirée.
+                patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO'), ...(v === 'INDIVIDUAL' ? { floorDoor: undefined } : {}) })
                 pick()
               }}
               options={[
