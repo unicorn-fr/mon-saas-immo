@@ -4,7 +4,7 @@ import { z } from 'zod'
 import type { Draft, Prisma } from '@prisma/client'
 import { prisma } from '../db.js'
 import { env } from '../env.js'
-import { draftDataSchema } from '../domain/lease.js'
+import { draftDataSchema, normalizeDraft } from '../domain/lease.js'
 import { HttpError } from '../lib/http.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { layout, sendEmail } from '../lib/email.js'
@@ -59,7 +59,8 @@ const saveSchema = z.object({ data: draftDataSchema, step: z.string().max(40).op
 router.put('/current', optionalUser, async (req, res) => {
   const draft = await draftFromRequest(req)
   if (draft.leaseId) throw new HttpError(409, 'Ce bail a déjà été créé.')
-  const { data, step } = saveSchema.parse(req.body)
+  // Nombres remis en forme avant la validation : l'enregistrement automatique n'échoue jamais pour une valeur vide.
+  const { data, step } = saveSchema.parse({ ...req.body, data: normalizeDraft(req.body?.data) })
   const updated = await prisma.draft.update({
     where: { id: draft.id },
     data: { data: data as Prisma.InputJsonValue, step: step ?? draft.step, expiresAt: expiry() },

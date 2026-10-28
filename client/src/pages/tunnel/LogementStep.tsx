@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AddressField } from '../../components/AddressField'
 import { Check } from '../../components/Icons'
-import { StepNav, TunnelLayout } from '../../components/TunnelLayout'
+import { StepNav, TunnelLayout, focusFirstError } from '../../components/TunnelLayout'
+import { QuestionCount, useQuestion } from '../../components/Questions'
 import { Notice, TextField, display, inputStyle } from '../../components/ui'
 import { api } from '../../lib/api'
 import { useDraft } from '../../lib/draft'
@@ -77,230 +78,323 @@ export default function LogementStep() {
     update((prev) => ({ property: { ...prev.property, ...next } }))
   }
 
-  async function next() {
+  // Une question par écran : un choix passe tout seul à la suivante. L'étage et la porte ne sont demandés que pour un appartement.
+  const ids = ['address', 'habitat', 'legalRegime', 'surface', 'rooms', ...(p.habitat === 'INDIVIDUAL' ? [] : ['floorDoor']), 'period', 'heating', 'energy', 'hotWater'] as const
+  const { q, go } = useQuestion(ids.length)
+  const id = ids[q - 1]
+  const count = ids.length
+  const forward = () => (q < count ? go(q + 1) : void finish())
+  const pick = () => setTimeout(forward, 120)
+
+  /** Ce qui manque encore, question par question (le même contrôle qu'avant, dans l'ordre des questions). */
+  function missing(): Record<string, string> {
     const surfaceValue = Number(surface.replace(',', '.'))
     const e: Record<string, string> = {}
     if (address.trim().length < 5) e.address = "Indiquez l'adresse du logement."
-    if (!surfaceValue || surfaceValue <= 0) e.surface = 'Indiquez la surface habitable.'
-    if (!rooms) e.rooms = 'Choisissez le nombre de pièces.'
     if (!p.habitat) e.habitat = 'Indiquez s’il s’agit d’un appartement ou d’une maison.'
     if (!p.legalRegime) e.legalRegime = 'Indiquez si le logement est en copropriété.'
+    if (!surfaceValue || surfaceValue <= 0) e.surface = 'Indiquez la surface habitable.'
+    if (!rooms) e.rooms = 'Choisissez le nombre de pièces.'
     if (!p.constructionPeriod) e.period = 'Indiquez la période de construction.'
-    if (!p.heatingMode || !p.hotWaterMode) e.heating = 'Indiquez le chauffage et l’eau chaude.'
-    setErrors(e)
-    if (Object.keys(e).length) {
-      // Le curseur va sur la première réponse à donner : le lecteur d'écran lit la question et son message.
-      const first = ['address', 'surface', 'rooms', 'habitat', 'legalRegime', 'period', 'heating'].find((k) => e[k])
-      requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-field="${first}"] input, [data-field="${first}"] button`)?.focus())
-      return
+    if (!p.heatingMode) e.heating = 'Indiquez si le chauffage est individuel ou collectif.'
+    if (!p.hotWaterMode) e.hotWater = 'Indiquez si l’eau chaude est individuelle ou collective.'
+    return e
+  }
+
+  function next() {
+    const e = missing()
+    if (e[id]) {
+      setErrors({ [id]: e[id] })
+      return focusFirstError()
     }
+    setErrors({})
+    forward()
+  }
+
+  async function finish() {
+    const e = missing()
+    const first = ids.find((k) => e[k])
+    if (first) {
+      setErrors({ [first]: e[first] })
+      return go(ids.indexOf(first) + 1)
+    }
+    const surfaceValue = Number(surface.replace(',', '.'))
     update((prev) => ({ property: { ...prev.property, address: address.trim(), surface: surfaceValue, rooms } }), 'personnes')
     await flush()
     navigate('/commencer/personnes')
   }
 
   const found = dpe && dpe.length === 1 ? dpe[0] : null
+  const back = q > 1 ? `?q=${q - 1}` : '/commencer'
+  const heading = (text: string) => <h1 style={display('clamp(34px, 5vw, 50px)')}>{text}</h1>
 
   return (
-    <TunnelLayout step="logement">
-      <h1 style={display('clamp(40px, 5vw, 56px)')}>Où se trouve le logement ?</h1>
-      <div data-field="address" className="stack">
-      <AddressField
-        label="Adresse"
-        value={address}
-        autoFocus={!address}
-        placeholder="12 rue de la République, 34000 Montpellier"
-        error={errors.address}
-        onChange={(v) => {
-          setAddress(v)
-          if (v.trim().length >= 5) clear('address')
-          // Adresse modifiée à la main : les informations liées à l'ancienne adresse ne valent plus.
-          patch(p.banId ? { address: v, banId: undefined, inseeCode: undefined, postalCode: undefined, city: undefined, dpeClass: undefined, dpeNumber: undefined } : { address: v })
-          if (p.banId) setDpe(null)
-        }}
-        onSelect={(s) => {
-          setAddress(s.label)
-          clear('address')
-          patch({ address: s.label, postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode, banId: s.banId, dpeClass: undefined, dpeNumber: undefined })
-          if (s.banId) lookupDpe(s.banId)
-        }}
-      />
-      </div>
-
-      {found ? (
-        <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 20, background: BAI.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Check />
-          </div>
-          <div className="stack" style={{ gap: 2 }}>
-            <span style={{ fontSize: 16, fontWeight: 600 }}>Diagnostic énergétique trouvé : classe {found.dpeClass}</span>
-            <span style={{ fontSize: 14, color: BAI.inkSoft }}>Il sera indiqué dans le bail automatiquement.</span>
-          </div>
-        </div>
-      ) : dpe !== null ? (
-        <div className="stack" style={{ gap: 8 }}>
-          <label htmlFor="dpe" style={{ fontSize: 15, fontWeight: 600 }}>
-            Classe énergie du logement <span style={{ fontWeight: 400, color: BAI.inkSoft }}>(facultatif)</span>
-          </label>
-          <select id="dpe" value={p.dpeClass ?? ''} onChange={(e) => patch({ dpeClass: (e.target.value || undefined) as DpeClass | undefined, dpeNumber: undefined })} style={{ ...inputStyle(), appearance: 'auto' }}>
-            <option value="">Je ne sais pas</option>
-            {CLASSES.map((c) => (
-              <option key={c} value={c}>
-                Classe {c}
-              </option>
-            ))}
-          </select>
-          <span style={{ fontSize: 14, color: BAI.inkSoft }}>
-            {dpe.length > 1 ? 'Plusieurs diagnostics existent à cette adresse. ' : ''}Elle figure sur votre diagnostic de performance énergétique (DPE).
-          </span>
-        </div>
-      ) : null}
-      <DpeWarning dpeClass={p.dpeClass} />
-
-      <div data-field="surface" style={{ display: 'flex', gap: 20 }}>
-        <TextField
-          label="Surface habitable"
-          name="surface"
-          inputMode="decimal"
-          suffix="m²"
-          value={surface}
-          error={errors.surface}
-          hint={smallSurfaceWarning(Number(surface.replace(',', '.'))) ?? undefined}
-          onChange={(e) => {
-            const v = e.target.value.replace(/[^\d,.]/g, '')
-            setSurface(v)
-            if (Number(v.replace(',', '.')) > 0) clear('surface')
-            patch({ surface: Number(v.replace(',', '.')) || undefined })
-          }}
-        />
-      </div>
-
-      <fieldset data-field="rooms" aria-describedby="rooms-help" style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
-        <legend style={{ fontSize: 15, fontWeight: 600, padding: 0, marginBottom: 10 }}>Nombre de pièces principales</legend>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          {[1, 2, 3, 4, 5].map((n) => {
-            const selected = n === 5 ? (rooms ?? 0) >= 5 : rooms === n
-            return (
-              <button
-                key={n}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => {
-                  setRooms(n)
-                  clear('rooms')
-                  patch({ rooms: n })
+    <TunnelLayout step="logement" sub={{ q, count }}>
+      <div data-question className="stack" style={{ gap: 28 }}>
+        <QuestionCount q={q} count={count} />
+        {id === 'address' ? (
+          <>
+            {heading('Où se trouve le logement ?')}
+            <div data-field="address" className="stack">
+              <AddressField
+                label="Adresse"
+                value={address}
+                autoFocus={!address}
+                placeholder="12 rue de la République, 34000 Montpellier"
+                error={errors.address}
+                onChange={(v) => {
+                  setAddress(v)
+                  if (v.trim().length >= 5) clear('address')
+                  // Adresse modifiée à la main : les informations liées à l'ancienne adresse ne valent plus.
+                  patch(p.banId ? { address: v, banId: undefined, inseeCode: undefined, postalCode: undefined, city: undefined, dpeClass: undefined, dpeNumber: undefined } : { address: v })
+                  if (p.banId) setDpe(null)
                 }}
-                style={{ width: 64, height: 56, border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 18, fontWeight: selected ? 700 : 600, borderRadius: 12 }}
-              >
-                {n === 5 ? '5+' : n}
-              </button>
-            )
-          })}
-        </div>
-        {(rooms ?? 0) >= 5 ? (
-          <div style={{ marginTop: 12, maxWidth: 200 }}>
-            <TextField label="Nombre exact" name="rooms" inputMode="numeric" value={String(rooms)} onChange={(e) => {
-              const n = Math.max(5, Math.min(30, Number(e.target.value.replace(/\D/g, '')) || 5))
-              setRooms(n)
-              patch({ rooms: n })
-            }} />
-          </div>
+                onSelect={(s) => {
+                  setAddress(s.label)
+                  clear('address')
+                  patch({ address: s.label, postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode, banId: s.banId, dpeClass: undefined, dpeNumber: undefined })
+                  if (s.banId) lookupDpe(s.banId)
+                }}
+              />
+            </div>
+            {found ? (
+              <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 20, background: BAI.greenLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Check />
+                </div>
+                <div className="stack" style={{ gap: 2 }}>
+                  <span style={{ fontSize: 16, fontWeight: 600 }}>Diagnostic énergétique trouvé : classe {found.dpeClass}</span>
+                  <span style={{ fontSize: 14, color: BAI.inkSoft }}>Il sera indiqué dans le bail automatiquement.</span>
+                </div>
+              </div>
+            ) : dpe !== null ? (
+              <div className="stack" style={{ gap: 8 }}>
+                <label htmlFor="dpe" style={{ fontSize: 15, fontWeight: 600 }}>
+                  Classe énergie du logement <span style={{ fontWeight: 400, color: BAI.inkSoft }}>(facultatif)</span>
+                </label>
+                <select id="dpe" value={p.dpeClass ?? ''} onChange={(e) => patch({ dpeClass: (e.target.value || undefined) as DpeClass | undefined, dpeNumber: undefined })} style={{ ...inputStyle(), appearance: 'auto' }}>
+                  <option value="">Je ne sais pas</option>
+                  {CLASSES.map((c) => (
+                    <option key={c} value={c}>
+                      Classe {c}
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: 14, color: BAI.inkSoft }}>
+                  {dpe.length > 1 ? 'Plusieurs diagnostics existent à cette adresse. ' : ''}Elle figure sur votre diagnostic de performance énergétique (DPE).
+                </span>
+              </div>
+            ) : null}
+            <DpeWarning dpeClass={p.dpeClass} />
+          </>
         ) : null}
-        <span id="rooms-help" style={{ fontSize: 14, color: errors.rooms ? BAI.error : BAI.inkSoft, marginTop: 10 }}>
-          {errors.rooms ?? 'Séjour et chambres. La cuisine et la salle de bain ne comptent pas.'}
-        </span>
-      </fieldset>
 
-      <TextField maxLength={120} label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
+        {id === 'habitat' ? (
+          <>
+            {heading('C’est un appartement ou une maison ?')}
+            <ChipGroup
+              legend="C’est"
+              field="habitat"
+              error={errors.habitat}
+              value={p.habitat}
+              onChange={(v) => {
+                clear('habitat', 'legalRegime')
+                patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })
+                pick()
+              }}
+              options={[
+                { value: 'COLLECTIVE', label: 'Un appartement' },
+                { value: 'INDIVIDUAL', label: 'Une maison' },
+              ]}
+            />
+          </>
+        ) : null}
 
-      <ChipGroup
-        legend="C’est"
-        field="habitat"
-        error={errors.habitat}
-        value={p.habitat}
-        onChange={(v) => {
-          clear('habitat', 'legalRegime')
-          patch({ habitat: v, legalRegime: p.legalRegime ?? (v === 'COLLECTIVE' ? 'COPRO' : 'MONO') })
-        }}
-        options={[
-          { value: 'COLLECTIVE', label: 'Un appartement' },
-          { value: 'INDIVIDUAL', label: 'Une maison' },
-        ]}
-      />
-      <ChipGroup
-        legend="En copropriété ?"
-        hint="Copropriété : il y a un syndic et un règlement de copropriété."
-        field="legalRegime"
-        error={errors.legalRegime}
-        value={p.legalRegime}
-        onChange={(v) => {
-          clear('legalRegime')
-          patch({ legalRegime: v })
-        }}
-        options={[
-          { value: 'COPRO', label: 'Oui' },
-          { value: 'MONO', label: 'Non' },
-        ]}
-      />
-      <ChipGroup
-        legend="Période de construction"
-        hint="Elle figure dans le bail et décide des diagnostics à fournir. Une estimation suffit."
-        field="period"
-        error={errors.period}
-        value={p.constructionPeriod}
-        onChange={(v) => {
-          clear('period')
-          patch({ constructionPeriod: v })
-        }}
-        options={[
-          { value: 'BEFORE_1949', label: 'Avant 1949' },
-          { value: '1949_1974', label: '1949 à 1974' },
-          { value: '1975_1989', label: '1975 à 1989' },
-          { value: '1990_2005', label: '1990 à 2005' },
-          { value: 'AFTER_2005', label: 'Depuis 2005' },
-        ]}
-      />
-      <ChipGroup
-        legend="Le chauffage est"
-        field="heating"
-        error={errors.heating}
-        value={p.heatingMode}
-        onChange={(v) => {
-          if (p.hotWaterMode) clear('heating')
-          patch({ heatingMode: v })
-        }}
-        options={[
-          { value: 'INDIVIDUAL', label: 'Individuel' },
-          { value: 'COLLECTIVE', label: 'Collectif (pour tout l’immeuble)' },
-        ]}
-      />
-      <ChipGroup
-        legend="Il fonctionne à"
-        value={p.heatingEnergy}
-        onChange={(v) => patch({ heatingEnergy: v })}
-        options={[
-          { value: 'ELECTRIC', label: 'Électricité' },
-          { value: 'GAS', label: 'Gaz' },
-          { value: 'HEAT_PUMP', label: 'Pompe à chaleur' },
-          { value: 'FUEL', label: 'Fioul' },
-          { value: 'WOOD', label: 'Bois' },
-          { value: 'NETWORK', label: 'Réseau de chaleur' },
-        ]}
-      />
-      <ChipGroup
-        legend="L’eau chaude est"
-        value={p.hotWaterMode}
-        onChange={(v) => {
-          if (p.heatingMode) clear('heating')
-          patch({ hotWaterMode: v })
-        }}
-        options={[
-          { value: 'INDIVIDUAL', label: 'Individuelle' },
-          { value: 'COLLECTIVE', label: 'Collective' },
-        ]}
-      />
+        {id === 'legalRegime' ? (
+          <>
+            {heading('Est-il en copropriété ?')}
+            <ChipGroup
+              legend="En copropriété ?"
+              hint="Copropriété : il y a un syndic et un règlement de copropriété."
+              field="legalRegime"
+              error={errors.legalRegime}
+              value={p.legalRegime}
+              onChange={(v) => {
+                clear('legalRegime')
+                patch({ legalRegime: v })
+                pick()
+              }}
+              options={[
+                { value: 'COPRO', label: 'Oui' },
+                { value: 'MONO', label: 'Non' },
+              ]}
+            />
+          </>
+        ) : null}
 
-      <StepNav back="/commencer" next={next} />
+        {id === 'surface' ? (
+          <>
+            {heading('Quelle est sa surface habitable ?')}
+            <div data-field="surface" style={{ display: 'flex', gap: 20 }}>
+              <TextField
+                label="Surface habitable"
+                name="surface"
+                inputMode="decimal"
+                suffix="m²"
+                value={surface}
+                error={errors.surface}
+                hint={smallSurfaceWarning(Number(surface.replace(',', '.'))) ?? undefined}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^\d,.]/g, '')
+                  setSurface(v)
+                  if (Number(v.replace(',', '.')) > 0) clear('surface')
+                  patch({ surface: Number(v.replace(',', '.')) || undefined })
+                }}
+              />
+            </div>
+          </>
+        ) : null}
+
+        {id === 'rooms' ? (
+          <>
+            {heading('Combien de pièces principales ?')}
+            <fieldset data-field="rooms" aria-describedby="rooms-help" style={{ margin: 0, padding: 0, border: 'none' }} className="stack">
+              <legend className="sr-only">Nombre de pièces principales</legend>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const selected = n === 5 ? (rooms ?? 0) >= 5 : rooms === n
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => {
+                        setRooms(n)
+                        clear('rooms')
+                        patch({ rooms: n })
+                        if (n < 5) pick()
+                      }}
+                      style={{ width: 64, height: 56, border: selected ? `2px solid ${BAI.owner}` : `1.5px solid ${BAI.borderStrong}`, background: selected ? BAI.ownerLight : BAI.surface, color: selected ? BAI.owner : BAI.ink, fontSize: 18, fontWeight: selected ? 700 : 600, borderRadius: 12 }}
+                    >
+                      {n === 5 ? '5+' : n}
+                    </button>
+                  )
+                })}
+              </div>
+              {(rooms ?? 0) >= 5 ? (
+                <div style={{ marginTop: 12, maxWidth: 200 }}>
+                  <TextField label="Nombre exact" name="rooms" inputMode="numeric" value={String(rooms)} onChange={(e) => {
+                    const n = Math.max(5, Math.min(30, Number(e.target.value.replace(/\D/g, '')) || 5))
+                    setRooms(n)
+                    patch({ rooms: n })
+                  }} />
+                </div>
+              ) : null}
+              <span id="rooms-help" style={{ fontSize: 14, color: errors.rooms ? BAI.error : BAI.inkSoft, marginTop: 10 }}>
+                {errors.rooms ?? 'Séjour et chambres. La cuisine et la salle de bain ne comptent pas.'}
+              </span>
+            </fieldset>
+          </>
+        ) : null}
+
+        {id === 'floorDoor' ? (
+          <>
+            {heading('Bâtiment, étage, porte ?')}
+            <TextField maxLength={120} label="Bâtiment, étage, porte (facultatif)" name="floorDoor" value={p.floorDoor ?? ''} onChange={(e) => patch({ floorDoor: e.target.value })} placeholder="Bâtiment B, 2e étage, porte gauche" />
+          </>
+        ) : null}
+
+        {id === 'period' ? (
+          <>
+            {heading('Quand a-t-il été construit ?')}
+            <ChipGroup
+              legend="Période de construction"
+              hint="Elle figure dans le bail et décide des diagnostics à fournir. Une estimation suffit."
+              field="period"
+              error={errors.period}
+              value={p.constructionPeriod}
+              onChange={(v) => {
+                clear('period')
+                patch({ constructionPeriod: v })
+                pick()
+              }}
+              options={[
+                { value: 'BEFORE_1949', label: 'Avant 1949' },
+                { value: '1949_1974', label: '1949 à 1974' },
+                { value: '1975_1989', label: '1975 à 1989' },
+                { value: '1990_2005', label: '1990 à 2005' },
+                { value: 'AFTER_2005', label: 'Depuis 2005' },
+              ]}
+            />
+          </>
+        ) : null}
+
+        {id === 'heating' ? (
+          <>
+            {heading('Le chauffage est individuel ou collectif ?')}
+            <ChipGroup
+              legend="Le chauffage est"
+              field="heating"
+              error={errors.heating}
+              value={p.heatingMode}
+              onChange={(v) => {
+                clear('heating')
+                patch({ heatingMode: v })
+                pick()
+              }}
+              options={[
+                { value: 'INDIVIDUAL', label: 'Individuel' },
+                { value: 'COLLECTIVE', label: 'Collectif (pour tout l’immeuble)' },
+              ]}
+            />
+          </>
+        ) : null}
+
+        {id === 'energy' ? (
+          <>
+            {heading('Il fonctionne à quoi ?')}
+            <ChipGroup
+              legend="Il fonctionne à"
+              hint="Facultatif."
+              value={p.heatingEnergy}
+              onChange={(v) => {
+                patch({ heatingEnergy: v })
+                pick()
+              }}
+              options={[
+                { value: 'ELECTRIC', label: 'Électricité' },
+                { value: 'GAS', label: 'Gaz' },
+                { value: 'HEAT_PUMP', label: 'Pompe à chaleur' },
+                { value: 'FUEL', label: 'Fioul' },
+                { value: 'WOOD', label: 'Bois' },
+                { value: 'NETWORK', label: 'Réseau de chaleur' },
+              ]}
+            />
+          </>
+        ) : null}
+
+        {id === 'hotWater' ? (
+          <>
+            {heading('Et l’eau chaude ?')}
+            <ChipGroup
+              legend="L’eau chaude est"
+              field="hotWater"
+              error={errors.hotWater}
+              value={p.hotWaterMode}
+              onChange={(v) => {
+                clear('hotWater')
+                patch({ hotWaterMode: v })
+              }}
+              options={[
+                { value: 'INDIVIDUAL', label: 'Individuelle' },
+                { value: 'COLLECTIVE', label: 'Collective' },
+              ]}
+            />
+          </>
+        ) : null}
+      </div>
+
+      <StepNav back={back} next={next} />
     </TunnelLayout>
   )
 }

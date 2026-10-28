@@ -164,3 +164,67 @@ export function formatEuros(cents: number): string {
 export function fullName(p: { firstName: string; lastName: string }): string {
   return `${p.firstName} ${p.lastName}`.trim()
 }
+
+// ─── Brouillon : nombres toujours lisibles ────────────────────────────────────
+
+/** Un nombre saisi ou lu (« 42,5 », "780", null, NaN) : un nombre fini, sinon rien. */
+function num(v: unknown): number | undefined {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
+  if (typeof v === 'string') {
+    const n = Number(v.replace(/[\s  €m²]/g, '').replace(',', '.'))
+    return v.trim() && Number.isFinite(n) ? n : undefined
+  }
+  return undefined
+}
+
+/**
+ * Remet en forme les nombres d'un brouillon avant de le garder ou d'en faire un bail : une valeur vide (null), un
+ * nombre écrit en texte ou illisible ne bloque plus rien. Charges absentes : 0 ; jour de paiement absent : le 5.
+ */
+export function normalizeDraft(input: unknown): unknown {
+  if (!input || typeof input !== 'object') return input
+  const d = structuredClone(input) as Record<string, Record<string, unknown> | unknown>
+  const fix = (obj: unknown, keys: string[], round = false) => {
+    if (!obj || typeof obj !== 'object') return
+    const o = obj as Record<string, unknown>
+    for (const k of keys) {
+      if (!(k in o)) continue
+      const n = num(o[k])
+      if (n === undefined) delete o[k]
+      else o[k] = round ? Math.round(n) : n
+    }
+  }
+  fix(d.property, ['surface'])
+  fix(d.property, ['rooms'], true)
+  fix(d.rent, ['rentCents', 'chargesCents', 'depositCents', 'paymentDay'], true)
+  if (d.irl && typeof d.irl === 'object') {
+    fix(d.irl, ['value'])
+    if ((d.irl as Record<string, unknown>).value === undefined) d.irl = null
+  }
+  if (d.rent && typeof d.rent === 'object') {
+    const r = d.rent as Record<string, unknown>
+    if (r.chargesCents === undefined) r.chargesCents = 0
+    if (r.paymentDay === undefined || (r.paymentDay as number) < 1 || (r.paymentDay as number) > 28) r.paymentDay = 5
+  }
+  return d
+}
+
+/** Ce qui manque pour créer le bail, dit simplement, avec l'étape du parcours où y répondre. */
+export function leaseIssue(path: PropertyKey[]): { message: string; step: 'type' | 'logement' | 'personnes' | 'loyer' | 'relecture' } {
+  const [a, b] = path.map(String)
+  if (a === 'type') return { message: 'Choisissez une location vide ou meublée.', step: 'type' }
+  if (a === 'property') {
+    if (b === 'surface') return { message: 'Indiquez la surface habitable du logement.', step: 'logement' }
+    if (b === 'rooms') return { message: 'Indiquez le nombre de pièces principales.', step: 'logement' }
+    return { message: 'Indiquez l’adresse du logement.', step: 'logement' }
+  }
+  if (a === 'landlord') return { message: 'Indiquez vos nom, prénom et adresse.', step: 'personnes' }
+  if (a === 'tenants') return { message: 'Indiquez le prénom et le nom de chaque locataire.', step: 'personnes' }
+  if (a === 'guarantor') return { message: 'Indiquez le nom et l’adresse du garant.', step: 'personnes' }
+  if (a === 'rent') {
+    if (b === 'startDate') return { message: 'Indiquez la date d’entrée du locataire.', step: 'loyer' }
+    if (b === 'depositCents') return { message: 'Vérifiez le dépôt de garantie.', step: 'loyer' }
+    return { message: 'Indiquez le loyer hors charges.', step: 'loyer' }
+  }
+  return { message: 'Une réponse manque encore dans votre bail.', step: 'relecture' }
+}

@@ -27,6 +27,7 @@ import portfolioRoutes from './routes/portfolio.js'
 import bulkRoutes from './routes/bulk.js'
 import adminRoutes from './routes/admin.js'
 import feedbackRoutes from './routes/feedback.js'
+import contactRequestRoutes from './routes/contact.js'
 import signatureRelayRoutes from './routes/signatureRelay.js'
 import visitRoutes from './routes/visits.js'
 
@@ -93,6 +94,7 @@ export function createApp() {
   app.use('/api', bulkRoutes)
   app.use('/api', adminRoutes)
   app.use('/api', feedbackRoutes)
+  app.use('/api', contactRequestRoutes)
   app.use('/api', visitRoutes)
   app.use('/api', signatureRelayRoutes)
   app.use((_req, _res, next) => next(new HttpError(404, 'Page introuvable.')))

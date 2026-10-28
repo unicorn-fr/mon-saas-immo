@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
-import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, watch } from '../lib.mjs'
+import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, shot, tunnelLoyer, tunnelPersonnes, watch } from '../lib.mjs'
 
 /**
  * Corrections de l'audit par personas (docs/audit/audit-personas-2026-10.md) : email mal tapé (suggestion et
@@ -11,60 +11,62 @@ let browser
 before(async () => (browser = await launch()))
 after(() => browser?.close())
 
-async function logement(page, { surface = '42' } = {}) {
-  await page.goto(BASE + '/commencer')
-  await page.getByRole('button', { name: 'Vide' }).first().click()
-  await page.getByRole('heading', { name: 'Où se trouve le logement ?' }).waitFor()
-  await page.getByLabel('Adresse').fill('12 rue de la Loge, 34000 Montpellier')
-  await page.getByLabel('Surface habitable').fill(surface)
-  for (const name of ['2', 'Un appartement', 'Non', '1990 à 2005', 'Individuel', 'Électricité', 'Individuelle']) await page.getByRole('button', { name, exact: true }).first().click()
-}
-
-test('tunnel : erreurs, curseur, surface, email mal tapé puis corrigé', async () => {
+test('tunnel : une question à la fois, erreurs, curseur, surface, email mal tapé puis corrigé', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
   page.setDefaultTimeout(15000)
 
-  // Envoi vide : le curseur va sur l'adresse ; chaque question à choix est reliée à son message.
+  // Une question par écran. Envoi vide : le curseur va sur l'adresse ; une réponse donnée efface son erreur.
   await page.goto(BASE + '/commencer')
   await page.getByRole('button', { name: 'Vide' }).first().click()
+  await page.getByRole('heading', { name: 'Où se trouve le logement ?' }).waitFor()
+  await page.getByText('Question 1 sur 10').waitFor()
   await page.getByRole('button', { name: 'Continuer', exact: true }).click()
   await page.waitForFunction(() => document.activeElement?.getAttribute('aria-invalid') === 'true')
-  const rooms = page.getByRole('group', { name: 'Nombre de pièces principales' })
-  assert.match(await rooms.getAttribute('aria-describedby'), /rooms-help/)
-  // Une réponse donnée efface son erreur tout de suite.
   await page.getByLabel('Adresse').fill('12 rue de la Loge, 34000 Montpellier')
   await page.getByText('Indiquez l\'adresse du logement.').waitFor({ state: 'detached' })
-  await page.getByRole('button', { name: '2', exact: true }).click()
-  await page.getByText('Choisissez le nombre de pièces.').waitFor({ state: 'detached' })
-
+  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+  // Un choix passe tout seul à la question suivante ; sans choix, « Continuer » dit ce qui manque.
+  await page.getByRole('heading', { name: 'C’est un appartement ou une maison ?' }).waitFor()
+  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+  await page.getByText('Indiquez s’il s’agit d’un appartement ou d’une maison.').waitFor()
+  await page.getByRole('button', { name: 'Un appartement', exact: true }).click()
+  await page.getByRole('heading', { name: 'Est-il en copropriété ?' }).waitFor()
+  await page.getByRole('button', { name: 'Non', exact: true }).click()
   // Surface sous 9 m² : alerte, sans blocage.
+  await page.getByRole('heading', { name: 'Quelle est sa surface habitable ?' }).waitFor()
   await page.getByLabel('Surface habitable').fill('4,5')
   await page.getByText('Moins de 9 m²', { exact: false }).waitFor()
   await page.getByLabel('Surface habitable').fill('42')
   assert.equal(await page.getByText('Moins de 9 m²', { exact: false }).count(), 0)
-
-  await logement(page)
   await page.getByRole('button', { name: 'Continuer', exact: true }).click()
-  await page.getByRole('heading', { name: 'Qui signe le bail ?' }).waitFor()
+  const rooms = page.getByRole('group', { name: 'Nombre de pièces principales' })
+  assert.match(await rooms.getAttribute('aria-describedby'), /rooms-help/)
+  // Retour : la question précédente revient avec sa réponse.
+  await page.goBack()
+  assert.equal(await page.getByLabel('Surface habitable').inputValue(), '42')
+  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+  await page.getByRole('button', { name: '2', exact: true }).click()
+  await page.getByRole('heading', { name: 'Bâtiment, étage, porte ?' }).waitFor()
+  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+  for (const [title, name] of [['Quand a-t-il été construit ?', '1990 à 2005'], ['Le chauffage est individuel ou collectif ?', 'Individuel'], ['Il fonctionne à quoi ?', 'Électricité'], ['Et l’eau chaude ?', 'Individuelle']]) {
+    await page.getByRole('heading', { name: title }).waitFor()
+    await page.getByRole('button', { name, exact: true }).click()
+  }
+  await shot(page, 'tunnel-question')
+  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+
   // Personnes : envoi vide, curseur sur le premier champ, l'erreur part dès qu'on écrit.
+  await page.getByRole('heading', { name: 'Comment vous appelez-vous ?' }).waitFor()
   await page.getByRole('button', { name: 'Continuer', exact: true }).click()
   await page.waitForFunction(() => document.activeElement?.getAttribute('aria-invalid') === 'true')
-  await page.getByLabel('Prénom', { exact: true }).nth(0).fill('Monique')
+  await page.getByLabel('Prénom', { exact: true }).fill('Monique')
   await page.getByText('Votre prénom est obligatoire.').waitFor({ state: 'detached' })
-  await page.getByLabel('Nom', { exact: true }).nth(0).fill('Bernard')
-  await page.getByLabel('Votre adresse').fill('3 place de la Comédie, 34000 Montpellier')
-  await page.getByLabel('Prénom', { exact: true }).nth(1).fill('Karim')
-  await page.getByLabel('Nom', { exact: true }).nth(1).fill('Haddad')
-  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
-  await page.getByRole('heading', { name: 'Quel est le loyer ?' }).waitFor()
-  await page.getByLabel('Loyer hors charges').fill('780')
-  await page.getByLabel('Charges', { exact: true }).fill('60')
-  await page.getByRole('button', { name: 'Une provision' }).click()
-  await page.getByLabel("Date d'entrée du locataire").fill('2026-12-01')
-  await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+  await page.goto(page.url().replace(/\?.*$/, ''))
+  await tunnelPersonnes(page)
+  await tunnelLoyer(page)
   await page.getByRole('button', { name: 'Mon bail est correct' }).click()
 
   // Email mal tapé : suggestion, puis envoi à la mauvaise adresse et correction sans recharger.

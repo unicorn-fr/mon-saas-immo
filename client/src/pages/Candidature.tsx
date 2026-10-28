@@ -4,12 +4,13 @@ import { Link, useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { Logo } from '../components/Logo'
 import { Fields } from '../components/FlowLayout'
-import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, NumberField, Select, TextArea, useLoad, useToast, AddressInput } from '../components/kit'
+import { Btn, Callout, Card, Check, Chips, Input, LoadError, Loader, Money, TextArea, useLoad, useToast, AddressInput } from '../components/kit'
 import { display } from '../components/ui'
 import { api } from '../lib/api'
 import { PublicPhoto } from '../components/media'
 import { DocFilesRow } from '../components/DocFiles'
 import { SafetyNote } from './SuiviCandidature'
+import { Choices, QuestionScreen, useQuestion } from '../components/Questions'
 
 interface Offer {
   title: string
@@ -52,6 +53,8 @@ export default function Candidature() {
     website: '',
   })
   const [sent, setSent] = useState(false)
+  // L'annonce d'abord, puis les questions une à une.
+  const [started, setStarted] = useState(false)
   // Après l'envoi : dépôt des pièces demandées, avec le jeton remis par le serveur.
   const [upload, setUpload] = useState<{ candidateId: string; uploadToken: string } | null>(null)
   // Lien de suivi (aussi envoyé par email) : confirmer la visite, retirer la candidature.
@@ -106,7 +109,7 @@ export default function Candidature() {
               </div>
             ) : null}
           </Card>
-        ) : (
+        ) : !started ? (
           <>
             {data.hasPhoto ? <PublicPhoto src={`/api/candidature/${encodeURIComponent(code)}/photo`} alt={`Photo du logement : ${data.title}`} /> : null}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -116,70 +119,213 @@ export default function Candidature() {
             <Card title="L’annonce">
               <div style={{ whiteSpace: 'pre-wrap', fontSize: 15, lineHeight: 1.6, color: BAI.inkMid }}>{data.text}</div>
             </Card>
-            <Card title="Vous">
-              <Chips legend="Civilité" value={f.civility} onChange={(v) => set({ civility: v })} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
-              <Fields>
-                <Input label="Prénom" value={f.firstNames} onChange={(v) => set({ firstNames: v })} autoComplete="given-name" />
-                <Input label="Nom" value={f.lastName} onChange={(v) => set({ lastName: v })} autoComplete="family-name" />
-              </Fields>
-              <Fields>
-                <Input label="Email" type="email" value={f.email} onChange={(v) => set({ email: v })} autoComplete="email" inputMode="email" />
-                <Input label="Téléphone" hint="Facultatif." value={f.phone} onChange={(v) => set({ phone: v })} autoComplete="tel" inputMode="tel" />
-              </Fields>
-              <AddressInput label="Adresse actuelle" hint="Facultatif." value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} />
-              <Select
-                label="Situation professionnelle"
-                value={f.situation}
-                onChange={(v) => set({ situation: v })}
-                options={[
-                  { value: 'EMPLOYEE', label: 'Salarié' },
-                  { value: 'SELF_EMPLOYED', label: 'Indépendant' },
-                  { value: 'STUDENT', label: 'Étudiant' },
-                  { value: 'APPRENTICE', label: 'Apprenti ou alternant' },
-                  { value: 'RETIRED', label: 'Retraité' },
-                  { value: 'OTHER', label: 'Autre situation' },
-                ]}
-              />
-              <Fields>
-                <Money label="Revenus nets du foyer, par mois" cents={f.monthlyIncomeCents} onChange={(c) => set({ monthlyIncomeCents: c })} />
-                <NumberField label="Personnes qui vivront dans le logement" value={f.occupants} onChange={(v) => set({ occupants: v })} />
-              </Fields>
-              <Input label="Date d’entrée souhaitée" hint="Facultatif." type="date" value={f.moveInDate} onChange={(v) => set({ moveInDate: v })} />
-            </Card>
-            <Card title="Votre garantie">
-              <Chips
-                legend="Garantie"
-                value={f.guarantee}
-                onChange={(v) => set({ guarantee: v })}
-                options={[
-                  { value: 'CAUTION', label: 'Une personne se porte caution' },
-                  { value: 'VISALE', label: 'Garantie Visale' },
-                  { value: 'GLI', label: 'Assurance loyers impayés' },
-                  { value: 'NONE', label: 'Pas de garant' },
-                ]}
-              />
-              {f.guarantee === 'CAUTION' ? (
-                <Fields>
-                  <Input label="Prénom du garant" value={f.guarantor.firstNames} onChange={(v) => set({ guarantor: { ...f.guarantor, firstNames: v } })} />
-                  <Input label="Nom du garant" value={f.guarantor.lastName} onChange={(v) => set({ guarantor: { ...f.guarantor, lastName: v } })} />
-                </Fields>
-              ) : null}
-              {f.guarantee === 'VISALE' ? <span style={{ fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>Visale est une garantie gratuite d’Action Logement, pour les moins de 31 ans et de nombreux salariés : visale.fr.</span> : null}
-            </Card>
-            <Card title="Vos justificatifs">
-              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>
-                Juste après l’envoi, vous pourrez déposer les pièces demandées : {data.requestedDocs.map((d) => d.label.toLowerCase()).join(', ')}. Vous avez un DossierFacile, le dossier gratuit de l’État ? Collez aussi son lien de partage.
-              </span>
-              <Input label="Lien de votre DossierFacile" value={f.dossierFacileUrl} onChange={(v) => set({ dossierFacileUrl: v })} placeholder="https://locataire.dossierfacile.logement.gouv.fr/…" hint="Facultatif, mais il accélère beaucoup la réponse." />
-              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>
-                Pas encore de DossierFacile ? C’est gratuit, fait par l’État, et vos pièces y sont vérifiées une fois pour toutes.{' '}
-                <a href="https://www.dossierfacile.logement.gouv.fr/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
-                  Créer mon DossierFacile
-                </a>
-              </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Btn onClick={() => setStarted(true)}>Postuler</Btn>
+              <span style={{ fontSize: 14, color: BAI.inkSoft }}>Quelques questions courtes, une à la fois. Sans compte.</span>
+            </div>
+            <SafetyNote />
+          </>
+        ) : (
+          <CandidateQuestions
+            offer={data}
+            f={f}
+            set={set}
+            busy={busy}
+            onSend={() => void send()}
+            onExit={() => setStarted(false)}
+          />
+        )}
+      </main>
+    </div>
+  )
+}
+
+type Form = {
+  civility: 'MADAME' | 'MONSIEUR' | null
+  firstNames: string
+  lastName: string
+  email: string
+  phone: string
+  currentAddress: string
+  situation: Situation | null
+  monthlyIncomeCents: number | null
+  occupants: number | null
+  guarantee: Guarantee | null
+  guarantor: { firstNames: string; lastName: string; email: string }
+  moveInDate: string
+  dossierFacileUrl: string
+  message: string
+  consent: boolean
+  website: string
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Les questions de la candidature, une par écran. Un choix passe tout seul à la suivante. */
+function CandidateQuestions({ offer, f, set, busy, onSend, onExit }: { offer: Offer; f: Form; set: (p: Partial<Form>) => void; busy: boolean; onSend: () => void; onExit: () => void }) {
+  const [error, setError] = useState<string | null>(null)
+  const ids = ['name', 'email', 'phone', 'situation', 'income', 'occupants', 'guarantee', ...(f.guarantee === 'CAUTION' ? ['guarantor'] : []), 'moveIn', 'address', 'dossierFacile', 'send'] as const
+  const { q, go } = useQuestion(ids.length)
+  const id = ids[q - 1]
+  const count = ids.length
+  const forward = () => {
+    setError(null)
+    go(q + 1)
+  }
+  const back = () => {
+    setError(null)
+    if (q === 1) onExit()
+    else go(q - 1)
+  }
+  const check = (msg: string | null) => {
+    if (msg) setError(msg)
+    else forward()
+  }
+  const base = { q, count, onBack: back }
+  switch (id) {
+    case 'name':
+      return (
+        <QuestionScreen {...base} title="Comment vous appelez-vous ?" onNext={() => check(!f.firstNames.trim() || !f.lastName.trim() ? 'Indiquez votre prénom et votre nom.' : null)}>
+          <Chips legend="Civilité" value={f.civility} onChange={(v) => set({ civility: v })} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
+          <Fields>
+            <Input label="Prénom" value={f.firstNames} onChange={(v) => set({ firstNames: v })} autoComplete="given-name" error={error && !f.firstNames.trim() ? error : undefined} />
+            <Input label="Nom" value={f.lastName} onChange={(v) => set({ lastName: v })} autoComplete="family-name" error={error && f.firstNames.trim() && !f.lastName.trim() ? error : undefined} />
+          </Fields>
+        </QuestionScreen>
+      )
+    case 'email':
+      return (
+        <QuestionScreen {...base} title="Votre email ?" hint="Le propriétaire vous répond à cette adresse." onNext={() => check(EMAIL_RE.test(f.email.trim()) ? null : 'Indiquez un email valide.')}>
+          <Input label="Email" type="email" value={f.email} onChange={(v) => set({ email: v })} autoComplete="email" inputMode="email" error={error ?? undefined} />
+        </QuestionScreen>
+      )
+    case 'phone':
+      return (
+        <QuestionScreen {...base} title="Votre téléphone ?" hint="Facultatif : pour organiser la visite plus vite." onNext={forward} skip={forward}>
+          <Input label="Téléphone" hint="Facultatif." value={f.phone} onChange={(v) => set({ phone: v })} autoComplete="tel" inputMode="tel" />
+        </QuestionScreen>
+      )
+    case 'situation':
+      return (
+        <QuestionScreen {...base} title="Votre situation professionnelle ?" hideNext={!f.situation} onNext={forward}>
+          <Choices
+            legend="Situation professionnelle"
+            value={f.situation}
+            onPick={(v) => {
+              set({ situation: v })
+              forward()
+            }}
+            options={[
+              { value: 'EMPLOYEE', label: 'Salarié' },
+              { value: 'SELF_EMPLOYED', label: 'Indépendant' },
+              { value: 'STUDENT', label: 'Étudiant' },
+              { value: 'APPRENTICE', label: 'Apprenti ou alternant' },
+              { value: 'RETIRED', label: 'Retraité' },
+              { value: 'OTHER', label: 'Autre situation' },
+            ]}
+          />
+        </QuestionScreen>
+      )
+    case 'income':
+      return (
+        <QuestionScreen {...base} title="Combien gagne votre foyer par mois ?" hint="Revenus nets, toutes ressources comprises (salaires, aides, pensions…)." onNext={() => check(f.monthlyIncomeCents === null ? 'Indiquez vos revenus, même approximatifs.' : null)}>
+          <Money label="Revenus nets du foyer, par mois" cents={f.monthlyIncomeCents} onChange={(c) => set({ monthlyIncomeCents: c })} error={error ?? undefined} />
+        </QuestionScreen>
+      )
+    case 'occupants':
+      return (
+        <QuestionScreen {...base} title="Combien de personnes vivront dans le logement ?" hideNext={!f.occupants} onNext={forward}>
+          <Choices
+            legend="Personnes qui vivront dans le logement"
+            value={f.occupants}
+            onPick={(v) => {
+              set({ occupants: v })
+              forward()
+            }}
+            options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: n === 5 ? '5 ou plus' : String(n) }))}
+          />
+        </QuestionScreen>
+      )
+    case 'guarantee':
+      return (
+        <QuestionScreen {...base} title="Quelle garantie proposez-vous ?" hint={f.guarantee === 'VISALE' ? 'Visale est une garantie gratuite d’Action Logement, pour les moins de 31 ans et de nombreux salariés : visale.fr.' : undefined} hideNext={!f.guarantee} onNext={forward}>
+          <Choices
+            legend="Garantie"
+            columns
+            value={f.guarantee}
+            onPick={(v) => {
+              set({ guarantee: v })
+              go(q + 1)
+            }}
+            options={[
+              { value: 'CAUTION', label: 'Une personne se porte caution' },
+              { value: 'VISALE', label: 'Garantie Visale' },
+              { value: 'GLI', label: 'Assurance loyers impayés' },
+              { value: 'NONE', label: 'Pas de garant' },
+            ]}
+          />
+        </QuestionScreen>
+      )
+    case 'guarantor':
+      return (
+        <QuestionScreen {...base} title="Qui se porte caution ?" onNext={() => check(!f.guarantor.firstNames.trim() || !f.guarantor.lastName.trim() ? 'Indiquez le prénom et le nom de votre garant.' : null)}>
+          <Fields>
+            <Input label="Prénom du garant" value={f.guarantor.firstNames} onChange={(v) => set({ guarantor: { ...f.guarantor, firstNames: v } })} error={error && !f.guarantor.firstNames.trim() ? error : undefined} />
+            <Input label="Nom du garant" value={f.guarantor.lastName} onChange={(v) => set({ guarantor: { ...f.guarantor, lastName: v } })} />
+          </Fields>
+        </QuestionScreen>
+      )
+    case 'moveIn':
+      return (
+        <QuestionScreen {...base} title="Quand souhaitez-vous entrer ?" hint="Facultatif." onNext={forward} skip={forward}>
+          <Input label="Date d’entrée souhaitée" hint="Facultatif." type="date" value={f.moveInDate} onChange={(v) => set({ moveInDate: v })} />
+        </QuestionScreen>
+      )
+    case 'address':
+      return (
+        <QuestionScreen {...base} title="Où habitez-vous aujourd’hui ?" hint="Facultatif." onNext={forward} skip={forward}>
+          <AddressInput label="Adresse actuelle" hint="Facultatif." value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} />
+        </QuestionScreen>
+      )
+    case 'dossierFacile':
+      return (
+        <QuestionScreen
+          {...base}
+          title="Avez-vous un DossierFacile ?"
+          hint={
+            <>
+              Le dossier gratuit de l’État : vos pièces y sont vérifiées une fois pour toutes. Facultatif, mais il accélère beaucoup la réponse.{' '}
+              <a href="https://www.dossierfacile.logement.gouv.fr/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
+                Créer mon DossierFacile
+              </a>
+            </>
+          }
+          onNext={forward}
+          skip={forward}
+        >
+          <Input label="Lien de votre DossierFacile" value={f.dossierFacileUrl} onChange={(v) => set({ dossierFacileUrl: v })} placeholder="https://locataire.dossierfacile.logement.gouv.fr/…" hint="Facultatif." />
+          {offer.requestedDocs.length ? (
+            <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Juste après l’envoi, vous pourrez aussi déposer les pièces demandées : {offer.requestedDocs.map((d) => d.label.toLowerCase()).join(', ')}.</span>
+          ) : null}
+        </QuestionScreen>
+      )
+    case 'send':
+    default:
+      return (
+        <QuestionScreen
+          {...base}
+          title="Un mot pour le propriétaire ?"
+          hint="Facultatif. Puis envoyez votre candidature."
+          nextLabel="Envoyer ma candidature"
+          busy={busy}
+          onNext={() => (f.consent ? onSend() : setError('Cochez la case pour envoyer votre candidature.'))}
+          footer={
+            <>
+              <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement (Bailio l’aide à trier les dossiers sur vos ressources, votre garantie, vos pièces et votre date d’entrée ; il décide lui-même)" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
+              <Callout tone="tip">Le propriétaire ne peut pas vous demander de photo, de relevés bancaires, de carte Vitale ni de chèque de réservation. La loi interdit aussi toute discrimination.</Callout>
               <details style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 600, color: BAI.ink, padding: '10px 0' }}>Les seules pièces qu’un propriétaire peut vous demander</summary>
-                {data.allowedDocuments.map((g) => (
+                {offer.allowedDocuments.map((g) => (
                   <div key={g.title} style={{ marginTop: 10 }}>
                     <strong>{g.title}</strong>
                     <ul style={{ margin: '4px 0 0', paddingLeft: 20 }}>
@@ -190,26 +336,17 @@ export default function Candidature() {
                   </div>
                 ))}
               </details>
-            </Card>
-            <Card title="Un message pour le propriétaire">
-              <TextArea label="Message" value={f.message} onChange={(v) => set({ message: v })} rows={4} hint="Facultatif." />
-              {/* Champ invisible : les robots le remplissent, pas les personnes. */}
-              <input tabIndex={-1} autoComplete="off" aria-hidden value={f.website} onChange={(e) => set({ website: e.target.value })} style={{ position: 'absolute', left: -9999, width: 1, height: 1 }} />
-              <Check checked={f.consent} onChange={(v) => set({ consent: v })} label="J’ai compris que ces informations sont transmises au propriétaire pour étudier ma candidature." />
-              <ThirdPartyNotice purpose="étudier votre candidature à la location de ce logement (Bailio l’aide à trier les dossiers sur vos ressources, votre garantie, vos pièces et votre date d’entrée ; il décide lui-même)" keep="Si votre candidature n’est pas retenue, elles sont effacées, pièces comprises, au plus tard trois mois après leur envoi." />
-            </Card>
-            <SafetyNote />
-            <Callout tone="tip">Le propriétaire ne peut pas vous demander de photo, de relevés bancaires, de carte Vitale ni de chèque de réservation. La loi interdit aussi toute discrimination.</Callout>
-            <div>
-              <Btn onClick={() => void send()} disabled={busy}>
-                Envoyer ma candidature
-              </Btn>
-            </div>
-          </>
-        )}
-      </main>
-    </div>
-  )
+            </>
+          }
+        >
+          <TextArea label="Message" value={f.message} onChange={(v) => set({ message: v })} rows={4} hint="Facultatif." />
+          {/* Champ invisible : les robots le remplissent, pas les personnes. */}
+          <input tabIndex={-1} autoComplete="off" aria-hidden value={f.website} onChange={(e) => set({ website: e.target.value })} style={{ position: 'absolute', left: -9999, width: 1, height: 1 }} />
+          <Check checked={f.consent} onChange={(v) => { set({ consent: v }); if (v) setError(null) }} label="J’ai compris que ces informations sont transmises au propriétaire pour étudier ma candidature." />
+          {error ? <span role="alert" style={{ fontSize: 14, color: BAI.error }}>{error}</span> : null}
+        </QuestionScreen>
+      )
+  }
 }
 
 /** Dépôt des pièces demandées par le propriétaire, après l'envoi de la candidature. Plusieurs fichiers par pièce. */

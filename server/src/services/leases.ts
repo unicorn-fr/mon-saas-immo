@@ -5,7 +5,9 @@ import {
   durationMonths,
   leaseEndDate,
   leaseInputSchema,
+  leaseIssue,
   maxDepositCents,
+  normalizeDraft,
   parseIsoDate,
   type LeaseInput,
 } from '../domain/lease.js'
@@ -18,9 +20,15 @@ import { upgradeLegacyLeases } from './upgrade.js'
 
 /** Valide un brouillon complet. Le dépôt de garantie prend par défaut le maximum légal. */
 export function draftToLeaseInput(draft: Pick<Draft, 'data'>): LeaseInput {
-  const parsed = leaseInputSchema.safeParse(draft.data)
+  // Nombres remis en forme (valeur vide, texte) avant la validation : une saisie « 42,5 » ou un champ vidé ne bloque rien.
+  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft.data))
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? 'Le bail est incomplet.', parsed.error.issues)
+    const issue = parsed.error.issues[0]
+    // Message clair et étape où répondre, jamais le message technique de validation.
+    const custom = issue?.code === 'custom' ? issue.message : null
+    const { message, step } = leaseIssue(issue?.path ?? [])
+    console.warn('[brouillon] bail incomplet :', parsed.error.issues.map((i) => i.path.join('.')).join(', '))
+    throw new HttpError(400, custom ?? message, { step, fields: parsed.error.issues.map((i) => i.path.join('.')) })
   }
   const lease = parsed.data
   if (lease.rent.depositCents === undefined) lease.rent.depositCents = maxDepositCents(lease.type, lease.rent.rentCents)
@@ -111,7 +119,8 @@ export async function createLeaseFromDraft(user: User, draftId: string): Promise
 
   await ensureReminders(lease)
   // Les réponses du tunnel alimentent tout de suite les fiches du compte (profil, logement, locataires).
-  await upgradeLegacyLeases(user)
+  // Le bail est déjà créé : un souci ici ne doit pas faire croire qu'il a échoué (refait à la prochaine ouverture de l'espace).
+  await upgradeLegacyLeases(user).catch((err) => console.error('[bail] fiches non mises à jour', err))
 
   if (!imported) {
     const mail = layout({

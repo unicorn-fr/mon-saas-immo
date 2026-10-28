@@ -123,3 +123,26 @@ test('garage loué seul : durée du contrat, quelle que soit la structure (Code 
   assert.equal(leaseDurationMonths('PARKING', { kind: 'COMPANY' }), 12)
   assert.equal(leaseDurationMonths('PARKING', { kind: 'SCI', sciFamily: false }, { durationMonths: 36 }), 36)
 })
+
+test('brouillon : nombres vides ou écrits en texte remis en forme, message clair sinon', async () => {
+  const { normalizeDraft, leaseIssue, leaseInputSchema } = await import('./lease.js')
+  const draft = {
+    type: 'UNFURNISHED',
+    property: { address: '12 rue de la Loge, 34000 Montpellier', surface: '42,5', rooms: '2' },
+    landlord: { firstName: 'Claire', lastName: 'Dubois', address: '8 rue Foch, 34000 Montpellier' },
+    tenants: [{ firstName: 'Karim', lastName: 'Haddad' }],
+    rent: { rentCents: 78000, chargesCents: null, depositCents: null, paymentDay: null, startDate: '2026-12-01' },
+    irl: { quarter: '2026-T2', value: null },
+  }
+  const parsed = leaseInputSchema.safeParse(normalizeDraft(draft))
+  assert.ok(parsed.success, JSON.stringify(parsed.error?.issues))
+  assert.equal(parsed.data!.property.surface, 42.5)
+  assert.equal(parsed.data!.rent.chargesCents, 0)
+  assert.equal(parsed.data!.rent.paymentDay, 5)
+  assert.equal(parsed.data!.rent.depositCents, undefined)
+  assert.equal(parsed.data!.irl, null)
+  // Réponse vraiment absente : le bon message et l'étape où y répondre.
+  assert.deepEqual(leaseIssue(['property', 'rooms']), { message: 'Indiquez le nombre de pièces principales.', step: 'logement' })
+  assert.equal(leaseIssue(['rent', 'rentCents']).step, 'loyer')
+  assert.equal(leaseIssue(['tenants', 0, 'lastName']).step, 'personnes')
+})
