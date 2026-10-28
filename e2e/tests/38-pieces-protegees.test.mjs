@@ -118,3 +118,49 @@ test('locataire : photo du logement sur son dossier, pièce filigranée', async 
   await browser.close()
   assert.deepEqual(errors, [])
 })
+
+test('plusieurs fichiers par pièce (trois bulletins de salaire) et PDF piégé nettoyé', async () => {
+  const fs = await import('node:fs')
+  const jpg = fs.readFileSync(PHOTO)
+  const { token } = await newAccount()
+  const { propertyId } = await completeLease(token)
+  const t = await api('/tenants', { method: 'POST', token, body: { propertyId, email: `bulletins+${Date.now()}@example.fr`, guarantee: 'NONE' } })
+  const { url } = await api(`/tenants/${t.id}/request`, { method: 'POST', token, body: { send: false } })
+  const code = new URL(url).pathname.split('/').pop()
+
+  // PDF piégé : du JavaScript lancé à l'ouverture. Le fichier gardé n'en contient plus.
+  const trapped = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R/OpenAction 4 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]>>endobj\n4 0 obj<</Type/Action/S/JavaScript/JS(app.alert(1))>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n')
+  await upload(`/dossier/${code}/document`, { category: 'taxNotice', who: 'TENANT' }, { buffer: trapped, type: 'application/pdf', name: 'avis.pdf' })
+  const avis = (await api(`/tenants/${t.id}`, { token })).file.documents.find((d) => d.category === 'taxNotice')
+  const kept = Buffer.from(await (await fetch(`${API}/files/${avis.fileId}`, { headers: { Authorization: `Bearer ${token}` } })).arrayBuffer()).toString('latin1')
+  assert.ok(kept.startsWith('%PDF'))
+  assert.ok(!kept.includes('JavaScript') && !kept.includes('OpenAction'), 'JavaScript retiré')
+
+  const browser = await launch()
+  const page = await browser.newPage()
+  const errors = []
+  watch(page, errors)
+  page.setDefaultTimeout(20000)
+  await page.goto(`${BASE}/dossier/${code}`)
+  const input = page.getByLabel('Justificatifs de ressources (locataire)')
+  // Deux bulletins d'un coup, puis le troisième : rien n'est remplacé.
+  const slip = (n) => ({ name: `bulletin-${n}.jpg`, mimeType: 'image/jpeg', buffer: jpg })
+  await input.setInputFiles([slip(1), slip(2)])
+  await page.getByText('2 sur 3').waitFor()
+  await page.getByText('Ajoutez le dernier, un par un ou tous ensemble.').waitFor()
+  await page.getByLabel('Justificatifs de ressources (locataire)').setInputFiles([slip(3)])
+  await page.getByText('Reçu, 3 fichiers').waitFor()
+  await shot(page, 'dossier-trois-bulletins')
+  // Un mauvais fichier se retire.
+  await page.getByRole('button', { name: 'Retirer bulletin-2.jpg' }).click()
+  await page.getByText('2 sur 3').waitFor()
+  const income = (await api(`/tenants/${t.id}`, { token })).file.documents.filter((d) => d.category === 'income')
+  assert.deepEqual(income.map((d) => d.label), ['bulletin-1.jpg', 'bulletin-3.jpg'])
+  // Le propriétaire vérifie la pièce en une fois, avec ses deux fichiers.
+  const review = await api(`/tenants/${t.id}/review`, { token })
+  const item = review.find((r) => r.key === 'doc.income')
+  assert.equal(item.fileIds.length, 2)
+  assert.match(item.label, /2 fichiers/)
+  await browser.close()
+  assert.deepEqual(errors, [])
+})

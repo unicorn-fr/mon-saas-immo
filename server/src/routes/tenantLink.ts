@@ -137,7 +137,7 @@ router.get('/locataire/:code', async (req, res) => {
  */
 async function saveTenantFile(lease: Lease, file: Express.Multer.File | undefined, title: string, type: string, extra: { tenant?: boolean; meta?: Record<string, string> } = {}) {
   if (!file) return null
-  const stored = await storeFile(lease.userId, file)
+  const stored = await storeFile(lease.userId, file, { external: true })
   const blob = await prisma.fileBlob.findUniqueOrThrow({ where: { id: stored.id } })
   const doc = await prisma.document.create({
     data: {
@@ -255,7 +255,7 @@ router.post('/locataire/:code/inventory-complement', limitPerVisitor(60, 10), up
   if ((d.complements ?? []).length >= 10) throw new HttpError(400, 'Vous avez déjà envoyé 10 demandes. Écrivez directement à votre bailleur.')
   // Photos gardées comme celles de l'état des lieux (annexe du PDF si la demande est acceptée).
   const photoIds: string[] = []
-  for (const f of files) photoIds.push((await storeFile(lease.userId, f)).id)
+  for (const f of files) photoIds.push((await storeFile(lease.userId, f, { external: true })).id)
   const complement = { id: randomUUID(), at: new Date().toISOString(), heating, text: body.text, photoIds, status: 'PENDING' as const }
   // Relu juste avant l'écriture : aucune autre demande n'est effacée.
   const fresh = inventoryDataSchema.parse((await prisma.inventory.findUniqueOrThrow({ where: { id: inv.id } })).data)

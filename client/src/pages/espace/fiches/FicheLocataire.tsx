@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
-import { Btn, Callout, Chips, Input, LoadError, Loader, Money, Pill, TextLink, useToast, AddressInput } from '../../../components/kit'
+import { OwnerDocList } from '../../../components/DocFiles'
+import { Btn, Callout, Chips, Input, LoadError, Loader, Money, TextLink, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type TenantDocKey, type TenantFile } from '../../../lib/contract'
@@ -138,30 +139,29 @@ export default function FicheLocataire() {
 }
 
 function DocList({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) => void }) {
-  const docs = f.documents ?? []
-  const keys = Object.keys(TENANT_DOCUMENTS) as TenantDocKey[]
-  const upd = (k: TenantDocKey, patch: Partial<{ label: string; received: boolean; fileId: string | null }>) => {
-    const cur = docs.find((d) => d.category === k) ?? { category: k, received: false }
-    set({ documents: [...docs.filter((d) => d.category !== k), { ...cur, ...patch }] })
-  }
+  const toast = useToast()
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {keys.map((k) => {
-        const d = docs.find((x) => x.category === k)
-        return (
-          <div key={k} className="col-md" style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
-            <span style={{ fontSize: 15, fontWeight: 600, width: 220, flexShrink: 0 }}>{TENANT_DOCUMENTS[k]}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Input label="Document fourni" value={d?.label} onChange={(v) => upd(k, { label: v })} placeholder={k === 'income' ? '3 derniers bulletins de salaire' : k === 'identity' ? 'Carte d’identité' : ''} />
-            </div>
-            <FileSlot compact label="" fileId={d?.fileId} onFile={(fileId) => upd(k, { fileId, received: true })} />
-            <button type="button" className="tap" aria-pressed={Boolean(d?.received)} onClick={() => upd(k, { received: !d?.received })} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-              <Pill tone={d?.received ? 'green' : 'muted'}>{d?.received ? 'Reçu' : 'À recevoir'}</Pill>
-            </button>
-          </div>
-        )
-      })}
-    </div>
+    <OwnerDocList
+      docs={f.documents ?? []}
+      onChange={(documents) => set({ documents })}
+      labels={TENANT_DOCUMENTS}
+      suggested={{ income: 3 }}
+      paper
+      view={(id) => void openDoc(`/files/${id}`).catch(toast.error)}
+      upload={async (list) => {
+        try {
+          return await uploadPhotos(list)
+        } catch (e) {
+          toast.error(e)
+          return []
+        }
+      }}
+      renderNote={(k, entry, setNote) => (
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <Input label={`Document fourni : ${TENANT_DOCUMENTS[k as TenantDocKey]}`} hideLabel value={entry?.label} onChange={setNote} placeholder={k === 'income' ? '3 derniers bulletins de salaire' : k === 'identity' ? 'Carte d’identité' : 'Précisez le document remis'} />
+        </div>
+      )}
+    />
   )
 }
 

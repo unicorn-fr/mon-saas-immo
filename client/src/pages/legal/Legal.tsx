@@ -5,7 +5,7 @@ import { SimplePage } from '../../components/SiteChrome'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '27 octobre 2026'
+const UPDATED = '28 octobre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -512,6 +512,7 @@ export function Securite() {
         <li>Chaque justificatif envoyé par un candidat ou un locataire (identité, avis d'imposition, bulletins de salaire…) reçoit un filigrane : « Uniquement pour louer un logement à [ville] », la date et Bailio. Seule cette copie est gardée, jamais l'original : une pièce volée ou revendue porte la trace de cette location ;</li>
         <li>Les pièces d'un candidat restent cachées au propriétaire tant que le candidat n'a pas confirmé, depuis le lien reçu par email, avoir visité le logement ou rencontré le propriétaire. Une fausse annonce, sans logement à visiter, ne permet donc pas de récolter des dossiers ;</li>
         <li>Le candidat peut retirer sa candidature à tout moment depuis ce lien : elle est effacée tout de suite, pièces comprises.</li>
+        <li>Aucun fichier reçu d'un candidat ou d'un locataire n'est gardé tel quel : les photos sont réencodées, et chaque page d'un PDF est redessinée en image dans un nouveau PDF. Ce qu'un fichier piégé pourrait cacher (programme, script, pièce jointe, lien qui lance un logiciel) disparaît ; aucun fichier reçu n'est jamais exécuté.</li>
       </ul>
       <H2>Vos locataires</H2>
       <p>

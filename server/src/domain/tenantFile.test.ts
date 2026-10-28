@@ -45,3 +45,14 @@ test('vérification : ce que le locataire envoie est à vérifier ; refusé, il 
   const docRefused = applyReview(t, 'doc.identity', false, 'x')
   assert.ok(tenantMissing(docRefused).some((m) => m.key === 'doc.identity'))
 })
+
+test('plusieurs fichiers pour une pièce : ajoutés sans remplacer, six au plus', async () => {
+  const { addDocFile, docFiles, MAX_FILES_PER_DOC } = await import('./tenantFile.js')
+  let docs = [{ category: 'income', received: true, label: 'Remis sur papier' }] as Array<{ category: string; received: boolean; fileId?: string; label?: string; source?: 'TENANT' | 'OWNER' }>
+  for (let i = 1; i <= 3; i++) docs = addDocFile(docs, { category: 'income', received: true, fileId: `00000000-0000-4000-8000-00000000000${i}`, label: `bulletin-${i}.pdf`, source: 'TENANT' })
+  // La ligne « papier » sans fichier laisse la place aux fichiers ; les trois bulletins sont gardés.
+  assert.deepEqual(docFiles(docs).income.map((f) => f.name), ['bulletin-1.pdf', 'bulletin-2.pdf', 'bulletin-3.pdf'])
+  assert.equal(docFiles(docs).income[0].removable, true)
+  for (let i = 4; i <= MAX_FILES_PER_DOC; i++) docs = addDocFile(docs, { category: 'income', received: true, fileId: `00000000-0000-4000-8000-00000000000${i}`, source: 'TENANT' })
+  assert.throws(() => addDocFile(docs, { category: 'income', received: true, fileId: '00000000-0000-4000-8000-000000000009' }), /6 fichiers au plus/)
+})

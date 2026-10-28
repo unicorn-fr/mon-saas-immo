@@ -16,6 +16,29 @@ const has = (v: unknown) => v !== undefined && v !== null && String(v).trim() !=
 export type DocKey = keyof typeof TENANT_DOCUMENTS
 export const DOC_KEYS = Object.keys(TENANT_DOCUMENTS) as DocKey[]
 
+/** Fichiers au plus par pièce (trois bulletins de salaire, recto et verso d'une carte…). */
+export const MAX_FILES_PER_DOC = 6
+
+/** Fichiers attendus d'habitude pour une pièce, rappelés au locataire (« 1 sur 3 »). */
+export const SUGGESTED_FILES: Partial<Record<DocKey, number>> = { income: 3 }
+
+type DocEntry = { category: string; received: boolean; fileId?: string | null; label?: string | null; source?: 'OWNER' | 'TENANT' | null }
+
+/** Ajoute un fichier à une pièce, sans remplacer ceux déjà reçus ; une ligne sans fichier de la même pièce disparaît. */
+export function addDocFile<T extends DocEntry>(docs: T[] | null | undefined, entry: T): T[] {
+  const list = docs ?? []
+  const files = list.filter((d) => d.category === entry.category && d.fileId)
+  if (files.length >= MAX_FILES_PER_DOC) throw new RangeError(`${MAX_FILES_PER_DOC} fichiers au plus pour une même pièce. Retirez-en un pour en ajouter un autre.`)
+  return [...list.filter((d) => !(d.category === entry.category && !d.fileId)), entry]
+}
+
+/** Fichiers de chaque pièce, pour les montrer à qui les a envoyés (nom, et s'il peut le retirer). */
+export function docFiles(docs: DocEntry[] | null | undefined): Record<string, Array<{ id: string; name: string; removable: boolean }>> {
+  return Object.fromEntries(
+    DOC_KEYS.map((k) => [k, (docs ?? []).filter((d) => d.category === k && d.fileId).map((d) => ({ id: d.fileId!, name: d.label || 'Fichier', removable: d.source === 'TENANT' }))]),
+  )
+}
+
 export function tenantMissing(t: TenantFile): FileMissing[] {
   const out: FileMissing[] = []
   const info = (key: string, label: string, who: FileMissing['who'] = 'TENANT') => out.push({ key, label, who, kind: 'INFO' })
@@ -83,6 +106,8 @@ export interface ReviewItem {
   kind: 'INFO' | 'DOCUMENT'
   value?: string | number | null
   fileId?: string | null
+  /** Tous les fichiers de la pièce (trois bulletins de salaire), vérifiés ensemble. */
+  fileIds?: string[]
 }
 
 /** Ce que le locataire a envoyé depuis son lien et que le propriétaire n'a pas encore vérifié. */
@@ -94,8 +119,17 @@ export function pendingReview(t: TenantFile): ReviewItem[] {
     const src = (guarantor ? t.guarantor : t) as Record<string, unknown> | null | undefined
     out.push({ key, label: `${FIELD_LABELS[field] ?? field}${guarantor ? ' du garant' : ''}`, who: guarantor ? 'GUARANTOR' : 'TENANT', kind: 'INFO', value: (src?.[field] as string | number | null) ?? null })
   }
-  for (const d of t.documents ?? []) if (d.source === 'TENANT' && d.received && !d.verifiedAt) out.push({ key: `doc.${d.category}`, label: TENANT_DOCUMENTS[d.category as DocKey], who: 'TENANT', kind: 'DOCUMENT', fileId: d.fileId ?? null })
-  for (const d of t.guarantor?.documents ?? []) if (d.source === 'TENANT' && d.received && !d.verifiedAt) out.push({ key: `guarantor.doc.${d.category}`, label: `${TENANT_DOCUMENTS[d.category as DocKey]} du garant`, who: 'GUARANTOR', kind: 'DOCUMENT', fileId: d.fileId ?? null })
+  // Une ligne par pièce, avec tous ses fichiers (plusieurs bulletins de salaire se vérifient ensemble).
+  const docs = (list: TenantFile['documents'], who: 'TENANT' | 'GUARANTOR') => {
+    for (const k of DOC_KEYS) {
+      const pending = (list ?? []).filter((d) => d.category === k && d.source === 'TENANT' && d.received && !d.verifiedAt)
+      if (!pending.length) continue
+      const fileIds = pending.flatMap((d) => (d.fileId ? [d.fileId] : []))
+      out.push({ key: `${who === 'GUARANTOR' ? 'guarantor.' : ''}doc.${k}`, label: `${TENANT_DOCUMENTS[k]}${who === 'GUARANTOR' ? ' du garant' : ''}${fileIds.length > 1 ? `, ${fileIds.length} fichiers` : ''}`, who, kind: 'DOCUMENT', fileId: fileIds[0] ?? null, fileIds })
+    }
+  }
+  docs(t.documents, 'TENANT')
+  docs(t.guarantor?.documents, 'GUARANTOR')
   return out
 }
 

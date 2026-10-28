@@ -10,7 +10,7 @@ import { newToken } from '../lib/tokens.js'
 import { requireUser } from '../services/session.js'
 import { propertyName, readProfile, readProperty, readTenant, tenantName } from '../services/contract.js'
 import { TENANT_DOCUMENTS, guarantorSchema, tenantFileSchema, type TenantFile } from '../domain/contract.js'
-import { DOC_KEYS, GUARANTOR_EDITABLE, TENANT_EDITABLE, applyReview, pendingReview, tenantLeaseMissing, tenantMissing } from '../domain/tenantFile.js'
+import { DOC_KEYS, GUARANTOR_EDITABLE, SUGGESTED_FILES, addDocFile, docFiles, TENANT_EDITABLE, applyReview, pendingReview, tenantLeaseMissing, tenantMissing } from '../domain/tenantFile.js'
 import { landlordName } from '../pdf/labels.js'
 import { renderLetterPdf } from '../pdf/letter.js'
 import { sendPdf, sendPropertyPhoto, storeFile, upload } from './helpers.js'
@@ -149,6 +149,10 @@ function publicView(t: TenantWithProperty & { user: User }) {
     guarantor: f.guarantee === 'CAUTION' ? pick(f.guarantor as Record<string, unknown>, GUARANTOR_EDITABLE) : null,
     documents: docStatus(f.documents),
     guarantorDocuments: f.guarantee === 'CAUTION' ? docStatus(f.guarantor?.documents) : null,
+    // Plusieurs fichiers par pièce : ceux déjà reçus, et combien on en attend d'habitude (trois bulletins de salaire).
+    files: docFiles(f.documents),
+    guarantorFiles: f.guarantee === 'CAUTION' ? docFiles(f.guarantor?.documents) : null,
+    suggested: SUGGESTED_FILES,
     labels: TENANT_DOCUMENTS,
     missing: tenantMissing(f),
   }
@@ -200,12 +204,32 @@ router.post('/dossier/:code/document', limitPerVisitor(60, 40), upload.single('f
   // Justificatif enregistré seulement avec son filigrane (location concernée, date) : l'original n'est jamais gardé.
   const stored = await storeFile(t.userId, req.file, { watermark: watermarkText({ city: t.property ? readProperty(t.property).city : null }) })
   const entry = { category, received: true, fileId: stored.id, label: stored.name.slice(0, 150), source: 'TENANT' as const }
-  const next: TenantFile =
-    who === 'GUARANTOR'
-      ? { ...f, guarantor: { ...f.guarantor, documents: [...(f.guarantor?.documents ?? []).filter((d) => d.category !== category), entry] } }
-      : { ...f, documents: [...(f.documents ?? []).filter((d) => d.category !== category), entry] }
+  // Le fichier s'ajoute à ceux déjà reçus pour cette pièce (trois bulletins de salaire), sans les remplacer.
+  let next: TenantFile
+  try {
+    next = who === 'GUARANTOR' ? { ...f, guarantor: { ...f.guarantor, documents: addDocFile(f.guarantor?.documents, entry) } } : { ...f, documents: addDocFile(f.documents, entry) }
+  } catch (e) {
+    await prisma.fileBlob.deleteMany({ where: { id: stored.id } })
+    throw new HttpError(400, (e as Error).message)
+  }
   await prisma.tenant.update({ where: { id: t.id }, data: { data: tenantFileSchema.parse(next) } })
   res.status(201).json({ success: true, data: publicView(await byCode(String(req.params.code))) })
+})
+
+// Le locataire retire un fichier qu'il a envoyé (mauvais fichier, doublon). Ceux du propriétaire ne se retirent pas d'ici.
+router.delete('/dossier/:code/document/:fileId', limitPerVisitor(60, 40), async (req, res) => {
+  const t = await byCode(String(req.params.code))
+  const fileId = z.uuid().parse(req.params.fileId)
+  const who = z.enum(['TENANT', 'GUARANTOR']).default('TENANT').parse(req.query.who)
+  const f = readTenant(t)
+  const docs = (who === 'GUARANTOR' ? f.guarantor?.documents : f.documents) ?? []
+  const doc = docs.find((d) => d.fileId === fileId)
+  if (!doc || doc.source !== 'TENANT') throw new HttpError(404, 'Ce fichier n’est plus là, ou c’est votre bailleur qui l’a ajouté.')
+  const rest = docs.filter((d) => d.fileId !== fileId)
+  const next: TenantFile = who === 'GUARANTOR' ? { ...f, guarantor: { ...f.guarantor, documents: rest } } : { ...f, documents: rest }
+  await prisma.tenant.update({ where: { id: t.id }, data: { data: tenantFileSchema.parse(next) } })
+  await prisma.fileBlob.deleteMany({ where: { id: fileId, userId: t.userId } })
+  res.json({ success: true, data: publicView(await byCode(String(req.params.code))) })
 })
 
 /** Le locataire a terminé : le propriétaire est prévenu. */
