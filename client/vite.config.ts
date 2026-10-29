@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { LAUNCH_OFFER, priceLabel } from './src/config'
+import { GUIDES, guidePath } from './src/content/guides'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -18,6 +19,8 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/prix-et-remboursement', 'yearly', '0.3'],
   ['/accessibilite', 'yearly', '0.2'],
   ['/securite', 'yearly', '0.3'],
+  ['/guides', 'weekly', '0.7'],
+  ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
 ]
 
 // Description du service pour les assistants et agents d'IA (format llms.txt) : informations publiques seulement.
@@ -44,6 +47,8 @@ const LLMS_TXT = `# Bailio
 - [Sécurité des données](${SITE_URL}/securite)
 - [Mentions légales](${SITE_URL}/mentions-legales)
 - [Contact](${SITE_URL}/contact)
+- [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
+${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
 
 ## Documents officiels publics
 

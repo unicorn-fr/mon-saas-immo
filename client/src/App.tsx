@@ -20,6 +20,7 @@ import RecevoirStep from './pages/tunnel/RecevoirStep'
 import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
+import { GuideArticle, GuidesList } from './pages/Guides'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
 
@@ -263,6 +264,8 @@ function Pages() {
               <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
               <Route path="/accessibilite" element={<Accessibilite />} />
               <Route path="/securite" element={<Securite />} />
+              <Route path="/guides" element={<GuidesList />} />
+              <Route path="/guides/:slug" element={<GuideArticle />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
