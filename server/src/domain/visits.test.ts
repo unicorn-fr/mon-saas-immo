@@ -12,6 +12,10 @@ test('audience : seules les pages publiques sont comptées, jamais un lien priv�
   assert.equal(countedPath('/signer/abc123'), null)
   assert.equal(countedPath('/locataire/abc'), null)
   assert.equal(countedPath('/connexion/lien?jeton=secret'), null)
+  assert.equal(countedPath('/guides'), '/guides')
+  assert.equal(countedPath('/guides/depot-de-garantie?utm_source=pinterest'), '/guides/depot-de-garantie')
+  assert.equal(countedPath('/guides/Depot_de_garantie'), null)
+  assert.equal(countedPath('/guides/a/b'), null)
 })
 
 test('audience : provenance regroupée, lien marqué, accès direct, rechargement', () => {

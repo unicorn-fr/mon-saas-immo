@@ -50,6 +50,8 @@ Les pages demandées lors de la création d'une application :
 | **TikTok** | developers.tiktok.com : application, produit « Content Posting API » | Tant que TikTok n'a pas validé l'application, les vidéos sont publiées en privé (visibles par vous seul). La validation prend quelques jours à quelques semaines. |
 | **LinkedIn (page Bailio)** | linkedin.com/developers : application liée à la page Bailio | Publier sur la page demande le produit « Community Management API », accordé après une demande. Sur un profil personnel, « Share on LinkedIn » suffit. |
 | **X (Twitter)** | developer.x.com : projet et application, OAuth 2.0 | Le niveau gratuit permet peu de publications par mois, et ses règles changent souvent : à vérifier au moment de l'inscription. |
+| **Pinterest** | developers.pinterest.com : application, accès « Trial » puis « Standard » | Épingles vidéo avec un lien vers le guide écrit de bailio.fr. Les gens y cherchent « bail », « état des lieux », « investissement locatif ». |
+| **Fiche Google de Bailio (Google Business Profile)** | business.google.com : créer la fiche, puis dans le projet Google Cloud de YouTube, demander l'accès à l'API Business Profile (formulaire Google) | Visible dans Google et Maps. Une publication par vidéo, avec le lien du guide. L'accès à l'API est accordé par Google sur demande. |
 
 Dans n8n, menu « Credentials », puis « Add credential » : choisissez le réseau, collez l'identifiant et le secret,
 cliquez sur « Connect » et acceptez sur la page du réseau.
@@ -62,9 +64,22 @@ de l'étape 1 dans les réglages de l'environnement Claude (menu de l'environnem
 session, « Modifier », puis secrets ou variables d'environnement), sous le nom `BAILIO_RESEAUX_PASSWORD`. Ne le
 collez jamais dans la conversation.
 
-Deux façons de travailler :
-- **avec relecture** : Claude prépare les textes et vous les montre, la publication part après votre accord ;
-- **automatique** : chaque jour à heure fixe, Claude publie les nouvelles vidéos d'un dossier Google Drive.
+Choix retenu : **automatique**. Chaque jour, Claude prend les nouvelles vidéos d'un dossier Google Drive, écrit
+pour chacune la description et les tags propres à chaque réseau, publie, et écrit le guide qui l'accompagne sur
+bailio.fr.
+
+## Guides écrits sur bailio.fr
+
+Chaque vidéo devient un guide écrit sur https://bailio.fr/guides (`client/src/content/guides.ts`), bien placé dans
+Google : c'est le canal qui rapporte le plus à long terme. Les règles citées sont vérifiées sur une source officielle
+(service-public.fr, Légifrance), indiquée en fin d'article avec sa date de vérification. Le plan du site et
+`llms.txt` reprennent chaque guide automatiquement.
+
+## À faire à la main
+
+Groupes Facebook de propriétaires et Reddit (r/immobilier, r/vosfinances) : aucune publication automatique possible
+ni souhaitable (règles des groupes). Répondre aux questions des propriétaires, sans publicité directe, avec le lien
+du guide qui répond quand il existe.
 
 ## Autres canaux à envisager
 
@@ -72,7 +87,3 @@ Deux façons de travailler :
 |---|---|---|
 | **Threads** | Même application Meta qu'Instagram, audience proche | Oui (API Threads) |
 | **Bluesky** | Inscription simple, aucune validation | Oui, avec un mot de passe d'application |
-| **Pinterest** | Recherches « bail », « état des lieux », « investissement locatif » | Oui, après validation de l'application |
-| **Fiche Google (Google Business Profile)** | Visibilité dans Google et Maps, publications | Partiellement (API soumise à accord) |
-| **Articles sur bailio.fr** | Chaque vidéo devient un guide écrit (« Comment rédiger un bail meublé »), bien référencé dans Google | Oui : c'est notre site |
-| **Groupes Facebook de propriétaires, Reddit (r/immobilier, r/vosfinances)** | Là où les propriétaires posent leurs questions | Non : à la main, en répondant aux questions, sans publicité directe (règles des groupes) |

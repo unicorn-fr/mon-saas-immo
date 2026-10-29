@@ -28,14 +28,18 @@ export const COUNTED_PATHS = [
   '/confidentialite',
   '/cookies',
   '/accessibilite',
+  '/guides',
 ] as const
 
 const COUNTED = new Set<string>(COUNTED_PATHS)
 
+/** Guides publics (/guides/:slug, client/src/content/guides.ts) : comptés chacun, sans en tenir la liste ici. */
+const GUIDE = /^\/guides\/[a-z0-9]+(-[a-z0-9]+)*$/
+
 /** Chemin compté, sans paramètres ni barre finale ; null pour toute autre page (espace, liens privés…). */
 export function countedPath(raw: string): string | null {
   const path = raw.split(/[?#]/)[0].replace(/\/+$/, '') || '/'
-  return COUNTED.has(path) ? path : null
+  return COUNTED.has(path) || (path.length <= 90 && GUIDE.test(path)) ? path : null
 }
 
 /** Robots et aperçus de liens : jamais comptés. */
