@@ -15,3 +15,6 @@ server/src/generated/
 # Résultats bruts de l'audit (régénérés à chaque passage)
 tests/audit/resultats/
 tests/audit/resultats-passage1/
+
+# Adresses propres au serveur (deploy/vps/reseaux.sh)
+deploy/vps/sites/*.caddy
