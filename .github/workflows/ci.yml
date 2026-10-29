@@ -38,6 +38,22 @@ jobs:
         run: npm test
       - name: Construction
         run: npm run build
+      - name: Configuration du serveur (Docker Compose et Caddy, avec et sans la publication sur les réseaux)
+        working-directory: deploy/vps
+        run: |
+          printf 'API_DOMAIN=api.bailio.eu\nPOSTGRES_PASSWORD=essai\n' > .env
+          docker compose config -q
+          COMPOSE_PROFILES=reseaux docker compose config -q
+          rm .env
+          caddy_check() {
+            docker run --rm -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" -v "$1:/etc/caddy/sites:ro" \
+              -e SITE_DOMAIN=bailio.fr -e "SITE_REDIRECT_DOMAINS=www.bailio.fr, bailio.eu, www.bailio.eu" -e API_DOMAIN=api.bailio.eu \
+              caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          }
+          caddy_check "$PWD/sites"
+          mkdir -p "$RUNNER_TEMP/sites"
+          ./reseaux.sh --print-site reseaux.bailio.fr "$(docker run --rm caddy:2-alpine caddy hash-password --plaintext essai)" > "$RUNNER_TEMP/sites/reseaux.caddy"
+          caddy_check "$RUNNER_TEMP/sites"
 
   e2e:
     name: Parcours complets (navigateur)

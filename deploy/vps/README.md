@@ -29,6 +29,13 @@ Infomaniak de bailio.fr (SMTP authentifié, port 587) : un VPS Lite ne peut pas 
 Dans `.env` : `SITE_DOMAIN=bailio.fr`, `SITE_REDIRECT_DOMAINS=www.bailio.fr, bailio.eu, www.bailio.eu`,
 `SITE_URL=https://bailio.fr`, `API_DOMAIN=api.bailio.eu`. Tant que `SITE_DOMAIN` est vide, le serveur ne sert que l'API.
 
+### Publication sur les réseaux sociaux (facultatif)
+
+n8n, éteint par défaut. DNS A « reseaux » de bailio.fr vers le serveur, puis :
+`sudo /opt/bailio/deploy/vps/reseaux.sh reseaux.bailio.fr` (désactiver : `--off`). Adresse protégée par mot de passe
+(`/root/bailio-reseaux.txt`), mémoire limitée, sans accès à la base. Guide complet : `docs/reseaux-sociaux.md`.
+Les réglages de n8n (accès aux réseaux) sont dans le volume `n8n_data`, hors de la sauvegarde nocturne.
+
 ## Mettre à jour
 
 **Automatique** : à chaque push sur `main`, GitHub Actions lance toutes les vérifications ; si elles passent, la

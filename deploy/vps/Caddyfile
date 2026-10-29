@@ -70,3 +70,7 @@
 		header_up X-Original-Forwarded-For {remote_host}
 	}
 }
+
+# Adresses propres à ce serveur (dossier deploy/vps/sites, hors du dépôt) : publication sur les réseaux sociaux,
+# écrite par reseaux.sh. Dossier vide : aucune adresse en plus.
+import /etc/caddy/sites/*.caddy
