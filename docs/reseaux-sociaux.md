@@ -87,3 +87,11 @@ du guide qui répond quand il existe.
 |---|---|---|
 | **Threads** | Même application Meta qu'Instagram, audience proche | Oui (API Threads) |
 | **Bluesky** | Inscription simple, aucune validation | Oui, avec un mot de passe d'application |
+
+## Méthode de Claude
+
+- `.agents/product-marketing.md` : produit, public, voix de Bailio (lu par toutes les skills marketing).
+- `.claude/skills/bailio-marketing/SKILL.md` : règles (exactitude juridique, musique libre de droits, aucun faux
+  témoignage), lignes éditoriales, textes par réseau, boucle quotidienne et revue hebdomadaire.
+- `.claude/skills/` : méthodes générales (réseaux, vidéo, contenu, référencement, statistiques…), reprises du dépôt
+  coreyhaines31/marketingskills (licence MIT, `LICENSE-marketingskills`).
