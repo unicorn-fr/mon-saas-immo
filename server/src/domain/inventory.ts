@@ -7,6 +7,9 @@ import type { PropertyFile } from './contract.js'
  * Les pièces viennent de la fiche du logement.
  */
 
+
+/** Image de signature : PNG intégré à la donnée (jamais une adresse à télécharger), ou vide. */
+const signatureImage = z.string().max(400_000).regex(/^data:image\/png;base64,[A-Za-z0-9+/=]+$/, 'Signature invalide.').or(z.literal(''))
 export const STATES = ['Neuf', 'Bon', 'Usé', 'Mauvais', 'Hors service'] as const
 
 const text = (max = 500) => z.string().trim().max(max)
@@ -48,7 +51,8 @@ export const inventoryDataSchema = z.object({
   furniture: opt(z.array(z.object({ item: text(120), count: z.number().int().min(1).max(999), state: opt(z.enum(STATES)), note: opt(text(300)) })).max(200)),
   vetusteGrid: opt(z.boolean()),
   notes: opt(text(2000)),
-  signatures: opt(z.object({ landlord: opt(z.string().max(400_000)), tenant: opt(z.string().max(400_000)), signedAt: opt(z.string()) })),
+  // Signatures : une image PNG intégrée seulement. Une adresse web serait téléchargée par le serveur au rendu du PDF.
+  signatures: opt(z.object({ landlord: opt(signatureImage), tenant: opt(signatureImage), signedAt: opt(z.string().max(40)) })),
   /** Demandes du locataire pour compléter l'état des lieux d'entrée signé (article 3-2), ajoutées depuis son lien. */
   complements: opt(z.array(complementSchema).max(10)),
 })

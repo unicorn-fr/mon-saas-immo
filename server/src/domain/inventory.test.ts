@@ -24,3 +24,10 @@ test('état des lieux : photos d’ensemble par pièce et compléments gardés',
   assert.deepEqual(d.rooms?.[0].photoIds, [id])
   assert.equal(d.complements?.[0].status, 'PENDING')
 })
+
+test('état des lieux : une signature est une image intégrée, jamais une adresse que le serveur irait chercher', () => {
+  const png = 'data:image/png;base64,iVBORw0KGgo='
+  assert.equal(inventoryDataSchema.safeParse({ signatures: { landlord: png, tenant: '' } }).success, true)
+  assert.equal(inventoryDataSchema.safeParse({ signatures: { landlord: 'http://127.0.0.1:8999/x.png' } }).success, false)
+  assert.equal(inventoryDataSchema.safeParse({ signatures: { tenant: 'file:///etc/passwd' } }).success, false)
+})

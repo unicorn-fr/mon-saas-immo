@@ -3,7 +3,7 @@ import type { LandlordProfile, PartyName } from '../domain/contract.js'
 import type { InventoryData } from '../domain/inventory.js'
 import { CHANGE_LABEL, compareWithEntry, itemKey, meterComparison, worseItems } from '../domain/inventoryCompare.js'
 import { dateLong, landlordAddress, landlordName, personName } from './labels.js'
-import { BLANK, Footer, MUTED, P, Row, Section, SignatureBoxes, Table, Title, s } from './theme.js'
+import { BLANK, Footer, MUTED, P, Row, Section, SignatureBoxes, Table, Title, s, embedded } from './theme.js'
 
 /** État des lieux d'entrée ou de sortie (décret n° 2016-382 du 30 mars 2016), photos en annexe. */
 export interface InventoryInput {
@@ -197,7 +197,7 @@ export function InventoryDocument(i: InventoryInput) {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {photoOrder.map((p, n) => (
                 <View key={p.id} style={{ width: '48%', marginBottom: 8 }} wrap={false}>
-                  <Image src={i.photos[p.id]} style={{ width: '100%', height: 170, objectFit: 'cover' }} />
+                  <Image src={embedded(i.photos[p.id]) ?? ''} style={{ width: '100%', height: 170, objectFit: 'cover' }} />
                   <Text style={{ fontSize: 7.8, color: MUTED, marginTop: 3 }}>{`Photo ${n + 1} · ${p.caption}${i.photoDates?.[p.id] ? ` · ajoutée le ${stamp(i.photoDates[p.id])}` : ''}`}</Text>
                 </View>
               ))}

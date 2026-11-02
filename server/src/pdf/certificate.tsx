@@ -1,5 +1,5 @@
 import { Image, Page, Text, View } from '@react-pdf/renderer'
-import { INK, MUTED, RULE, s } from './theme.js'
+import { INK, MUTED, RULE, s, embedded } from './theme.js'
 
 /**
  * Certificat de signature électronique, joint en dernière page du document signé :
@@ -85,7 +85,7 @@ export function CertificatePage({ data }: { data: CertificateData }) {
               {x.photoHash ? <Line label="Empreinte SHA-256 de la photo" value={x.photoHash} /> : null}
               {x.mention ? <Line label="Mention recopiée" value={`« ${x.mention} »`} /> : null}
             </View>
-            {x.photo ? <Image src={x.photo} style={{ width: 78, height: 104, objectFit: 'cover', borderWidth: 0.8, borderColor: RULE }} /> : null}
+            {embedded(x.photo) ? <Image src={embedded(x.photo)!} style={{ width: 78, height: 104, objectFit: 'cover', borderWidth: 0.8, borderColor: RULE }} /> : null}
           </View>
         </View>
       ))}
