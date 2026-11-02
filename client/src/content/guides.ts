@@ -25,6 +25,35 @@ export interface Guide {
 
 export const GUIDES: Guide[] = [
   {
+    slug: 'treve-hivernale',
+    title: 'Trêve hivernale 2026-2027 : ce qui change pour le propriétaire',
+    description: 'Du 1er novembre 2026 au 31 mars 2027 : ce que la trêve interdit, ce qu’elle n’efface pas et les personnes qu’elle ne protège pas.',
+    date: '2026-11-02',
+    blocks: [
+      { p: 'La trêve hivernale est la période pendant laquelle un locataire ne peut pas être expulsé de son logement. Elle revient chaque année, du 1er novembre au 31 mars. Cette année, elle court du 1er novembre 2026 au 31 mars 2027.' },
+      { h: 'Ce que la trêve interdit' },
+      { p: 'Pendant la trêve, vous ne pouvez pas faire expulser votre locataire, même si un juge a déjà décidé son expulsion. Cela vaut pour tous les motifs, loyers impayés compris.' },
+      { p: 'Les coupures de gaz et d’électricité du logement sont, elles aussi, interdites pendant cette période.' },
+      { h: 'Ce que la trêve n’efface pas' },
+      { p: 'La trêve ne supprime pas les dettes de loyer. Le loyer reste dû chaque mois, et votre locataire doit continuer, ou commencer, à rembourser ce qu’il vous doit.' },
+      { p: 'À la fin de la trêve, si un juge a déjà rendu une décision d’expulsion, elle peut être exécutée par un commissaire de justice (anciennement huissier), à partir du 1er avril 2027.' },
+      { h: 'Les personnes que la trêve ne protège pas' },
+      { list: [
+        'Les personnes qui bénéficient d’un relogement adapté aux besoins de leur famille.',
+        'Les occupants d’un immeuble visé par un arrêté de mise en sécurité, c’est-à-dire un bâtiment jugé dangereux par la mairie ou la préfecture.',
+        'Les squatteurs qui occupent un domicile, résidence principale ou secondaire.',
+        'Les squatteurs d’un garage ou d’un terrain : le juge qui ordonne l’expulsion peut supprimer ou réduire la trêve.',
+      ] },
+      { p: 'Dans certains cas de violences dans le couple ou sur un enfant, le juge aux affaires familiales peut aussi ordonner l’expulsion pendant la trêve.' },
+      { h: 'Que faire si votre locataire ne paie plus ?' },
+      { p: 'N’attendez pas le printemps. Parlez-en vite avec votre locataire : un retard d’un mois se règle plus facilement qu’une dette de six mois. Proposez-lui, si besoin, un échéancier, c’est-à-dire un remboursement en plusieurs fois, et gardez une trace écrite de chaque échange.' },
+      { note: 'Dans Bailio, un loyer en retard apparaît dans « Aujourd’hui » et le parcours « Impayé » vous guide étape par étape : lettre de relance prête à envoyer, puis appel au garant s’il y en a un.' },
+    ],
+    sources: [
+      { label: 'Service-public.fr : Trêve hivernale 2026-2027, ce que vous devez savoir (actualité du 2 octobre 2026)', url: 'https://www.service-public.gouv.fr/particuliers/actualites/A14632', checked: '2 novembre 2026' },
+    ],
+  },
+  {
     slug: 'conge-du-proprietaire',
     title: 'Donner congé à son locataire : délais et motifs',
     description: 'Quand et pourquoi un propriétaire peut mettre fin au bail, et comment envoyer la lettre pour qu’elle soit valable.',
