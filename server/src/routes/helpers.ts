@@ -2,6 +2,7 @@ import type { Response } from 'express'
 import multer from 'multer'
 import sharp from 'sharp'
 import { prisma } from '../db.js'
+import { lockedCandidateFiles } from '../services/lockedFiles.js'
 import { HttpError } from '../lib/http.js'
 import { sha256 } from '../lib/tokens.js'
 import { cleanPdf, watermarkImage } from '../services/watermark.js'
@@ -74,7 +75,8 @@ export async function storeFile(userId: string, f: Express.Multer.File, opts: { 
 /** Fichier du propriétaire, en data URL (pour l'intégrer à un PDF). */
 export async function filesAsDataUrls(userId: string, ids: string[]): Promise<Record<string, string>> {
   if (!ids.length) return {}
-  const rows = await prisma.fileBlob.findMany({ where: { userId, id: { in: ids }, mimeType: { startsWith: 'image/' } } })
+  const locked = await lockedCandidateFiles(userId, ids)
+  const rows = await prisma.fileBlob.findMany({ where: { userId, id: { in: ids.filter((id) => !locked.has(id)) }, mimeType: { startsWith: 'image/' } } })
   return Object.fromEntries(rows.map((r) => [r.id, `data:${r.mimeType};base64,${Buffer.from(r.data).toString('base64')}`]))
 }
 
@@ -139,7 +141,8 @@ export function mergeFile<T extends Record<string, unknown>>(current: T, patch: 
 /** Photo principale d'un logement, pour une page publique (candidat, locataire) : la première de la fiche. */
 export async function sendPropertyPhoto(res: Response, p: Parameters<typeof readProperty>[0]) {
   const id = readProperty(p).photos?.[0]
-  const f = id ? await prisma.fileBlob.findFirst({ where: { id, userId: p.userId, mimeType: { startsWith: 'image/' } } }) : null
+  const locked = id ? (await lockedCandidateFiles(p.userId, [id])).has(id) : false
+  const f = id && !locked ? await prisma.fileBlob.findFirst({ where: { id, userId: p.userId, mimeType: { startsWith: 'image/' } } }) : null
   if (!f) throw new HttpError(404, 'Aucune photo pour ce logement.')
   sendFile(res, Buffer.from(f.data), f.mimeType, f.name, false)
 }

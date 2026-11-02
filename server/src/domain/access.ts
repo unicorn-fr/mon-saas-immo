@@ -28,8 +28,23 @@ export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitati
 
 export const isSelfPath = (path: string) => SELF_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
+/**
+ * Chemin tel que le routeur l'interprète : Express ignore les majuscules et la barre finale, et décode l'adresse.
+ * Sans cette forme unique, « /STRUCTURES/x » ou « /properties/x/structure/ » passaient à côté de routeDenied.
+ */
+export function normalizePath(raw: string): string {
+  let p = raw
+  try {
+    p = decodeURIComponent(raw)
+  } catch {
+    // Adresse mal encodée : gardée telle quelle (le routeur la refusera).
+  }
+  return p.toLowerCase().replace(/\/{2,}/g, '/').replace(/\/+$/, '') || '/'
+}
+
 /** null si la requête est permise pour ce rôle, sinon le message (en français) à afficher. */
-export function routeDenied(role: AccessRole, method: string, path: string): string | null {
+export function routeDenied(role: AccessRole, method: string, rawPath: string): string | null {
+  const path = normalizePath(rawPath)
   const m = method.toUpperCase()
   const read = m === 'GET' || m === 'HEAD'
   if (path === '/trash' || path.startsWith('/trash/')) return 'La corbeille reste réservée au propriétaire.'
@@ -133,7 +148,8 @@ export function scopeQuery(model: string, operation: string, args: Record<string
     if (filter === 'DENY') return { kind: 'DENY' }
     return filter ? { kind: 'FILTER', where: filter } : { kind: 'ALLOW' }
   }
-  if (model === 'User') return { kind: 'DENY' }
+  // Profil et structures (identité, IBAN qui reçoit les loyers) : réservés au propriétaire, quelle que soit la route.
+  if (model === 'User' || model === 'Structure') return { kind: 'DENY' }
   if (FILTER_WRITE_OPS.has(operation)) {
     if (filter === 'DENY') return { kind: 'DENY' }
     return filter ? { kind: 'FILTER', where: filter } : { kind: 'ALLOW' }

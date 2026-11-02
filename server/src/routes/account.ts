@@ -2,11 +2,12 @@ import { Router } from 'express'
 import { randomInt } from 'node:crypto'
 import { z } from 'zod'
 import { prisma } from '../db.js'
+import { docsLocked, type CandidateFollow } from '../domain/candidates.js'
 import { requireUser } from '../services/session.js'
 import { publicUser } from './auth.js'
 import { HttpError } from '../lib/http.js'
 import { layout, sendEmail } from '../lib/email.js'
-import { limitPerVisitor } from '../lib/rateLimit.js'
+import { allowPerKey, limitPerVisitor } from '../lib/rateLimit.js'
 import { hashToken } from '../lib/tokens.js'
 import { deviceLabel } from '../domain/device.js'
 
@@ -52,6 +53,8 @@ const PURPOSE_LABEL = { EXPORT: 'télécharger toutes vos données', DELETE: 'su
 router.post('/account/confirm-code', limitPerVisitor(10, 5), async (req, res) => {
   const user = req.user!
   const { purpose } = z.object({ purpose: purposeSchema }).parse(req.body)
+  // Chaque code redonne 5 essais : au plus 5 codes par heure et par compte, quelle que soit l'adresse IP.
+  allowPerKey('confirm-code', user.id, 5, 60, 'Plusieurs codes ont déjà été envoyés. Réessayez dans une heure.')
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0')
   await prisma.actionCode.deleteMany({ where: { userId: user.id, purpose } })
   await prisma.actionCode.create({ data: { userId: user.id, purpose, codeHash: hashToken(`${user.id}:${purpose}:${code}`), expiresAt: new Date(Date.now() + CODE_MINUTES * 60_000) } })
@@ -103,7 +106,13 @@ router.post('/account/export', async (req, res) => {
     prisma.structure.findMany({ where: { userId } }),
   ])
   res.setHeader('Content-Disposition', 'attachment; filename="bailio-export.json"')
-  res.json({ exportedAt: new Date().toISOString(), user: { ...publicUser(user), profile: user.profile }, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates, contacts, interventions, structures })
+  // Candidatures : sans les jetons du candidat (dépôt, suivi), et sans les fichiers encore cachés (visite non confirmée).
+  const safeCandidates = candidates.map((c) => {
+    const { uploadToken: _u, followHashes: _f, ...d } = (c.data ?? {}) as Record<string, unknown> & { documents?: { fileId?: string | null }[] }
+    const locked = docsLocked(c.data as unknown as CandidateFollow)
+    return { ...c, data: { ...d, documents: (d.documents ?? []).map((doc) => (locked ? { ...doc, fileId: null } : doc)) } }
+  })
+  res.json({ exportedAt: new Date().toISOString(), user: { ...publicUser(user), profile: user.profile }, properties, tenants, leases, payments, expenses, inventories, reminders, documents, files, candidates: safeCandidates, contacts, interventions, structures })
 })
 
 // Suppression définitive du compte et de toutes ses données (RGPD, art. 17).
@@ -134,6 +143,8 @@ router.delete('/account/sessions/:id', async (req, res) => {
 // « Déconnecter tous les autres appareils »
 router.post('/account/sessions/revoke-others', async (req, res) => {
   const r = await prisma.session.deleteMany({ where: { userId: req.user!.id, NOT: { id: req.sessionId ?? '' } } })
+  // Les liens de connexion encore valables (emails, QR code de l'état des lieux) ouvriraient de nouvelles sessions.
+  await prisma.loginToken.updateMany({ where: { email: req.user!.email, usedAt: null }, data: { usedAt: new Date() } })
   res.json({ success: true, data: { revoked: r.count } })
 })
 

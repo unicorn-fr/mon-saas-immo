@@ -33,3 +33,16 @@ test('PDF illisible ou trop long : refusé avec une explication', async () => {
   for (let i = 0; i < 13; i++) long.addPage([200, 200])
   await assert.rejects(cleanPdf(Buffer.from(await long.save())), /plus de 12 pages/)
 })
+
+test('PDF à page démesurée : refusé avant d’être dessiné (mémoire du serveur protégée)', async () => {
+  const doc = await PDFDocument.create()
+  doc.addPage([14400, 14400])
+  const huge = Buffer.from(await doc.save())
+  assert.ok(huge.length < 5000)
+  await assert.rejects(cleanPdf(huge, 'test'), /beaucoup trop grande/)
+  // Une page A3 reste acceptée.
+  const a3 = await PDFDocument.create()
+  a3.addPage([842, 1191])
+  const out = await PDFDocument.load(await cleanPdf(Buffer.from(await a3.save())))
+  assert.equal(out.getPageCount(), 1)
+})
