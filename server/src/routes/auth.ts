@@ -111,8 +111,13 @@ router.post('/magic-link', limiter, async (req, res) => {
   const { email, signup, next } = emailSchema.extend({ signup: z.boolean().optional(), next: nextPath }).parse(req.body)
   const user = await prisma.user.findUnique({ where: { email } })
   // Page demandée avant la connexion : le lien de l'email y ramène.
-  if (user || signup) await sendMagicLink(email, null, !user, null, next)
-  // Même réponse que le compte existe ou non (on ne révèle pas les adresses inscrites).
+  // Même réponse, et même délai, que le compte existe ou non (on ne révèle pas les adresses inscrites) : l'envoi
+  // se fait après la réponse, et une limite atteinte pour cette adresse n'est pas dévoilée.
+  if (user || signup) {
+    void sendMagicLink(email, null, !user, null, next).catch((e) => {
+      if (!(e instanceof HttpError && e.status === 429)) console.error('[auth] lien de connexion non envoyé :', e)
+    })
+  }
   res.json({ success: true, data: { sent: true } })
 })
 

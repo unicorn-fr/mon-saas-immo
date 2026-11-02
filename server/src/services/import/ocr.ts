@@ -3,6 +3,7 @@ import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { HttpError } from '../../lib/http.js'
+import { assertReasonablePages } from '../pdfPages.js'
 import { preparePage } from './image.js'
 
 /**
@@ -155,6 +156,7 @@ export async function documentText(files: UploadedFile[]): Promise<DocumentText>
         // Un PDF tapé contient du texte sur chaque page ; un scan n'en contient pas (ou presque).
         if (text.replace(/\s/g, '').length >= 250 * pages) return { text, pages, scanned: false }
 
+        await assertReasonablePages(pdf, pages)
         await run('pdftoppm', ['-r', '300', '-gray', '-png', '-l', String(pages), pdf, join(dir, 'scan')])
         const images = (await readdir(dir)).filter((f) => f.startsWith('scan')).sort()
         const texts: string[] = []

@@ -4,7 +4,7 @@ import { formatDateFr } from '../domain/lease.js'
 import type { LetterContent } from '../domain/letters.js'
 import { landlordAddress, landlordName } from './labels.js'
 import { CONGE_NOTICE, NoticePages } from './notice.js'
-import { BLANK, MUTED, P, RULE, ScriptName, SignatureBoxes, Table, s } from './theme.js'
+import { BLANK, MUTED, P, RULE, ScriptName, SignatureBoxes, Table, s, embedded } from './theme.js'
 
 /** Courrier au locataire : expéditeur, destinataire, lieu et date, objet, texte, signature. */
 export interface LetterRender {
@@ -20,7 +20,7 @@ export function LetterDocument({ content, landlord, recipient, date = new Date()
   const signature = (
     <View style={{ alignItems: 'flex-end', marginTop: 26 }} wrap={false}>
       <Text style={{ fontSize: 10 }}>{name}</Text>
-      {landlord.signature ? <Image src={landlord.signature} style={{ height: 46, marginTop: 6, objectFit: 'contain' }} /> : <View style={{ marginTop: 8 }}><ScriptName>{landlord.lastName ?? name}</ScriptName></View>}
+      {embedded(landlord.signature) ? <Image src={embedded(landlord.signature)!} style={{ height: 46, marginTop: 6, objectFit: 'contain' }} /> : <View style={{ marginTop: 8 }}><ScriptName>{landlord.lastName ?? name}</ScriptName></View>}
     </View>
   )
   const body = content.paragraphs.map((p, i) => (

@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { User } from '@prisma/client'
 import { accessScope, prisma } from '../db.js'
-import { isSelfPath, routeDenied, type AccessRole, type Scope } from '../domain/access.js'
+import { isSelfPath, normalizePath, routeDenied, type AccessRole, type Scope } from '../domain/access.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { HttpError } from '../lib/http.js'
 import { clientIp } from '../lib/rateLimit.js'
@@ -77,7 +77,7 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
   if (!user) return next(new HttpError(401, 'Votre session a expiré. Reconnectez-vous.'))
   const space = String(req.headers['x-bailio-space'] ?? '').trim()
   // Chemin complet sous /api (dans un sous-routeur, req.path est raccourci).
-  const path = req.originalUrl.split('?')[0].replace(/^\/api(?=\/|$)/, '') || '/'
+  const path = normalizePath(req.originalUrl.split('?')[0].replace(/^\/api(?=\/|$)/i, '') || '/')
   if (!space || isSelfPath(path)) {
     req.user = user
     return next()

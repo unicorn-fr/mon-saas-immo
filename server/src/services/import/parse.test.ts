@@ -89,3 +89,10 @@ test('nombres en lettres', () => {
   assert.equal(wordsToNumber('trois'), 3)
   assert.equal(wordsToNumber('premier'), 1)
 })
+
+test('texte importé démesuré de lignes vides : lu en temps linéaire (pas de blocage du serveur)', () => {
+  const text = 'CONTRAT DE LOCATION\n' + '\t \n '.repeat(60_000)
+  const start = performance.now()
+  parseLease(text)
+  assert.ok(performance.now() - start < 1500, 'lecture trop lente')
+})

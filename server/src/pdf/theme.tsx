@@ -58,6 +58,12 @@ export const s = StyleSheet.create({
 })
 
 /** Valeur inconnue : une ligne à compléter à la main. */
+/**
+ * Image intégrée seulement (data:image/…) : le moteur PDF télécharge toute adresse web qu'on lui donne, ce qui ferait
+ * appeler par le serveur des adresses choisies par un utilisateur. Toute autre valeur est ignorée.
+ */
+export const embedded = (src: string | null | undefined): string | undefined => (src && /^data:image\/(png|jpeg|webp);base64,/.test(src) ? src : undefined)
+
 export const BLANK = '__________________________'
 export const orBlank = (v: string | number | null | undefined) => (v === null || v === undefined || v === '' ? BLANK : String(v))
 
@@ -166,7 +172,7 @@ export function SignatureBoxes({ boxes }: { boxes: { label: string; name?: strin
         <View key={b.label + (b.name ?? '')} style={s.signBox}>
           <Text style={{ fontSize: 7.8, color: MUTED }}>{b.label}</Text>
           {b.name ? <Text style={{ fontSize: 8.5, fontWeight: 600, marginTop: 2 }}>{b.name}</Text> : null}
-          {b.image ? <Image src={b.image} style={{ height: 44, objectFit: 'contain', marginTop: 4, alignSelf: 'flex-start' }} /> : null}
+          {embedded(b.image) ? <Image src={embedded(b.image)!} style={{ height: 44, objectFit: 'contain', marginTop: 4, alignSelf: 'flex-start' }} /> : null}
           {b.hint ? <Text style={{ fontSize: 7, color: MUTED, marginTop: 'auto' }}>{b.hint}</Text> : null}
         </View>
       ))}

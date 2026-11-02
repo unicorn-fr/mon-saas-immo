@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib'
 import sharp from 'sharp'
 import { prisma } from '../db.js'
+import { lockedCandidateFiles } from './lockedFiles.js'
 import type { ContractInput } from '../domain/contract.js'
 import { diagnosticsFor } from '../domain/rules.js'
 import { renderContractPdf, type SignedLease } from '../pdf/contract.js'
@@ -20,6 +21,8 @@ interface Annex {
 /** Dernier fichier déposé pour chaque diagnostic exigé et joint au bail. */
 export async function diagnosticAnnexes(property: ContractInput['property'], propertyId: string | null | undefined): Promise<Annex[]> {
   if (!propertyId) return []
+  const owner = await prisma.property.findUnique({ where: { id: propertyId }, select: { userId: true } })
+  if (!owner) return []
   const out: Annex[] = []
   for (const d of diagnosticsFor(property).filter((x) => x.required && x.annexed)) {
     const doc = await prisma.document.findFirst({ where: { propertyId, kind: 'DIAGNOSTIC', meta: { path: ['diagnostic'], equals: d.key }, file: { not: null } }, orderBy: { createdAt: 'desc' } })
@@ -28,7 +31,10 @@ export async function diagnosticAnnexes(property: ContractInput['property'], pro
       continue
     }
     const fileId = property.diagnostics?.[d.key]?.fileId
-    const blob = fileId ? await prisma.fileBlob.findUnique({ where: { id: fileId } }) : null
+    // Seulement un fichier du propriétaire du logement (jamais celui d'un autre compte), et jamais une pièce de candidat
+    // encore cachée.
+    const locked = fileId ? (await lockedCandidateFiles(owner.userId, [fileId])).has(fileId) : true
+    const blob = fileId && !locked ? await prisma.fileBlob.findFirst({ where: { id: fileId, userId: owner.userId } }) : null
     if (blob) out.push({ label: d.label, bytes: Buffer.from(blob.data), mime: blob.mimeType })
   }
   return out

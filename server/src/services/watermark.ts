@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { PDFDocument } from 'pdf-lib'
 import { HttpError } from '../lib/http.js'
+import { assertReasonablePages } from './pdfPages.js'
 
 const escapeXml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -40,11 +41,34 @@ export const MAX_PAGES = 12
  * le fichier gardé ne contient que des images. Avec `text`, chaque page reçoit aussi le filigrane.
  */
 export async function cleanPdf(pdf: Buffer, text?: string): Promise<Buffer> {
+  return oneAtATime(() => cleanPdfNow(pdf, text))
+}
+
+// Une conversion à la fois (comme la lecture des baux importés) : plusieurs PDF envoyés en même temps ne peuvent
+// pas saturer la mémoire du serveur ; au-delà de 8 en attente, la demande est refusée et peut être refaite.
+let running = false
+const waiting: (() => void)[] = []
+async function oneAtATime<T>(fn: () => Promise<T>): Promise<T> {
+  if (running) {
+    if (waiting.length >= 8) throw new HttpError(503, 'Beaucoup de documents sont en cours de traitement. Réessayez dans une minute.')
+    await new Promise<void>((resolve) => waiting.push(resolve))
+  } else running = true
+  try {
+    return await fn()
+  } finally {
+    const next = waiting.shift()
+    if (next) next()
+    else running = false
+  }
+}
+
+async function cleanPdfNow(pdf: Buffer, text?: string): Promise<Buffer> {
   const dir = await mkdtemp(join(tmpdir(), 'bailio-piece-'))
   let pages: string[] = []
   try {
     const src = join(dir, 'piece.pdf')
     await writeFile(src, pdf, { mode: 0o600 })
+    await assertReasonablePages(src, MAX_PAGES + 1)
     try {
       // Une page de plus que la limite : pour savoir s'il y en a trop, sans tout lire.
       await new Promise<void>((resolve, reject) =>

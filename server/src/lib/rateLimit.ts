@@ -10,7 +10,8 @@ import { HttpError } from './http.js'
  * limite par adresse et une limite globale (ci-dessous).
  */
 export function clientIp(req: Request): string {
-  const forwarded = req.header('x-original-forwarded-for') || req.header('x-real-ip') || ''
+  // Seul l'en-tête écrit par Caddy compte (X-Real-IP n'est jamais posé par Caddy : il ne servait qu'à contourner les limites).
+  const forwarded = req.header('x-original-forwarded-for') || ''
   const first = forwarded.split(',')[0]?.trim()
   return first || req.ip || 'inconnu'
 }
@@ -60,4 +61,23 @@ export function allowEmailTo(to: string): void {
   sentTo.set(key, recent)
   // Nettoyage : la table ne garde que les adresses de la dernière heure.
   if (sentTo.size > 5000) for (const [k, v] of sentTo) if (!v.some((t) => now - t < HOUR)) sentTo.delete(k)
+}
+
+// ── Limite par clé (compte, adresse…), indépendante de l'IP ─────────────────
+
+const buckets = new Map<string, number[]>()
+
+/**
+ * Refuse au-delà de `max` actions par `windowMinutes` pour une même clé (par exemple un compte) : une limite par IP
+ * se contourne en changeant d'adresse, pas celle-ci. Mémoire du processus, nettoyée au passage.
+ */
+export function allowPerKey(bucket: string, key: string, max: number, windowMinutes: number, message: string): void {
+  const now = Date.now()
+  const windowMs = windowMinutes * 60_000
+  const k = `${bucket}:${key}`
+  const recent = (buckets.get(k) ?? []).filter((t) => now - t < windowMs)
+  if (recent.length >= max * SCALE) throw new HttpError(429, message)
+  recent.push(now)
+  buckets.set(k, recent)
+  if (buckets.size > 10000) for (const [b, v] of buckets) if (!v.some((t) => now - t < windowMs)) buckets.delete(b)
 }

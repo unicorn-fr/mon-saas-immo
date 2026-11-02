@@ -2,7 +2,7 @@ import { Document, Image, Page, Text, View, renderToBuffer } from '@react-pdf/re
 import type { LandlordProfile, PartyName } from '../domain/contract.js'
 import type { DamageLine } from '../domain/damage.js'
 import { dateLong, landlordName, personName } from './labels.js'
-import { BLANK, Footer, MUTED, P, Row, Section, Table, Title, s } from './theme.js'
+import { BLANK, Footer, MUTED, P, Row, Section, Table, Title, s, embedded } from './theme.js'
 
 /**
  * Récapitulatif des dégradations : éléments plus abîmés qu'à l'entrée, décision et commentaire du bailleur, coût,
@@ -72,7 +72,7 @@ export function DamageDocument(i: DamageInput) {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {annex.map((p, n) => (
                 <View key={p.id} style={{ width: '48%', marginBottom: 8 }} wrap={false}>
-                  <Image src={i.photos[p.id]} style={{ width: '100%', height: 170, objectFit: 'cover' }} />
+                  <Image src={embedded(i.photos[p.id]) ?? ''} style={{ width: '100%', height: 170, objectFit: 'cover' }} />
                   <Text style={{ fontSize: 7.8, color: MUTED, marginTop: 3 }}>{`Photo ${n + 1} · ${p.caption}${i.photoDates[p.id] ? ` · ajoutée le ${new Date(i.photoDates[p.id]).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })}` : ''}`}</Text>
                 </View>
               ))}
