@@ -54,6 +54,23 @@ jobs:
           mkdir -p "$RUNNER_TEMP/sites"
           ./reseaux.sh --print-site reseaux.bailio.fr "$(docker run --rm caddy:2-alpine caddy hash-password --plaintext essai)" > "$RUNNER_TEMP/sites/reseaux.caddy"
           caddy_check "$RUNNER_TEMP/sites"
+      - name: Image de l'API (démarre et répond, sans droits d'administrateur, avec les outils de lecture des PDF)
+        run: |
+          docker build -q -t bailio-api .
+          docker network create essai
+          docker run -d --name db --network essai -e POSTGRES_USER=bailio -e POSTGRES_PASSWORD=essai -e POSTGRES_DB=bailio postgres:16-alpine
+          for i in $(seq 1 30); do docker exec db pg_isready -U bailio -d bailio >/dev/null 2>&1 && break; sleep 1; done
+          docker run -d --name api --network essai -e DATABASE_URL=postgresql://bailio:essai@db:5432/bailio bailio-api
+          ok=0
+          for i in $(seq 1 60); do
+            if docker exec api node -e "fetch('http://localhost:5000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then ok=1; break; fi
+            sleep 2
+          done
+          docker logs api 2>&1 | tail -20
+          [ "$ok" = 1 ] || { echo "L'API ne démarre pas"; exit 1; }
+          [ "$(docker exec api id -u)" != "0" ] || { echo "L'API tourne en administrateur"; exit 1; }
+          docker exec api sh -c 'tesseract --list-langs 2>&1 | grep -q fra && pdftoppm -v >/dev/null 2>&1 && pdfinfo -v >/dev/null 2>&1'
+          docker exec api node -e "const fs=require('fs'),os=require('os'),p=fs.mkdtempSync(os.tmpdir()+'/essai-');fs.writeFileSync(p+'/x','1')"
 
   e2e:
     name: Parcours complets (navigateur)

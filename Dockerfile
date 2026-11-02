@@ -13,6 +13,10 @@ RUN npm ci
 COPY server ./
 RUN npm run build
 ENV NODE_ENV=production
+# Sans droits d'administrateur : l'utilisateur « node » de l'image lit le code (qui reste à root, non modifiable) et
+# n'écrit que dans le dossier temporaire du système (conversions PDF, lecture des baux). Une faille dans l'API ne
+# donnerait donc pas la main sur tout le conteneur. Vérifié en CI : l'image démarre et répond (ci.yml).
+USER node
 EXPOSE 5000
 # migrate deploy n'applique que des migrations versionnées : il ne supprime jamais de données.
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
