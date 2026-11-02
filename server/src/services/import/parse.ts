@@ -401,7 +401,9 @@ function readParties(doc: Doc): { landlord: Person; tenants: (PersonName & { ema
     taken.push([hit.index, n.end])
   }
   // 2 bis. Acte rédigé sans civilité : « ENTRE LES SOUSSIGNÉS / Jean DUPONT, né le… ; / ET / Marie MARTIN… ; Paul BERNARD… ; »
-  for (const hit of doc.find(/entre les soussigne(?:e)?s?\s*[:,]?\s*\n|\n[\s:]*et\s*\n|;\s*\n/g, 0, end)) {
+  // Avant « ET », seulement des espaces de la même ligne : avec \s*, une longue suite de lignes vides faisait un temps
+  // de recherche quadratique (plus d'une seconde pour 120 000 caractères), qui bloquait le serveur.
+  for (const hit of doc.find(/entre les soussigne(?:e)?s?\s*[:,]?\s*\n|\n[ \t:]*et\s*\n|;\s*\n/g, 0, end)) {
     if (overlaps(hit.end)) continue
     if (/^[\s:]*([cg]i-?\s?(apres|dessous)|pour|le|la|les|il|d'une|d'autre)\b/.test(doc.low.slice(hit.end, hit.end + 30))) continue
     const n = nameAt(doc, hit.end, false)

@@ -21,6 +21,8 @@ const router = Router()
 const createLimiter = limitPerVisitor(60, 30)
 const emailLimiter = limitPerVisitor(60, 8)
 const importLimiter = limitPerVisitor(60, 10)
+// Aperçu PDF : la génération occupe le processeur ; 30 aperçus par 10 minutes suffisent largement à un visiteur.
+const previewLimiter = limitPerVisitor(10, 30)
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024, files: 10 } })
 
 /** Le brouillon est identifié par son jeton, envoyé dans l'en-tête X-Draft-Token. */
@@ -88,7 +90,7 @@ router.post('/current/resume-link', emailLimiter, optionalUser, async (req, res)
 })
 
 // Aperçu du bail complet, avant la création du compte.
-router.get('/current/preview.pdf', optionalUser, async (req, res) => {
+router.get('/current/preview.pdf', previewLimiter, optionalUser, async (req, res) => {
   const draft = await draftFromRequest(req)
   // Aperçu du tunnel : toujours incomplet (diagnostics, équipements…), jamais à signer tel quel.
   const pdf = await stampDraft(await renderLeasePdf(draftToLeaseInput(draft)))
