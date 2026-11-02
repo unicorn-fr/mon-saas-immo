@@ -9,7 +9,7 @@ import { Callout, Input } from '../components/kit'
 import { MailLinks } from '../components/MailLinks'
 import { Button, Spinner, display } from '../components/ui'
 import { switchSpace, type SharedSpace } from '../lib/shared'
-import { api, ApiError } from '../lib/api'
+import { API_BASE, api, ApiError } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import type { User } from '../lib/types'
 
@@ -131,13 +131,24 @@ export function Inscription() {
 /** Arrivée depuis le lien reçu par email (ou le QR code de l'état des lieux). */
 export function ConnexionLien() {
   const [params] = useSearchParams()
-  const { signIn } = useAuth()
+  const { signIn, user, loading } = useAuth()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  // Lien d'un autre compte que celui déjà ouvert : on demande avant de changer d'espace (un lien reçu d'un tiers
+  // ne doit pas faire travailler le propriétaire, sans qu'il le voie, dans l'espace de quelqu'un d'autre).
+  const [other, setOther] = useState<Session | null>(null)
   const once = useRef(false)
 
+  const open = (s: Session) => {
+    signIn(s.sessionToken, s.user)
+    // Lien venu d'une invitation : l'espace partagé s'ouvre tout de suite.
+    if (s.space) return switchSpace(s.space)
+    const next = safePath(params.get('suite'))
+    navigate(s.leaseId ? `/bienvenue/${s.leaseId}` : next ?? '/espace', { replace: true, state: { justCreated: Boolean(s.leaseId) } })
+  }
+
   useEffect(() => {
-    if (once.current) return
+    if (loading || once.current) return
     once.current = true
     const token = params.get('jeton')
     if (!token) {
@@ -145,15 +156,17 @@ export function ConnexionLien() {
       return
     }
     api<Session>('/auth/magic-link/verify', { method: 'POST', body: { token } })
-      .then((s) => {
-        signIn(s.sessionToken, s.user)
-        // Lien venu d'une invitation : l'espace partagé s'ouvre tout de suite.
-        if (s.space) return switchSpace(s.space)
-        const next = safePath(params.get('suite'))
-        navigate(s.leaseId ? `/bienvenue/${s.leaseId}` : next ?? '/espace', { replace: true, state: { justCreated: Boolean(s.leaseId) } })
-      })
+      .then((s) => (user && user.id !== s.user.id ? setOther(s) : open(s)))
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Connexion impossible.'))
-  }, [params, signIn, navigate])
+    // open() lit params et navigate, déjà dans les dépendances.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params, signIn, navigate, loading, user])
+
+  /** Rester dans l'espace actuel : la session ouverte par le lien est fermée tout de suite. */
+  const stay = () => {
+    if (other) void fetch(`${API_BASE}/api/auth/logout`, { method: 'POST', headers: { Authorization: `Bearer ${other.sessionToken}` } }).catch(() => undefined)
+    navigate('/espace', { replace: true })
+  }
 
   return (
     <AuthLayout>
@@ -162,6 +175,20 @@ export function ConnexionLien() {
           <h1 style={display(40)}>Lien expiré.</h1>
           <Callout tone="warn">{error}</Callout>
           <Button onClick={() => navigate('/connexion')}>Recevoir un nouveau lien</Button>
+        </>
+      ) : other && user ? (
+        <>
+          <h1 style={display(40)}>
+            Changer <em>d’espace</em> ?
+          </h1>
+          <p style={{ margin: 0, fontSize: 17, lineHeight: 1.55, color: BAI.inkMid }}>
+            Vous êtes connecté avec <strong style={{ color: BAI.ink }}>{user.email}</strong>. Ce lien ouvre l’espace de <strong style={{ color: BAI.ink }}>{other.user.email}</strong>.
+          </p>
+          <Callout tone="warn">Si vous n’avez pas demandé ce lien vous-même, restez dans votre espace : tout ce que vous saisiriez ensuite irait dans l’autre compte.</Callout>
+          <Button onClick={stay}>Rester dans mon espace</Button>
+          <Button variant="light" onClick={() => open(other)}>
+            Ouvrir l’autre espace
+          </Button>
         </>
       ) : (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 17 }}>
