@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Callout, Card, LoadError, Loader, PageHead, useLoad } from '../../components/kit'
+import { Btn, Callout, Card, LoadError, Loader, PageHead, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { dateNum } from '../../lib/format'
@@ -70,7 +70,7 @@ export default function Pilotage() {
   const td = { padding: '8px', fontVariantNumeric: 'tabular-nums' } as const
   return (
     <AppShell>
-      <PageHead title="Pilotage" sub="Les chiffres de Bailio, réservés à vous. Les comptes du pilotage ne sont pas comptés." />
+      <PageHead title="Pilotage" sub="Les chiffres de Bailio, réservés à vous. Les comptes du pilotage ne sont pas comptés." actions={<Btn variant="outline" size="sm" to="/espace/pilotage/tiktok">Publier sur TikTok</Btn>} />
       {loading && !data ? (
         <Loader />
       ) : error || !data ? (

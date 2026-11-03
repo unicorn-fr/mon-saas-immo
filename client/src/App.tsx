@@ -72,6 +72,7 @@ const ImpotsBail = page('ImpotsBail')
 const Aides = page('Aides')
 const Patrimoine = page('Patrimoine')
 const Pilotage = page('Pilotage')
+const TikTok = page('TikTok')
 const Actions = page('Actions')
 const Repartir = page('Repartir')
 const AccesPartages = page('AccesPartages')
@@ -236,6 +237,7 @@ function Pages() {
               <Route path="/espace/logements/:id/aides" element={<RequireAuth><Aides /></RequireAuth>} />
               <Route path="/espace/patrimoine" element={<RequireAuth><Patrimoine /></RequireAuth>} />
               <Route path="/espace/pilotage" element={<RequireAuth><Pilotage /></RequireAuth>} />
+              <Route path="/espace/pilotage/tiktok" element={<RequireAuth><TikTok /></RequireAuth>} />
               <Route path="/espace/actions" element={<RequireAuth><Actions /></RequireAuth>} />
               <Route path="/espace/argent/repartir" element={<RequireAuth><Repartir /></RequireAuth>} />
               <Route path="/espace/logements/:id/annonce" element={<RequireAuth><Annonce /></RequireAuth>} />

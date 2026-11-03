@@ -1,0 +1,64 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 27.8
+const bar = (label, w, bg, t0, t) => { const p = eo((t - t0) / .6); return `<div style="margin-top:30px;opacity:${clamp((t - t0) * 5)}"><div style="font-size:44px;font-weight:900;color:#fff;margin-bottom:14px">${label}</div>
+  <div style="height:96px;border:${OUT};border-radius:48px;background:${C.white};box-shadow:${SH(10)};overflow:hidden;position:relative"><i style="position:absolute;right:0;top:0;bottom:0;width:${w * p}%;background:${bg};border-left:${OUT}"></i></div></div>` }
+const circle = (p) => `<svg width="460" height="230" viewBox="0 0 460 230" style="position:absolute;left:-20px;top:-30px;overflow:visible"><path d="M240 14 C420 4, 470 120, 380 200 C280 250, 40 230, 18 130 C4 50, 120 10, 280 22" fill="none" stroke="${C.green}" stroke-width="12" stroke-linecap="round" stroke-dasharray="1600" stroke-dashoffset="${1600 * (1 - clamp(p))}"/></svg>`
+const strike = (p) => `<svg width="420" height="200" viewBox="0 0 420 200" style="position:absolute;left:0;top:0;overflow:visible"><path d="M10 100 L410 100" stroke="${C.night}" stroke-width="18" stroke-linecap="round" stroke-dasharray="500" stroke-dashoffset="${500 * (1 - clamp(p))}"/></svg>`
+
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:80px;top:780px"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Récupérer votre appart ?', .05, t, { size: 140, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('1 jour de retard…', { bg: C.white, size: 70, rot: -3, t0: W('jour') - .1, t })
+      $('c').innerHTML = sticker('RATÉ !', { bg: C.night, color: C.orange, size: 170, rot: 6, pad: '20px 70px', t0: W('raté'), t, shadow: 18 })
+    } },
+  { start: W('location') - .35, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:70px;right:40px;top:200px"></div>
+      <div class="abs" id="flag" style="right:70px;top:540px"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:660px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('La lettre doit arriver', this.start + .2, t, { size: 118, color: C.white, per: .1 })
+      $('flag').innerHTML = sticker('Fin du bail', { bg: C.peach, size: 44, rot: 3, t0: this.start + .5, t })
+      $('b').innerHTML = bar('Location vide : 6 mois avant', 100, C.orange, W('6'), t) + bar('Meublé : 3 mois avant', 50, C.mint, W('meublé'), t)
+    } },
+  { start: W('attention') - .35, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px;text-align:center"></div>
+      <div class="abs" id="e" style="left:110px;top:700px;width:420px;height:200px"></div>
+      <div class="abs" id="r" style="left:560px;top:930px;width:420px;height:200px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Ce qui compte ?', this.start + .2, t, { size: 136, color: C.night })
+      $('r').innerHTML = `<div style="position:relative">${sticker('RÉCEPTION', { bg: C.mint, size: 76, rot: 3, t0: W('réception') - .1, t })}${t > W('réception') + .2 ? circle((t - W('réception') - .2) / .5) : ''}</div>`
+      $('e').innerHTML = `<div style="position:relative">${sticker('ENVOI', { bg: C.white, size: 76, rot: -3, t0: W('l’envoi.') - .25, t })}${t > W('l’envoi.') ? strike((t - W('l’envoi.')) / .3) : ''}</div>`
+    } },
+  { start: W('email') - .3, bg: C.peach, burst: C.peach, html: () => `
+      <div class="abs" id="a" style="left:60px;top:190px"></div>
+      <div class="abs" id="n" style="right:90px;top:400px"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:620px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Un email ?', this.start + .1, t, { size: 140, color: C.night })
+      $('n').innerHTML = sticker('NON', { bg: C.night, color: C.orange, size: 110, rot: 8, t0: W('marche'), t })
+      $('b').innerHTML = [['Recommandé', C.white, W('recommandé'), -2], ['Commissaire de justice', C.sky, W('commissaire'), 2], ['En main propre, contre signature', C.white, W('main') - .2, -1]]
+        .map(([txt, bg, t0, rot]) => `<div style="margin-top:40px">${sticker('✓ ' + txt, { bg, size: 60, rot, t0, t })}</div>`).join('')
+    } },
+  { start: W('motif') - .55, bg: C.sky, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.14)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:600px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Et il faut un motif', this.start + .15, t, { size: 124, color: C.blue })
+      $('b').innerHTML = [['Vendre', C.orange, W('vendre'), -3], ['Y habiter', C.white, W('habiter'), 2], ['Motif légitime et sérieux', C.peach, W('légitime'), -2]]
+        .map(([txt, bg, t0, rot], k) => `<div style="margin-top:44px;text-align:${['left', 'right', 'left'][k]}">${sticker(txt, { bg, size: 72, rot, t0, t })}</div>`).join('')
+    } },
+  { start: W('enregistrez') - .3, end: 25.2, bg: C.night, burst: C.orange, noCaption: true, html: () => `<div class="abs" id="a" style="left:0;right:0;top:560px;text-align:center"></div>`,
+    update(lt, t) {
+      const f = eo((lt - .3) / .4)
+      $('a').innerHTML = `<div style="display:inline-block;transform:scale(${back(lt / .4)}) rotate(${(1 - eo(lt / .5)) * -14}deg)"><svg width="230" height="290" viewBox="0 0 26 32"><defs><clipPath id="bk"><path d="M3 2h20v28l-10-7-10 7z"/></clipPath></defs><path d="M3 2h20v28l-10-7-10 7z" fill="#fff"/><rect x="0" y="${32 - 32 * f}" width="26" height="32" fill="${C.orange}" clip-path="url(#bk)"/><path d="M3 2h20v28l-10-7-10 7z" fill="none" stroke="${C.night}" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+        <div style="margin-top:60px">${sticker('Enregistrez la vidéo', { bg: C.white, size: 76, rot: -2, t0: this.start + .2, t })}</div>`
+    } },
+  endScene(25.2, 25.2, 'Source : service-public.fr, fiche F929', false),
+]
+</script></body></html>

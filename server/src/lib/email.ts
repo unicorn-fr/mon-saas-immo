@@ -59,6 +59,8 @@ export async function sendEmail(email: Email): Promise<void> {
     text: email.text,
     html: email.html,
     replyTo: email.replyTo,
+    // Email envoyé par le service, pas par une personne : ni réponse automatique ni accusé de lecture en retour.
+    headers: { 'Auto-Submitted': 'auto-generated' },
     attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
   }
   try {
@@ -72,19 +74,27 @@ export async function sendEmail(email: Email): Promise<void> {
 
 const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
-/** Gabarit sobre : un titre, quelques paragraphes, un bouton. */
+/**
+ * Pied de chaque email : qui écrit et comment répondre. Les messageries classent plus volontiers en indésirables un
+ * email réduit à un lien, sans expéditeur identifiable ni adresse de contact.
+ */
+const FOOTER = ['Bailio, le bail et le suivi locatif du propriétaire · https://bailio.fr', 'Une question ? Répondez à cet email ou écrivez à contact@bailio.fr.']
+
+/** Gabarit sobre : un titre, quelques paragraphes, un bouton (et son adresse en clair). */
 export function layout(opts: { title: string; paragraphs: string[]; cta?: { label: string; url: string } }): { html: string; text: string } {
   const p = opts.paragraphs.map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#3b4659">${escape(x)}</p>`).join('')
   const cta = opts.cta
-    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#ff8a3d;color:#0f1f3d;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:999px">${escape(opts.cta.label)}</a></p>`
+    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#ff8a3d;color:#0f1f3d;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:999px">${escape(opts.cta.label)}</a></p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#5b6577">Le bouton ne s’ouvre pas ? Copiez cette adresse dans votre navigateur :<br><span style="word-break:break-all;color:#1f4396">${escape(opts.cta.url)}</span></p>`
     : ''
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f5f7fa;font-family:Helvetica,Arial,sans-serif;color:#16233f">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(opts.paragraphs[0] ?? opts.title)}</div>
 <div style="max-width:560px;margin:0 auto;padding:40px 24px">
 <p style="margin:0 0 32px;font-family:Georgia,serif;font-weight:700;font-size:28px;color:#1f4396">Bailio</p>
 <h1 style="margin:0 0 20px;font-family:Georgia,serif;font-weight:400;font-size:30px;line-height:1.15">${escape(opts.title)}</h1>
 ${p}${cta}
-<p style="margin:40px 0 0;font-size:13px;color:#5b6577">Bailio · le suivi de vos locations</p>
+<p style="margin:40px 0 0;font-size:13px;line-height:1.5;color:#5b6577">${FOOTER.map(escape).join('<br>')}</p>
 </div></body></html>`
-  const text = [opts.title, '', ...opts.paragraphs, ...(opts.cta ? ['', `${opts.cta.label} : ${opts.cta.url}`] : [])].join('\n')
+  const text = [opts.title, '', ...opts.paragraphs, ...(opts.cta ? ['', `${opts.cta.label} : ${opts.cta.url}`] : []), '', '--', ...FOOTER].join('\n')
   return { html, text }
 }

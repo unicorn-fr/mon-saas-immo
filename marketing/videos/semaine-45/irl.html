@@ -1,0 +1,71 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="irl.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 31.4
+const count = (from, to, p, dec = 2) => (from + (to - from) * eo(p)).toFixed(dec).replace('.', ',')
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Votre loyer peut augmenter…', .05, t, { size: 136, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('mais pas comme vous voulez !', { bg: C.night, color: C.white, size: 64, rot: -3, t0: W('mais'), t, shadow: 14 })
+    } },
+  { start: W('une') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = `<div>${sticker('1 fois', { bg: C.white, size: 190, rot: -4, pad: '20px 70px', t0: W('une'), t, shadow: 18 })}</div><div style="margin-top:40px">${sticker('par an', { bg: C.peach, size: 110, rot: 3, t0: W('an,'), t })}</div>`
+      $('b').innerHTML = sticker('si le bail a une<br>clause de révision', { bg: C.white, size: 64, rot: -2, t0: W('clause'), t })
+    } },
+  { start: W('plafond') - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:960px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Le plafond :', this.start + .15, t, { size: 140, color: C.night })
+      $('b').innerHTML = sticker('IRL', { bg: C.orange, size: 220, rot: -5, pad: '10px 80px', t0: W('lirl'), t, shadow: 18 })
+      $('c').innerHTML = sticker('Indice de référence des loyers', { bg: C.white, size: 56, rot: 2, t0: W('lindice'), t })
+    } },
+  { start: W('dernier') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:560px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:980px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Publié en octobre 2026', { bg: C.sky, size: 60, rot: -2, t0: W('octobre') - .2, t })
+      const p = (t - W('157%')) / .9
+      $('b').innerHTML = p > 0 ? `<div style="font-family:Fraunces;font-weight:800;font-size:300px;color:${C.white};-webkit-text-stroke:6px ${C.night};paint-order:stroke fill;transform:scale(${lerp(.6, 1, back(clamp(p * 2)))})">+${count(0, 1.57, p)} %</div>` : ''
+      $('c').innerHTML = sticker('sur un an', { bg: C.orange, size: 70, rot: 3, t0: W('sur') , t })
+    } },
+  { start: W('exemple') - .3, bg: C.peach, burst: C.peach, html: () => `
+      <div class="abs" id="a" style="left:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:80px;right:80px;top:520px"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1050px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Exemple', this.start + .1, t, { size: 140, color: C.night, italic: true })
+      const p = (t - W('12')) / .8
+      $('b').innerHTML = `<div style="background:${C.white};border:${OUT};border-radius:36px;box-shadow:${SH(14)};padding:44px 50px;opacity:${clamp((t - W('800')) * 5)}">
+        <div style="font-size:48px;font-weight:800">Loyer actuel</div><div style="font-family:Fraunces;font-weight:800;font-size:150px;line-height:1.1">800 €</div>
+        <div style="height:6px;background:${C.night};margin:24px 0;border-radius:3px"></div>
+        <div style="font-size:48px;font-weight:800">Au maximum</div><div style="font-family:Fraunces;font-weight:800;font-size:150px;line-height:1.1;color:${C.blue}">${p > 0 ? count(800, 812.57, p) : '800,00'} €</div></div>`
+      $('c').innerHTML = sticker('+ 12,57 € par mois', { bg: C.orange, size: 76, rot: -3, t0: W('maximum.') - .1, t, shadow: 14 })
+    } },
+  { start: W('attention') - .3, bg: C.sky, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.12)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1040px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Attention !', this.start + .1, t, { size: 150, color: C.blue })
+      $('b').innerHTML = [['F', C.soft, W('f'), -6], ['G', C.night, W('g,'), 5]].map(([l, bg, t0, rot]) => `<span style="display:inline-block;margin:0 24px">${sticker(l, { bg, color: bg === C.night ? C.white : C.night, size: 220, pad: '6px 70px', rot, t0, t, shadow: 16 })}</span>`).join('')
+      $('c').innerHTML = sticker('Révision interdite', { bg: C.white, size: 84, rot: -2, t0: W('révision') - .1, t, shadow: 14 })
+    } },
+  { start: W('deffet') - .45, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Pas d’effet rétroactif', this.start + .15, t, { size: 130, color: C.night })
+      $('b').innerHTML = `${sticker('La hausse compte', { bg: C.white, size: 66, rot: -2, t0: W('hausse') - .1, t })}<div style="margin-top:40px">${sticker('à partir de votre demande', { bg: C.mint, size: 66, rot: 2, t0: W('partir'), t })}</div>`
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F1311'),
+]
+</script></body></html>

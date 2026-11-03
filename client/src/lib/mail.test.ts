@@ -38,3 +38,23 @@ describe('faute de frappe dans l’adresse', () => {
     expect(suggestEmail('pas-une-adresse')).toBeNull()
   })
 })
+
+import { deviceOf, mailTarget } from './mail'
+
+describe('ouvrir la messagerie sur téléphone', () => {
+  const gmail = MAIL_PROVIDERS.find((p) => p.key === 'gmail')!
+  const orange = MAIL_PROVIDERS.find((p) => p.key === 'orange')!
+  it('reconnaît l’appareil', () => {
+    expect(deviceOf('Mozilla/5.0 (Linux; Android 14; Pixel 8)')).toBe('android')
+    expect(deviceOf('Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)')).toBe('ios')
+    expect(deviceOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 5)).toBe('ios')
+    expect(deviceOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', 0)).toBe('desktop')
+  })
+  it('ouvre l’application, sinon le site', () => {
+    expect(mailTarget(gmail, 'ios')).toEqual({ href: 'googlegmail://', fallback: gmail.url })
+    expect(mailTarget(gmail, 'android').href).toContain('package=com.google.android.gm')
+    expect(mailTarget(gmail, 'android').href).toContain('S.browser_fallback_url=')
+    expect(mailTarget(gmail, 'desktop')).toEqual({ href: gmail.url, fallback: null })
+    expect(mailTarget(orange, 'ios')).toEqual({ href: orange.url, fallback: null })
+  })
+})

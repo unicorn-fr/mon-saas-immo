@@ -1,0 +1,11 @@
+/* Polices servies par le site (client/node_modules) : lancer `npm --prefix client ci` avant le rendu. */
+@font-face { font-family: 'Fraunces'; src: url('../../client/node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2') format('woff2'); font-weight: 100 900; }
+@font-face { font-family: 'Fraunces'; src: url('../../client/node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-italic.woff2') format('woff2'); font-weight: 100 900; font-style: italic; }
+@font-face { font-family: 'Figtree'; src: url('../../client/node_modules/@fontsource/figtree/files/figtree-latin-600-normal.woff2'); font-weight: 600; }
+@font-face { font-family: 'Figtree'; src: url('../../client/node_modules/@fontsource/figtree/files/figtree-latin-800-normal.woff2'); font-weight: 800; }
+@font-face { font-family: 'Figtree'; src: url('../../client/node_modules/@fontsource/figtree/files/figtree-latin-900-normal.woff2'); font-weight: 900; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+/* Vertical par défaut (1080 × 1920) ; ajouter class="paysage" sur <html> pour la vidéo YouTube (1920 × 1080). */
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #fbf6ec; font-family: 'Figtree', sans-serif; color: #16233f; }
+html.paysage, html.paysage body { width: 1920px; height: 1080px; }
+.abs { position: absolute; }

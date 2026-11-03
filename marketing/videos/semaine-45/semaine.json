@@ -1,0 +1,36 @@
+{
+ "videos": [
+  {
+   "date": "2026-11-06",
+   "heure": "18:30",
+   "nom": "revision-irl",
+   "type": "vertical",
+   "fichier": "sortie/irl.mp4",
+   "textes": "textes/irl.json"
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "10:00",
+   "nom": "5-erreurs",
+   "type": "youtube",
+   "fichier": "sortie/yt.mp4",
+   "textes": "textes/yt.json"
+  },
+  {
+   "date": "2026-11-07",
+   "heure": "11:30",
+   "nom": "dpe-interdiction",
+   "type": "vertical",
+   "fichier": "sortie/dpe.mp4",
+   "textes": "textes/dpe.json"
+  },
+  {
+   "date": "2026-11-08",
+   "heure": "10:30",
+   "nom": "quittance-gratuite",
+   "type": "vertical",
+   "fichier": "sortie/quittance.mp4",
+   "textes": "textes/quittance.json"
+  }
+ ]
+}

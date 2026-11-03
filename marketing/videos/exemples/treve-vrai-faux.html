@@ -1,0 +1,68 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 26.4
+const ICON = {
+  flame: `<svg width="150" height="150" viewBox="0 0 24 24" fill="${C.orange}" stroke="${C.night}" stroke-width="1.4" stroke-linejoin="round"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg>`,
+  bolt: `<svg width="150" height="150" viewBox="0 0 24 24" fill="#ffd84d" stroke="${C.night}" stroke-width="1.4" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`,
+}
+const cross = (p) => `<svg width="420" height="220" viewBox="0 0 420 220" style="position:absolute;left:0;top:0;overflow:visible"><path d="M20 20 L400 200 M400 20 L20 200" fill="none" stroke="${C.night}" stroke-width="22" stroke-linecap="round" stroke-dasharray="1200" stroke-dashoffset="${1200 * (1 - clamp(p))}"/></svg>`
+
+window.SCENES = [
+  { start: 0, bg: C.sky, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.16)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:210px;text-align:center"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1150px;display:flex;justify-content:center;gap:60px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Vrai ou faux ?', 0, t, { size: 150, color: C.blue, stroke: false })
+      $('b').innerHTML = sticker('« Pendant la trêve, votre locataire n’a plus besoin de payer son loyer. »', { bg: C.white, size: 64, rot: -2, pad: '40px 46px', t0: W('pendant'), t })
+      const pulse = (k) => 1 + .06 * Math.sin(t * 9 + k)
+      $('c').innerHTML = (t > 2.8 ? `<div style="transform:scale(${pulse(0)})">${sticker('VRAI', { bg: C.mint, size: 84, rot: -6, t0: 2.8, t })}</div><div style="transform:scale(${pulse(2)})">${sticker('FAUX', { bg: C.orange, size: 84, rot: 5, t0: 3.0, t })}</div>` : '')
+    } },
+  { start: W('faux', 2) - .08, bg: C.orange, burst: C.orange, html: () => `<div class="abs" id="bz" style="left:90px;top:160px"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:330px;text-align:center"></div>
+      <div class="abs" id="b" style="left:60px;right:60px;top:860px;text-align:center"></div>
+      <div class="abs" id="c" style="left:60px;right:60px;top:1090px;text-align:center"></div>`,
+    update(lt, t) {
+      $('bz').innerHTML = `<div style="transform:scale(${back(lt / .4)}) rotate(${lt * 30}deg);opacity:${clamp(lt * 5)}">${BURST(900, C.peach)}</div>`
+      $('a').innerHTML = slam('FAUX !', this.start, t, { size: 260, color: C.night, font: 'Figtree' })
+      $('b').innerHTML = sticker('Le loyer reste dû', { bg: C.white, size: 74, rot: -3, t0: W('loyer', 2), t })
+      $('c').innerHTML = sticker('La trêve n’efface aucune dette', { bg: C.night, color: C.white, size: 56, rot: 2, t0: W('n’efface'), t })
+    } },
+  { start: W('contre') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="v" style="left:70px;top:190px"></div>
+      <div class="abs" id="a" style="left:70px;right:40px;top:400px"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:820px"></div>
+      <div class="abs" id="c" style="left:70px;right:70px;top:1010px;text-align:right"></div>
+      <div class="abs" id="d" style="left:70px;right:70px;top:1200px"></div>`,
+    update(lt, t) {
+      $('v').innerHTML = sticker('VRAI', { bg: C.mint, size: 96, rot: -5, t0: W('oui'), t })
+      $('a').innerHTML = slam('Aucune expulsion', W('aucune', 2) - .05, t, { size: 140, color: C.white })
+      $('b').innerHTML = sticker('jusqu’au 31 mars', { bg: C.orange, size: 72, rot: -2, t0: W('31'), t })
+      $('c').innerHTML = sticker('même avec un jugement', { bg: C.white, size: 60, rot: 3, t0: W('jugement'), t })
+      $('d').innerHTML = sticker('sauf exceptions', { bg: C.peach, size: 46, rot: -1, t0: W('sauf'), t })
+    } },
+  { start: W('squatteurs') - .4, bg: C.peach, burst: C.peach, html: () => `<div class="abs" id="a" style="left:60px;right:60px;top:240px;text-align:center"></div>
+      <div class="abs" id="sq" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="b" style="left:60px;right:60px;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Les squatteurs ?', this.start + .3, t, { size: 140, color: C.night })
+      const door = eo((t - W('peuvent')) / .5)
+      $('sq').innerHTML = `<div style="display:inline-block;position:relative;width:300px;height:380px;border:${OUT};border-radius:24px 24px 0 0;background:${C.blue};box-shadow:${SH(14)};transform:rotate(-2deg)">
+        <div style="position:absolute;inset:26px;border:5px solid ${C.night};border-radius:14px 14px 0 0;background:${C.orange};transform-origin:0 50%;transform:perspective(800px) rotateY(${-door * 70}deg)"><i style="position:absolute;right:22px;top:160px;width:26px;height:26px;border-radius:50%;background:${C.night}"></i></div></div>`
+      $('b').innerHTML = sticker('Expulsables, même en plein hiver', { bg: C.white, size: 62, rot: 2, t0: W('expulsés'), t })
+    } },
+  { start: W('couper') - .45, bg: C.cream, burst: C.night, html: () => `<div class="abs" id="a" style="left:60px;right:60px;top:230px;text-align:center"></div>
+      <div class="abs" style="left:0;right:0;top:620px;display:flex;justify-content:center;gap:90px"><div id="i1"></div><div id="i2"></div></div>
+      <div class="abs" id="x" style="left:330px;top:620px;width:420px;height:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:1000px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Couper le gaz ou l’électricité ?', this.start + .3, t, { size: 104, color: C.night, per: .09 })
+      $('i1').innerHTML = sticker(ICON.flame, { bg: C.white, pad: '20px', rot: -6, t0: W('gaz'), t })
+      $('i2').innerHTML = sticker(ICON.bolt, { bg: C.white, pad: '20px', rot: 6, t0: W('l’électricité'), t })
+      $('x').innerHTML = cross((t - W('interdit') + .1) / .35)
+      $('b').innerHTML = sticker('INTERDIT', { bg: C.orange, size: 130, rot: -4, pad: '24px 60px', t0: W('interdit'), t, shadow: 16 })
+    } },
+  endScene(W('abonnez-vous') - .25, W('guide') - .3, 'Source : service-public.fr, actualité du 2 octobre 2026'),
+]
+</script></body></html>

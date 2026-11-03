@@ -551,3 +551,18 @@ model PageVisit {
 
   @@id([day, path, source])
 }
+
+/// Comptes de Bailio sur les réseaux (page « Publier sur TikTok » du pilotage) : un par réseau, jetons OAuth du compte
+/// de l'entreprise, jamais celui d'un propriétaire. Lus seulement par le serveur.
+model SocialAccount {
+  provider         String   @id // "tiktok"
+  openId           String
+  accessToken      String
+  refreshToken     String
+  expiresAt        DateTime
+  refreshExpiresAt DateTime
+  scope            String
+  connectedBy      String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
