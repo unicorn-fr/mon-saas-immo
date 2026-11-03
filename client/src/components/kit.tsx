@@ -660,10 +660,15 @@ export function Filters<T extends string>({ items, value, onChange }: { items: A
 
 export function Modal({ open, onClose, title, children, actions, width = 560 }: { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; actions?: ReactNode; width?: number }) {
   const ref = useRef<HTMLDivElement>(null)
+  // onClose change à chaque affichage chez la plupart des appelants (fonction écrite sur place) : gardé dans une
+  // référence, il ne relance pas l'effet. Sinon chaque lettre tapée remettait le curseur sur le premier bouton
+  // (« Fermer »), et la touche suivante fermait la fenêtre.
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
   useEffect(() => {
     if (!open) return
     const prev = document.activeElement as HTMLElement | null
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     setTimeout(() => ref.current?.querySelector<HTMLElement>('input, select, textarea, button')?.focus(), 0)
@@ -672,7 +677,7 @@ export function Modal({ open, onClose, title, children, actions, width = 560 }: 
       document.body.style.overflow = ''
       prev?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
   if (!open) return null
   return (
     <div role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: BAI.overlay, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>

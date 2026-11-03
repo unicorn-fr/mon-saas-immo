@@ -154,30 +154,18 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               </div>
             </Card>
           ) : null}
-          <div id="signature">{l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} /> : null}</div>
+          <div id="signature">{l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? <ESignCard leaseId={l.id} ready={l.status === 'DRAFT' ? l.ready : true} amendment={l.status === 'ACTIVE'} onChange={reload} secondary={l.status === 'DRAFT' && l.ready && !l.checkedAt} /> : null}</div>
 
           {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
             <Card title="Que voulez-vous faire ?">
-              <div className="grid-2" style={{ gap: 12 }}>
-                <Btn size="lg" variant={l.status === 'DRAFT' ? 'outline' : 'primary'} onClick={guard(() => printDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
-                  {l.status === 'DRAFT' ? 'Imprimer pour signer à la main' : 'Imprimer'}
-                </Btn>
-                <Btn size="lg" variant="outline" onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))} style={{ fontSize: 15, padding: '0 16px' }}>
-                  Télécharger le PDF
-                </Btn>
-                <Btn size="lg" variant="outline" onClick={send} disabled={!l.tenants.some((x) => x.email)} title={l.tenants.some((x) => x.email) ? undefined : 'Ajoutez l’email du locataire dans sa fiche'} style={{ fontSize: 15, padding: '0 16px' }}>
-                  L’envoyer à {first} par email
-                </Btn>
-                {editable ? (
-                  <Btn size="lg" variant="outline" to={`/espace/baux/${l.id}/contrat`} style={{ fontSize: 15, padding: '0 16px' }}>
-                    Modifier une information
-                  </Btn>
-                ) : (
-                  <Btn size="lg" variant="outline" onClick={guard(() => openDoc(pdf))} style={{ fontSize: 15, padding: '0 16px' }}>
-                    Ouvrir le bail
-                  </Btn>
-                )}
+              {/* Liens simples plutôt que quatre gros boutons : l'action principale de l'écran reste la signature. */}
+              <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap' }}>
+                <TextLink onClick={guard(() => printDoc(pdf))}>{l.status === 'DRAFT' ? 'Imprimer pour signer à la main' : 'Imprimer'}</TextLink>
+                <TextLink onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))}>Télécharger le PDF</TextLink>
+                {l.tenants.some((x) => x.email) ? <TextLink onClick={send}>L’envoyer à {first} par email</TextLink> : null}
+                {editable ? <TextLink to={`/espace/baux/${l.id}/contrat`}>Modifier une information</TextLink> : <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir le bail</TextLink>}
               </div>
+              {l.tenants.some((x) => x.email) ? null : <span style={{ fontSize: 13, color: BAI.inkSoft }}>Pour l’envoyer par email, ajoutez l’adresse du locataire dans sa fiche.</span>}
               {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
                 <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier par vous et votre locataire ? Indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
@@ -394,13 +382,14 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             <Line label="Durée" value={`${l.computed.durationMonths >= 12 && l.computed.durationMonths % 12 === 0 ? `${l.computed.durationMonths / 12} an${l.computed.durationMonths > 12 ? 's' : ''}` : `${l.computed.durationMonths} mois`}`} />
             <span style={{ fontSize: 13, color: BAI.inkSoft }}>{l.computed.renewal}.</span>
           </Card>
+          {l.status !== 'DRAFT' ? (
           <Card dark title="Plus tard" style={{ gap: 12 }}>
             {l.status === 'ACTIVE' ? (
               <Link to={`/espace/baux/${l.id}/contrat`} className="tap" style={darkLink}>
                 Créer un avenant
               </Link>
             ) : null}
-            {l.status !== 'DRAFT' && l.status !== 'ENDED' ? (
+            {l.status !== 'ENDED' ? (
               <>
                 <Link to={`/espace/baux/${l.id}/courriers`} className="tap" style={darkLink}>
                   Quittances et courriers
@@ -423,12 +412,8 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                 Restituer le dépôt de garantie
               </Link>
             ) : null}
-            {l.status === 'DRAFT' ? (
-              <button type="button" className="tap" onClick={removeDraft} style={{ ...darkLink, background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
-                Supprimer ce bail en préparation
-              </button>
-            ) : null}
           </Card>
+          ) : null}
           <Card title="Personnes">
             {l.tenants.map((x) => (
               <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} className="tap" style={{ textDecoration: 'none' }}>{x.name}</Link>} />
@@ -437,6 +422,12 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} className="tap" style={{ textDecoration: 'none' }}>{g.name}</Link>} />
             ))}
           </Card>
+          {/* Suppression discrète : une action rare et irréversible ne mérite pas un bloc sombre en évidence. */}
+          {l.status === 'DRAFT' ? (
+            <TextLink onClick={removeDraft} style={{ fontSize: 14, color: BAI.error, alignSelf: 'flex-start' }}>
+              Supprimer ce bail en préparation
+            </TextLink>
+          ) : null}
           <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>
         </aside>
       </div>

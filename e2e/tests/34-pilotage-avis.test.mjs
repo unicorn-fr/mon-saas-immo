@@ -24,7 +24,13 @@ test('avis : envoyé par email à l’équipe, pilotage invisible pour un compte
   await page.getByRole('button', { name: 'Votre avis' }).click()
   await page.getByRole('dialog', { name: 'Votre avis' }).waitFor()
   await page.getByRole('button', { name: 'Utile, mais…' }).click()
-  await page.getByLabel('Qu’est-ce qui vous manque ou vous a gêné ?').fill('Il me manque un rappel par SMS.')
+  // Lettre par lettre, comme au clavier : la fenêtre doit garder le curseur dans le champ et rester ouverte
+  // (avant la correction, chaque lettre renvoyait le curseur sur « Fermer » et un espace fermait la fenêtre).
+  const field = page.getByLabel('Qu’est-ce qui vous manque ou vous a gêné ?')
+  await field.click()
+  await page.keyboard.type('Il me manque un rappel par SMS.', { delay: 15 })
+  assert.equal(await field.inputValue(), 'Il me manque un rappel par SMS.')
+  assert.ok(await page.getByRole('dialog', { name: 'Votre avis' }).isVisible())
   await shot(page, 'avis')
   await page.getByRole('button', { name: 'Envoyer mon avis' }).click()
   await page.getByText('Merci, votre avis est bien arrivé.', { exact: false }).waitFor()

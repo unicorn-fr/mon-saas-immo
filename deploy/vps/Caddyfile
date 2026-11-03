@@ -45,7 +45,9 @@
 	handle {
 		root * /srv/site
 		header Cache-Control "no-cache"
-		try_files {path} /index.html
+		# Pages publiques préparées à la construction (guides, pages légales : titre et description propres pour les
+		# moteurs de recherche), sinon l'application.
+		try_files {path}.html {path} /index.html
 		file_server
 	}
 }

@@ -70,7 +70,7 @@ function List({ items }: { items: PropertySummary[] }) {
           <div className="stats-bar" style={{ background: BAI.night, borderRadius: 20, padding: '24px 28px', ['--line' as string]: BAI.nightLine }}>
             <Stat value={items.length} label={items.length > 1 ? 'logements' : 'logement'} />
             <Stat value={rented} label={rented > 1 ? 'loués' : 'loué'} />
-            <Stat value={late} label={late > 1 ? 'loyers en retard' : 'loyer en retard'} accent />
+            <Stat value={late} label={late > 1 ? 'loyers en retard' : 'loyer en retard'} accent={late > 0} />
             <Stat value={drafts} label={drafts > 1 ? 'baux en préparation' : 'bail en préparation'} />
           </div>
           <Link to="/espace/patrimoine" className="tap" style={{ alignSelf: 'flex-start', fontSize: 15, fontWeight: 600, color: BAI.owner }}>
@@ -124,7 +124,8 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
           <StatusPill p={p} />
         </CoverPhoto>
       ) : (
-        <div style={{ height: 150, background: bg, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>
+        // Sans photo : un bandeau de couleur court plutôt qu'un grand cadre vide (moins de défilement sur téléphone).
+        <div style={{ height: 64, background: bg, display: 'flex', alignItems: 'flex-end', padding: 14, boxSizing: 'border-box' }}>
           <StatusPill p={p} />
         </div>
       )}

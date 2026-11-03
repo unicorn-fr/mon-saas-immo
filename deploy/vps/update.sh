@@ -20,3 +20,18 @@ docker compose up -d --remove-orphans
 date +%s > /var/tmp/bailio-last-update 2>/dev/null || true
 docker image prune -f >/dev/null
 echo "Bailio est à jour (version $BAILIO_VERSION, Node $(docker compose exec -T api node -p process.version 2>/dev/null || echo '?'))."
+
+# Moteurs de recherche (IndexNow : Bing, Yandex, Seznam… ; DuckDuckGo et Qwant s'appuient sur Bing) : toutes les
+# pages du plan du site leur sont signalées après chaque mise à jour, pour que les nouveaux guides soient vus vite.
+# Google lit le plan du site de lui-même (déclaré une fois dans la Search Console). Sans effet si SITE_DOMAIN est vide.
+INDEXNOW_KEY=ca9ecfec4f87d752eed54b9db7ddd7c4
+SITE_DOMAIN="$(grep -E '^SITE_DOMAIN=' .env 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+if [ -n "$SITE_DOMAIN" ]; then
+  sleep 20
+  URLS="$(curl -fsS -m 20 "https://$SITE_DOMAIN/sitemap.xml" 2>/dev/null | grep -o '<loc>[^<]*</loc>' | sed 's#</*loc>##g' | sed 's/.*/"&"/' | paste -sd, - || true)"
+  if [ -n "$URLS" ]; then
+    curl -fsS -m 20 -o /dev/null -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' \
+      -d "{\"host\":\"$SITE_DOMAIN\",\"key\":\"$INDEXNOW_KEY\",\"keyLocation\":\"https://$SITE_DOMAIN/$INDEXNOW_KEY.txt\",\"urlList\":[$URLS]}" \
+      && echo "Pages signalées aux moteurs de recherche (IndexNow)." || echo "IndexNow indisponible : les moteurs passeront par le plan du site."
+  fi
+fi
