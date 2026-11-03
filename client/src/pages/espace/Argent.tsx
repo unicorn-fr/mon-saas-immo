@@ -61,11 +61,18 @@ export default function Argent() {
         <LoadError message={error ?? ''} retry={reload} />
       ) : (
         <>
-          <div className="grid-3" style={{ gap: 20 }}>
-            <Total label="Loyers encaissés" value={eurosCents(data.incomeCents)} />
-            <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
-            <Total label="Reste" value={eurosCents(data.netCents)} dark />
-          </div>
+          {/* Année vide : une phrase plutôt que trois cartes à 0,00 €. */}
+          {data.incomeCents || data.expensesCents ? (
+            <div className="grid-3" style={{ gap: 20 }}>
+              <Total label="Loyers encaissés" value={eurosCents(data.incomeCents)} />
+              <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
+              <Total label="Reste" value={eurosCents(data.netCents)} dark />
+            </div>
+          ) : (
+            <Card>
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Rien d’enregistré pour {year} pour l’instant. Les loyers reçus et vos dépenses apparaîtront ici, avec ce qu’il vous reste.</span>
+            </Card>
+          )}
           <nav aria-label="Outils" className="grid-4" style={{ gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {[
               { to: '/espace/argent/releve', title: 'Relevé bancaire', text: 'Retrouver les loyers reçus' },
@@ -84,10 +91,12 @@ export default function Argent() {
             </button>
           </nav>
           <div className="split-aside" style={{ gap: 24 }}>
-            <Card title="Loyers encaissés par mois" style={{ flex: '1 1 0', gap: 18 }}>
-              <Chart data={data} />
-              <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{explain(data)}</span>
-            </Card>
+            {data.incomeCents ? (
+              <Card title="Loyers encaissés par mois" style={{ flex: '1 1 0', gap: 18 }}>
+                <Chart data={data} />
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{explain(data)}</span>
+              </Card>
+            ) : null}
             <Expenses
               data={data}
               onOpen={async (e) => {

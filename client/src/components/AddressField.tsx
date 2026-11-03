@@ -31,8 +31,11 @@ export function useAddressSuggestions(value: string, onSelect: (s: AddressSugges
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(-1)
   const skip = useRef(false)
+  // Suggestions seulement quand la personne tape : une adresse déjà enregistrée ne doit pas ouvrir la liste à l'arrivée.
+  const typed = useRef(false)
 
   useEffect(() => {
+    if (!typed.current) return
     if (skip.current) {
       skip.current = false
       return
@@ -111,7 +114,15 @@ export function useAddressSuggestions(value: string, onSelect: (s: AddressSugges
       </ul>
     ) : null
 
-  return { id, inputProps, list, reopen: () => setOpen(true) }
+  return {
+    id,
+    inputProps,
+    list,
+    reopen: () => {
+      typed.current = true
+      setOpen(true)
+    },
+  }
 }
 
 /** Adresse avec suggestions (tunnel et « Ajouter un logement »). */

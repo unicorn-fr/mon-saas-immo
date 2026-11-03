@@ -18,7 +18,8 @@ interface ESignStatus {
  * Signature en ligne du bail : lancement, suivi de chaque signataire, relance.
  * Le propriétaire signe lui aussi par le même parcours (code reçu par email).
  */
-export function ESignCard({ leaseId, ready, amendment = false, onChange }: { leaseId: string; ready: boolean; amendment?: boolean; onChange: () => void }) {
+/** `secondary` : une autre action principale est à faire avant (relire le bail) ; le bouton n'est pas orange. */
+export function ESignCard({ leaseId, ready, amendment = false, onChange, secondary = false }: { leaseId: string; ready: boolean; amendment?: boolean; onChange: () => void; secondary?: boolean }) {
   const { data, reload } = useLoad(() => api<ESignStatus | null>(`/leases/${leaseId}/esign`), [leaseId])
   const toast = useToast()
   const navigate = useNavigate()
@@ -101,7 +102,7 @@ export function ESignCard({ leaseId, ready, amendment = false, onChange }: { lea
             Chacun reçoit un lien, confirme son identité par un code envoyé par email, puis signe sur son téléphone. Le bail signé et son certificat de preuve sont envoyés à tous.
           </span>
           <div>
-            <Btn onClick={() => start().catch(toast.error)} disabled={!ready} title={ready ? undefined : 'Complétez d’abord les informations manquantes'}>
+            <Btn variant={secondary ? 'outline' : 'primary'} onClick={() => start().catch(toast.error)} disabled={!ready} title={ready ? undefined : 'Complétez d’abord les informations manquantes'}>
               Signer en ligne
             </Btn>
           </div>

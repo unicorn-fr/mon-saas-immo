@@ -166,11 +166,14 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
           )}
         </Card>
         <PropertyLinks p={p} reload={reload} />
-        <Card dark title={`En ${p.year.year}, ce ${p.nature === 'PARKING' ? 'garage' : 'logement'}`} style={{ gap: 12 }}>
-          <Line dark label="a rapporté" value={eurosCents(p.year.incomeCents)} />
-          <Line dark label="a coûté" value={eurosCents(p.year.expensesCents)} />
-          <Line dark border label="reste" value={<span style={{ color: BAI.accent, fontWeight: 700 }}>{eurosCents(p.year.incomeCents - p.year.expensesCents)}</span>} />
-        </Card>
+        {/* Rien d'encaissé ni de dépensé cette année : pas de tableau de zéros. */}
+        {p.year.incomeCents || p.year.expensesCents ? (
+          <Card dark title={`En ${p.year.year}, ce ${p.nature === 'PARKING' ? 'garage' : 'logement'}`} style={{ gap: 12 }}>
+            <Line dark label="a rapporté" value={eurosCents(p.year.incomeCents)} />
+            <Line dark label="a coûté" value={eurosCents(p.year.expensesCents)} />
+            <Line dark border label="reste" value={<span style={{ color: BAI.accent, fontWeight: 700 }}>{eurosCents(p.year.incomeCents - p.year.expensesCents)}</span>} />
+          </Card>
+        ) : null}
       </div>
       <Card pad={28} style={{ flex: '1 1 0', gap: 4 }} title={<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, width: '100%', flexWrap: 'wrap', paddingBottom: 12 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Chronologie</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout ce qui s’est passé dans ce {p.nature === 'PARKING' ? 'garage' : 'logement'}</span></div>}>
         {events.length ? (
