@@ -5,10 +5,12 @@ pour validation, puis les programme après son accord. **Rien n'est publié sans
 
 ## Ce qui est produit chaque semaine
 
-- **7 vidéos verticales** (1080 × 1920, 20 à 40 s), une par jour du lundi au dimanche, publiées à 13 h (Paris) sur
-  YouTube Shorts, Facebook et Instagram (TikTok dès que le compte est branché dans n8n).
-- **1 vidéo YouTube** au format paysage (1920 × 1080, 3 à 6 min), le samedi à 10 h : le sujet le plus fort de la
-  semaine traité en entier.
+- **7 vidéos verticales** (1080 × 1920, 20 à 40 s), une par jour du lundi au dimanche, sur YouTube Shorts, Facebook
+  et Instagram (TikTok dès que le compte est branché dans n8n).
+- **1 vidéo YouTube** au format paysage (1920 × 1080, 2 à 6 min) : les sujets de la semaine traités en entier.
+- **Heures choisies par Claude**, pour le plus de vues : au départ, soir de semaine (18 h 30) et fin de matinée le
+  week-end (10 h à 11 h 30), d'après les études publiées ; puis ajustées chaque semaine d'après les statistiques de
+  chaque réseau (vues, durée regardée, abonnés gagnés par heure de publication). Instagram part à 13 h (circuit n8n).
 - Pour chaque sujet, un **guide écrit** sur bailio.fr (`client/src/content/guides.ts`, règles de CLAUDE.md).
 
 Style : direction artistique du site (`kit.js`, `kit.css` : aplats bleu nuit, bleu, crème, pêche, orange réservé au
@@ -50,7 +52,10 @@ voix clonée : voix de la bibliothèque ElevenLabs, énergique.
 13. **Programmation, après l'accord seulement.** Écrire `semaine.json` (vidéos acceptées seulement) puis
     `python3 publier.py semaine.json --essai` et, si tout répond, `python3 publier.py semaine.json`. Une vidéo
     refusée est corrigée selon sa remarque et renvoyée, ou abandonnée.
-14. **Journal.** Ajouter chaque vidéo programmée à « Publiés » de `sujets.md` (date, sujet, format, source) et
+14. **Statistiques.** Avant de choisir les sujets et les heures, relever les chiffres des vidéos de la semaine passée
+    (vues, durée moyenne regardée, abonnés gagnés, visites de bailio.fr par `utm_source`) ; garder ce qui marche
+    (accroche, sujet, durée, heure), changer une chose à la fois, et noter la leçon dans `sujets.md`.
+15. **Journal.** Ajouter chaque vidéo programmée à « Publiés » de `sujets.md` (date, heure, sujet, format, source) et
     retirer l'idée utilisée ; commit.
 
 ## Coûts

@@ -1,0 +1,57 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="dpe.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 30.8
+const NOTES = [['A', C.green, C.white], ['B', C.mint, C.night], ['C', C.sky, C.night], ['D', C.white, C.night], ['E', C.peach, C.night], ['F', C.soft, C.night], ['G', C.orange, C.night]]
+const scale = (t, from, banned) => NOTES.map(([l, bg, fg], k) => { const p = clamp((t - from - k * .07) / .3), off = banned.includes(l)
+  return `<div style="display:flex;align-items:center;margin:14px 0;opacity:${p};transform:translateX(${(1 - eo(p)) * -80}px)"><div style="width:${300 + k * 70}px;height:104px;background:${off ? C.night : bg};border:${OUT};border-radius:0 52px 52px 0;box-shadow:${SH(8)};display:flex;align-items:center;padding-left:36px;font-family:Fraunces;font-weight:800;font-size:76px;color:${off ? C.white : fg}">${l}</div>${off ? `<div style="margin-left:24px">${sticker('Interdit', { bg: C.white, size: 44, rot: -4, t0: from + .5, t })}</div>` : ''}</div>` }).join('')
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:700px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Votre logement est classé', .05, t, { size: 130, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('G ?', { bg: C.night, color: C.white, size: 300, rot: -6, pad: '0 90px', t0: W('g'), t, shadow: 20 }) + `<div style="margin-top:70px">${sticker('Depuis le 1er janvier 2025', { bg: C.white, size: 64, rot: 2, t0: W('depuis'), t })}</div>`
+    } },
+  { start: W('vous') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:620px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:960px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Depuis le 1er janvier 2025', { bg: C.sky, size: 64, rot: -2, t0: W('depuis'), t })
+      $('b').innerHTML = sticker('Plus de nouveau bail', { bg: C.orange, size: 90, rot: 3, t0: W('signer'), t, shadow: 16 })
+      $('c').innerHTML = sticker('Même au renouvellement', { bg: C.white, size: 66, rot: -2, t0: W('renouvelle') - .1, t })
+    } },
+  { start: W('continue') - .45, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:60px;right:60px;top:520px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Et ça continue', this.start + .15, t, { size: 136, color: C.night, italic: true })
+      $('b').innerHTML = [['2025', 'G', C.night, C.white, W('continue'), -2], ['2028', 'F', C.orange, C.night, W('2028'), 2], ['2034', 'E', C.peach, C.night, W('2034'), -1]]
+        .map(([y, l, bg, fg, t0, rot]) => `<div style="margin-top:46px;display:flex;align-items:center;gap:30px">${sticker(y, { bg: C.white, size: 92, rot, t0, t })}${sticker('fin du ' + l, { bg, color: fg, size: 92, rot: -rot, t0: t0 + .25, t })}</div>`).join('')
+    } },
+  { start: W('dpe') - .3, bg: C.sky, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.12)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:180px"></div>
+      <div class="abs" id="b" style="left:0;right:60px;top:460px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = `${sticker('DPE', { bg: C.orange, size: 120, rot: -4, pad: '6px 50px', t0: W('dpe'), t })}<div style="margin-top:26px">${sticker('Diagnostic de performance énergétique', { bg: C.white, size: 44, rot: 1, t0: W('diagnostic'), t })}</div>`
+      $('b').innerHTML = scale(t, W('note') - .1, t > W('et', 2) - .2 ? ['F', 'G'] : [])
+    } },
+  { start: W('et', 2) - .2, bg: C.peach, burst: C.peach, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:700px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Déjà aujourd’hui', this.start + .1, t, { size: 140, color: C.night })
+      $('b').innerHTML = `<div>${[['F', C.soft, -5], ['G', C.night, 4]].map(([l, bg, rot]) => `<span style="display:inline-block;margin:0 20px">${sticker(l, { bg, color: bg === C.night ? C.white : C.night, size: 180, pad: '6px 60px', rot, t0: W(l === 'G' ? 'g' : 'f', 2) - .05, t })}</span>`).join('')}</div>
+        <div style="margin-top:60px">${sticker('Loyer gelé', { bg: C.white, size: 100, rot: -3, t0: W('daugmenter'), t, shadow: 16 })}</div>`
+    } },
+  { start: W('regardez') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:260px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Regardez votre DPE', this.start + .1, t, { size: 136, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('Prévoyez les travaux maintenant', { bg: C.orange, size: 64, rot: -2, t0: W('prévoyez'), t, shadow: 14 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Sources : service-public.fr, fiches F2042 et F1311'),
+]
+</script></body></html>

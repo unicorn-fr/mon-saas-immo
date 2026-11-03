@@ -1,0 +1,137 @@
+<!doctype html><html lang="fr" class="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="yt.data.js"></script><script src="../kit.js"></script>
+<script>
+/* Vidéo YouTube paysage (1920 × 1080) : 5 erreurs qui coûtent cher aux propriétaires. */
+window.DURATION = 144
+/* Premier mot après un instant donné (plus sûr que le rang d'apparition sur une longue voix). */
+const A = (word, after) => { const norm = (x) => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9%€]/g, ''); const w = window.WORDS.find((x) => x.s >= after && norm(x.t) === norm(word)); if (!w) console.warn('mot introuvable', word, after); return w ? w.s : after }
+const N = (n) => W('numéro', n) - .5
+const CAP = 905
+const box = (inner, w = 'auto') => `<div style="display:inline-block;width:${w};background:${C.white};border:${OUT};border-radius:32px;box-shadow:${SH(14)};padding:34px 44px;text-align:left">${inner}</div>`
+const big = (txt, t0, t, size = 230, color = C.night) => `<div style="font-family:Fraunces;font-weight:800;font-size:${size}px;line-height:1;color:${color};transform:scale(${lerp(2, 1, back((t - t0) / .35))});opacity:${clamp((t - t0) * 5)}">${txt}</div>`
+const count = (from, to, p, dec = 0) => (from + (to - from) * eo(p)).toFixed(dec).replace('.', ',')
+const S = (start, bg, burst, html, update, extra = {}) => ({ start, bg, burst, capTop: CAP, html, update, ...extra })
+const center = (id, top) => `<div class="abs" id="${id}" style="left:0;right:0;top:${top}px;text-align:center"></div>`
+const chapter = (n, title, start, color = C.orange) => S(start, color, color, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>${center('a', 170)}${center('b', 440)}`,
+  function (lt, t) {
+    $('a').innerHTML = sticker(`Erreur n° ${n}`, { bg: C.night, color: C.white, size: 90, rot: -3, t0: this.start + .1, t, shadow: 14 })
+    $('b').innerHTML = `<div style="padding:0 120px">${slam(title, this.start + .4, t, { size: 150, color: C.white, stroke: true })}</div>`
+  })
+const NOTES = [['A', C.green, C.white], ['B', C.mint, C.night], ['C', C.sky, C.night], ['D', C.white, C.night], ['E', C.peach, C.night], ['F', C.soft, C.night], ['G', C.orange, C.night]]
+
+window.SCENES = [
+  S(0, C.night, C.night, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div><div class="abs" id="n" style="left:140px;top:120px"></div><div class="abs" id="a" style="left:640px;right:120px;top:200px"></div><div class="abs" id="b" style="left:640px;top:600px"></div>`,
+    function (lt, t) {
+      $('n').innerHTML = big('5', .05, t, 620, C.orange)
+      $('a').innerHTML = slam('erreurs qui coûtent cher aux propriétaires', .3, t, { size: 118, color: C.white, per: .09 })
+      $('b').innerHTML = sticker('La 5e est la plus sournoise', { bg: C.peach, size: 60, rot: -2, t0: A('cinquième', 6), t })
+    }),
+  chapter(1, 'Envoyer le congé trop\u00a0tard', N(1)),
+  S(A('en', 14) - .3, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>${center('a', 110)}<div class="abs" id="b" style="left:200px;right:200px;top:300px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('Le locataire doit recevoir la lettre', { bg: C.white, size: 64, rot: -2, t0: this.start + .1, t })
+      $('b').innerHTML = [['Location vide : 6 mois avant la fin du bail', 100, C.orange, A('six', 17)], ['Meublé : 3 mois avant', 50, C.mint, A('meublé', 19)]].map(([l, w, bg, t0]) => { const p = eo((t - t0) / .6)
+        return `<div style="margin-top:46px;opacity:${clamp((t - t0) * 5)}"><div style="font-size:52px;font-weight:900;color:#fff;margin-bottom:16px">${l}</div><div style="height:100px;border:${OUT};border-radius:50px;background:${C.white};box-shadow:${SH(10)};overflow:hidden;position:relative"><i style="position:absolute;right:0;top:0;bottom:0;width:${w * p}%;background:${bg};border-left:${OUT}"></i></div></div>` }).join('')
+    }),
+  S(A('et', 20.5) - .3, C.cream, C.orange, () => `${center('a', 120)}<div class="abs" id="e" style="left:260px;top:420px"></div><div class="abs" id="r" style="right:260px;top:420px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Ce qui compte ?', this.start + .15, t, { size: 140 })
+      $('r').innerHTML = sticker('✓ RÉCEPTION', { bg: C.mint, size: 96, rot: 3, t0: A('réception', 21), t, shadow: 14 })
+      $('e').innerHTML = sticker('✗ ENVOI', { bg: C.white, size: 96, rot: -3, t0: A('denvoi', 22.5) - .2, t })
+    }),
+  S(A('un', 23.5) - .3, C.night, C.orange, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>${center('a', 170)}${center('b', 460)}`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('1 jour de retard', { bg: C.white, size: 110, rot: -3, t0: A('jour', 23.5), t, shadow: 16 })
+      $('b').innerHTML = sticker('Congé pas valable : le bail repart', { bg: C.orange, size: 84, rot: 2, t0: A('valable', 25), t, shadow: 16 })
+    }),
+  S(A('simple', 27) - .5, C.peach, C.peach, () => `<div class="abs" id="a" style="left:140px;top:140px"></div><div class="abs" id="n" style="left:200px;top:420px"></div><div class="abs" id="b" style="left:900px;right:120px;top:150px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Un email ?', this.start + .1, t, { size: 150 })
+      $('n').innerHTML = sticker('NON', { bg: C.night, color: C.orange, size: 150, rot: 8, t0: A('suffit', 28), t, shadow: 16 })
+      $('b').innerHTML = [['Lettre recommandée', C.white, A('recommandée', 29), -2], ['Commissaire de justice', C.sky, A('commissaire', 30), 2], ['Main propre, contre signature', C.white, A('remise', 32), -1]]
+        .map(([x, bg, t0, rot]) => `<div style="margin-top:44px">${sticker('✓ ' + x, { bg, size: 62, rot, t0, t })}</div>`).join('')
+    }),
+  chapter(2, 'Rendre le dépôt de garantie en retard', N(2), C.blue),
+  S(A('vous', 38.5) - .3, C.sky, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.12)')}"></div>${center('a', 110)}<div class="abs" id="b" style="left:180px;right:180px;top:330px;display:flex;gap:70px;justify-content:center"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Après la remise des clés', this.start + .1, t, { size: 120, color: C.blue })
+      $('b').innerHTML = [['1 mois', 'État des lieux conforme', C.mint, A('mois', 39)], ['2 mois', 'Des différences', C.peach, A('deux', 43)]].map(([m, x, bg, t0], k) =>
+        `<div>${sticker(`<div style="font-family:Fraunces;font-size:150px">${m}</div><div style="font-size:48px;margin-top:10px">${x}</div>`, { bg, size: 60, rot: k ? 2 : -2, pad: '30px 54px', t0, t, shadow: 14 })}</div>`).join('')
+    }),
+  S(A('au-delà', 45) - .3, C.night, C.orange, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>${center('a', 90)}${center('b', 270)}${center('c', 620)}`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('Pénalité', { bg: C.orange, size: 90, rot: -3, t0: A('pénalité', 46), t, shadow: 14 })
+      $('b').innerHTML = t > A('dix', 46) ? big('10 %', A('dix', 46), t, 230, C.white) : ''
+      const p = (t - A('80', 52)) / .8
+      $('c').innerHTML = t < A('sur', 50) ? sticker('du loyer hors charges, par mois de retard commencé', { bg: C.white, size: 50, rot: 2, t0: A('loyer', 47.5), t })
+        : sticker(`Loyer 800 € = ${p > 0 ? count(0, 80, p) : 0} € par mois`, { bg: C.peach, size: 74, rot: 2, t0: A('sur', 50), t, shadow: 14 })
+    }),
+  S(A('chaque', 53.5) - .4, C.cream, C.orange, () => `${center('a', 130)}<div class="abs" id="b" style="left:0;right:0;top:430px;display:flex;gap:50px;justify-content:center"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Chaque retenue justifiée', this.start + .1, t, { size: 130 })
+      $('b').innerHTML = [['Devis', C.white, A('devis', 55), -3], ['Facture', C.sky, A('facture', 56), 2], ['Photos', C.peach, A('photos', 57), -2]].map(([x, bg, t0, rot]) => sticker(x, { bg, size: 90, rot, t0, t, shadow: 14 })).join('')
+    }),
+  chapter(3, 'Oublier de réviser le loyer', N(3), C.orange),
+  S(A('si', 61) - .3, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>${center('a', 140)}${center('b', 470)}`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('1 fois par an', { bg: C.white, size: 140, rot: -3, t0: A('fois', 64), t, shadow: 16 })
+      $('b').innerHTML = sticker('Plafond : l’IRL, indice de référence des loyers', { bg: C.orange, size: 66, rot: 2, t0: A('lirl', 65) - .1, t, shadow: 14 })
+    }),
+  S(A('dernier', 68) - .3, C.night, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>${center('a', 110)}${center('b', 280)}`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('Publié en octobre 2026', { bg: C.sky, size: 60, rot: -2, t0: A('publié', 68.5), t })
+      const p = (t - A('157%', 70)) / .9
+      $('b').innerHTML = p > 0 ? `<div style="font-family:Fraunces;font-weight:800;font-size:300px;color:#fff">+${count(0, 1.57, p, 2)} %</div>` : ''
+    }),
+  S(A('mais', 73) - .3, C.peach, C.peach, () => `<div class="abs" id="a" style="left:140px;right:140px;top:130px"></div><div class="abs" id="b" style="left:140px;top:450px"></div><div class="abs" id="c" style="right:160px;top:470px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Pas en arrière', this.start + .1, t, { size: 140, italic: true })
+      $('b').innerHTML = sticker('À partir de votre demande', { bg: C.white, size: 64, rot: -2, t0: A('partir', 75), t })
+      $('c').innerHTML = sticker('1 an sans demander : perdue', { bg: C.night, color: C.white, size: 64, rot: 3, t0: A('perdue.', 79) - .3, t, shadow: 14 })
+    }),
+  chapter(4, 'Ignorer le DPE', N(4), C.blue),
+  S(A('diagnostic', 83) - .4, C.sky, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.12)')}"></div><div class="abs" id="a" style="left:140px;top:120px;width:640px"></div><div class="abs" id="b" style="left:900px;top:60px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = `${sticker('DPE', { bg: C.orange, size: 130, rot: -4, t0: this.start + .1, t })}<div style="margin-top:30px">${sticker('Diagnostic de performance énergétique', { bg: C.white, size: 46, rot: 1, t0: A('diagnostic', 83), t })}</div>`
+      $('b').innerHTML = NOTES.map(([l, bg, fg], k) => { const p = clamp((t - A('note', 84.5) - k * .08) / .3)
+        return `<div style="margin:10px 0;opacity:${p};transform:translateX(${(1 - eo(p)) * -60}px)"><div style="width:${260 + k * 60}px;height:92px;background:${bg};border:${OUT};border-radius:0 46px 46px 0;box-shadow:${SH(8)};padding-left:32px;font-family:Fraunces;font-weight:800;font-size:66px;line-height:84px;color:${fg}">${l}</div></div>` }).join('')
+    }),
+  S(A('depuis', 87) - .3, C.cream, C.orange, () => `${center('a', 110)}<div class="abs" id="b" style="left:0;right:0;top:330px;display:flex;gap:60px;justify-content:center"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Interdits à la location', this.start + .1, t, { size: 120 })
+      $('b').innerHTML = [['2025', 'G', C.night, C.white, A('depuis', 87), -2], ['2028', 'F', C.orange, C.night, A('2028', 93), 2], ['2034', 'E', C.peach, C.night, A('2034', 96), -1]]
+        .map(([y, l, bg, fg, t0, rot]) => sticker(`<div style="font-size:64px">${y}</div><div style="font-family:Fraunces;font-size:200px;line-height:1">${l}</div>`, { bg, color: fg, size: 60, rot, pad: '26px 60px', t0, t, shadow: 16 })).join('')
+    }),
+  S(A('et', 98.8) - .3, C.night, C.orange, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>${center('a', 140)}${center('b', 470)}`,
+    function (lt, t) {
+      $('a').innerHTML = [['F', C.soft, -5], ['G', C.orange, 4]].map(([l, bg, rot]) => `<span style="display:inline-block;margin:0 20px">${sticker(l, { bg, size: 170, pad: '4px 60px', rot, t0: this.start + .2 + (l === 'G' ? .3 : 0), t, shadow: 16 })}</span>`).join('')
+      $('b').innerHTML = t < A('regardez', 102) - .1 ? sticker('Révision du loyer déjà interdite', { bg: C.white, size: 76, rot: -2, t0: A('révision', 100) - .1, t, shadow: 14 })
+        : sticker('Regardez votre note aujourd’hui', { bg: C.mint, size: 76, rot: 2, t0: A('regardez', 102), t, shadow: 14 })
+    }),
+  chapter(5, 'Faire payer la quittance', N(5), C.orange),
+  S(A('si', 110) - .3, C.cream, C.orange, () => `<div class="abs" id="a" style="left:160px;top:120px"></div><div class="abs" id="b" style="left:160px;top:420px"></div><div class="abs" id="c" style="left:1000px;right:120px;top:140px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = t < A('gratuitement', 112) ? slam('Votre locataire la demande\u00a0?', this.start + .15, t, { size: 110, per: .1 }) : big('0 €', A('gratuitement', 112), t, 300)
+      $('b').innerHTML = sticker('Gratuite, sur demande', { bg: C.orange, size: 64, rot: -3, t0: A('gratuitement', 112) + .2, t, shadow: 14 })
+      $('c').innerHTML = [['✗ Timbre', A('timbre', 114), -2], ['✗ Frais de gestion', A('gestion.', 115) - .2, 2], ['✓ Loyer et charges séparés', A('séparer', 116), -1], ['✓ Email si le locataire est d’accord', A('email', 118), 1]]
+        .map(([x, t0, rot], k) => `<div style="margin-top:34px">${sticker(x, { bg: k < 2 ? C.white : C.sky, size: 54, rot, t0, t })}</div>`).join('')
+    }),
+  S(A('récapitulons', 120) - .3, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div><div class="abs" id="a" style="left:160px;top:90px"></div><div class="abs" id="b" style="left:160px;right:160px;top:270px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Récapitulons', this.start + .1, t, { size: 130, color: C.white, stroke: true })
+      $('b').innerHTML = [['Le congé, envoyé à temps', A('congé', 121.5)], ['Le dépôt, rendu dans les délais', A('dépôt', 123.5)], ['Le loyer, révisé chaque année', A('révisé', 126)], ['Le DPE, surveillé', A('surveillé.', 128) - .4], ['La quittance, toujours gratuite', A('quittance', 129.4)]]
+        .map(([x, t0], k) => `<div style="margin-top:22px;margin-left:${k % 2 ? 120 : 0}px">${sticker('✓ ' + x, { bg: k % 2 ? C.peach : C.white, size: 52, rot: k % 2 ? 1.5 : -1.5, pad: '14px 30px', t0, t })}</div>`).join('')
+    }),
+  S(A('si', 131) - .3, C.orange, C.orange, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>${center('a', 200)}${center('b', 520)}`,
+    function (lt, t) {
+      $('a').innerHTML = sticker('+ S’abonner', { bg: C.white, size: 150, rot: -4, pad: '30px 80px', t0: A('abonnez-vous', 132) - .2, t, shadow: 18 })
+      $('b').innerHTML = sticker('1 règle de propriétaire, chaque semaine', { bg: C.night, color: C.white, size: 64, rot: 2, t0: A('règle', 133), t, shadow: 14 })
+    }),
+  S(A('et', 135.9) - .2, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.12)')}"></div>${center('a', 120)}${center('b', 470)}${center('c', 650)}`,
+    function (lt, t) {
+      $('a').innerHTML = `<div style="display:inline-flex;align-items:center;gap:40px;transform:scale(${lerp(.3, 1, back(lt / .45))})">${LOGO(240)}<span style="font-family:Fraunces;font-weight:800;font-size:170px;color:#fff;-webkit-text-stroke:5px ${C.night};paint-order:stroke fill">bailio</span></div>`
+      $('b').innerHTML = sticker('Bail, quittances, révisions, rappels', { bg: C.white, size: 54, rot: -2, t0: A('bail', 137) - .1, t })
+      $('c').innerHTML = sticker('bailio.fr', { bg: C.orange, size: 96, pad: '24px 70px', rot: 2, t0: A('rendez-vous', 139), t, shadow: 16 }) + `<div style="margin-top:56px;font-size:30px;font-weight:800;color:#fff;opacity:${eo((t - 141) / .5)}">Sources : service-public.fr (F929, F31269, F1311, F2042) ; loi du 6 juillet 1989, art. 21. Information générale, pas un conseil personnalisé.</div>`
+    }, { noCaption: true }),
+]
+</script></body></html>
