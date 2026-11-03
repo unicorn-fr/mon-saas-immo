@@ -1,7 +1,7 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { LAUNCH_OFFER, priceLabel } from './src/config'
-import { GUIDES, guidePath } from './src/content/guides'
+import { GUIDES, guidePath, type Guide } from './src/content/guides'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -61,6 +61,102 @@ ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description
 Les espaces des propriétaires et les liens remis aux locataires (/espace, /signer, /dossier, /locataire, /edl, /candidature) sont privés : ne pas les explorer ni les résumer.
 `
 
+/** Titre, description et contenu propres à chaque page publique (sinon Google ne voit que l'accueil). */
+const PAGE_META: Record<string, { title: string; description: string }> = {
+  '/importer': { title: 'Importer un bail signé', description: 'Vous avez déjà un bail signé ? Reprenez-le dans Bailio en quelques minutes : quittances, révision du loyer et rappels des échéances suivent seuls.' },
+  '/mentions-legales': { title: 'Mentions légales', description: 'Éditeur, hébergeur et contact du site Bailio.' },
+  '/conditions': { title: 'Conditions d’utilisation', description: 'Les conditions générales d’utilisation de Bailio, le bail et le suivi locatif des propriétaires bailleurs particuliers.' },
+  '/confidentialite': { title: 'Confidentialité', description: 'Les données que Bailio collecte, pourquoi, combien de temps, chez quels prestataires, et vos droits.' },
+  '/contact': { title: 'Contact', description: 'Une question sur votre bail ou sur Bailio ? Laissez votre numéro ou votre email : nous vous rappelons.' },
+  '/cookies': { title: 'Cookies', description: 'Bailio n’utilise aucun cookie ni traceur : seulement le stockage indispensable au fonctionnement du site.' },
+  '/prix-et-remboursement': { title: 'Prix et remboursement', description: 'Premier bail gratuit, sans carte bancaire. Le suivi de la location, sans engagement : prix, rétractation et remboursement.' },
+  '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
+  '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
+  '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
+}
+
+const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+const jsonLd = (o: unknown) => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`
+const frDate = (iso: string) => new Date(`${iso}T12:00:00Z`).toISOString().slice(0, 10)
+
+/** Texte de l'article en HTML simple, pour les robots qui n'exécutent pas JavaScript (dans <noscript>). */
+function guideHtml(g: Guide) {
+  const body = g.blocks
+    .map((b) => ('h' in b ? `<h2>${esc(b.h)}</h2>` : 'p' in b ? `<p>${esc(b.p)}</p>` : 'list' in b ? `<ul>${b.list.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : `<p><strong>À retenir :</strong> ${esc(b.note)}</p>`))
+    .join('')
+  const sources = g.sources.map((x) => `<li><a href="${esc(x.url)}">${esc(x.label)}</a> (vérifié le ${esc(x.checked)})</li>`).join('')
+  return `<article><h1>${esc(g.title)}</h1><p>${esc(g.description)}</p>${body}<h2>Sources</h2><ul>${sources}</ul></article><p><a href="/guides">Tous les guides du propriétaire</a> · <a href="/">Bailio</a></p>`
+}
+
+const guideText = (g: Guide) => g.blocks.map((b) => ('h' in b ? b.h : 'p' in b ? b.p : 'list' in b ? b.list.join(' ') : b.note)).join('\n')
+
+/** Une page HTML par page publique : titre, description, adresse canonique, partage et données structurées propres. */
+function pageHtml(base: string, path: string) {
+  const url = `${SITE_URL}${path}`
+  const guide = GUIDES.find((g) => guidePath(g) === path)
+  const meta = guide ? { title: guide.title, description: guide.description } : PAGE_META[path]
+  if (!meta) return null
+  const title = `${meta.title} · Bailio`
+  const crumbs = [{ name: 'Bailio', url: `${SITE_URL}/` }, ...(path.startsWith('/guides') ? [{ name: 'Guides du propriétaire', url: `${SITE_URL}/guides` }] : []), ...(path !== '/guides' ? [{ name: meta.title, url }] : [])]
+  const ld = [
+    jsonLd({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })) }),
+    guide
+      ? jsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: guide.title,
+          description: guide.description,
+          inLanguage: 'fr-FR',
+          datePublished: frDate(guide.date),
+          dateModified: frDate(guide.date),
+          mainEntityOfPage: url,
+          url,
+          image: `${SITE_URL}/apple-touch-icon.png`,
+          author: { '@id': `${SITE_URL}/#organization` },
+          publisher: { '@id': `${SITE_URL}/#organization` },
+          isAccessibleForFree: true,
+          articleBody: guideText(guide),
+          citation: guide.sources.map((x) => x.url),
+        })
+      : path === '/guides'
+        ? jsonLd({ '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: GUIDES.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}${guidePath(g)}`, name: g.title })) })
+        : '',
+  ].join('')
+  const noscript = guide
+    ? guideHtml(guide)
+    : path === '/guides'
+      ? `<h1>Guides du propriétaire bailleur</h1><ul>${GUIDES.map((g) => `<li><a href="${guidePath(g)}">${esc(g.title)}</a> : ${esc(g.description)}</li>`).join('')}</ul>`
+      : `<h1>${esc(meta.title)}</h1><p>${esc(meta.description)}</p>`
+  return base
+    .replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*"/, `$1${esc(meta.description)}"`)
+    .replace(/(<link rel="canonical" href=")[^"]*"/, `$1${url}"`)
+    .replace(/(<meta property="og:type" content=")[^"]*"/, `$1${guide ? 'article' : 'website'}"`)
+    .replace(/(<meta property="og:title" content=")[^"]*"/, `$1${esc(meta.title)}"`)
+    .replace(/(<meta property="og:description" content=")[^"]*"/, `$1${esc(meta.description)}"`)
+    .replace(/(<meta property="og:url" content=")[^"]*"/, `$1${url}"`)
+    .replace('</head>', `${ld}\n  </head>`)
+    .replace(/<noscript>[\s\S]*?<\/noscript>/, `<noscript><main style="max-width:720px;margin:0 auto;padding:24px;font-family:'Figtree',system-ui,sans-serif;color:#16233f">${noscript}</main></noscript>`)
+}
+
+/** Pages publiques préparées à la construction (dist/guides/….html), servies par Caddy avant index.html. */
+function staticPages(): Plugin {
+  return {
+    name: 'bailio-static-pages',
+    enforce: 'post',
+    generateBundle(_, bundle) {
+      const index = bundle['index.html']
+      if (!index || index.type !== 'asset') return
+      const base = String(index.source)
+      for (const [path] of PUBLIC_PAGES) {
+        if (path === '/') continue
+        const html = pageHtml(base, path)
+        if (html) this.emitFile({ type: 'asset', fileName: `${path.slice(1)}.html`, source: html })
+      }
+    },
+  }
+}
+
 function siteUrl(): Plugin {
   return {
     name: 'bailio-site-url',
@@ -78,7 +174,10 @@ function siteUrl(): Plugin {
         source: [
           '<?xml version="1.0" encoding="UTF-8"?>',
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-          ...PUBLIC_PAGES.map(([p, f, pr]) => `  <url><loc>${SITE_URL}${p}</loc><changefreq>${f}</changefreq><priority>${pr}</priority></url>`),
+          ...PUBLIC_PAGES.map(([p, f, pr]) => {
+            const g = GUIDES.find((x) => guidePath(x) === p)
+            return `  <url><loc>${SITE_URL}${p}</loc>${g ? `<lastmod>${g.date}</lastmod>` : ''}<changefreq>${f}</changefreq><priority>${pr}</priority></url>`
+          }),
           '</urlset>',
           '',
         ].join('\n'),
@@ -88,7 +187,7 @@ function siteUrl(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), siteUrl()],
+  plugins: [react(), siteUrl(), staticPages()],
   server: {
     port: 5173,
     // En développement, /api est relayé vers l'API locale.

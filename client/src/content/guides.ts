@@ -26,8 +26,8 @@ export interface Guide {
 export const GUIDES: Guide[] = [
   {
     slug: 'quittance-de-loyer',
-    title: 'Quittance de loyer : gratuite et obligatoire sur demande',
-    description: 'Ce que doit contenir la quittance, quand vous devez la remettre, et pourquoi vous ne pouvez rien facturer.',
+    title: 'Quittance de loyer : comment la faire, gratuite et obligatoire sur demande',
+    description: 'Comment faire une quittance de loyer, ce qu’elle doit contenir, quand vous devez la remettre, et pourquoi vous ne pouvez rien facturer.',
     date: '2026-11-03',
     blocks: [
       { p: 'La quittance de loyer est le reçu qui prouve que votre locataire a payé son loyer et ses charges pour une période. Il s’en sert souvent pour un dossier de location, une aide au logement ou une démarche administrative.' },
@@ -35,6 +35,10 @@ export const GUIDES: Guide[] = [
       { p: 'Dès que votre locataire vous la demande, vous devez la lui transmettre. Vous ne pouvez pas refuser.' },
       { h: 'Que doit-elle indiquer ?' },
       { p: 'Le détail des sommes versées, en séparant le loyer et les charges.' },
+      { h: 'Comment faire une quittance de loyer ?' },
+      { p: 'La loi impose une seule règle de contenu : séparer le loyer et les charges. En pratique, pour qu’elle serve de preuve sans discussion, indiquez aussi :' },
+      { list: ['vos nom et adresse, et ceux de votre locataire ;', 'l’adresse du logement loué ;', 'la période payée, par exemple « novembre 2026 » ;', 'le montant du loyer, puis celui des charges, puis le total ;', 'la date du paiement ;', 'la date de la quittance et votre signature.'] },
+      { p: 'Si le loyer n’a été payé qu’en partie, ne faites pas de quittance pour le mois entier : remettez un reçu du montant versé.' },
       { h: 'Par email ou par courrier ?' },
       { p: 'La quittance peut partir par email si votre locataire est d’accord. Sinon, vous la lui remettez sur papier.' },
       { h: 'Combien pouvez-vous la facturer ?' },
