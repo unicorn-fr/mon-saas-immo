@@ -20,6 +20,9 @@ const schema = z.object({
   ADMIN_EMAILS: z.string().default(''),
   // Destinataire des avis envoyés depuis l'espace (« Votre avis »).
   // Vide dans .env (ligne recopiée de l'exemple) : l'adresse par défaut, jamais un arrêt du serveur.
+  // Publication sur le compte TikTok de Bailio (pilotage, « Publier sur TikTok ») : clés de l'app TikTok for Developers.
+  TIKTOK_CLIENT_KEY: z.string().default(''),
+  TIKTOK_CLIENT_SECRET: z.string().default(''),
   FEEDBACK_TO: z.preprocess((v) => (v === '' ? undefined : v), z.string().email().default('contact@bailio.fr')),
 })
 

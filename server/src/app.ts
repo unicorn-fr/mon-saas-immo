@@ -26,6 +26,7 @@ import inventoryRoutes from './routes/inventories.js'
 import portfolioRoutes from './routes/portfolio.js'
 import bulkRoutes from './routes/bulk.js'
 import adminRoutes from './routes/admin.js'
+import tiktokRoutes from './routes/tiktok.js'
 import feedbackRoutes from './routes/feedback.js'
 import contactRequestRoutes from './routes/contact.js'
 import signatureRelayRoutes from './routes/signatureRelay.js'
@@ -93,6 +94,7 @@ export function createApp() {
   app.use('/api', portfolioRoutes)
   app.use('/api', bulkRoutes)
   app.use('/api', adminRoutes)
+  app.use('/api', tiktokRoutes)
   app.use('/api', feedbackRoutes)
   app.use('/api', contactRequestRoutes)
   app.use('/api', visitRoutes)
