@@ -20,14 +20,14 @@ function requireAdmin(req: Request, _res: Response, next: NextFunction) {
 }
 router.use('/admin/tiktok', requireUser, requireAdmin)
 
-router.get('/admin/tiktok', async (_req, res) => {
+router.get('/admin/tiktok', requireUser, requireAdmin, async (_req, res) => {
   const configured = tiktokConfigured()
   const creator = configured ? await creatorInfo() : null
   res.json({ success: true, data: { configured, connected: Boolean(creator), creator, redirectUri: redirectUri() } })
 })
 
 // Photo du compte relayée par le serveur : la politique de sécurité du site n'affiche que ses propres images.
-router.get('/admin/tiktok/avatar', async (_req, res) => {
+router.get('/admin/tiktok/avatar', requireUser, requireAdmin, async (_req, res) => {
   const url = (await creatorInfo())?.avatarUrl
   if (!url || !/^https:\/\/[a-z0-9.-]+\.(tiktokcdn|tiktokcdn-us|tiktokcdn-eu|ibyteimg|byteimg)\.com\//.test(url)) throw new HttpError(404, 'Pas de photo.')
   const r = await fetch(url)
@@ -38,17 +38,17 @@ router.get('/admin/tiktok/avatar', async (_req, res) => {
   res.send(Buffer.from(await r.arrayBuffer()))
 })
 
-router.post('/admin/tiktok/connect', (req, res) => {
+router.post('/admin/tiktok/connect', requireUser, requireAdmin, (req, res) => {
   res.json({ success: true, data: { url: connectUrl(req.user!.id) } })
 })
 
-router.post('/admin/tiktok/callback', async (req, res) => {
+router.post('/admin/tiktok/callback', requireUser, requireAdmin, async (req, res) => {
   const body = z.object({ code: z.string().min(1).max(2000), state: z.string().min(1).max(200) }).parse(req.body)
   await finishConnect(body.code, body.state, req.user!.id)
   res.json({ success: true, data: { connected: true } })
 })
 
-router.delete('/admin/tiktok', async (_req, res) => {
+router.delete('/admin/tiktok', requireUser, requireAdmin, async (_req, res) => {
   await disconnect()
   res.json({ success: true, data: { connected: false } })
 })
@@ -61,7 +61,7 @@ const postSchema = z.object({
   durationSec: z.preprocess((v) => (v === '' || v === undefined ? null : Number(v)), z.number().nullable()),
 })
 
-router.post('/admin/tiktok/post', upload.single('video'), async (req, res) => {
+router.post('/admin/tiktok/post', requireUser, requireAdmin, upload.single('video'), async (req, res) => {
   const file = req.file
   if (!file || !['video/mp4', 'video/quicktime', 'video/webm'].includes(file.mimetype)) throw new HttpError(400, 'Choisissez une vidéo MP4, MOV ou WebM.')
   const choice = postSchema.parse(req.body)
@@ -73,7 +73,7 @@ router.post('/admin/tiktok/post', upload.single('video'), async (req, res) => {
   res.json({ success: true, data: { publishId } })
 })
 
-router.get('/admin/tiktok/post/:id', async (req, res) => {
+router.get('/admin/tiktok/post/:id', requireUser, requireAdmin, async (req, res) => {
   const id = z.string().min(1).max(200).parse(req.params.id)
   res.json({ success: true, data: await postStatus(id) })
 })
