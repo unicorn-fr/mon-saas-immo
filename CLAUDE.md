@@ -25,7 +25,7 @@
 - Palette « Confiance et élan » (choix argumenté dans la direction artistique) : fond `BAI.bg` (blanc `BAI.surface` sur l'accueil et les pages publiques), encre `BAI.ink`, marque bleu `BAI.owner`, **bouton de l'action principale orange `BAI.cta` avec texte `BAI.ctaInk`, seul élément orange de l'écran**, accent `BAI.accent`, validé `BAI.green`, aplats `BAI.sky` et `BAI.peach`. Pas de dégradé, pas d'ombre lourde ; le rouge ne sert qu'aux erreurs ; jamais de texte blanc sur orange.
 - Module « page de bail » (coin replié) : `.fold`, `.fold--lg`, `.fold--ear` dans `styles.css` ; photo dans un module arrondi, bloc de couleur posé en bas, jamais en haut.
 - Une seule action principale par écran (variante `primary` des boutons, orange). Boutons et étiquettes en pilule. Champs de 60 px de haut, rayon 14 px ; cartes rayon 24 px.
-- Logo (`components/Logo.tsx`) : en couleurs sur fond clair, `onDark` sur un aplat sombre, jamais en couleurs sur un aplat de couleur.
+- Logo (`components/Logo.tsx`, `docs/design/direction-artistique.md`) : maison au toit en coin replié et porte en trou de serrure, puis « bailio » (serrure orange sur le i). En couleurs sur fond clair, `onDark` sur un aplat sombre, jamais en couleurs sur un aplat de couleur. Favicon et icône de téléphone (`client/public/`) à garder identiques.
 - Mobile d'abord : `clamp()` pour les tailles, classes `.col-md`, `.hide-md`, `.grid-*` pour les ruptures.
 - Accessibilité (RGAA 4.1 / WCAG 2.1 AA), contrôlée par axe-core sur toutes les pages (`e2e/tests/16-accessibilite.test.mjs`) :
   - texte ≥ 4,5:1 : `BAI.accent` seulement sur fond sombre (`night`), sur fond clair `BAI.accentInk` ;

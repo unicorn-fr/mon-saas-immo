@@ -73,7 +73,7 @@ Interdits : texte blanc sur orange (2,4:1, illisible) ; deux boutons orange sur 
 
 ## Logo
 
-`components/Logo.tsx` : la page au coin replié (bleu, revers orange, deux lignes de texte) puis « Bailio » en Fraunces. Version horizontale partout. En couleurs sur fond clair, en blanc (`onDark`) sur un aplat sombre. Marge libre autour : la hauteur d'une capitale.
+`components/Logo.tsx` (novembre 2026) : une maison dont le toit est le coin replié d'une page de bail (revers orange) et dont la porte est un trou de serrure, puis « bailio » en Fraunces demi-gras, le point du i remplacé par une petite serrure orange. Construction sur une grille de 24 unités : marge 3, un seul rayon d'angle (3), une seule pente de toit (37°, celle du coin replié). L'orange n'est porté que par le coin replié et la serrure, toujours sur un aplat (3,9:1 sur le bleu Bailio, 7:1 sur le bleu nuit), jamais seul sur blanc. Version horizontale partout ; empilée (maison au-dessus du nom) pour les réseaux et les fins de vidéo. En couleurs sur fond clair, en blanc (`onDark`, serrure bleu nuit) sur un aplat sombre. Favicon `client/public/favicon.svg`, icône de téléphone `client/public/apple-touch-icon.png` (maison blanche sur bleu nuit). Lisible dès 16 px (maison et coin orange), serrure lisible dès 32 px. Marge libre autour : la hauteur d'une capitale.
 
 ## Photos
 
