@@ -80,3 +80,11 @@ Lien vers bailio.fr toujours marqué : `?utm_source=<reseau>&utm_medium=social&u
   tester la semaine suivante. Noter l'apprentissage dans « Learnings » de `.agents/product-marketing.md`.
 - Repérer les tendances (formats, sujets, sons libres de droits qui montent) et les proposer.
 - Envoyer un résumé court au propriétaire du compte.
+
+## Production hebdomadaire (dimanche)
+
+Mode d'emploi complet : `marketing/videos/README.md`. Chaque dimanche : 7 vidéos verticales (une par jour, 13 h) et
+1 vidéo YouTube paysage (samedi 10 h), en motion design dans la direction artistique du site, voix ElevenLabs de la
+bibliothèque. Sujets toujours nouveaux (`marketing/videos/sujets.md`, recherche sur Internet), règles vérifiées le
+jour même, guide écrit pour chaque sujet. Tout est envoyé au propriétaire du compte pour validation ; **rien n'est
+programmé sans son accord**, puis `publier.py` programme YouTube, Facebook et Instagram.
