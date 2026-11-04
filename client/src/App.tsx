@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, type ComponentType, type ReactNode } from 'react'
 import { recoverOnce } from './lib/recover'
+import { markNavigation } from './lib/navigation'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -116,6 +117,7 @@ function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
+    markNavigation()
   }, [pathname])
   return null
 }

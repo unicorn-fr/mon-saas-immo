@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { ApiError } from '../lib/api'
 import { cacheKey, loadCache, remember } from '../lib/loadCache'
+import { afterAction } from '../lib/navigation'
 import { centsToInput, parseEuros } from '../lib/format'
 import { Spinner, display } from './ui'
 import { useAddressSuggestions, type AddressSuggestion } from './AddressField'
@@ -252,8 +253,14 @@ const CALLOUT = {
 
 export function Callout({ tone = 'info', title, children }: { tone?: keyof typeof CALLOUT; title?: ReactNode; children?: ReactNode }) {
   const c = CALLOUT[tone]
+  const ref = useRef<HTMLDivElement>(null)
+  // Message d'erreur apparu après une action (pas à l'ouverture de la page) : l'écran remonte jusqu'à lui,
+  // dans la page, l'onglet ou la fenêtre, pour qu'il ne passe jamais inaperçu.
+  useEffect(() => {
+    if (tone === 'warn' && afterAction()) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [tone])
   return (
-    <div role={tone === 'warn' ? 'note' : undefined} style={{ background: c.bg, borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.5, color: BAI.ink }}>
+    <div ref={ref} role={tone === 'warn' ? 'note' : undefined} className={tone === 'warn' ? 'panel-in' : undefined} style={{ background: c.bg, borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.5, color: BAI.ink }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 2 }}>
         {c.path}
       </svg>
@@ -682,7 +689,7 @@ export function Modal({ open, onClose, title, children, actions, width = 560 }: 
   if (!open) return null
   return (
     <div role="presentation" onMouseDown={(e) => e.target === e.currentTarget && onClose()} style={{ position: 'fixed', inset: 0, background: BAI.overlay, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div ref={ref} role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined} style={{ background: BAI.surface, borderRadius: 20, width: '100%', maxWidth: width, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', padding: 'clamp(20px, 4vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div ref={ref} role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined} className="panel-in" style={{ background: BAI.surface, borderRadius: 20, width: '100%', maxWidth: width, maxHeight: 'calc(100dvh - 32px)', overflow: 'hidden', padding: 'clamp(20px, 4vw, 28px)', display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
           <h2 style={display(30)}>{title}</h2>
           <button type="button" onClick={onClose} aria-label="Fermer" style={{ border: 'none', background: 'none', padding: 6, cursor: 'pointer', color: BAI.inkSoft }}>
@@ -691,9 +698,10 @@ export function Modal({ open, onClose, title, children, actions, width = 560 }: 
             </svg>
           </button>
         </div>
-        {children}
+        {/* Seul le contenu défile s'il est trop long : le titre et les boutons restent toujours visibles. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, overflowY: 'auto', minHeight: 0, flex: '0 1 auto', margin: '-4px', padding: '4px' }}>{children}</div>
         {actions ? (
-          <div className="col-md" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <div className="col-md" style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', flexShrink: 0 }}>
             {actions}
           </div>
         ) : null}

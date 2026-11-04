@@ -30,6 +30,8 @@ test('appareils, export et suppression depuis « Mon compte »', async () => {
   const errors = []
   watch(page, errors)
   await page.goto(BASE + '/espace/compte')
+  // Un sujet par onglet : appareils, export et suppression sont dans « Sécurité et données ».
+  await page.getByRole('tab', { name: 'Sécurité et données' }).click()
   await page.getByText('Appareils connectés').waitFor()
   await page.getByText('Cet appareil').waitFor()
   assert.ok((await page.getByText('Déconnecter', { exact: true }).count()) >= 1, 'l’autre appareil est listé')
