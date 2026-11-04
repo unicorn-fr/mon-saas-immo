@@ -128,9 +128,13 @@ test('retards de loyer : le même calcul pour Aujourd’hui, Logements, le bail 
   const portfolio = await api('/portfolio', { token: a.token })
   assert.ok(portfolio.alerts.some((w) => w.kind === 'UNPAID'), 'le tableau de bord signale aussi le retard')
 
-  // Bail du 6 octobre, loyer payable le 4 : le premier mois au prorata n'est en retard nulle part.
+  // Bail commencé aujourd'hui, loyer payable le 1er (le 2 si l'on est le 1er) : le premier mois au prorata n'est en
+  // retard nulle part, et l'échéance suivante est à venir, quel que soit le jour où le test tourne.
   const b = await newAccount()
   const B = await completeLease(b.token, { furnished: false })
+  const now = new Date()
+  const todayIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  await api(`/leases/${B.leaseId}/terms`, { method: 'PUT', token: b.token, body: { startDate: todayIso, paymentDay: now.getDate() === 1 ? 2 : 1 } })
   await api(`/leases/${B.leaseId}/sign`, { method: 'POST', token: b.token })
   const lb = await api(`/leases/${B.leaseId}`, { token: b.token })
   assert.notEqual(lb.rent.key, 'LATE', lb.rent.label)

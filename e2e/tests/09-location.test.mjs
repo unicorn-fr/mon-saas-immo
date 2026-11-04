@@ -159,7 +159,14 @@ test('déclaration de revenus : loyers encaissés repris, intérêts d’emprunt
   await page.getByRole('button', { name: String(year) }).click()
   // Parcours guidé en tête (intérêts déjà connus, régularisation de copropriété demandée), puis le détail replié.
   await page.getByRole('button', { name: /Vérifier vos chiffres/ }).waitFor()
-  await page.getByText('Studio Sète : régularisation de copropriété').waitFor()
+  // Selon le jour, un loyer de l'année peut être échu sans être enregistré : sa question passe d'abord (« Plus tard »).
+  const copro = page.getByText('Studio Sète : régularisation de copropriété')
+  for (let i = 0; i < 4 && !(await copro.isVisible()); i++) {
+    const later = page.getByRole('button', { name: 'Plus tard, question suivante' })
+    if (await later.isVisible()) await later.click()
+    else await page.waitForTimeout(500)
+  }
+  await copro.waitFor()
   await shot(page, 'declaration')
   await page.getByText('Le détail des calculs, logement par logement').click()
   await page.getByText('Case 4BE de la déclaration 2042').waitFor()
