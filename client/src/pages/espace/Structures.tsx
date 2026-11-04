@@ -71,7 +71,7 @@ export function StructureFiche() {
   const { id } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
-  const { data, error, loading, reload } = useLoad(() => api<StructureView>(`/structures/${id}`), [id])
+  const { data, error, loading, reload } = useLoad(() => api<StructureView>(`/structures/${id}`), [id], { cache: false })
   const [f, setF] = useState<StructureFile | null>(null)
   const [busy, setBusy] = useState(false)
   const [open, setOpen] = useState<string | null>(null)

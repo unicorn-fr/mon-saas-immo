@@ -11,6 +11,9 @@ test('tableau de bord de tous les logements', async () => {
   const other = await api('/properties', { method: 'POST', token, body: { address: '1 rue Basse, 34000 Montpellier', label: 'T2 Montpellier', diagnostics: { dpe: { class: 'F', ges: 'F', date: '2024-01-10' } } } })
   await api(`/properties/${propertyId}`, { method: 'PUT', token, body: { loans: [{ principalCents: 10_000_000, ratePercent: 3, months: 240, firstPaymentDate: '2025-01-05' }] } })
 
+  // Loyers déjà échus selon le jour où le test tourne (bail du 6 octobre, payable le 4) : encaissés, pour que le seul
+  // point à surveiller soit le DPE du second logement, quel que soit le jour.
+  for (const period of (await api(`/leases/${leaseId}`, { token })).rent.unpaidPeriods ?? []) await api(`/leases/${leaseId}/payments`, { method: 'POST', token, body: { period } })
   const v = await api('/portfolio', { token })
   assert.equal(v.totals.properties, 2)
   const lease = await api(`/leases/${leaseId}`, { token })

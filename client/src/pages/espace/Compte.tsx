@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { LAUNCH_OFFER, priceLabel } from '../../config'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Fields } from '../../components/FlowLayout'
 import { SignaturePad } from '../../components/media'
-import { Btn, Card, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, TextLink, Toggle, useLoad, useToast, AddressInput } from '../../components/kit'
+import { Btn, Card, Input, Line, LoadError, Loader, Modal, PageHead, Pill, Progress, Tabs, TextLink, Toggle, useLoad, useToast, AddressInput } from '../../components/kit'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { useAuth } from '../../lib/auth'
 import { dateNum } from '../../lib/format'
@@ -16,7 +16,16 @@ import type { User } from '../../lib/types'
 import { FeedbackModal } from '../../components/Feedback'
 
 /** Mon compte. Maquette « Mon compte ». */
+type CompteTab = 'profil' | 'reglages' | 'securite'
+const COMPTE_TABS: Array<{ value: CompteTab; label: string }> = [
+  { value: 'profil', label: 'Votre profil' },
+  { value: 'reglages', label: 'Réglages' },
+  { value: 'securite', label: 'Sécurité et données' },
+]
+
 export default function Compte() {
+  const [params, setParams] = useSearchParams()
+  const tab: CompteTab = COMPTE_TABS.some((t) => t.value === params.get('onglet')) ? (params.get('onglet') as CompteTab) : 'profil'
   const { user, setUser, signOut } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
@@ -53,9 +62,13 @@ export default function Compte() {
       ) : !p || !completion ? (
         <Loader />
       ) : (
-        <div className="split-aside" style={{ gap: 24 }}>
-          <div className="grow">
-            <Card title="Vous, en tant que bailleur" action={<TextLink to="/espace/compte/profil" style={{ fontSize: 14 }}>Profil complet</TextLink>}>
+        <>
+          {/* Un sujet à la fois : la page tient sur un écran, sans faire défiler tout le compte. */}
+          <Tabs label="Sections du compte" tabs={COMPTE_TABS} value={tab} onChange={(v) => setParams(v === 'profil' ? {} : { onglet: v }, { replace: true })} />
+          <div key={tab} role="tabpanel" aria-label={COMPTE_TABS.find((t) => t.value === tab)!.label} className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {tab === 'profil' ? (
+              <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
+                <Card title="Vous, en tant que bailleur" action={<TextLink to="/espace/compte/profil" style={{ fontSize: 14 }}>Profil complet</TextLink>}>
               <Fields>
                 <Input label="Prénom" value={p.firstNames} onChange={(v) => set({ firstNames: v })} />
                 <Input label="Nom" value={p.lastName} onChange={(v) => set({ lastName: v })} />
@@ -78,13 +91,14 @@ export default function Compte() {
                 </div>
                 <Progress percent={completion.percent} />
               </div>
-            </Card>
-            <Card title="Votre signature">
+                </Card>
+                <Card title="Votre signature">
               <SignaturePad value={p.signature} onChange={(v) => set({ signature: v ?? '' })} label="Signez ici avec la souris ou le doigt" />
               <span style={{ fontSize: 13, color: BAI.inkSoft }}>Ajoutée sur vos quittances. Jamais sur un bail sans votre accord.</span>
-            </Card>
-          </div>
-          <aside className="aside" style={{ width: 400 }}>
+                </Card>
+              </div>
+            ) : tab === 'reglages' ? (
+              <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
             <Card title="Abonnement">
               <Line label="Formule" value="Bailio, tout inclus" />
               <Line label="Prix" value={`${priceLabel()} par mois, ${LAUNCH_OFFER.charAt(0).toLowerCase()}${LAUNCH_OFFER.slice(1)}`} />
@@ -108,6 +122,9 @@ export default function Compte() {
                 <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Comptes, baux, utilisateurs actifs et entonnoir : les chiffres de Bailio, réservés à vous.</span>
               </Card>
             ) : null}
+              </div>
+            ) : (
+              <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
             <Card title="Accès partagés" action={<TextLink to="/espace/compte/acces" style={{ fontSize: 14 }}>Gérer</TextLink>}>
               <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Invitez un associé, votre comptable ou un artisan sur certains logements, ou ouvrez un espace partagé avec vous.</span>
             </Card>
@@ -122,9 +139,11 @@ export default function Compte() {
                 <TextLink onClick={() => void signOut().then(() => navigate('/'))}>Se déconnecter</TextLink>
               </div>
             </Card>
-            <Devices />
-          </aside>
-        </div>
+                <Devices />
+              </div>
+            )}
+          </div>
+        </>
       )}
       <FeedbackModal open={feedback} onClose={() => setFeedback(false)} />
       {action && (

@@ -37,7 +37,7 @@ test('avis : envoyé par email à l’équipe, pilotage invisible pour un compte
   const [m] = await fromLog(/Avis sur Bailio · Utile, mais…[\s\S]*?De : .*?(e2e\+[^\s]+@example\.fr)[\s\S]*?Il me manque un rappel par SMS\./g, before)
   assert.equal(m[1], email)
   // Le compte ordinaire n'a pas le lien du pilotage, et la page le renvoie vers son espace.
-  await page.goto(`${BASE}/espace/compte`)
+  await page.goto(`${BASE}/espace/compte?onglet=reglages`)
   await page.getByRole('heading', { name: 'Votre avis' }).waitFor()
   assert.equal(await page.getByRole('heading', { name: 'Pilotage de Bailio' }).count(), 0)
   await page.goto(`${BASE}/espace/pilotage`)
@@ -89,6 +89,7 @@ test('pilotage : chiffres réservés à l’adresse autorisée', { skip: !proces
   const errors = []
   watch(page, errors)
   await page.goto(`${BASE}/espace/compte`)
+  await page.getByRole('tab', { name: 'Réglages' }).click()
   await page.getByRole('heading', { name: 'Pilotage de Bailio' }).waitFor()
   await page.goto(`${BASE}/espace/pilotage`)
   await page.getByRole('heading', { name: 'Pilotage', exact: true }).waitFor()

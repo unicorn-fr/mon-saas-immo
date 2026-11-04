@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { clearLoadCache } from './loadCache'
 import { setSpace } from './shared'
 import { api } from './api'
 import { SESSION_KEY, storage } from './storage'
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api('/auth/logout', { method: 'POST' }).catch(() => undefined)
     storage.set(SESSION_KEY, null)
     setSpace(null)
+    clearLoadCache()
     setUser(null)
   }, [])
 
