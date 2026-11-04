@@ -8,7 +8,7 @@ import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
-import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, TextLink, Toggle, btnStyle, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, Toggle, btnStyle, useLoad, useToast } from '../../components/kit'
 import { api } from '../../lib/api'
 import { KIND_LABEL } from '../../lib/contract'
 import { documentPath, downloadDoc, openDoc, printDoc } from '../../lib/docs'
@@ -25,6 +25,8 @@ export default function Bail() {
     </AppShell>
   )
 }
+
+type LeaseTab = 'loyers' | 'bail' | 'locataire'
 
 const STATUS: Record<string, { label: string; tone: 'owner' | 'green' | 'accent' | 'muted' }> = {
   READY: { label: 'Prêt à signer', tone: 'owner' },
@@ -46,6 +48,8 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   const [endOpen, setEndOpen] = useState(new URLSearchParams(search).get('depart') === '1')
   const [signOpen, setSignOpen] = useState(false)
   const [showAnnexes, setShowAnnexes] = useState(false)
+  const [allDocs, setAllDocs] = useState(false)
+  const [allPays, setAllPays] = useState(false)
   const status = STATUS[l.status === 'DRAFT' && l.ready ? 'READY' : l.status]
   const first = l.tenants[0]?.name.split(' ')[0] || 'votre locataire'
   const pdf = `/leases/${l.id}/lease.pdf`
@@ -87,6 +91,262 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
     return { label: 'L’ajouter', to: `/espace/logements/${l.property.id}?onglet=diagnostics` }
   }
 
+  // Bail signé : trois onglets plutôt qu'une longue page (loyers d'abord, c'est ce qu'on vient voir le plus souvent).
+  const signed = !(l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty))
+  const tabs: Array<{ value: LeaseTab; label: string }> = [
+    { value: 'loyers', label: 'Loyers' },
+    { value: 'bail', label: 'Le bail' },
+    { value: 'locataire', label: l.tenants.length > 1 ? 'Locataires' : 'Locataire' },
+  ]
+  const fromUrl = new URLSearchParams(search).get('onglet') ?? (hash === '#locataire' ? 'locataire' : hash === '#paiements' ? 'loyers' : null)
+  const [tab, setTab] = useState<LeaseTab>(tabs.some((x) => x.value === fromUrl) ? (fromUrl as LeaseTab) : 'loyers')
+  useEffect(() => {
+    if (fromUrl && tabs.some((x) => x.value === fromUrl)) setTab(fromUrl as LeaseTab)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fromUrl])
+  const pickTab = (v: LeaseTab) => {
+    setTab(v)
+    navigate({ search: v === 'loyers' ? '' : `?onglet=${v}` }, { replace: true })
+  }
+
+  const annexCard = (
+    <>
+          <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12, paddingBottom: 8 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Pièces à joindre au bail</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>{annexDone} sur {l.annexes.length}</span></div>} style={{ gap: 0 }}>
+            {(showAnnexes ? l.annexes : l.annexes.filter((a) => !a.done)).map((a) => {
+              const act = a.done && !a.key.startsWith('caution-') && !['notice', 'repairs', 'charges'].includes(a.key) ? null : annexAction(a.key)
+              return (
+                <div key={a.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
+                  <span style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
+                    {a.done ? <Check /> : <Circle color={BAI.error} />}
+                    {a.label}
+                  </span>
+                  {act ? (
+                    act.to ? (
+                      <TextLink to={act.to}>{a.key === 'inventory' && l.terms.startDate && l.status !== 'DRAFT' ? `Le faire le ${dateFr(l.terms.startDate, false)}` : act.label}</TextLink>
+                    ) : act.onClick ? (
+                      <TextLink onClick={act.onClick}>{act.label}</TextLink>
+                    ) : (
+                      <span style={{ fontSize: 14, color: BAI.inkSoft }}>{a.status}</span>
+                    )
+                  ) : (
+                    <span style={{ fontSize: 15, fontWeight: 600, color: a.done ? BAI.green : BAI.inkSoft }}>{a.status}</span>
+                  )}
+                </div>
+              )
+            })}
+            <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+              {annexDone === l.annexes.length && !showAnnexes ? <span style={{ fontSize: 15, color: BAI.green, fontWeight: 600, marginRight: 16 }}>Toutes les pièces sont prêtes.</span> : null}
+              <TextLink onClick={() => setShowAnnexes(!showAnnexes)} style={{ fontSize: 14 }}>
+                {showAnnexes ? 'Ne voir que ce qui manque' : `Voir les ${l.annexes.length} pièces`}
+              </TextLink>
+            </div>
+          </Card>
+    </>
+  )
+  const payCard = (
+    <>
+          {l.status !== 'DRAFT' ? (
+            <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
+              <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
+              {l.status !== 'ENDED' ? (
+                <>
+                  <Toggle
+                    checked={Boolean(l.facts?.receiptAuto)}
+                    onChange={(v) =>
+                      void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
+                        .then(() => {
+                          toast.show(v ? 'La quittance partira dès que vous notez le loyer reçu.' : 'Envoi des quittances par email arrêté.')
+                          reload()
+                        })
+                        .catch(toast.error)
+                    }
+                    label="Quittance par email dès que le loyer est noté reçu"
+                    sub={
+                      l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
+                        ? 'Vous notez le loyer reçu (ou Bailio le retrouve sur votre relevé) : la quittance part tout de suite au locataire.'
+                        : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
+                    }
+                  />
+                  {l.facts?.receiptAuto ? (
+                    <Toggle
+                      checked={Boolean(l.facts?.receiptAssume)}
+                      onChange={(v) =>
+                        void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { assume: v } })
+                          .then(() => {
+                            toast.show(v ? 'Sans nouvelle de votre part, le loyer sera noté reçu 7 jours après l’échéance.' : 'Bailio attendra que vous notiez le loyer reçu.')
+                            reload()
+                          })
+                          .catch(toast.error)
+                      }
+                      label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
+                      sub="Facultatif. La quittance prouve que le loyer est payé : ne l’activez que si votre locataire paie toujours à l’heure. Vous êtes prévenu par email 3 jours avant, et un clic suffit pour l’arrêter."
+                    />
+                  ) : null}
+                </>
+              ) : null}
+              {l.facts?.autoReceipt ? (
+                l.facts.autoReceipt.held ? (
+                  <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>
+                    Une quittance prouve que le loyer est payé : elle ne part pas tant que le loyer n’est pas reçu.{' '}
+                    <TextLink to={`/espace/baux/${l.id}/courriers?type=REMINDER`} style={{ fontSize: 14 }}>
+                      Envoyer une demande de paiement
+                    </TextLink>
+                    {' · '}
+                    <TextLink
+                      style={{ fontSize: 14 }}
+                      onClick={guard(async () => {
+                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: false } })
+                        reload()
+                      })}
+                    >
+                      Rétablir l’envoi
+                    </TextLink>
+                  </Callout>
+                ) : (
+                  <Callout tone="info" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi automatique le ${dateShort(l.facts.autoReceipt.sendOn)}`}>
+                    Rien à faire si le loyer arrive.{' '}
+                    <TextLink
+                      style={{ fontSize: 14 }}
+                      onClick={guard(async () => {
+                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: true } })
+                        toast.show('Envoi annulé.')
+                        reload()
+                      })}
+                    >
+                      Le loyer n’est pas arrivé
+                    </TextLink>
+                  </Callout>
+                )
+              ) : null}
+              {l.payments.length ? (
+                (allPays ? l.payments : l.payments.slice(0, 3)).map((p) => (
+                  <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+                    <span style={{ fontWeight: 600, minWidth: 140 }}>{periodLabel(p.period, true)}</span>
+                    <span style={{ color: BAI.inkMid, flex: 1 }}>
+                      {eurosCents(p.amountCents)} reçus le {dateShort(p.receivedAt)}
+                      {p.full ? '' : ' · paiement partiel'}
+                    </span>
+                    <span style={{ display: 'flex', gap: 12 }}>
+                      <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(`/leases/${l.id}/receipts/${p.period}.pdf`))}>
+                        {p.full ? 'Quittance' : 'Reçu'}
+                      </TextLink>
+                      <TextLink
+                        style={{ fontSize: 14 }}
+                        onClick={guard(async () => {
+                          const r = await api<{ sentTo: string[] }>(`/leases/${l.id}/receipts/${p.period}/send`, { method: 'POST' })
+                          toast.show(`Envoyé à ${r.sentTo.join(', ')}.`)
+                        })}
+                      >
+                        Envoyer
+                      </TextLink>
+                      <TextLink
+                        style={{ fontSize: 14, color: BAI.error }}
+                        onClick={guard(async () => {
+                          if (!window.confirm(`Annuler le loyer de ${periodLabel(p.period)} ? La quittance sera retirée.`)) return
+                          await api(`/leases/${l.id}/payments/${p.period}`, { method: 'DELETE' })
+                          reload()
+                        })}
+                      >
+                        Annuler
+                      </TextLink>
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun loyer enregistré pour l’instant.</span>
+              )}
+              {l.payments.length > 3 ? (
+                <TextLink onClick={() => setAllPays(!allPays)} style={{ fontSize: 14 }}>
+                  {allPays ? 'Voir moins' : `Voir les ${l.payments.length} loyers`}
+                </TextLink>
+              ) : null}
+              {l.status !== 'ENDED' ? (
+                <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(`/leases/${l.id}/notice/${nextPeriod()}.pdf`))}>
+                  Avis d’échéance de {periodLabel(nextPeriod())}
+                </TextLink>
+              ) : null}
+            </Card>
+          ) : null}
+    </>
+  )
+  const taxCard = (
+    <>
+          {l.status !== 'DRAFT' && l.kind !== 'PARKING' ? (
+            <Card title="Impôts">
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'ENDED' ? 'Le départ du locataire se signale aux impôts.' : 'L’arrivée du locataire se signale aux impôts, et une première location meublée s’enregistre. Tout est prêt à copier.'}</span>
+              <TextLink to={`/espace/baux/${l.id}/impots`}>Déclarer ce bail aux impôts</TextLink>
+            </Card>
+          ) : null}
+    </>
+  )
+  const docsCard = (
+    <>
+          {l.documents.length ? (
+            <Card title="Documents de ce bail">
+              {(allDocs ? l.documents : l.documents.slice(0, 3)).map((d) => (
+                <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
+                  <span>
+                    {d.title}
+                    {d.kind === 'LEASE' ? <span style={{ color: BAI.inkSoft }}> · version {d.version}</span> : null}
+                  </span>
+                  <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <span className="hide-sm" style={{ fontSize: 13, color: BAI.inkSoft }}>
+                      {dateNum(d.createdAt)}
+                    </span>
+                    <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(documentPath(d.id)))}>
+                      Ouvrir
+                    </TextLink>
+                  </span>
+                </div>
+              ))}
+              {l.documents.length > 3 ? (
+                <TextLink onClick={() => setAllDocs(!allDocs)} style={{ fontSize: 14 }}>
+                  {allDocs ? 'Voir moins' : `Voir les ${l.documents.length} documents`}
+                </TextLink>
+              ) : null}
+            </Card>
+          ) : null}
+    </>
+  )
+  const summaryCard = (
+    <>
+          <Card title="En résumé">
+            <Line label="Loyer" value={`${euros(l.columns.rentCents)} + ${euros(l.columns.chargesCents)} de charges (${t.chargesMode === 'FORFAIT' ? 'forfait' : 'provision'})`} />
+            {l.kind !== 'MOBILITE' ? <Line label="Dépôt de garantie" value={euros(l.columns.depositCents)} /> : null}
+            <Line label="Paiement" value={`le ${l.columns.paymentDay === 1 ? '1er' : l.columns.paymentDay} du mois`} />
+            <Line label="Révision" value={t.revision?.enabled === false || !l.computed.revisionAllowed ? 'aucune' : `chaque ${dateFr(`2000-${t.revision?.date ?? l.columns.startDate.slice(5)}`, false)}`} />
+            <Line label="Durée" value={`${l.computed.durationMonths >= 12 && l.computed.durationMonths % 12 === 0 ? `${l.computed.durationMonths / 12} an${l.computed.durationMonths > 12 ? 's' : ''}` : `${l.computed.durationMonths} mois`}`} />
+            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{l.computed.renewal}.</span>
+            {signed ? (
+              <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap', borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14 }}>
+                <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir le bail</TextLink>
+                <TextLink onClick={guard(() => printDoc(pdf))}>Imprimer</TextLink>
+                <TextLink onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))}>Télécharger</TextLink>
+                {l.tenants.some((x) => x.email) ? <TextLink onClick={send}>L’envoyer à {first} par email</TextLink> : null}
+                {editable ? <TextLink to={`/espace/baux/${l.id}/contrat`}>Modifier une information</TextLink> : null}
+              </div>
+            ) : null}
+          </Card>
+    </>
+  )
+  const peopleCard = (
+    <>
+          <Card title="Personnes">
+            {l.tenants.map((x) => (
+              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} className="tap" style={{ textDecoration: 'none' }}>{x.name}</Link>} />
+            ))}
+            {l.guarantors.map((g) => (
+              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} className="tap" style={{ textDecoration: 'none' }}>{g.name}</Link>} />
+            ))}
+          </Card>
+    </>
+  )
+  const tenantLinkCard = (
+    <>
+          <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>
+    </>
+  )
+
   return (
     <>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: l.property.name, to: `/espace/logements/${l.property.id}` }, { label: 'Bail' }]} />
@@ -97,6 +357,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
         </div>
         <span style={{ fontSize: 16, color: BAI.inkMid }}>
           {KIND_LABEL[l.kind]} · {l.property.address} · du {dateFr(l.columns.startDate)} au {dateFr(l.columns.endDate)}
+          {signed && l.signedAt ? ` · signé le ${dateNum(l.signedAt)}` : ''}
         </span>
       </div>
 
@@ -181,207 +442,38 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             </Card>
           ) : null}
 
-          <Card title={<div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: 12, paddingBottom: 8 }}><h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>Pièces à joindre au bail</h2><span style={{ fontSize: 14, color: BAI.inkSoft }}>{annexDone} sur {l.annexes.length}</span></div>} style={{ gap: 0 }}>
-            {(showAnnexes ? l.annexes : l.annexes.filter((a) => !a.done)).map((a) => {
-              const act = a.done && !a.key.startsWith('caution-') && !['notice', 'repairs', 'charges'].includes(a.key) ? null : annexAction(a.key)
-              return (
-                <div key={a.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '16px 0', borderTop: `1px solid ${BAI.dividerSoft}` }}>
-                  <span style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
-                    {a.done ? <Check /> : <Circle color={BAI.error} />}
-                    {a.label}
-                  </span>
-                  {act ? (
-                    act.to ? (
-                      <TextLink to={act.to}>{a.key === 'inventory' && l.terms.startDate && l.status !== 'DRAFT' ? `Le faire le ${dateFr(l.terms.startDate, false)}` : act.label}</TextLink>
-                    ) : act.onClick ? (
-                      <TextLink onClick={act.onClick}>{act.label}</TextLink>
-                    ) : (
-                      <span style={{ fontSize: 14, color: BAI.inkSoft }}>{a.status}</span>
-                    )
-                  ) : (
-                    <span style={{ fontSize: 15, fontWeight: 600, color: a.done ? BAI.green : BAI.inkSoft }}>{a.status}</span>
-                  )}
-                </div>
-              )
-            })}
-            <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
-              {annexDone === l.annexes.length && !showAnnexes ? <span style={{ fontSize: 15, color: BAI.green, fontWeight: 600, marginRight: 16 }}>Toutes les pièces sont prêtes.</span> : null}
-              <TextLink onClick={() => setShowAnnexes(!showAnnexes)} style={{ fontSize: 14 }}>
-                {showAnnexes ? 'Ne voir que ce qui manque' : `Voir les ${l.annexes.length} pièces`}
-              </TextLink>
-            </div>
-          </Card>
-
-          {l.status !== 'DRAFT' ? (
-            <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
-              <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
-              {l.status !== 'ENDED' ? (
-                <>
-                  <Toggle
-                    checked={Boolean(l.facts?.receiptAuto)}
-                    onChange={(v) =>
-                      void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
-                        .then(() => {
-                          toast.show(v ? 'La quittance partira dès que vous notez le loyer reçu.' : 'Envoi des quittances par email arrêté.')
-                          reload()
-                        })
-                        .catch(toast.error)
-                    }
-                    label="Quittance par email dès que le loyer est noté reçu"
-                    sub={
-                      l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                        ? 'Vous notez le loyer reçu (ou Bailio le retrouve sur votre relevé) : la quittance part tout de suite au locataire.'
-                        : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
-                    }
-                  />
-                  {l.facts?.receiptAuto ? (
-                    <Toggle
-                      checked={Boolean(l.facts?.receiptAssume)}
-                      onChange={(v) =>
-                        void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { assume: v } })
-                          .then(() => {
-                            toast.show(v ? 'Sans nouvelle de votre part, le loyer sera noté reçu 7 jours après l’échéance.' : 'Bailio attendra que vous notiez le loyer reçu.')
-                            reload()
-                          })
-                          .catch(toast.error)
-                      }
-                      label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
-                      sub="Facultatif. La quittance prouve que le loyer est payé : ne l’activez que si votre locataire paie toujours à l’heure. Vous êtes prévenu par email 3 jours avant, et un clic suffit pour l’arrêter."
-                    />
-                  ) : null}
-                </>
-              ) : null}
-              {l.facts?.autoReceipt ? (
-                l.facts.autoReceipt.held ? (
-                  <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>
-                    Une quittance prouve que le loyer est payé : elle ne part pas tant que le loyer n’est pas reçu.{' '}
-                    <TextLink to={`/espace/baux/${l.id}/courriers?type=REMINDER`} style={{ fontSize: 14 }}>
-                      Envoyer une demande de paiement
-                    </TextLink>
-                    {' · '}
-                    <TextLink
-                      style={{ fontSize: 14 }}
-                      onClick={guard(async () => {
-                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: false } })
-                        reload()
-                      })}
-                    >
-                      Rétablir l’envoi
-                    </TextLink>
-                  </Callout>
-                ) : (
-                  <Callout tone="info" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi automatique le ${dateShort(l.facts.autoReceipt.sendOn)}`}>
-                    Rien à faire si le loyer arrive.{' '}
-                    <TextLink
-                      style={{ fontSize: 14 }}
-                      onClick={guard(async () => {
-                        await api(`/leases/${l.id}/receipt-hold`, { method: 'POST', body: { period: l.facts!.autoReceipt!.period, hold: true } })
-                        toast.show('Envoi annulé.')
-                        reload()
-                      })}
-                    >
-                      Le loyer n’est pas arrivé
-                    </TextLink>
-                  </Callout>
-                )
-              ) : null}
-              {l.payments.length ? (
-                l.payments.map((p) => (
-                  <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
-                    <span style={{ fontWeight: 600, minWidth: 140 }}>{periodLabel(p.period, true)}</span>
-                    <span style={{ color: BAI.inkMid, flex: 1 }}>
-                      {eurosCents(p.amountCents)} reçus le {dateShort(p.receivedAt)}
-                      {p.full ? '' : ' · paiement partiel'}
-                    </span>
-                    <span style={{ display: 'flex', gap: 12 }}>
-                      <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(`/leases/${l.id}/receipts/${p.period}.pdf`))}>
-                        {p.full ? 'Quittance' : 'Reçu'}
-                      </TextLink>
-                      <TextLink
-                        style={{ fontSize: 14 }}
-                        onClick={guard(async () => {
-                          const r = await api<{ sentTo: string[] }>(`/leases/${l.id}/receipts/${p.period}/send`, { method: 'POST' })
-                          toast.show(`Envoyé à ${r.sentTo.join(', ')}.`)
-                        })}
-                      >
-                        Envoyer
-                      </TextLink>
-                      <TextLink
-                        style={{ fontSize: 14, color: BAI.error }}
-                        onClick={guard(async () => {
-                          if (!window.confirm(`Annuler le loyer de ${periodLabel(p.period)} ? La quittance sera retirée.`)) return
-                          await api(`/leases/${l.id}/payments/${p.period}`, { method: 'DELETE' })
-                          reload()
-                        })}
-                      >
-                        Annuler
-                      </TextLink>
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun loyer enregistré pour l’instant.</span>
-              )}
-              {l.status !== 'ENDED' ? (
-                <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(`/leases/${l.id}/notice/${nextPeriod()}.pdf`))}>
-                  Avis d’échéance de {periodLabel(nextPeriod())}
-                </TextLink>
-              ) : null}
-            </Card>
-          ) : null}
-
-          {!(l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty)) ? (
-            <Card title="Le bail signé">
-              <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap' }}>
-                <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir</TextLink>
-                <TextLink onClick={guard(() => printDoc(pdf))}>Imprimer</TextLink>
-                <TextLink onClick={guard(() => downloadDoc(pdf, 'bail.pdf'))}>Télécharger</TextLink>
-                {l.tenants.some((x) => x.email) ? <TextLink onClick={send}>L’envoyer à {first} par email</TextLink> : null}
-                {editable ? <TextLink to={`/espace/baux/${l.id}/contrat`}>Modifier une information</TextLink> : null}
+          {signed ? (
+            <>
+              <Tabs label="Sections du bail" tabs={tabs} value={tab} onChange={pickTab} />
+              <div key={tab} role="tabpanel" aria-label={tabs.find((x) => x.value === tab)!.label} className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {tab === 'loyers' ? payCard : null}
+                {tab === 'bail' ? (
+                  <>
+                    {summaryCard}
+                    {annexCard}
+                    {docsCard}
+                  </>
+                ) : null}
+                {tab === 'locataire' ? (
+                  <>
+                    {tenantLinkCard}
+                    {peopleCard}
+                  </>
+                ) : null}
               </div>
-              {l.signedAt ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Signé le {dateNum(l.signedAt)}.</span> : null}
-            </Card>
-          ) : null}
-
-          {l.status !== 'DRAFT' && l.kind !== 'PARKING' ? (
-            <Card title="Impôts">
-              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'ENDED' ? 'Le départ du locataire se signale aux impôts.' : 'L’arrivée du locataire se signale aux impôts, et une première location meublée s’enregistre. Tout est prêt à copier.'}</span>
-              <TextLink to={`/espace/baux/${l.id}/impots`}>Déclarer ce bail aux impôts</TextLink>
-            </Card>
-          ) : null}
-
-          {l.documents.length ? (
-            <Card title="Documents de ce bail">
-              {l.documents.map((d) => (
-                <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
-                  <span>
-                    {d.title}
-                    {d.kind === 'LEASE' ? <span style={{ color: BAI.inkSoft }}> · version {d.version}</span> : null}
-                  </span>
-                  <span style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    <span className="hide-sm" style={{ fontSize: 13, color: BAI.inkSoft }}>
-                      {dateNum(d.createdAt)}
-                    </span>
-                    <TextLink style={{ fontSize: 14 }} onClick={guard(() => openDoc(documentPath(d.id)))}>
-                      Ouvrir
-                    </TextLink>
-                  </span>
-                </div>
-              ))}
-            </Card>
-          ) : null}
+            </>
+          ) : (
+            <>
+              {annexCard}
+              {payCard}
+              {taxCard}
+              {docsCard}
+            </>
+          )}
         </div>
 
         <aside className="aside" style={{ width: 380 }}>
-          <Card title="En résumé">
-            <Line label="Loyer" value={euros(l.columns.rentCents)} />
-            <Line label="Charges" value={`${euros(l.columns.chargesCents)}, ${t.chargesMode === 'FORFAIT' ? 'forfait' : t.chargesMode === 'PERIODIC' ? 'provision' : 'provision'}`} />
-            {l.kind !== 'MOBILITE' ? <Line label="Dépôt de garantie" value={euros(l.columns.depositCents)} /> : null}
-            <Line label="Paiement" value={`le ${l.columns.paymentDay === 1 ? '1er' : l.columns.paymentDay} du mois`} />
-            <Line label="Révision" value={t.revision?.enabled === false || !l.computed.revisionAllowed ? 'aucune' : `chaque ${dateFr(`2000-${t.revision?.date ?? l.columns.startDate.slice(5)}`, false)}`} />
-            <Line label="Durée" value={`${l.computed.durationMonths >= 12 && l.computed.durationMonths % 12 === 0 ? `${l.computed.durationMonths / 12} an${l.computed.durationMonths > 12 ? 's' : ''}` : `${l.computed.durationMonths} mois`}`} />
-            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{l.computed.renewal}.</span>
-          </Card>
+          {signed ? null : summaryCard}
           {l.status !== 'DRAFT' ? (
           <Card dark title="Plus tard" style={{ gap: 12 }}>
             {l.status === 'ACTIVE' ? (
@@ -412,23 +504,21 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                 Restituer le dépôt de garantie
               </Link>
             ) : null}
+            {signed && l.kind !== 'PARKING' ? (
+              <Link to={`/espace/baux/${l.id}/impots`} className="tap" style={darkLink}>
+                {l.status === 'ENDED' ? 'Signaler le départ aux impôts' : 'Déclarer ce bail aux impôts'}
+              </Link>
+            ) : null}
           </Card>
           ) : null}
-          <Card title="Personnes">
-            {l.tenants.map((x) => (
-              <Line key={x.id} label="Locataire" value={<Link to={`/espace/locataires/${x.id}`} className="tap" style={{ textDecoration: 'none' }}>{x.name}</Link>} />
-            ))}
-            {l.guarantors.map((g) => (
-              <Line key={g.tenantId} label="Garant" value={<Link to={`/espace/locataires/${g.tenantId}/caution`} className="tap" style={{ textDecoration: 'none' }}>{g.name}</Link>} />
-            ))}
-          </Card>
+          {signed ? null : peopleCard}
           {/* Suppression discrète : une action rare et irréversible ne mérite pas un bloc sombre en évidence. */}
           {l.status === 'DRAFT' ? (
             <TextLink onClick={removeDraft} style={{ fontSize: 14, color: BAI.error, alignSelf: 'flex-start' }}>
               Supprimer ce bail en préparation
             </TextLink>
           ) : null}
-          <div id="locataire">{l.status === 'ACTIVE' || l.status === 'IMPORTED' ? <TenantLink leaseId={l.id} tenantEmail={l.tenants.find((x) => x.email)?.email} /> : null}</div>
+          {signed ? null : tenantLinkCard}
         </aside>
       </div>
 

@@ -43,7 +43,7 @@ test('signature en ligne complète, bail figé pendant la signature, puis avenan
   let lease = await api(`/leases/${leaseId}`, { token: account.token })
   assert.equal(lease.status, 'ACTIVE')
   await page.goto(`${BASE}/espace/baux/${leaseId}`)
-  await page.getByText(/Signé le/).first().waitFor()
+  await page.getByText(/[Ss]igné le/).first().waitFor()
   await shot(page, 'bail-signe')
 
   // Avenant : une modification après signature se signe aussi en ligne.

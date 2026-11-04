@@ -137,7 +137,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
 function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
   const lease = currentLease(p)
   const [all, setAll] = useState(false)
-  const events = all ? p.events : p.events.slice(0, 6)
+  const events = all ? p.events : p.events.slice(0, 4)
   return (
     <div className="split-aside" style={{ gap: 28 }}>
       <div className="aside-wide">
@@ -190,7 +190,7 @@ function Overview({ p, reload }: { p: PropertyView; reload: () => void }) {
         ) : (
           <span style={{ fontSize: 15, color: BAI.inkMid, padding: '14px 0', borderTop: `1px solid ${BAI.timeline}` }}>Les loyers, les travaux et les documents de ce {p.nature === 'PARKING' ? 'garage' : 'logement'} apparaîtront ici.</span>
         )}
-        {p.events.length > 6 ? (
+        {p.events.length > 4 ? (
           <div style={{ paddingTop: 10 }}>
             <TextLink onClick={() => setAll(!all)} style={{ fontSize: 14 }}>
               {all ? 'Voir moins' : 'Voir tout l’historique'}
