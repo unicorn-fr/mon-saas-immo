@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useId, useRef, useSt
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { ApiError } from '../lib/api'
+import { cacheKey, loadCache, remember } from '../lib/loadCache'
 import { centsToInput, parseEuros } from '../lib/format'
 import { Spinner, display } from './ui'
 import { useAddressSuggestions, type AddressSuggestion } from './AddressField'
@@ -744,20 +745,30 @@ export function errorMessage(err: unknown): string {
 
 // ── Chargement des données ───────────────────────────────────────────────────
 
-export function useLoad<T>(load: () => Promise<T>, deps: unknown[] = []) {
-  const [data, setData] = useState<T | null>(null)
+/** `cache: false` : écran où l'on écrit à partir des données (formulaire) ; il attend toujours les données à jour. */
+export function useLoad<T>(load: () => Promise<T>, deps: unknown[] = [], { cache = true }: { cache?: boolean } = {}) {
+  const key = cache ? cacheKey(load, deps) : ''
+  const [data, setDataState] = useState<T | null>(() => (key ? (loadCache.get(key) as T | undefined) : undefined) ?? null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [tick, setTick] = useState(0)
   const loadRef = useRef(load)
   loadRef.current = load
+  const keyRef = useRef(key)
+  keyRef.current = key
   useEffect(() => {
     let alive = true
+    const k = keyRef.current
+    // Autre page ou autres paramètres : ce qu'on y a déjà vu, sinon l'écran de chargement.
+    if (tick === 0) setDataState((k ? (loadCache.get(k) as T | undefined) : undefined) ?? null)
     setLoading(true)
     setError(null)
     loadRef
       .current()
-      .then((d) => alive && setData(d))
+      .then((d) => {
+        if (k) remember(k, d)
+        if (alive) setDataState(d)
+      })
       .catch((e) => alive && setError(errorMessage(e)))
       .finally(() => alive && setLoading(false))
     return () => {
@@ -766,6 +777,14 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[] = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick])
   const reload = useCallback(() => setTick((t) => t + 1), [])
+  // Mise à jour faite par la page (après une action) : gardée aussi pour le prochain passage.
+  const setData = useCallback((v: T | null | ((prev: T | null) => T | null)) => {
+    setDataState((prev) => {
+      const next = typeof v === 'function' ? (v as (p: T | null) => T | null)(prev) : v
+      if (next !== null && keyRef.current) remember(keyRef.current, next)
+      return next
+    })
+  }, [])
   return { data, setData, error, loading, reload }
 }
 

@@ -52,7 +52,7 @@ export default function TikTok() {
       navigate('/espace/pilotage/tiktok', { replace: true })
     } else if (params.get('error')) setCallbackError('La connexion à TikTok a été annulée.')
     return api<Status>('/admin/tiktok')
-  }, [])
+  }, [], { cache: false })
   if (user && !user.admin) return <Navigate to="/espace" replace />
 
   const connect = async () => {

@@ -230,6 +230,9 @@ throw new HttpError(404, 'Bail introuvable.')   // message en français, affich�
 
 // Client
 const lease = await api<LeaseDetails>(`/leases/${id}`)
+// Écrans : useLoad (components/kit.tsx) garde en mémoire les dernières données vues (lib/loadCache.ts, vidée à la
+// déconnexion) : une page déjà vue s'affiche tout de suite puis se met à jour. Formulaire rempli à partir des données :
+// useLoad(load, deps, { cache: false }), pour ne jamais écraser une saisie avec des données anciennes.
 const url = await pdfUrl(`/leases/${id}/lease.pdf`)   // PDF protégé → URL locale
 ```
 

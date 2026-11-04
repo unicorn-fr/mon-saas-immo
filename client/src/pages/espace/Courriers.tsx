@@ -289,7 +289,7 @@ const INFO: Partial<Record<LetterType, { text: string; ref: string; guides?: Gui
  * automatiquement (brouillon gardé avec le bail), pour la retrouver plus tard telle quelle.
  */
 function useLetter(leaseId: string, type: LetterType) {
-  const { data, error, loading, reload } = useLoad(() => api<LetterDefaults>(`/leases/${leaseId}/letters/defaults/${type}`), [leaseId, type])
+  const { data, error, loading, reload } = useLoad(() => api<LetterDefaults>(`/leases/${leaseId}/letters/defaults/${type}`), [leaseId, type], { cache: false })
   const [letter, setState] = useState<Letter | null>(null)
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)

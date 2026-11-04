@@ -15,7 +15,7 @@ import { STATES, inventoryItemKey, stateChange, type InventoryData, type Invento
  */
 export default function Edl() {
   const { id = '' } = useParams()
-  const { data, error, loading, reload } = useLoad(() => api<InventoryView>(`/inventories/${id}`), [id])
+  const { data, error, loading, reload } = useLoad(() => api<InventoryView>(`/inventories/${id}`), [id], { cache: false })
   if (loading && !data) return <Loader />
   if (error || !data) return <div style={{ padding: 16 }}><LoadError message={error ?? ''} retry={reload} /></div>
   return <Flow inv={data} />

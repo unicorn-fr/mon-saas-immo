@@ -47,7 +47,7 @@ const DOC_HINTS: Record<string, string> = {
 export default function Dossier() {
   const { code = '' } = useParams()
   const toast = useToast()
-  const { data, error, loading, reload } = useLoad(() => api<View>(`/dossier/${encodeURIComponent(code)}`), [code])
+  const { data, error, loading, reload } = useLoad(() => api<View>(`/dossier/${encodeURIComponent(code)}`), [code], { cache: false })
   const [view, setView] = useState<View | null>(null)
   const [done, setDone] = useState(false)
   // Par défaut, un parcours guidé : seulement ce qui manque, une question à la fois. « Tout voir » ouvre le dossier entier.

@@ -36,7 +36,7 @@ interface AdView {
 export default function Annonce() {
   const { id = '' } = useParams()
   const toast = useToast()
-  const { data, error, loading, reload } = useLoad(() => api<AdView>(`/properties/${id}/ad`), [id])
+  const { data, error, loading, reload } = useLoad(() => api<AdView>(`/properties/${id}/ad`), [id], { cache: false })
   const [settings, setSettings] = useState<AdSettings | null>(null)
   const [view, setView] = useState<AdView['ad'] | null>(null)
   const [prompt, setPrompt] = useState('')
