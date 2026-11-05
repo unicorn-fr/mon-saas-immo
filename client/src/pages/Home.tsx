@@ -264,7 +264,7 @@ export default function Home() {
         <section className="hero" data-section>
           <div className="hero-photo">
             {/* Photo élargie à gauche (son propre ciel en miroir, caché par le bloc) : l’Arbre Blanc entier, à droite du bloc. */}
-            <img src="/accueil/arbre-blanc-large.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={3000} height={1250} fetchPriority="high" />
+            <img src="/accueil/arbre-blanc-large.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={3000} height={1000} fetchPriority="high" />
             <small className="hero-credit">© Ludwig Deguffroy/Getty Images</small>
           </div>
           <div className="hero-block fold fold--lg fold--ear">
