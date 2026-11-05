@@ -104,7 +104,7 @@ export default function ImpotsBail() {
                   <span style={{ fontSize: 17, fontWeight: 700 }}>{`${n + 1}. ${item.title}`}</span>
                   {item.doneAt ? null : <span style={{ fontSize: 14, color: BAI.accentInk, fontWeight: 600 }}>{item.deadline}</span>}
                 </span>
-                {item.doneAt ? <Pill tone="green">Fait</Pill> : <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, whiteSpace: 'nowrap' }}>Ouvrir</span>}
+                {item.doneAt ? <Pill tone="green">Fait le {frDay(item.doneAt)}</Pill> : <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, whiteSpace: 'nowrap' }}>Ouvrir</span>}
               </button>
             ) : (
             <div key={item.id} className="panel-in" style={{ display: 'flex', flexDirection: 'column' }}>
