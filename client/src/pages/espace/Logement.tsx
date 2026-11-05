@@ -463,7 +463,7 @@ function CreateDocument({ open, onClose, p, onSaved }: { open: boolean; onClose:
   return (
     <>
       <Modal open={open} onClose={onClose} title="Créer un document" width={620}>
-        {!lease ? <Callout tone="info">Quittances, courriers et états des lieux se préparent une fois le bail créé.</Callout> : null}
+        {!lease ? <Callout tone="info">Quittances, courriers et états des lieux : après la création du bail.</Callout> : null}
         <div className="grid-2" style={{ gap: 12 }}>
           {items.map((it) => (
             <button key={it.title} type="button" onClick={it.onClick} style={{ textAlign: 'left', border: `1px solid ${BAI.divider}`, background: BAI.surface, borderRadius: 16, padding: 18, fontFamily: 'inherit', color: BAI.ink, display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>

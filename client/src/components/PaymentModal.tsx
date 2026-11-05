@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { BAI } from '../constants/bailio-tokens'
 import { api } from '../lib/api'
 import { currentPeriod, eurosCents, periodLabel, recentPeriods, todayIso } from '../lib/format'
-import { Btn, Callout, Input, Modal, Money, Select, useToast } from './kit'
+import { Btn, Callout, Input, Modal, Money, Select, useToast, useConfirm } from './kit'
 
 /**
  * « Loyer reçu » : paiement complet → quittance ; paiement partiel → reçu (jamais une quittance).
@@ -10,6 +10,7 @@ import { Btn, Callout, Input, Modal, Money, Select, useToast } from './kit'
  */
 export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenantEmail, emailConsent }: { open: boolean; onClose: () => void; onSaved: () => void; leaseId: string; dueCents: number; tenantEmail?: string | null; emailConsent?: boolean }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const [period, setPeriod] = useState(currentPeriod())
   const [amount, setAmount] = useState<number | null>(dueCents)
   const [date, setDate] = useState(todayIso())
@@ -25,6 +26,7 @@ export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenant
 
   const save = async (send: boolean) => {
     if (!amount) return toast.show('Indiquez le montant reçu.', 'error')
+    if (send && !(await confirm({ title: `Envoyer ${partial ? 'le reçu' : 'la quittance'} ?`, text: tenantEmail ? `Le loyer est enregistré et ${partial ? 'le reçu part' : 'la quittance part'} par email à ${tenantEmail}.` : 'Le loyer est enregistré et le document part par email au locataire.' }))) return
     try {
       const saved = await api<{ missing?: Array<{ label: string }> }>(`/leases/${leaseId}/payments`, { method: 'POST', body: { period, amountCents: amount, receivedAt: date } })
       if (saved.missing?.length) {
@@ -61,7 +63,7 @@ export function PaymentModal({ open, onClose, onSaved, leaseId, dueCents, tenant
         <Input label="Date de réception" type="date" value={date} onChange={setDate} />
       </div>
       {partial ? (
-        <Callout tone="tip">Paiement partiel : Bailio établit un reçu, pas une quittance. La quittance n’est due que lorsque tout est payé (article 21 de la loi du 6 juillet 1989).</Callout>
+        <Callout tone="tip">Paiement partiel : Bailio établit un reçu. La quittance n’est due que lorsque tout est payé (article 21 de la loi du 6 juillet 1989).</Callout>
       ) : (
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>La quittance est gratuite et due au locataire qui la demande.</span>
       )}

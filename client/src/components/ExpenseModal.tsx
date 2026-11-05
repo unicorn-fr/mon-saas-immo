@@ -91,7 +91,7 @@ export function ExpenseModal({ open, onClose, onSaved, expense, propertyId }: { 
         <Select label="Catégorie" value={d.category} onChange={(v) => set('category', v)} options={CATEGORY_OPTIONS} />
       </div>
       <Select label="Logement" value={d.propertyId ?? ''} onChange={(v) => set('propertyId', v || null)} options={properties.map((p) => ({ value: p.id, label: p.name }))} placeholder="Aucun logement en particulier" />
-      <Money label="Dont charges récupérables" hint="La part que vous pourrez demander au locataire lors de la régularisation des charges (eau, ordures ménagères, entretien des parties communes…)." cents={d.recoverableCents} onChange={(c) => set('recoverableCents', c ?? 0)} />
+      <Money label="Dont charges récupérables" hint="La part à demander au locataire à la régularisation des charges (eau, ordures ménagères, parties communes…)." cents={d.recoverableCents} onChange={(c) => set('recoverableCents', c ?? 0)} />
       <fieldset style={{ border: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <legend style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Qui paie cette dépense ?</legend>
         <div className="col-md" style={{ display: 'flex', gap: 24 }}>
@@ -99,7 +99,6 @@ export function ExpenseModal({ open, onClose, onSaved, expense, propertyId }: { 
           <Radio name="chargeTo" checked={d.chargeTo === 'TENANT'} onChange={() => set('chargeTo', 'TENANT')} label="À refacturer au locataire" />
         </div>
       </fieldset>
-      <span style={{ fontSize: 13, color: BAI.inkSoft }}>La dépense apparaît dans l’onglet Argent et dans l’historique du logement.</span>
     </Modal>
   )
 }

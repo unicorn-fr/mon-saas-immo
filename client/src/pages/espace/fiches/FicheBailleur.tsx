@@ -37,7 +37,7 @@ export default function FicheBailleur() {
         <TextLink to="/espace/structures">{structures ? `Vos structures (${structures.length})` : 'Vos structures'}</TextLink>
       </Callout>
 
-      <FicheSection id="identity" n={++n} title="Votre identité" intro="Vous, ou la personne qui signe pour la société. Repris dans le bail, les quittances et les courriers." done={done('identity')}>
+      <FicheSection id="identity" n={++n} title="Votre identité" intro="Vous, ou la personne qui signe pour la société." done={done('identity')}>
         <Chips legend="Civilité" value={p.civility ?? null} onChange={(v) => set({ civility: v })} options={[{ value: 'MADAME', label: 'Madame' }, { value: 'MONSIEUR', label: 'Monsieur' }]} />
         <Fields>
           <Input label="Nom" value={p.lastName} onChange={(v) => set({ lastName: v })} />
@@ -103,7 +103,7 @@ export default function FicheBailleur() {
 
       <FicheSection id="signature" n={++n} title="Votre signature" done={done('signature')}>
         <SignaturePad value={p.signature} onChange={(v) => set({ signature: v ?? '' })} label="Signez ici avec la souris ou le doigt" />
-        <span style={{ fontSize: 13, color: BAI.inkSoft }}>Apposée sur vos quittances. Jamais sur un bail sans votre accord : pour un bail, vous signez à chaque fois.</span>
+        <span style={{ fontSize: 13, color: BAI.inkSoft }}>Apposée sur vos quittances. Un bail se signe à chaque fois.</span>
       </FicheSection>
     </FicheLayout>
   )

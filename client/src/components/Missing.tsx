@@ -22,7 +22,7 @@ export function MissingList({ items, title = 'Avant de signer, il manque :' }: {
         <Group
           items={later}
           title={essential.length ? 'À compléter si possible :' : 'Le bail peut être signé. À compléter si possible :'}
-          text="Ces mentions sont prévues par la loi, mais le bail peut se faire sans : il laissera une ligne à compléter à la main. Mieux vaut les ajouter avant la signature."
+          text="Mentions prévues par la loi, mais facultatives : le bail laissera une ligne à compléter à la main. Mieux vaut les ajouter avant la signature."
           tone={BAI.surface}
         />
       ) : null}

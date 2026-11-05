@@ -39,7 +39,7 @@ export function StructurePicker({ value, onChange }: { value: string | null; onC
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <Select
         label="À qui appartient ce logement ?"
-        hint="Le bail désigne ce propriétaire : sa durée et les congés possibles en dépendent."
+        hint="Le bail désigne ce propriétaire : sa durée et les congés en dépendent."
         value={creating ? NEW : value}
         onChange={(v) => {
           if (v === NEW) {

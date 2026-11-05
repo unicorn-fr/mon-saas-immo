@@ -226,7 +226,7 @@ function ConfirmByCode({ purpose, onClose, onDeleted }: { purpose: Purpose; onCl
       }
     >
       <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
-        {del ? 'Vos logements, vos locataires, vos baux et tous vos documents seront effacés définitivement. Pensez à tout exporter avant.' : 'Vous allez télécharger toutes les informations enregistrées dans votre compte, dans un fichier lisible par un autre logiciel.'}
+        {del ? 'Vos logements, vos locataires, vos baux et tous vos documents seront effacés définitivement. Pensez à tout exporter avant.' : 'Vous allez télécharger toutes les informations de votre compte, dans un fichier lisible par un autre logiciel.'}
       </p>
       <p style={{ margin: 0, fontSize: 14, color: BAI.inkSoft, lineHeight: 1.5 }}>Par sécurité, nous vérifions que c’est bien vous : un code à 6 chiffres vous est envoyé par email.</p>
       {sentTo && (

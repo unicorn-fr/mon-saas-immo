@@ -63,7 +63,7 @@ export function Binder({ propertyId }: { propertyId: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
       <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>
-        {data.missing ? `Il manque ${data.missing} document${data.missing > 1 ? 's' : ''} important${data.missing > 1 ? 's' : ''}.` : 'Tout ce qui est important est rangé.'} Pour chaque document : pourquoi il compte et combien de temps le garder.
+        {data.missing ? `Il manque ${data.missing} document${data.missing > 1 ? 's' : ''} important${data.missing > 1 ? 's' : ''}.` : 'Tout ce qui est important est rangé.'}
       </span>
       {data.sections.map((s) => (
         <Card key={s.key} title={s.title} style={{ gap: 0 }}>
@@ -75,8 +75,9 @@ export function Binder({ propertyId }: { propertyId: string }) {
                   <Pill tone={STATE[it.state].tone}>{STATE[it.state].label}</Pill>
                   {it.optional && it.state === 'MISSING' ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>facultatif</span> : null}
                 </span>
-                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{it.why}</span>
-                <span style={{ fontSize: 13, color: BAI.inkSoft }}>À garder : {it.keep.charAt(0).toLowerCase() + it.keep.slice(1)}</span>
+                {/* L'explication seulement pour ce qui manque ; la durée de conservation pour ce qui est rangé. */}
+                {it.state === 'MISSING' ? <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{it.why}</span> : null}
+                {it.state === 'OK' || it.state === 'AUTO' ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>À garder : {it.keep.charAt(0).toLowerCase() + it.keep.slice(1)}</span> : null}
               </span>
               <span style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
                 {it.docId ? <TextLink onClick={() => openDoc(`/documents/${it.docId}/file`).catch(toast.error)} style={{ fontSize: 14 }}>Ouvrir</TextLink> : null}

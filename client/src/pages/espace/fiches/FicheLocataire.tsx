@@ -55,7 +55,7 @@ export default function FicheLocataire() {
         <AddressInput label="Adresse actuelle" value={f.currentAddress} onChange={(v) => set({ currentAddress: v })} hint="Jusqu’à son entrée dans les lieux." />
       </FicheSection>
 
-      <FicheSection id="situation" n={++n} title="Situation" intro="Sert à vous proposer le bon type de bail et à vérifier la part du loyer dans les revenus. Rien de cela ne figure dans le bail." done={done('situation')}>
+      <FicheSection id="situation" n={++n} title="Situation" intro="Ne figure pas dans le bail." done={done('situation')}>
         <Chips
           legend="Situation"
           value={f.situation ?? null}

@@ -70,7 +70,7 @@ export default function Pilotage() {
   const td = { padding: '8px', fontVariantNumeric: 'tabular-nums' } as const
   return (
     <AppShell>
-      <PageHead title="Pilotage" sub="Les chiffres de Bailio, réservés à vous. Les comptes du pilotage ne sont pas comptés." actions={<Btn variant="outline" size="sm" to="/espace/pilotage/tiktok">Publier sur TikTok</Btn>} />
+      <PageHead title="Pilotage" sub="Les chiffres de Bailio. Les comptes du pilotage ne sont pas comptés." actions={<Btn variant="outline" size="sm" to="/espace/pilotage/tiktok">Publier sur TikTok</Btn>} />
       {loading && !data ? (
         <Loader />
       ) : error || !data ? (

@@ -4,7 +4,7 @@ import { markNavigation } from './lib/navigation'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { ToastProvider } from './components/kit'
+import { ConfirmProvider, ToastProvider } from './components/kit'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
@@ -165,10 +165,12 @@ export default function App() {
       <AuthProvider>
         <DraftProvider>
           <ToastProvider>
+          <ConfirmProvider>
             <ScrollToTop />
             <SkipLink />
             <PageTitle />
             <Pages />
+          </ConfirmProvider>
           </ToastProvider>
         </DraftProvider>
       </AuthProvider>

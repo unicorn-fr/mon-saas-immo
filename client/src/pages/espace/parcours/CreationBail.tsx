@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
-import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, Select, TextArea, TextLink, Toggle, errorMessage, useToast } from '../../../components/kit'
+import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, Select, TextArea, TextLink, Toggle, errorMessage, useToast, useConfirm } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { KIND_LABEL, MOBILITY_REASONS, PARKING_TYPES, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
 import { openDoc, printDoc } from '../../../lib/docs'
@@ -258,7 +258,7 @@ export default function CreationBail() {
           {parking ? null : <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />}
           <div style={{ background: BAI.night, borderRadius: 18, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, color: BAI.surface }}>
             <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accent }}>Il reste quelques questions</span>
-            <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer. Un garage loué seul a son propre contrat, plus simple qu’un bail d’habitation.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
+            <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
           </div>
         </>
       ) : null}
@@ -275,8 +275,8 @@ export default function CreationBail() {
           ) : null}
           {parking ? (
             <>
-              <Chips big legend="Durée du contrat" value={terms.durationMonths ?? 12} onChange={(v) => setT({ durationMonths: v })} options={[6, 12, 24, 36].map((n) => ({ value: n, label: durationText(n) }))} hint="Libre pour un garage. À son terme, le contrat se reconduit tout seul pour la même durée." />
-              <Chips legend="Préavis pour y mettre fin" value={terms.noticeMonths ?? 1} onChange={(v) => setT({ noticeMonths: v })} options={[1, 2, 3].map((n) => ({ value: n, label: `${n} mois` }))} hint="Le même pour vous et pour le locataire. Un mois est l’usage." />
+              <Chips big legend="Durée du contrat" value={terms.durationMonths ?? 12} onChange={(v) => setT({ durationMonths: v })} options={[6, 12, 24, 36].map((n) => ({ value: n, label: durationText(n) }))} hint="Libre pour un garage. Reconduction tacite." />
+              <Chips legend="Préavis pour y mettre fin" value={terms.noticeMonths ?? 1} onChange={(v) => setT({ noticeMonths: v })} options={[1, 2, 3].map((n) => ({ value: n, label: `${n} mois` }))} hint="Le même pour les deux parties. Un mois est l’usage." />
             </>
           ) : null}
           {c ? <Known items={[`Durée : ${durationText(c.durationMonths)}${terms.startDate && c.endDate ? `, jusqu’au ${dateFr(c.endDate)}` : ''}`, c.renewal]} /> : null}
@@ -469,11 +469,13 @@ interface TenantBlocker {
 function TenantCheck({ tenantId, name, email, blockers, propertyId }: { tenantId: string; name: string; email: string | null; blockers: TenantBlocker[]; propertyId: string | null }) {
   const toast = useToast()
   const [sent, setSent] = useState(false)
+  const confirm = useConfirm()
   if (!blockers.length) return null
   const blocking = blockers.some((b) => b.level === 'ESSENTIAL')
   const step = blockers[0].key.startsWith('guarantor') ? 'guarantor' : TENANT_STEP[blockers[0].key] ?? 'identity'
   const askable = blockers.some((b) => b.ask)
   const ask = async () => {
+    if (!(await confirm({ title: 'Envoyer la demande ?', text: `Le lien pour compléter son dossier part par email à ${email}.` }))) return
     try {
       await api(`/tenants/${tenantId}/request`, { method: 'POST', body: { send: true } })
       setSent(true)

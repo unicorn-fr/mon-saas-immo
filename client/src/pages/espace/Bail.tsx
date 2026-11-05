@@ -8,7 +8,7 @@ import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
-import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, Toggle, btnStyle, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, Toggle, btnStyle, useLoad, useToast, useConfirm } from '../../components/kit'
 import { api } from '../../lib/api'
 import { KIND_LABEL } from '../../lib/contract'
 import { documentPath, downloadDoc, openDoc, printDoc } from '../../lib/docs'
@@ -44,6 +44,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   }, [hash])
   const toast = useToast()
   const navigate = useNavigate()
+  const confirm = useConfirm()
   const [payOpen, setPayOpen] = useState(false)
   const [endOpen, setEndOpen] = useState(new URLSearchParams(search).get('depart') === '1')
   const [signOpen, setSignOpen] = useState(false)
@@ -60,6 +61,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   const guard = (fn: () => Promise<unknown>) => () => fn().catch(toast.error)
 
   const send = guard(async () => {
+    if (!(await confirm({ title: 'Envoyer le bail ?', text: `Le bail part par email à ${l.tenantName || 'votre locataire'}.` }))) return
     const r = await api<{ sentTo: string[] }>(`/leases/${l.id}/send`, { method: 'POST' })
     toast.show(`Bail envoyé à ${r.sentTo.join(', ')}.`)
   })
@@ -163,7 +165,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                     label="Quittance par email dès que le loyer est noté reçu"
                     sub={
                       l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                        ? 'Vous notez le loyer reçu (ou Bailio le retrouve sur votre relevé) : la quittance part tout de suite au locataire.'
+                        ? 'La quittance part tout de suite au locataire.'
                         : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
                     }
                   />
@@ -179,7 +181,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                           .catch(toast.error)
                       }
                       label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
-                      sub="Facultatif. La quittance prouve que le loyer est payé : ne l’activez que si votre locataire paie toujours à l’heure. Vous êtes prévenu par email 3 jours avant, et un clic suffit pour l’arrêter."
+                      sub="Facultatif. La quittance prouve le paiement : activez-le seulement si votre locataire paie toujours à l’heure. Vous êtes prévenu 3 jours avant et pouvez l’arrêter d’un clic."
                     />
                   ) : null}
                 </>
@@ -187,7 +189,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               {l.facts?.autoReceipt ? (
                 l.facts.autoReceipt.held ? (
                   <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>
-                    Une quittance prouve que le loyer est payé : elle ne part pas tant que le loyer n’est pas reçu.{' '}
+                    Elle ne part pas tant que le loyer n’est pas reçu.{' '}
                     <TextLink to={`/espace/baux/${l.id}/courriers?type=REMINDER`} style={{ fontSize: 14 }}>
                       Envoyer une demande de paiement
                     </TextLink>
@@ -233,6 +235,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                       <TextLink
                         style={{ fontSize: 14 }}
                         onClick={guard(async () => {
+                          if (!(await confirm({ title: `Envoyer ${p.full ? 'la quittance' : 'le reçu'} ?`, text: `Celui de ${periodLabel(p.period)} part par email à ${l.tenantName || 'votre locataire'}.` }))) return
                           const r = await api<{ sentTo: string[] }>(`/leases/${l.id}/receipts/${p.period}/send`, { method: 'POST' })
                           toast.show(`Envoyé à ${r.sentTo.join(', ')}.`)
                         })}
@@ -374,22 +377,22 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           ) : null}
           {l.status === 'ACTIVE' && l.reopen ? (
             <Callout tone="warn" title={`Ce bail est incomplet : il manque ${l.reopen.missing} mention${l.reopen.missing > 1 ? 's' : ''} obligatoire${l.reopen.missing > 1 ? 's' : ''}`}>
-              Il a été créé avant que Bailio vérifie toutes les mentions exigées par la loi.{' '}
+              Il a été créé avant que Bailio vérifie toutes les mentions légales.{' '}
               {l.reopen.allowed ? (
                 <>
-                  S’il n’est pas encore signé, repassez-le en préparation : Bailio vous demandera ce qui manque, puis vous le ferez signer.{' '}
+                  S’il n’est pas signé, repassez-le en préparation : Bailio vous demandera ce qui manque.{' '}
                   <TextLink style={{ fontSize: 13 }} onClick={reopen}>
                     Repasser en préparation
                   </TextLink>
                 </>
               ) : (
-                'Des loyers ou un état des lieux sont déjà enregistrés : s’il faut le corriger, modifiez-le puis faites signer la nouvelle version (avenant).'
+                'Des loyers ou un état des lieux sont déjà enregistrés : pour corriger le bail, modifiez-le puis faites signer un avenant.'
               )}
             </Callout>
           ) : null}
           {l.status === 'ACTIVE' && l.dirty ? (
             <Callout tone="warn" title="Le bail a changé depuis la signature">
-              Faites signer la nouvelle version par les deux parties (c’est un avenant), puis indiquez-le ici. La version signée précédente reste conservée.
+              Faites signer la nouvelle version (un avenant) par les deux parties, puis indiquez-le ici. La précédente reste conservée.
             </Callout>
           ) : null}
           {l.computed.energyWarning ? <Callout tone="warn">{l.computed.energyWarning}</Callout> : null}
@@ -405,7 +408,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           {l.status === 'DRAFT' && l.ready && !l.checkedAt ? (
             <Card title="Relisez le bail avant de l’envoyer">
               <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>
-                Vérifiez les noms, l’adresse, le loyer, les charges, le dépôt et les dates. Une erreur ? Corrigez la fiche du logement, du locataire ou les conditions : le bail se met à jour tout seul.
+                Vérifiez les noms, l’adresse, le loyer, les charges, le dépôt et les dates. Une erreur ? Corrigez la fiche : le bail se met à jour tout seul.
               </span>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <Btn variant="outline" onClick={guard(() => openDoc(pdf))}>
@@ -429,7 +432,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
               {l.tenants.some((x) => x.email) ? null : <span style={{ fontSize: 13, color: BAI.inkSoft }}>Pour l’envoyer par email, ajoutez l’adresse du locataire dans sa fiche.</span>}
               {l.status === 'DRAFT' || (l.status === 'ACTIVE' && l.dirty) ? (
                 <div style={{ borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier par vous et votre locataire ? Indiquez-le : Bailio lance les quittances, les rappels et prépare l’état des lieux.' : 'Quand la nouvelle version est signée, indiquez-le pour la conserver.'}</span>
+                  <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>{l.status === 'DRAFT' ? 'Signé sur papier ? Indiquez-le : Bailio lance les quittances et les rappels.' : 'Une fois signée, indiquez-le pour la conserver.'}</span>
                   <div>
                     <Btn variant="dark" onClick={() => setSignOpen(true)} disabled={l.status === 'DRAFT' && !l.ready}>
                       {l.status === 'DRAFT' ? 'Le bail est signé sur papier' : 'La nouvelle version est signée'}
@@ -537,11 +540,10 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
       >
         <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.55 }}>
           {l.status === 'DRAFT'
-            ? 'Bailio conserve cette version du bail telle quelle, avec les actes de caution. Les loyers, les quittances et les rappels (révision, assurance, fin du bail) démarrent.'
-            : 'Bailio conserve cette nouvelle version, en plus de la précédente. Les loyers suivants tiennent compte des changements.'}
+            ? 'Bailio conserve cette version telle quelle, avec les actes de caution. Loyers, quittances et rappels démarrent.'
+            : 'Bailio conserve cette version en plus de la précédente. Les loyers suivants en tiennent compte.'}
         </p>
-        <span style={{ fontSize: 13, color: BAI.inkSoft }}>Chaque partie garde un exemplaire original signé, avec ses annexes.</span>
-      </Modal>
+              </Modal>
       <EndModal open={endOpen} onClose={() => setEndOpen(false)} lease={l} onDone={setLease} />
       <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={reload} leaseId={l.id} dueCents={l.columns.rentCents + l.columns.chargesCents} tenantEmail={l.tenants.find((x) => x.email)?.email} emailConsent={Boolean(l.facts?.eReceiptConsent)} />
     </>
@@ -588,7 +590,7 @@ function EndModal({ open, onClose, lease, onDone }: { open: boolean; onClose: ()
       }
     >
       <Input label="Date de remise des clés" type="date" value={keysDate} onChange={setKeysDate} />
-      <Input label="Nouvelle adresse du locataire" value={newAddress} onChange={setNewAddress} hint="Obligatoire pour lui restituer le dépôt de garantie et lui envoyer le décompte." />
+      <Input label="Nouvelle adresse du locataire" value={newAddress} onChange={setNewAddress} hint="Obligatoire pour restituer le dépôt de garantie." />
       {!exit || exit.status !== 'SIGNED' ? (
         <Callout tone="tip">
           Pensez à l’état des lieux de sortie avant la remise des clés.{' '}
@@ -604,7 +606,7 @@ function EndModal({ open, onClose, lease, onDone }: { open: boolean; onClose: ()
           </button>
         </Callout>
       ) : null}
-      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>{lease.kind === 'PARKING' ? 'Le dépôt de garantie est à restituer dans le mois qui suit la remise des clés, comme le prévoit le contrat.' : 'Le dépôt de garantie doit être restitué dans un mois si l’état des lieux de sortie est conforme à l’entrée, deux mois sinon (article 22 de la loi du 6 juillet 1989).'}</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>{lease.kind === 'PARKING' ? 'Le dépôt de garantie est à restituer dans le mois qui suit la remise des clés.' : 'Le dépôt de garantie doit être restitué dans un mois si l’état des lieux de sortie est conforme à l’entrée, deux mois sinon (article 22 de la loi du 6 juillet 1989).'}</span>
     </Modal>
   )
 }

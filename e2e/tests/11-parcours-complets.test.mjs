@@ -127,6 +127,7 @@ test('ajouter un locataire : ce qui manque est demandé par email, le locataire 
   await page.getByText('Date de naissance', { exact: false }).first().waitFor()
   await shot(page, 'parcours-locataire-manque')
   await page.getByRole('button', { name: 'Demander par email' }).click()
+  await page.getByRole('button', { name: 'Oui, envoyer' }).click()
   await page.getByText(`Demande envoyée à ${email}.`).waitFor()
   const tenantId = new URL(page.url()).searchParams.get('id')
   await ctx.close()

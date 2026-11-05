@@ -193,8 +193,8 @@ function BottomNav({ onAdd }: { onAdd: () => void }) {
 const ADD_ITEMS = [
   { to: '/espace/logements/nouveau', title: 'Un logement', text: 'Quelques questions simples, une à la fois.' },
   { to: '/espace/locataires/nouveau', title: 'Un locataire', text: 'Son identité, son garant, ses justificatifs.' },
-  { to: '/espace/baux/nouveau', title: 'Un bail', text: 'Bailio vous demande seulement ce qu’il ne sait pas.' },
-  { to: '/espace/argent/facture', title: 'Une facture ou une dépense', text: 'En photo : Bailio la lit et la range dans le bon logement.' },
+  { to: '/espace/baux/nouveau', title: 'Un bail', text: 'Bailio ne demande que ce qu’il ne sait pas.' },
+  { to: '/espace/argent/facture', title: 'Une facture ou une dépense', text: 'En photo : Bailio la lit et la range.' },
   { to: '/espace/documents?ajouter=1', title: 'Un document', text: 'Diagnostic, attestation, courrier reçu.' },
   { to: '/importer', title: 'Un bail déjà signé', text: 'Une photo suffit. Bailio remplit tout.' },
 ]

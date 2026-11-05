@@ -36,7 +36,7 @@ export default function Corbeille() {
   }
   return (
     <AppShell>
-      <PageHead title="Corbeille" sub="Ce que vous supprimez reste ici 30 jours : vous pouvez le restaurer tel quel." />
+      <PageHead title="Corbeille" sub="Ce que vous supprimez reste 30 jours ici, restaurable tel quel." />
       {loading && !data ? (
         <Loader />
       ) : error || !data ? (

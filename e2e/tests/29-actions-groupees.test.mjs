@@ -32,6 +32,7 @@ test('actions groupées : liens d’assurance et quittances en une fois', async 
     await page.getByText('Aucune attestation enregistrée').first().waitFor()
     const before = logSize()
     await page.getByRole('button', { name: 'Envoyer le lien à 2 locataires' }).click()
+    await page.getByRole('button', { name: 'Oui, envoyer' }).click()
     await page.getByText('C’est fait : 2 envois.').waitFor()
     assert.equal(await page.getByText('Lien envoyé').count(), 2)
     const links = await fromLog(/(http:\/\/[^\s]+\/locataire\/[A-Za-z0-9]+)/g, before)
@@ -40,6 +41,7 @@ test('actions groupées : liens d’assurance et quittances en une fois', async 
 
     // Quittances : une seule, celle de A
     await page.getByRole('button', { name: /^Envoyer les quittances/ }).click()
+    await page.getByRole('button', { name: 'Oui, envoyer' }).click()
     const b2 = logSize()
     await page.getByRole('button', { name: 'Envoyer 1 quittance' }).click()
     await page.getByText('Quittance envoyée').waitFor()

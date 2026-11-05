@@ -110,7 +110,7 @@ export default function Emprunt() {
           ) : null}
 
           <Callout tone="tip" title="Pour la déclaration">
-            Location vide au régime réel : les intérêts, l’assurance et les frais du prêt payés dans l’année se déclarent ligne 250 de la 2044. Bailio les reprend tout seul dans l’aide à la déclaration{v.thisYear.deductibleCents ? ` (${eurosCents(v.thisYear.deductibleCents)} pour ${v.thisYear.year})` : ''}. Au micro-foncier, rien ne se déduit : l’abattement de 30 % couvre tout.
+            Location vide au régime réel : les intérêts, l’assurance et les frais du prêt payés dans l’année se déclarent ligne 250 de la 2044. Bailio les reprend dans l’aide à la déclaration{v.thisYear.deductibleCents ? ` (${eurosCents(v.thisYear.deductibleCents)} pour ${v.thisYear.year})` : ''}. Au micro-foncier, rien ne se déduit : l’abattement de 30 % couvre tout.
           </Callout>
         </>
       )}
@@ -231,7 +231,7 @@ function LoanWizard({ loan, onChange, onFinish, onCancel, busy, error, editing }
           content: (
             <>
               <Money big label="Montant emprunté" cents={loan.principalCents ?? null} onChange={(c) => set({ principalCents: c ?? undefined })} />
-              <NumberField big label="Taux annuel, hors assurance" value={loan.ratePercent ?? null} onChange={(n) => set({ ratePercent: n ?? undefined })} suffix="%" step="decimal" hint="Par exemple 3,45. Mettez 0 pour un prêt à taux zéro." />
+              <NumberField big label="Taux annuel, hors assurance" value={loan.ratePercent ?? null} onChange={(n) => set({ ratePercent: n ?? undefined })} suffix="%" step="decimal" hint="Par exemple 3,45. 0 pour un prêt à taux zéro." />
             </>
           ),
         },
@@ -255,7 +255,7 @@ function LoanWizard({ loan, onChange, onFinish, onCancel, busy, error, editing }
                 </div>
               </fieldset>
               {other ? <NumberField big label="Durée, en mois" value={loan.months ?? null} onChange={(n) => set({ months: n ?? undefined })} step="int" /> : null}
-              <Input big label="Date de la première mensualité" type="date" value={loan.firstPaymentDate ?? ''} onChange={(x) => set({ firstPaymentDate: x })} hint="Sur votre tableau d’amortissement, première ligne." />
+              <Input big label="Date de la première mensualité" type="date" value={loan.firstPaymentDate ?? ''} onChange={(x) => set({ firstPaymentDate: x })} hint="Première ligne du tableau d’amortissement." />
             </>
           ),
         },

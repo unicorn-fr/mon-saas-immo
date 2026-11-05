@@ -41,6 +41,7 @@ test('le locataire remplit lui-même son dossier, avec les mêmes informations q
   const email = `ines.${Date.now()}@example.fr`
   await page.getByLabel('Email du locataire').fill(email)
   await page.getByRole('button', { name: 'Envoyer le lien au locataire' }).click()
+  await page.getByRole('button', { name: 'Oui, envoyer' }).click()
   await page.getByText('Lien envoyé.').waitFor()
   await page.waitForURL(/\/espace\/locataires\/[0-9a-f-]{36}$/)
   const tenantId = page.url().split('/').pop()

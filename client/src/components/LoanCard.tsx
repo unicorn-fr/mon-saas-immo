@@ -22,7 +22,7 @@ export function LoanCard({ propertyId, compact }: { propertyId: string; compact?
   if (!data.loans.length)
     return (
       <Card title="Emprunt" action={<TextLink to={to} style={{ fontSize: 14 }}>Ajouter</TextLink>}>
-        <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un crédit pour ce logement ? Bailio calcule son tableau, ce que vous déclarez chaque année et ce qu’il vous reste chaque mois.</span>
+        <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un crédit pour ce logement ? Bailio calcule le tableau, ce que vous déclarez et ce qu’il vous reste chaque mois.</span>
       </Card>
     )
   const cf = data.cashflow

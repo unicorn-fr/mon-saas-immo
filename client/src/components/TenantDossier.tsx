@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BAI } from '../constants/bailio-tokens'
-import { Btn, Card, Callout, Modal, Pill, TextLink, useLoad, useToast } from './kit'
+import { Btn, Card, Callout, Modal, Pill, TextLink, useLoad, useToast, useConfirm } from './kit'
 import { api } from '../lib/api'
 import { openDoc } from '../lib/docs'
 import { dateNum } from '../lib/format'
@@ -18,11 +18,13 @@ interface FileMissing {
  */
 export function TenantDossier({ tenantId, email }: { tenantId: string; email?: string | null }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const { data, reload } = useLoad(() => api<{ missing: FileMissing[]; toReview: number; link: { url: string; sentAt: string } | null }>(`/tenants/${tenantId}/missing`), [tenantId])
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   if (!data) return null
   const send = async () => {
+    if (!(await confirm({ title: 'Envoyer la demande ?', text: `Le lien pour compléter son dossier part par email à ${email}.` }))) return
     setBusy(true)
     try {
       await api(`/tenants/${tenantId}/request`, { method: 'POST', body: { send: true } })
@@ -152,7 +154,7 @@ function Review({ tenantId, onClose }: { tenantId: string; onClose: () => void }
           </div>
         ))
       )}
-      <span style={{ fontSize: 13, color: BAI.inkSoft }}>« À corriger » retire l’élément : il repasse dans ce qui manque et vous pouvez le redemander au locataire.</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft }}>« À corriger » retire l’élément : vous pouvez le redemander au locataire.</span>
     </Modal>
   )
 }

@@ -21,7 +21,7 @@ export default function Structures() {
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Vos structures' }]} />
-      <PageHead title="Vos structures" sub="Qui détient vos logements : vous, à plusieurs, une SCI ou une société. Le bail de chaque logement en dépend." actions={<Btn onClick={() => setAdding(true)}>Ajouter une structure</Btn>} />
+      <PageHead title="Vos structures" sub="Qui détient vos logements : vous, plusieurs personnes, une SCI ou une société." actions={<Btn onClick={() => setAdding(true)}>Ajouter une structure</Btn>} />
       {loading && !data ? (
         <Loader />
       ) : error ? (
@@ -166,7 +166,7 @@ export function StructureFiche() {
             <Input label="Siège social" value={c.seat} onChange={(v) => set({ company: { ...c, seat: v } })} />
           </Fields>
           <Fields>
-            <Input label="Représentée par" value={c.representedBy} onChange={(v) => set({ company: { ...c, representedBy: v } })} hint="La personne qui signe les baux, en général le gérant." />
+            <Input label="Représentée par" value={c.representedBy} onChange={(v) => set({ company: { ...c, representedBy: v } })} hint="Celle qui signe les baux, en général le gérant." />
             <Input label="En qualité de" value={c.representativeRole} onChange={(v) => set({ company: { ...c, representativeRole: v } })} placeholder="Gérant" />
           </Fields>
         </Section>

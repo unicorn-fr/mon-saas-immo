@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
-import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextLink, errorMessage, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextLink, errorMessage, useLoad, useToast, useConfirm } from '../../components/kit'
 import { display } from '../../components/ui'
 import { api } from '../../lib/api'
 import { openDoc } from '../../lib/docs'
@@ -59,6 +59,7 @@ const key = (r: Row) => `${r.leaseId}:${r.period ?? ''}`
 export default function Actions() {
   const toast = useToast()
   const { data, error, reload } = useLoad(() => api<BulkView>('/bulk'))
+  const confirm = useConfirm()
   // undefined : premier groupe ouvert par défaut ; null : tout est replié.
   const [open, setOpen] = useState<Kind | null | undefined>(undefined)
   const [skipped, setSkipped] = useState<Record<string, boolean>>({})
@@ -88,6 +89,7 @@ export default function Actions() {
   }
   const run = async (kind: Kind) => {
     const rows = data.groups[kind].filter((r) => !r.blocked && !skipped[key(r)] && !results[key(r)]?.ok)
+    if (!rows.length || !(await confirm({ title: `Envoyer ${rows.length > 1 ? `ces ${rows.length} emails` : 'cet email'} ?`, text: 'Chaque locataire coché reçoit son email maintenant.' }))) return
     setBusy(true)
     let sent = 0
     for (const r of rows) {
@@ -110,7 +112,7 @@ export default function Actions() {
         <h1 style={display('clamp(34px, 5vw, 48px)')}>Actions groupées</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Ce qui se fait en une fois pour tous vos logements. Vous relisez la liste, puis un seul bouton.</span>
       </div>
-      {!available.length ? <Callout tone="ok">Rien à faire en groupe aujourd’hui : relances, assurances, révisions et quittances sont à jour.</Callout> : null}
+      {!available.length ? <Callout tone="ok">Rien à faire en groupe aujourd’hui.</Callout> : null}
       {available.map((kind) => {
         const g = GROUPS[kind]
         const rows = data.groups[kind]

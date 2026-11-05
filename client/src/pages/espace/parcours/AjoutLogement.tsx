@@ -343,7 +343,7 @@ function StepCopro({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>
       <Input big label="Syndic" value={f.copro?.syndic ?? ''} onChange={(v) => set({ copro: { ...f.copro, syndic: v } })} placeholder="Nom du syndic" hint="Il rejoint votre carnet." />
       <Fields>
         <Input label="Numéro de lot" value={f.lotNumber ?? ''} onChange={(v) => set({ lotNumber: v })} placeholder="12" />
-        <Input label="Quote-part des parties communes" value={f.copro?.quotePart ?? ''} onChange={(v) => set({ copro: { ...f.copro, quotePart: v } })} placeholder="245 / 10 000es" hint="Les tantièmes du lot." />
+        <Input label="Quote-part des parties communes" value={f.copro?.quotePart ?? ''} onChange={(v) => set({ copro: { ...f.copro, quotePart: v } })} placeholder="245 / 10 000es" hint="Tantièmes du lot." />
       </Fields>
       <Check checked={Boolean(f.copro?.extractsProvided)} onChange={(v) => set({ copro: { ...f.copro, extractsProvided: v } })} label="J’ai les extraits du règlement de copropriété à remettre au locataire" sub="Destination de l’immeuble, usage des parties privatives et communes, quote-part des charges. Ils sont annexés au bail." />
     </>
@@ -373,13 +373,13 @@ function StepSize({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
         value={f.rooms && f.rooms >= 5 ? 5 : (f.rooms ?? null)}
         onChange={(v) => set({ rooms: v, roomList: rooms.length ? rooms : defaultRooms({ ...f, rooms: v }) })}
         options={[1, 2, 3, 4].map((n) => ({ value: n, label: String(n) })).concat([{ value: 5, label: '5 et plus' }])}
-        hint="Séjour et chambres. La cuisine et la salle de bain ne comptent pas."
+        hint="Séjour et chambres, sans cuisine ni salle de bain."
       />
       {f.rooms && f.rooms >= 5 ? <NumberField label="Nombre exact de pièces principales" value={f.rooms} onChange={(v) => set({ rooms: v ?? 5 })} /> : null}
       {f.rooms ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ fontSize: 15, fontWeight: 600 }}>Composition du logement</span>
-          <span style={{ fontSize: 13, color: BAI.inkSoft }}>Elle sert au bail et prépare l’état des lieux, pièce par pièce. Modifiez-la si besoin.</span>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>Modifiez-la si besoin.</span>
           {rooms.map((r, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
               <Input label="" value={r.name} onChange={(v) => setRooms(rooms.map((x, j) => (j === i ? { ...x, name: v } : x)))} style={{ flex: '1 1 0' }} />
@@ -433,7 +433,7 @@ function StepAnnexes({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFil
         ))}
       </Group>
       {annexes.has('garage') || annexes.has('parking') || annexes.has('cellar') ? <Input label="Numéro de garage, de place ou de cave" value={f.garageNumber ?? ''} onChange={(v) => set({ garageNumber: v })} /> : null}
-      {annexes.has('garden') ? <NumberField label="Superficie du jardin" suffix="m²" value={f.gardenArea} onChange={(v) => set({ gardenArea: v })} hint="Son entretien courant revient au locataire." /> : null}
+      {annexes.has('garden') ? <NumberField label="Superficie du jardin" suffix="m²" value={f.gardenArea} onChange={(v) => set({ gardenArea: v })} hint="Entretien courant à la charge du locataire." /> : null}
       {f.habitat === 'COLLECTIVE' ? (
         <Group legend="Dans l’immeuble, à l’usage de tous">
           {(Object.keys(COMMON_AREAS) as CommonKey[]).map((k) => (
@@ -514,7 +514,7 @@ function StepFurniture({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyF
   return (
     <>
       <StepTitle>Les meubles obligatoires</StepTitle>
-      <StepNote>Pour louer en meublé, la loi impose ces 11 équipements (<Cite reference="décret n° 2015-981" />). Cochez ce qui est présent.</StepNote>
+      <StepNote>La loi impose ces 11 équipements en meublé (<Cite reference="décret n° 2015-981" />). Cochez ce qui est présent.</StepNote>
       <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'grid', gap: 12 }}>
         {keys.map((k) => (
           <Check
@@ -544,8 +544,7 @@ function StepDiagnostics({ f, set, diagnostics, propertyId }: { f: PropertyFile;
   return (
     <>
       <StepTitle>Les diagnostics</StepTitle>
-      <StepNote>Ils sont annexés au bail. Les informations du DPE y sont recopiées.</StepNote>
-      <Chips big legend="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="Sur le diagnostic de performance énergétique (DPE)." />
+            <Chips big legend="Classe énergie (DPE)" value={d.dpe?.class ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, class: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} hint="Sur le diagnostic de performance énergétique (DPE)." />
       {d.dpe?.class === 'G' ? <Callout tone="warn">Depuis le 1er janvier 2025, un logement classé G ne peut plus être proposé à la location (décence énergétique).</Callout> : d.dpe?.class === 'F' ? <Callout tone="warn">Classé F : le loyer ne peut pas être augmenté, et le logement ne pourra plus être loué à partir de 2028.</Callout> : null}
       <Chips legend="Classe climat (gaz à effet de serre)" value={d.dpe?.ges ?? null} onChange={(v) => set({ diagnostics: { ...d, dpe: { ...d.dpe, ges: v } } })} options={(['A', 'B', 'C', 'D', 'E', 'F', 'G'] as const).map((c) => ({ value: c, label: c }))} />
       <Fields>
@@ -605,7 +604,7 @@ function StepPhotos({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile
   return (
     <>
       <StepTitle>Des photos ?</StepTitle>
-      <StepNote>Facultatif. Elles vous serviront pour votre annonce et l’état des lieux.</StepNote>
+      <StepNote>Facultatif.</StepNote>
       <label style={{ border: `1.5px dashed ${BAI.dashed}`, background: BAI.surface, borderRadius: 20, padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', cursor: 'pointer' }}>
         {busy ? <Spinner size={28} /> : <Camera size={36} />}
         <span style={{ fontSize: 17, fontWeight: 700 }}>Déposez vos photos</span>
@@ -670,7 +669,7 @@ function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
         <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={parking ? 'Libre pour un garage. Bailio propose un mois de loyer, deux au plus.' : max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
         <NumberField label="Jour de paiement du loyer" value={r.paymentDay ?? 5} onChange={(v) => sr({ paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null })} />
       </Fields>
-      <StepNote>Ce loyer sera repris dans l’annonce et dans {parking ? 'le contrat' : 'le bail'}. Vous pourrez toujours le changer : il sera mis à jour partout.</StepNote>
+      <StepNote>Repris dans l’annonce et {parking ? 'le contrat' : 'le bail'}. Modifiable à tout moment.</StepNote>
     </>
   )
 }

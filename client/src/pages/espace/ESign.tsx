@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { Guide } from '../../components/Sources'
-import { Btn, Card, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Pill, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
 import { api } from '../../lib/api'
 import { dateNum } from '../../lib/format'
 
@@ -22,6 +22,7 @@ interface ESignStatus {
 export function ESignCard({ leaseId, ready, amendment = false, onChange, secondary = false }: { leaseId: string; ready: boolean; amendment?: boolean; onChange: () => void; secondary?: boolean }) {
   const { data, reload } = useLoad(() => api<ESignStatus | null>(`/leases/${leaseId}/esign`), [leaseId])
   const toast = useToast()
+  const confirm = useConfirm()
   const navigate = useNavigate()
   const pending = data?.status === 'PENDING' ? data : null
 
@@ -36,6 +37,7 @@ export function ESignCard({ leaseId, ready, amendment = false, onChange, seconda
     navigate(r.url)
   }
   const remind = (id: string) => async () => {
+    if (!(await confirm({ title: 'Renvoyer le lien de signature ?', text: 'Un nouveau lien part par email à cette personne.' }))) return
     const r = await api<{ sentTo: string }>(`/leases/${leaseId}/esign/remind/${id}`, { method: 'POST' })
     toast.show(`Nouveau lien envoyé à ${r.sentTo}.`)
   }

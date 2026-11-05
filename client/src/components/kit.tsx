@@ -758,6 +758,56 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// ── Confirmation avant un envoi ──────────────────────────────────────────────
+
+interface ConfirmOptions {
+  title: string
+  text?: ReactNode
+  confirm?: string
+}
+type ConfirmFn = (o: ConfirmOptions) => Promise<boolean>
+const ConfirmContext = createContext<ConfirmFn | null>(null)
+
+/**
+ * Fenêtre « Envoyer cet email ? » : un email parti ne se reprend pas, on le confirme d'un second clic.
+ * `const confirm = useConfirm()` puis `if (!(await confirm({ title, text }))) return`.
+ */
+export function ConfirmProvider({ children }: { children: ReactNode }) {
+  const [ask, setAsk] = useState<(ConfirmOptions & { resolve: (v: boolean) => void }) | null>(null)
+  const confirm = useCallback<ConfirmFn>((o) => new Promise<boolean>((resolve) => setAsk({ ...o, resolve })), [])
+  const close = (v: boolean) => {
+    ask?.resolve(v)
+    setAsk(null)
+  }
+  return (
+    <ConfirmContext.Provider value={confirm}>
+      {children}
+      <Modal
+        open={Boolean(ask)}
+        onClose={() => close(false)}
+        title={ask?.title ?? ''}
+        width={460}
+        actions={
+          <>
+            <Btn variant="outline" onClick={() => close(false)}>
+              Annuler
+            </Btn>
+            <Btn onClick={() => close(true)}>{ask?.confirm ?? 'Oui, envoyer'}</Btn>
+          </>
+        }
+      >
+        {ask?.text ? <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{ask.text}</span> : null}
+      </Modal>
+    </ConfirmContext.Provider>
+  )
+}
+
+export function useConfirm(): ConfirmFn {
+  const ctx = useContext(ConfirmContext)
+  // Hors du fournisseur (tests de composants) : on envoie sans demander.
+  return ctx ?? (async () => true)
+}
+
 export function useToast(): ToastState {
   const ctx = useContext(ToastContext)
   if (!ctx) throw new Error('useToast hors ToastProvider')

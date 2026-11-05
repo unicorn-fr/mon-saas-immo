@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
 import { Check, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
 import { api } from '../../lib/api'
@@ -137,9 +137,11 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 
 function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => void; first?: boolean }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const navigate = useNavigate()
 
-  const run = async (fn: () => Promise<unknown>, done: string) => {
+  const run = async (fn: () => Promise<unknown>, done: string, ask?: { title: string; text?: string }) => {
+    if (ask && !(await confirm(ask))) return
     try {
       await fn()
       toast.show(done)
@@ -154,7 +156,7 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
     run(async () => {
       await api(`/leases/${t.leaseId}/tenant-link`, { method: 'POST', body: { open: true } })
       await api(`/leases/${t.leaseId}/tenant-link/send`, { method: 'POST' })
-    }, done)
+    }, done, { title: 'Envoyer le lien ?', text: 'Votre locataire reçoit par email un lien pour déposer son attestation.' })
   const letters = (type: string) => navigate(`/espace/baux/${t.leaseId}/courriers?type=${type}`)
 
   let actions: Array<{ label: string; onClick: () => unknown; variant?: 'primary' | 'outline' | 'ghost' }> = []
@@ -204,7 +206,7 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
               const defaults = await api<{ letter: Record<string, unknown> }>(`/leases/${t.leaseId}/letters/defaults/INSURANCE`)
               const saved = await api<{ documentId: string }>(`/leases/${t.leaseId}/letters`, { method: 'POST', body: defaults.letter })
               await api(`/documents/${saved.documentId}/send`, { method: 'POST' })
-            }, 'Demande envoyée à votre locataire.'),
+            }, 'Demande envoyée à votre locataire.', { title: 'Envoyer la lettre ?', text: 'La lettre de demande part par email à votre locataire.' }),
         },
         { label: 'Me le rappeler plus tard', variant: 'ghost', onClick: () => reminder('snooze', 'Rappel reporté d’une semaine.') },
       ]

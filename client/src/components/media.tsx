@@ -359,7 +359,7 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
       </div>
       {mode === 'TRACKPAD' ? (
         <span aria-live="polite" style={{ fontSize: 14, color: BAI.owner, fontWeight: 600, lineHeight: 1.5 }}>
-          Écrivez votre signature en glissant le doigt sur le pavé tactile, sans appuyer, aussi grand que vous voulez : elle se cadre toute seule. Pour finir, cliquez ou appuyez sur une touche.
+          Glissez le doigt sur le pavé tactile, sans appuyer, aussi grand que vous voulez : la signature se cadre toute seule. Pour finir, cliquez ou appuyez sur une touche.
         </span>
       ) : null}
       <div style={{ display: 'flex', gap: '6px 18px', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
@@ -470,7 +470,7 @@ function PhoneSignature({ onImage, onCancel }: { onImage: (dataUrl: string) => v
       {code ? <QrCode text={link} size={150} /> : <Spinner />}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1, minWidth: 200 }}>
         <strong style={{ fontSize: 16 }}>Scannez ce code avec l’appareil photo de votre téléphone</strong>
-        <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Signez au doigt sur le téléphone, puis touchez « Envoyer ». La signature apparaît ici toute seule. Le lien sert une seule fois et expire dans 10 minutes.</span>
+        <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Signez au doigt, puis touchez « Envoyer ». La signature apparaît ici. Le lien sert une fois et expire dans 10 minutes.</span>
         {error ? <span role="alert" style={{ fontSize: 14, color: BAI.error }}>{error}</span> : code ? <span style={{ fontSize: 14, color: BAI.owner, fontWeight: 600 }}>En attente de votre signature…</span> : null}
         <span style={{ alignSelf: 'flex-start' }}>
           <PadLink onClick={onCancel}>Annuler</PadLink>
