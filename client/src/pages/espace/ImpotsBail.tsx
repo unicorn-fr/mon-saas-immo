@@ -41,11 +41,14 @@ export default function ImpotsBail() {
   const toast = useToast()
   const { data, error, loading, reload } = useLoad(() => api<View>(`/money/leases/${id}/tax${mode ? `?mode=${mode}` : ''}`), [id, mode])
   const [siret, setSiret] = useState('')
+  // Une démarche ouverte à la fois : la première qui reste à faire, les autres repliées sur leur titre.
+  const [openId, setOpenId] = useState<Item['id'] | null>(null)
 
   const mark = (item: Item['id'], done: boolean) =>
     api(`/money/leases/${id}/tax`, { method: 'PUT', body: { mode: data!.mode, item, done } })
       .then(() => {
         toast.show(done ? 'C’est noté.' : 'Remis à faire.')
+        setOpenId(done ? null : item)
         reload()
       })
       .catch(toast.error)
@@ -69,6 +72,7 @@ export default function ImpotsBail() {
   }
 
   const first = data?.items.find((i) => !i.doneAt)
+  const opened = openId ?? first?.id ?? data?.items[0]?.id
   return (
     <AppShell>
       <Crumbs items={[{ label: data?.place ?? 'Bail', to: `/espace/baux/${id}` }, { label: 'Impôts' }]} />
@@ -87,7 +91,24 @@ export default function ImpotsBail() {
       ) : (
         <>
           {data.items.map((item, n) => (
-            <Card key={item.id} title={<h2 style={{ margin: 0, fontSize: 21, fontWeight: 700 }}>{`${n + 1}. ${item.title}`}</h2>}>
+            item.id !== opened ? (
+              <button
+                key={item.id}
+                type="button"
+                aria-expanded={false}
+                onClick={() => setOpenId(item.id)}
+                className="tap"
+                style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 24, padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, textAlign: 'left', fontFamily: 'inherit', color: BAI.ink, cursor: 'pointer' }}
+              >
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 17, fontWeight: 700 }}>{`${n + 1}. ${item.title}`}</span>
+                  {item.doneAt ? null : <span style={{ fontSize: 14, color: BAI.accentInk, fontWeight: 600 }}>{item.deadline}</span>}
+                </span>
+                {item.doneAt ? <Pill tone="green">Fait le {frDay(item.doneAt)}</Pill> : <span style={{ fontSize: 14, fontWeight: 600, color: BAI.owner, whiteSpace: 'nowrap' }}>Ouvrir</span>}
+              </button>
+            ) : (
+            <div key={item.id} className="panel-in" style={{ display: 'flex', flexDirection: 'column' }}>
+            <Card title={<h2 style={{ margin: 0, fontSize: 21, fontWeight: 700 }}>{`${n + 1}. ${item.title}`}</h2>}>
               <span style={{ fontSize: 15, lineHeight: 1.6 }}>{item.why}</span>
               <span style={{ fontSize: 15, color: BAI.accentInk, fontWeight: 600 }}>{item.deadline}</span>
               <ol style={{ margin: 0, paddingLeft: 22, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 15, lineHeight: 1.6 }}>
@@ -162,6 +183,8 @@ export default function ImpotsBail() {
                 )}
               </div>
             </Card>
+            </div>
+            )
           ))}
           <Callout tone="tip">
             Vos loyers de l’année se déclareront au printemps prochain : Bailio les additionne et vous guide case par case. <TextLink to="/espace/argent/declaration" style={{ fontSize: 14 }}>Déclaration des revenus</TextLink>

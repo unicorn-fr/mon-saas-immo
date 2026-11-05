@@ -6,7 +6,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
 import { UploadModal } from '../../components/UploadModal'
-import { Avatar, Btn, Callout, Card, Crumbs, Line, LoadError, Loader, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Avatar, Btn, Callout, Card, Crumbs, Line, LoadError, Loader, Pill, Tabs, TextLink, useLoad, useToast } from '../../components/kit'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
 import { api } from '../../lib/api'
@@ -33,6 +33,8 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
   const navigate = useNavigate()
   const [payOpen, setPayOpen] = useState(false)
   const [upload, setUpload] = useState(false)
+  // Téléphone : une partie à la fois (sur ordinateur, les deux colonnes tiennent côte à côte).
+  const [part, setPart] = useState<'location' | 'fiche'>(t.lease ? 'location' : 'fiche')
   const f = t.file
   const lease = t.lease
   const g = f.guarantor
@@ -74,8 +76,19 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
         </div>
       </div>
 
+      <div className="only-md">
+        <Tabs
+          label="Parties de la fiche du locataire"
+          tabs={[
+            { value: 'location', label: t.homes.length > 1 ? 'Ses locations' : 'Sa location' },
+            { value: 'fiche', label: 'Sa fiche' },
+          ]}
+          value={part}
+          onChange={setPart}
+        />
+      </div>
       <div className="split-aside" style={{ gap: 28 }}>
-        <div className="aside-wide">
+        <div className={`aside-wide${part === 'fiche' ? ' panel-in' : ' hide-md'}`}>
           <Card title="Coordonnées" action={<TextLink to={`/espace/locataires/${t.id}/fiche`} style={{ fontSize: 14 }}>Modifier</TextLink>}>
             <Line label="Email" value={f.email || 'À compléter'} />
             <Line label="Téléphone" value={f.phone || 'À compléter'} />
@@ -132,7 +145,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
           </div>
         </div>
 
-        <div className="grow">
+        <div className={`grow${part === 'location' ? ' panel-in' : ' hide-md'}`}>
           {t.homes.length ? (
             <Card title={t.homes.length > 1 ? 'Ses logements' : 'Son logement'}>
               {t.homes.map((h) => (
@@ -159,7 +172,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               <Line label="Loyer" value={`${euros(lease.rentCents)} + ${euros(lease.chargesCents)} de charges`} />
               {lease.kind !== 'MOBILITE' ? <Line label="Dépôt de garantie" value={euros(lease.depositCents)} /> : null}
               <div className="col-md" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', paddingTop: 4 }}>
-                <Btn size="sm" to={`/espace/baux/${lease.id}`}>
+                <Btn size="sm" variant="outline" to={`/espace/baux/${lease.id}`}>
                   Voir le bail
                 </Btn>
                 {lease.status !== 'DRAFT' ? (
@@ -173,7 +186,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
             <Card title="Son bail">
               <span style={{ fontSize: 15, color: BAI.inkMid }}>Pas encore de bail.</span>
               <div>
-                <Btn size="sm" to={`/espace/baux/nouveau?locataire=${t.id}${t.propertyId ? `&logement=${t.propertyId}` : ''}`}>
+                <Btn size="sm" variant="outline" to={`/espace/baux/nouveau?locataire=${t.id}${t.propertyId ? `&logement=${t.propertyId}` : ''}`}>
                   Créer son bail
                 </Btn>
               </div>

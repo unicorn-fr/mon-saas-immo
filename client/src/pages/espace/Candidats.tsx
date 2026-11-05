@@ -6,7 +6,7 @@ import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextArea, T
 import { openDoc } from '../../lib/docs'
 import { TENANT_DOCUMENTS, type TenantDocKey } from '../../lib/contract'
 import type { ProfileView, PropertyView } from '../../lib/space'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { api } from '../../lib/api'
 import { dateNum, eurosCents } from '../../lib/format'
 
@@ -214,20 +214,6 @@ export default function Candidats() {
               )}
             </div>
             <aside className="aside">
-              <Card title="Des dossiers sûrs, pour vous et pour eux">
-                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <li>Chaque pièce reçue porte un filigrane : la ville du logement, la date et Bailio. Elle ne peut pas resservir ailleurs.</li>
-                  <li>Les pièces s’ouvrent quand le candidat confirme la visite. Profitez-en pour comparer sa pièce d’identité avec la personne.</li>
-                  <li>
-                    Vérifiez un avis d’imposition sur le{' '}
-                    <a href="https://cfsmsp.impots.gouv.fr/secavis/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
-                      service de vérification des impôts
-                    </a>{' '}
-                    (numéro fiscal et référence de l’avis).
-                  </li>
-                  <li>Une pièce qui porte le filigrane d’un autre site ou d’une autre location : demandez-en l’explication.</li>
-                </ul>
-              </Card>
               <Card title="Lien de candidature">
                 {link ? (
                   <>
@@ -262,14 +248,28 @@ export default function Candidats() {
                 ))}
                 <Check checked={guarantorDocs} onChange={(v) => void saveDocs(requested, v)} label="Les mêmes pièces pour le garant" />
               </Card>
-              <Card title="Ce que vous ne pouvez pas demander">
+              <Fold title="Des dossiers sûrs, pour vous et pour eux">
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <li>Chaque pièce reçue porte un filigrane : la ville du logement, la date et Bailio. Elle ne peut pas resservir ailleurs.</li>
+                  <li>Les pièces s’ouvrent quand le candidat confirme la visite. Profitez-en pour comparer sa pièce d’identité avec la personne.</li>
+                  <li>
+                    Vérifiez un avis d’imposition sur le{' '}
+                    <a href="https://cfsmsp.impots.gouv.fr/secavis/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
+                      service de vérification des impôts
+                    </a>{' '}
+                    (numéro fiscal et référence de l’avis).
+                  </li>
+                  <li>Une pièce qui porte le filigrane d’un autre site ou d’une autre location : demandez-en l’explication.</li>
+                </ul>
+              </Fold>
+              <Fold title="Ce que vous ne pouvez pas demander">
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: BAI.inkMid, lineHeight: 1.55 }}>
                   {data.forbiddenDocuments.map((d) => (
                     <li key={d}>{d}</li>
                   ))}
                 </ul>
                 <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Loi du 6 juillet 1989, article 22-2. Le choix ne peut reposer sur aucun critère discriminatoire.</span>
-              </Card>
+              </Fold>
               <Callout tone="tip">Les candidatures sont effacées automatiquement {Math.round(data.keepDays / 30)} mois après leur réception. Celle que vous choisissez devient la fiche du locataire.</Callout>
             </aside>
           </div>
@@ -344,5 +344,21 @@ function ReplyMessage({ link, title, docs, landlord }: { link: string; title: st
         ) : null}
       </div>
     </Card>
+  )
+}
+
+/** Conseil replié sur son titre : on l'ouvre quand on en a besoin, la page reste courte. */
+function Fold({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <section style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 24, padding: '4px 24px', display: 'flex', flexDirection: 'column' }}>
+      <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+        <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: '16px 0', fontFamily: 'inherit', fontSize: 17, fontWeight: 700, color: BAI.ink, textAlign: 'left', cursor: 'pointer' }}>
+          {title}
+          <span aria-hidden style={{ color: BAI.owner, fontSize: 20, lineHeight: 1, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform .2s' }}>+</span>
+        </button>
+      </h2>
+      {open ? <div className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 20 }}>{children}</div> : null}
+    </section>
   )
 }

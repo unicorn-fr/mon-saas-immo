@@ -4,7 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Fields } from '../../components/FlowLayout'
 import { display } from '../../components/ui'
-import { Btn, Callout, Card, Chips, Crumbs, Input, LoadError, Loader, Money, TextArea, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Chips, Crumbs, Input, LoadError, Loader, Money, Tabs, TextArea, TextLink, useLoad, useToast } from '../../components/kit'
 import { Check, Circle } from '../../components/Icons'
 import { api } from '../../lib/api'
 
@@ -42,6 +42,8 @@ export default function Annonce() {
   const [prompt, setPrompt] = useState('')
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const dirty = useRef(false)
+  // Téléphone : une partie à la fois (sur ordinateur, tout tient côte à côte).
+  const [part, setPart] = useState<'conditions' | 'texte' | 'publier'>('conditions')
 
   useEffect(() => {
     if (data) {
@@ -92,8 +94,21 @@ export default function Annonce() {
           {w}
         </Callout>
       ))}
+      <div className="only-md">
+        <Tabs
+          label="Parties de l’annonce"
+          tabs={[
+            { value: 'conditions', label: 'Conditions' },
+            { value: 'texte', label: 'Texte' },
+            { value: 'publier', label: 'Aperçu et publier' },
+          ]}
+          value={part}
+          onChange={setPart}
+        />
+      </div>
       <div className="split-aside" style={{ gap: 24 }}>
-        <div className="grow">
+        <div className={`grow${part === 'publier' ? ' hide-md' : ''}`}>
+          <div className={part === 'conditions' ? 'panel-in' : 'hide-md'} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Card title="Loyer et conditions">
             <Fields>
               <Money label="Loyer hors charges, par mois" cents={settings.rentCents} onChange={(c) => set({ rentCents: c })} />
@@ -119,6 +134,8 @@ export default function Annonce() {
             <Money label="Dont complément de loyer (zone d’encadrement)" cents={settings.complementCents} onChange={(c) => set({ complementCents: c })} hint="Seulement si la commune encadre les loyers et que le logement le justifie. Sinon, laissez vide." />
             )}
           </Card>
+          </div>
+          <div className={part === 'texte' ? 'panel-in' : 'hide-md'} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <Writer
             id={id}
             prompt={prompt}
@@ -135,9 +152,10 @@ export default function Annonce() {
             <Input label="Titre" value={settings.title ?? ''} onChange={(v) => set({ title: v || null })} placeholder={view.title} hint="Laissez vide pour le titre proposé par Bailio." />
             <TextArea label="Description" value={settings.description ?? ''} onChange={(v) => set({ description: v || null })} rows={8} maxLength={3000} placeholder="Lumineux, au calme, proche des commerces et des transports." hint="Écrivez-la vous-même ou collez le texte d’une IA ci-dessus. Décrivez le logement, sans critère sur le futur locataire : la loi interdit toute discrimination." />
           </Card>
+          </div>
           {savedAt ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>Enregistré automatiquement à {savedAt}.</span> : null}
         </div>
-        <aside className="aside" style={{ width: 460 }}>
+        <aside className={`aside${part === 'publier' ? ' panel-in' : ' hide-md'}`} style={{ width: 460 }}>
           <Card title="Aperçu" action={<Btn size="sm" onClick={() => void copy()}>Copier l’annonce</Btn>}>
             <span style={{ fontSize: 17, fontWeight: 700 }}>{view.title}</span>
             <div style={{ whiteSpace: 'pre-wrap', fontSize: 15, lineHeight: 1.6, color: BAI.inkMid }}>{view.text}</div>

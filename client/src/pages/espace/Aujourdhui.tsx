@@ -24,6 +24,9 @@ export default function Aujourdhui() {
 function TodayContent() {
   const { setTaskCount } = useSpace()
   const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
+  // Trois actions à la fois : les plus urgentes d'abord, le reste sur demande (pas de longue liste à faire défiler).
+  const [allTasks, setAllTasks] = useState(false)
+  const [allUpcoming, setAllUpcoming] = useState(false)
   useEffect(() => {
     if (data) setTaskCount(data.tasks.length)
   }, [data, setTaskCount])
@@ -73,7 +76,14 @@ function TodayContent() {
             </Link>
           ) : null}
           {data.tasks.length ? (
-            data.tasks.map((t, i) => <TaskCard key={t.id} task={t} onChange={reload} first={i === 0} />)
+            <>
+              {(allTasks ? data.tasks : data.tasks.slice(0, 3)).map((t, i) => <TaskCard key={t.id} task={t} onChange={reload} first={i === 0} />)}
+              {data.tasks.length > 3 ? (
+                <Btn variant="outline" onClick={() => setAllTasks(!allTasks)}>
+                  {allTasks ? 'Voir moins' : `Voir ${data.tasks.length - 3 > 1 ? `les ${data.tasks.length - 3} autres actions` : 'l’autre action'}`}
+                </Btn>
+              ) : null}
+            </>
           ) : (
             <Card>
               <span style={{ fontSize: 17, fontWeight: 600 }}>Rien à faire cette semaine.</span>
@@ -85,12 +95,17 @@ function TodayContent() {
         <aside className="aside">
           {data.upcoming.length ? (
             <Card dark title="Prochaines échéances" style={{ gap: 16 }}>
-              {data.upcoming.map((u, i) => (
+              {(allUpcoming ? data.upcoming : data.upcoming.slice(0, 3)).map((u, i) => (
                 <div key={i} style={{ display: 'flex', gap: 14 }}>
                   <span style={{ width: 56, flexShrink: 0, color: BAI.accent, fontWeight: 700, fontSize: 14 }}>{u.date}</span>
                   <span style={{ fontSize: 14, lineHeight: 1.45 }}>{u.label}</span>
                 </div>
               ))}
+              {data.upcoming.length > 3 ? (
+                <button type="button" onClick={() => setAllUpcoming(!allUpcoming)} className="tap" style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, color: BAI.accent, textAlign: 'left', cursor: 'pointer' }}>
+                  {allUpcoming ? 'Voir moins' : `Voir les ${data.upcoming.length} échéances`}
+                </button>
+              ) : null}
             </Card>
           ) : null}
           <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>

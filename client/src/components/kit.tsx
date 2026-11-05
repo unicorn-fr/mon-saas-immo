@@ -256,11 +256,12 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
   const ref = useRef<HTMLDivElement>(null)
   // Message d'erreur apparu après une action (pas à l'ouverture de la page) : l'écran remonte jusqu'à lui,
   // dans la page, l'onglet ou la fenêtre, pour qu'il ne passe jamais inaperçu.
+  const [alerted] = useState(() => tone === 'warn' && afterAction())
   useEffect(() => {
-    if (tone === 'warn' && afterAction()) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [tone])
+    if (alerted) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [alerted])
   return (
-    <div ref={ref} role={tone === 'warn' ? 'note' : undefined} className={tone === 'warn' ? 'panel-in' : undefined} style={{ background: c.bg, borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.5, color: BAI.ink }}>
+    <div ref={ref} role={alerted ? 'alert' : tone === 'warn' ? 'note' : undefined} className={tone === 'warn' ? 'panel-in' : undefined} style={{ background: c.bg, borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.5, color: BAI.ink }}>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 2 }}>
         {c.path}
       </svg>
@@ -722,15 +723,33 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const error = useCallback((err: unknown) => show(errorMessage(err), 'error'), [show])
   useEffect(() => {
     if (!msg) return
-    const t = setTimeout(() => setMsg(null), msg.tone === 'error' ? 6000 : 3500)
+    const t = setTimeout(() => setMsg(null), msg.tone === 'error' ? 10000 : 3500)
     return () => clearTimeout(t)
   }, [msg])
   return (
     <ToastContext.Provider value={{ show, error }}>
       {children}
+      {/* Erreur : en haut de l'écran, bien visible, avec son intitulé ; elle reste jusqu'à ce qu'on la ferme (ou 10 s). */}
+      <div aria-live="assertive" className="toast-wrap toast-wrap--error" style={{ position: 'fixed', left: 16, right: 16, display: 'flex', justifyContent: 'center', zIndex: 70, pointerEvents: 'none' }}>
+        {msg?.tone === 'error' ? (
+          <div key={msg.id} role="alert" className="panel-in" style={{ background: BAI.error, color: BAI.surface, padding: '14px 14px 14px 18px', borderRadius: 16, fontSize: 15, maxWidth: 560, width: '100%', lineHeight: 1.45, pointerEvents: 'auto', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 1 }}>
+              <path d="M12 3 2 20h20z" />
+              <path d="M12 10v4M12 17h.01" />
+            </svg>
+            <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <strong style={{ fontSize: 16 }}>Erreur</strong>
+              <span>{msg.text}</span>
+            </span>
+            <button type="button" onClick={() => setMsg(null)} aria-label="Fermer le message d’erreur" style={{ background: 'none', border: 'none', color: BAI.surface, fontSize: 22, lineHeight: 1, cursor: 'pointer', padding: '0 4px', fontFamily: 'inherit' }}>
+              ×
+            </button>
+          </div>
+        ) : null}
+      </div>
       <div aria-live="polite" className="toast-wrap" style={{ position: 'fixed', left: 16, right: 16, display: 'flex', justifyContent: 'center', zIndex: 60, pointerEvents: 'none' }}>
-        {msg ? (
-          <div key={msg.id} role={msg.tone === 'error' ? 'alert' : 'status'} style={{ background: msg.tone === 'error' ? BAI.error : BAI.night, color: BAI.surface, padding: '14px 20px', borderRadius: 14, fontSize: 15, fontWeight: 500, maxWidth: 520, lineHeight: 1.45, pointerEvents: 'auto' }}>
+        {msg && msg.tone !== 'error' ? (
+          <div key={msg.id} role="status" style={{ background: BAI.night, color: BAI.surface, padding: '14px 20px', borderRadius: 14, fontSize: 15, fontWeight: 500, maxWidth: 520, lineHeight: 1.45, pointerEvents: 'auto' }}>
             {msg.text}
           </div>
         ) : null}

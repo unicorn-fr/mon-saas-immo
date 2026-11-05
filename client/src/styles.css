@@ -116,8 +116,10 @@ button:not(:disabled):active { transform: scale(.98); }
   .auth-side { width: auto !important; }
 }
 .toast-wrap { bottom: 28px; }
+.toast-wrap--error { bottom: auto; top: calc(14px + env(safe-area-inset-top)); }
 @media (max-width: 1023px) {
   .toast-wrap { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .toast-wrap--error { bottom: auto; }
 }
 
 /* Écran tactile : les petits liens et boutons texte gagnent une zone de toucher plus haute, sans rien déplacer
