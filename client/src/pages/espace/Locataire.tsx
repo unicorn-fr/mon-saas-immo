@@ -33,6 +33,8 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
   const navigate = useNavigate()
   const [payOpen, setPayOpen] = useState(false)
   const [upload, setUpload] = useState(false)
+  // Paiements : le dernier seulement, les autres sur demande.
+  const [allPays, setAllPays] = useState(false)
   // Téléphone : une partie à la fois (sur ordinateur, les deux colonnes tiennent côte à côte).
   const [part, setPart] = useState<'location' | 'fiche'>(t.lease ? 'location' : 'fiche')
   const f = t.file
@@ -193,9 +195,9 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
             </Card>
           )}
           {lease && lease.status !== 'DRAFT' ? (
-            <Card title="Paiements" action={<TextLink to={`/espace/baux/${lease.id}#paiements`} style={{ fontSize: 14 }}>Tout voir</TextLink>}>
+            <Card title={t.payments.length > 1 && !allPays ? 'Dernier paiement' : 'Paiements'} action={<TextLink to={`/espace/baux/${lease.id}#paiements`} style={{ fontSize: 14 }}>Tout voir</TextLink>}>
               {t.payments.length ? (
-                t.payments.slice(0, 6).map((p) => (
+                (allPays ? t.payments : t.payments.slice(0, 1)).map((p) => (
                   <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
                     <span style={{ fontWeight: 600 }}>{periodLabel(p.period, true)}</span>
                     <span style={{ color: BAI.inkMid }}>
@@ -209,6 +211,11 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               ) : (
                 <span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun loyer enregistré pour l’instant.</span>
               )}
+              {t.payments.length > 1 ? (
+                <TextLink onClick={() => setAllPays(!allPays)} style={{ fontSize: 14 }}>
+                  {allPays ? 'Voir moins' : `Voir les ${t.payments.length} paiements`}
+                </TextLink>
+              ) : null}
             </Card>
           ) : null}
           {t.completion.percent < 100 ? (

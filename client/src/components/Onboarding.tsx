@@ -57,7 +57,7 @@ export function Onboarding({ onLater }: { onLater: () => void }) {
     <section style={{ maxWidth: 640, width: '100%', display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 'clamp(8px, 3vw, 32px)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h1 style={display('clamp(38px, 6vw, 54px)')}>Bienvenue sur Bailio.</h1>
-        <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, lineHeight: 1.5 }}>Trois questions pour faire connaissance. Ce que vous indiquez est repris dans vos baux et vos quittances : vous ne le saisirez qu’une fois.</p>
+        <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, lineHeight: 1.5 }}>Trois questions. Vos réponses sont reprises dans vos baux et quittances : une seule saisie.</p>
       </div>
       <div style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 28px)' }}>
         <Wizard
@@ -85,7 +85,7 @@ export function Onboarding({ onLater }: { onLater: () => void }) {
             {
               key: 'address',
               title: 'Où peut-on vous écrire ?',
-              note: 'Votre adresse figure dans le bail : votre locataire peut vous y envoyer un courrier. Vous pouvez la donner plus tard.',
+              note: 'Votre adresse figure dans le bail, pour le courrier de votre locataire. Vous pouvez la donner plus tard.',
               optional: true,
               content: (
                 <>

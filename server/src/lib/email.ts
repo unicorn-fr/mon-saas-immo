@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { env } from '../env.js'
+import { mailError } from '../domain/mailError.js'
 
 export interface EmailAttachment {
   filename: string
@@ -64,11 +65,18 @@ export async function sendEmail(email: Email): Promise<void> {
     attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.content })),
   }
   try {
-    await smtp.sendMail(message)
+    try {
+      await smtp.sendMail(message)
+    } catch (err) {
+      if (!transient(err)) throw err
+      await new Promise((r) => setTimeout(r, 2000))
+      await smtp.sendMail(message)
+    }
   } catch (err) {
-    if (!transient(err)) throw err
-    await new Promise((r) => setTimeout(r, 2000))
-    await smtp.sendMail(message)
+    // Le détail reste dans les logs du serveur ; le propriétaire lit ce qui s'est passé et quoi faire.
+    const e = err as { code?: string; responseCode?: number; response?: string }
+    console.error(`[email] envoi refusé → ${email.to} · ${email.subject} · ${e.code ?? ''} ${e.responseCode ?? ''} ${e.response ?? (err as Error).message}`)
+    throw mailError(err, email.to)
   }
 }
 

@@ -70,7 +70,7 @@ export default function Degradations() {
     return (
       <AppShell>
         {header}
-        <Callout tone="info">Faites d’abord l’état des lieux de sortie et signez-le : Bailio le compare à l’entrée et liste ici ce qui a changé.</Callout>
+        <Callout tone="info">Signez d’abord l’état des lieux de sortie : Bailio le compare à l’entrée et liste ici ce qui a changé.</Callout>
         <div>
           <Btn onClick={() => navigate(`/espace/baux/${id}/etat-des-lieux?type=EXIT`)}>Préparer l’état des lieux de sortie</Btn>
         </div>

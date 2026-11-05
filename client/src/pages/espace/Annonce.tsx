@@ -131,7 +131,7 @@ export default function Annonce() {
               <Money label="Honoraires du mandataire à la charge du locataire (TTC)" cents={settings.tenantFeesCents} onChange={(c) => set({ tenantFeesCents: c })} hint="Mention obligatoire de l’annonce quand un mandataire s’occupe de la location. 0 s’il n’y en a pas." />
             ) : null}
 {data.parking ? null : (
-            <Money label="Dont complément de loyer (zone d’encadrement)" cents={settings.complementCents} onChange={(c) => set({ complementCents: c })} hint="Seulement si la commune encadre les loyers et que le logement le justifie. Sinon, laissez vide." />
+            <Money label="Dont complément de loyer (zone d’encadrement)" cents={settings.complementCents} onChange={(c) => set({ complementCents: c })} hint="Seulement en zone d’encadrement, si le logement le justifie." />
             )}
           </Card>
           </div>
@@ -149,7 +149,7 @@ export default function Annonce() {
             }}
           />
           <Card title="Présentation">
-            <Input label="Titre" value={settings.title ?? ''} onChange={(v) => set({ title: v || null })} placeholder={view.title} hint="Laissez vide pour le titre proposé par Bailio." />
+            <Input label="Titre" value={settings.title ?? ''} onChange={(v) => set({ title: v || null })} placeholder={view.title} hint="Vide : titre proposé par Bailio." />
             <TextArea label="Description" value={settings.description ?? ''} onChange={(v) => set({ description: v || null })} rows={8} maxLength={3000} placeholder="Lumineux, au calme, proche des commerces et des transports." hint="Écrivez-la vous-même ou collez le texte d’une IA ci-dessus. Décrivez le logement, sans critère sur le futur locataire : la loi interdit toute discrimination." />
           </Card>
           </div>
@@ -246,7 +246,7 @@ function Writer({ id, prompt, highlights, onHighlights, onPasted }: { id: string
       </span>
       {open ? (
         <>
-          <Input label="Ce que vous aimez dans ce logement (facultatif)" value={highlights} onChange={onHighlights} placeholder="Très lumineux, rue calme, cuisine refaite en 2024" hint="Ajouté à la consigne. Rien d’autre n’est inventé." />
+          <Input label="Ce que vous aimez dans ce logement (facultatif)" value={highlights} onChange={onHighlights} placeholder="Très lumineux, rue calme, cuisine refaite en 2024" hint="Ajouté à la consigne." />
           <Step n={1} title="Copiez la consigne">
             <div aria-label="Consigne pour l’IA" style={{ whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.5, color: BAI.inkMid, background: BAI.bg, border: `1px solid ${BAI.divider}`, borderRadius: 14, padding: 14, maxHeight: 220, overflowY: 'auto' }}>
               {prompt}

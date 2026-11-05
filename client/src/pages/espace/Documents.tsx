@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { UploadModal } from '../../components/UploadModal'
-import { Btn, Card, Filters, LoadError, Loader, Modal, PageHead, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Filters, LoadError, Loader, Modal, PageHead, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
 import { api } from '../../lib/api'
 import { documentPath, downloadDoc, openDoc, printDoc, slug } from '../../lib/docs'
 import { dateNum, euros } from '../../lib/format'
@@ -45,7 +45,7 @@ export default function Documents() {
 
   return (
     <AppShell>
-      <PageHead title="Documents" sub="Tous vos documents, générés par Bailio ou ajoutés par vous." actions={<Btn variant="outline" onClick={() => setUpload(true)}>Ajouter un document</Btn>} />
+      <PageHead title="Documents" sub="Générés par Bailio ou ajoutés par vous." actions={<Btn variant="outline" onClick={() => setUpload(true)}>Ajouter un document</Btn>} />
       <Card title="Créer un document">
         <div className="grid-4" style={{ gap: 12 }}>
           {creators.map((c) => (
@@ -68,11 +68,13 @@ const ORIGIN = (d: DocumentItem) => (d.origin === 'UPLOADED' ? (d.kind === 'INVO
 
 function DocTable({ docs, reload }: { docs: DocumentItem[]; reload: () => void }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const grid = { gridTemplateColumns: 'minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 1.6fr)' }
   if (!docs.length) return <Card><span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun document dans cette catégorie.</span></Card>
   const act = (fn: () => Promise<unknown>) => () => fn().catch(toast.error)
   const send = (d: DocumentItem) =>
     act(async () => {
+      if (!(await confirm({ title: 'Envoyer ce document ?', text: `« ${d.title} » part par email à son destinataire.` }))) return
       const r = await api<{ sentTo: string[] }>(`/documents/${d.id}/send`, { method: 'POST' })
       toast.show(`Envoyé à ${r.sentTo.join(', ')}.`)
     })

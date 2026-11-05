@@ -67,7 +67,7 @@ export default function AccesPartages() {
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Mon compte', to: '/espace/compte' }, { label: 'Accès partagés' }]} />
-      <PageHead title="Accès partagés" sub="Invitez un associé, votre comptable ou un artisan, seulement sur les logements que vous choisissez." actions={!inviting ? <Btn onClick={() => setInviting(true)}>Inviter quelqu’un</Btn> : undefined} />
+      <PageHead title="Accès partagés" sub="Un associé, votre comptable ou un artisan, sur les logements que vous choisissez." actions={!inviting ? <Btn onClick={() => setInviting(true)}>Inviter quelqu’un</Btn> : undefined} />
 
       {inviting ? (
         <Card pad={28}>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BAI } from '../constants/bailio-tokens'
-import { Btn, Card, Line, TextLink, useLoad, useToast } from './kit'
+import { Btn, Card, Line, TextLink, useLoad, useToast, useConfirm } from './kit'
 import { api } from '../lib/api'
 import { dateNum } from '../lib/format'
 
@@ -22,6 +22,7 @@ interface TenantLinkView {
  */
 export function TenantLink({ leaseId, tenantEmail }: { leaseId: string; tenantEmail?: string | null }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const { data, reload } = useLoad(() => api<TenantLinkView>(`/leases/${leaseId}/tenant-link`), [leaseId])
   const [busy, setBusy] = useState(false)
   if (!data) return null
@@ -39,6 +40,7 @@ export function TenantLink({ leaseId, tenantEmail }: { leaseId: string; tenantEm
     }
   }
   const send = async () => {
+    if (!(await confirm({ title: 'Envoyer le lien ?', text: tenantEmail ? `Le lien part par email à ${tenantEmail}.` : 'Le lien part par email à votre locataire.' }))) return
     setBusy(true)
     try {
       const out = await api<{ sentTo: string[] }>(`/leases/${leaseId}/tenant-link/send`, { method: 'POST' })
@@ -60,7 +62,7 @@ export function TenantLink({ leaseId, tenantEmail }: { leaseId: string; tenantEm
   return (
     <Card title="Documents du locataire">
       <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>
-        Un lien, sans compte, pour que votre locataire vous envoie son attestation d’assurance{data.boiler ? ', l’entretien de la chaudière' : ''} et son accord pour les quittances par email.
+        Un lien sans compte pour recevoir l’attestation d’assurance de votre locataire{data.boiler ? ', l’entretien de la chaudière' : ''} et son accord pour les quittances par email.
       </span>
       <Line label="Assurance" value={r.insurance ? `jusqu’au ${dateNum(r.insurance.expiresAt)}` : 'pas reçue'} tone={r.insurance ? 'green' : undefined} />
       {data.boiler ? <Line label="Chaudière" value={r.boiler ? `entretien du ${dateNum(r.boiler.date)}` : 'pas reçue'} tone={r.boiler ? 'green' : undefined} /> : null}

@@ -49,7 +49,7 @@ export default function Situations() {
         <LoadError message={error} retry={reload} />
       ) : !(data ?? []).some((l) => l.status === 'ACTIVE' || l.status === 'ENDED') ? (
         <Callout tone="tip" title="Aucun bail signé pour l’instant">
-          Les parcours s’appuient sur un bail en cours. <TextLink to="/espace/baux/nouveau" style={{ fontSize: 13 }}>Créer un bail</TextLink> ou <TextLink to="/importer" style={{ fontSize: 13 }}>importer un bail signé</TextLink>.
+          Il faut un bail en cours. <TextLink to="/espace/baux/nouveau" style={{ fontSize: 13 }}>Créer un bail</TextLink> ou <TextLink to="/importer" style={{ fontSize: 13 }}>importer un bail signé</TextLink>.
         </Callout>
       ) : (
         <>

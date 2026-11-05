@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextArea, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Card, Check, Crumbs, LoadError, Loader, Pill, TextArea, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
 import { openDoc } from '../../lib/docs'
 import { TENANT_DOCUMENTS, type TenantDocKey } from '../../lib/contract'
 import type { ProfileView, PropertyView } from '../../lib/space'
@@ -51,6 +51,7 @@ const ORDER = { SHORTLIST: 0, NEW: 1, REJECTED: 2 }
 export default function Candidats() {
   const { id = '' } = useParams()
   const toast = useToast()
+  const confirm = useConfirm()
   const navigate = useNavigate()
   const { data, error, loading, reload } = useLoad(() => api<CandidatesView>(`/properties/${id}/candidates`), [id])
   const link = data?.applyCode ? `${window.location.origin}/candidature/${data.applyCode}` : null
@@ -90,7 +91,7 @@ export default function Candidats() {
     }
   }
   const choose = async (c: CandidateRow) => {
-    if (!window.confirm(`Choisir ${c.name} ? Sa fiche de locataire est créée avec ses informations, puis vous passez au bail.`)) return
+    if (!window.confirm(`Choisir ${c.name} ? Sa fiche de locataire est créée, puis vous passez au bail.`)) return
     try {
       const r = await api<{ tenantId: string; propertyId: string }>(`/candidates/${c.id}/choose`, { method: 'POST' })
       navigate(`/espace/baux/nouveau?logement=${r.propertyId}&locataire=${r.tenantId}`)
@@ -117,7 +118,7 @@ export default function Candidats() {
               {link ? <ReplyMessage link={link} title={data.offer.title} docs={requested} landlord={firstName} /> : null}
               {data.candidates.length > 1 ? (
                 <Callout tone="info" title="Les dossiers les plus complets d’abord">
-                  Bailio les classe seulement sur les ressources, la garantie, les pièces déposées et la date d’entrée. C’est une aide : vous décidez. Refuser un candidat pour son âge, sa famille, son origine, sa santé ou un autre critère interdit est puni par la loi.
+                  Classement selon les ressources, la garantie, les pièces et la date d’entrée. C’est une aide : vous décidez. Refuser un candidat pour son âge, sa famille, son origine, sa santé ou un autre critère interdit est puni par la loi.
                 </Callout>
               ) : null}
               {data.candidates.length ? (
@@ -159,7 +160,7 @@ export default function Candidats() {
                             <strong>{c.documents.length} pièce{c.documents.length > 1 ? 's' : ''} déposée{c.documents.length > 1 ? 's' : ''}</strong> ({c.documents.map((d) => d.label.toLowerCase()).join(', ')}). Elles s’ouvrent dès que le candidat confirme avoir visité le logement : une protection contre les fausses annonces.
                           </span>
                           <span>
-                            <TextLink onClick={() => void act(() => api(`/candidates/${c.id}/visit-request`, { method: 'POST' }), 'Demande envoyée au candidat.')} style={{ fontSize: 14 }}>
+                            <TextLink onClick={() => void confirm({ title: 'Relancer le candidat ?', text: 'Il reçoit par email une demande de confirmer sa visite.' }).then((ok) => { if (ok) void act(() => api(`/candidates/${c.id}/visit-request`, { method: 'POST' }), 'Demande envoyée au candidat.') })} style={{ fontSize: 14 }}>
                               {c.visitRequestedAt ? 'Lui redemander de confirmer la visite' : 'Lui demander de confirmer la visite'}
                             </TextLink>
                           </span>
@@ -209,7 +210,7 @@ export default function Candidats() {
               ) : (
                 <Card>
                   <span style={{ fontSize: 17, fontWeight: 600 }}>Aucune candidature pour l’instant.</span>
-                  <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Partagez le lien de candidature dans votre annonce : les candidatures arrivent ici, et vous êtes prévenu par email.</span>
+                  <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Partagez le lien dans votre annonce : vous êtes prévenu par email à chaque candidature.</span>
                 </Card>
               )}
             </div>
@@ -229,7 +230,7 @@ export default function Candidats() {
                   </>
                 ) : (
                   <>
-                    <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un formulaire simple, sans compte : identité, situation, revenus, garantie et lien DossierFacile. Les pièces que vous demandez ci-dessous se déposent juste après.</span>
+                    <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Un formulaire sans compte : identité, situation, revenus, garantie. Les pièces demandées se déposent juste après.</span>
                     <div>
                       <Btn size="sm" onClick={() => void toggleLink(true)}>
                         Créer le lien
@@ -242,7 +243,7 @@ export default function Candidats() {
                 </TextLink>
               </Card>
               <Card title="Pièces demandées aux candidats">
-                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Seulement parmi celles que la loi autorise. Enregistré dans la fiche du logement.</span>
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Seulement celles que la loi autorise.</span>
                 {(Object.keys(TENANT_DOCUMENTS) as TenantDocKey[]).map((k) => (
                   <Check key={k} checked={requested.includes(k)} onChange={(v) => void saveDocs(v ? [...requested, k] : requested.filter((x) => x !== k), guarantorDocs)} label={TENANT_DOCUMENTS[k]} />
                 ))}
@@ -250,8 +251,8 @@ export default function Candidats() {
               </Card>
               <Fold title="Des dossiers sûrs, pour vous et pour eux">
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <li>Chaque pièce reçue porte un filigrane : la ville du logement, la date et Bailio. Elle ne peut pas resservir ailleurs.</li>
-                  <li>Les pièces s’ouvrent quand le candidat confirme la visite. Profitez-en pour comparer sa pièce d’identité avec la personne.</li>
+                  <li>Chaque pièce porte un filigrane (ville, date, Bailio) : elle ne peut pas resservir ailleurs.</li>
+                  <li>Les pièces s’ouvrent quand le candidat confirme la visite : comparez sa pièce d’identité avec la personne.</li>
                   <li>
                     Vérifiez un avis d’imposition sur le{' '}
                     <a href="https://cfsmsp.impots.gouv.fr/secavis/" target="_blank" rel="noreferrer" style={{ color: BAI.owner, fontWeight: 600 }}>
@@ -259,7 +260,7 @@ export default function Candidats() {
                     </a>{' '}
                     (numéro fiscal et référence de l’avis).
                   </li>
-                  <li>Une pièce qui porte le filigrane d’un autre site ou d’une autre location : demandez-en l’explication.</li>
+                  <li>Filigrane d’un autre site ou d’une autre location : demandez des explications.</li>
                 </ul>
               </Fold>
               <Fold title="Ce que vous ne pouvez pas demander">
@@ -268,7 +269,7 @@ export default function Candidats() {
                     <li key={d}>{d}</li>
                   ))}
                 </ul>
-                <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Loi du 6 juillet 1989, article 22-2. Le choix ne peut reposer sur aucun critère discriminatoire.</span>
+                <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Loi du 6 juillet 1989, article 22-2.</span>
               </Fold>
               <Callout tone="tip">Les candidatures sont effacées automatiquement {Math.round(data.keepDays / 30)} mois après leur réception. Celle que vous choisissez devient la fiche du locataire.</Callout>
             </aside>

@@ -408,7 +408,7 @@ function Photos({ f, set, onError }: { f: PropertyFile; set: (p: Partial<Propert
           ))}
         </div>
       ) : null}
-      <span style={{ fontSize: 13, color: BAI.inkSoft }}>Les photos ne sont visibles que par vous. Rien n’est publié.</span>
+      <span style={{ fontSize: 13, color: BAI.inkSoft }}>Photos visibles par vous seul.</span>
     </>
   )
 }

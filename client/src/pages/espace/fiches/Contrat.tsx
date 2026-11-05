@@ -57,7 +57,7 @@ export default function Contrat() {
     return (
       <div style={{ padding: 24, maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Callout tone="warn" title="Une signature en ligne est en cours">
-          Le bail envoyé aux signataires est figé : il ne peut plus être modifié, sinon chacun signerait un texte différent. Pour le modifier, annulez d’abord la signature, puis relancez-la.
+          Le bail envoyé aux signataires est figé. Pour le modifier, annulez d’abord la signature, puis relancez-la.
         </Callout>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <Btn to={`/espace/baux/${id}`}>Retour au bail</Btn>
@@ -107,7 +107,7 @@ export default function Contrat() {
         !view.checklist ? null : view.checklist.length ? (
           <MissingList items={view.checklist} title={`Pour un bail complet, il manque ${view.checklist.length} information${view.checklist.length > 1 ? 's' : ''} :`} />
         ) : (
-          <Callout tone="ok" title="Dossier complet">Toutes les mentions exigées par la loi sont renseignées. Vérifiez l’aperçu, puis passez à la signature.</Callout>
+          <Callout tone="ok" title="Dossier complet">Toutes les mentions obligatoires sont renseignées. Vérifiez l’aperçu, puis signez.</Callout>
         )
       ) : null}
       {view.status === 'ACTIVE' ? <Callout tone="warn" title="Ce bail est signé">Toute modification crée une nouvelle version, à faire signer par les deux parties (avenant). La version signée reste conservée.</Callout> : null}
@@ -117,7 +117,7 @@ export default function Contrat() {
           <Callout tone="info">Garage, box ou place loué seul : la loi du 6 juillet 1989 ne s’applique pas. Durée, préavis et dépôt sont ceux que vous fixez dans le contrat.</Callout>
         </FicheSection>
       ) : (
-      <FicheSection id="type" guides={['meuble', 'mobilite']} n={++n} title="Type de bail" intro="Chaque type a ses règles de durée, de dépôt et de charges. Bailio les applique." reference="loi n° 89-462 du 6 juillet 1989, titres Ier, Ier bis et Ier ter" done={done('type')}>
+      <FicheSection id="type" guides={['meuble', 'mobilite']} n={++n} title="Type de bail" intro="Bailio applique les règles propres à chaque type." reference="loi n° 89-462 du 6 juillet 1989, titres Ier, Ier bis et Ier ter" done={done('type')}>
         <Chips
           legend="Quel contrat ?"
           value={kind}
@@ -135,7 +135,7 @@ export default function Contrat() {
       </FicheSection>
       )}
 
-      <FicheSection id="parties" guides={['bail']} n={++n} title="Les parties" intro="Repris des fiches déjà remplies. Rien à ressaisir." reference="Contrat type, rubrique I" done={done('parties')}>
+      <FicheSection id="parties" guides={['bail']} n={++n} title="Les parties" intro="Repris des fiches déjà remplies." reference="Contrat type, rubrique I" done={done('parties')}>
         <Computed
           rows={[
             ['Bailleur', [fullName(L) || L.company?.name || 'À compléter', L.address].filter(Boolean).join(', ')],
@@ -392,10 +392,10 @@ export default function Contrat() {
         <Chips legend="Signature" value={t.signature?.mode ?? null} onChange={(v) => set({ signature: { ...t.signature, mode: v } })} options={[{ value: 'PAPER', label: 'Sur papier' }, { value: 'ELECTRONIC', label: 'Électronique' }]} />
         {t.signature?.mode === 'ELECTRONIC' ? (
           <Callout tone="tip">
-            En ligne : chaque signataire reçoit un lien et un code par email, puis signe sur son téléphone. Il faut donc l’adresse email de chacun{view.guarantors.length ? ', garant compris' : ''}. La signature se lance depuis la page du bail.
+            En ligne : chacun reçoit un lien et un code par email. Il faut donc l’adresse email de chaque signataire{view.guarantors.length ? ', garant compris' : ''}. La signature se lance depuis la page du bail.
           </Callout>
         ) : (
-          <Callout tone="tip">Sur papier : un exemplaire original par partie{view.guarantors.length ? ', plus un pour le garant' : ''}. Bailio imprime le bail avec les cases de paraphe.</Callout>
+          <Callout tone="tip">Sur papier : un exemplaire original par partie{view.guarantors.length ? ', plus un pour le garant' : ''}.</Callout>
         )}
         <div>
           <Btn variant="outline" onClick={preview}>

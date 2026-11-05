@@ -73,7 +73,7 @@ export default function TikTok() {
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Pilotage', to: '/espace/pilotage' }, { label: 'Publier sur TikTok' }]} />
-      <PageHead title="Publier sur TikTok" sub="Les vidéos de Bailio, publiées sur le compte TikTok de Bailio." />
+      <PageHead title="Publier sur TikTok" sub="Les vidéos de Bailio, sur le compte TikTok de Bailio." />
       {callbackError ? <Callout tone="warn">{callbackError}</Callout> : null}
       {loading && !data ? (
         <Loader />
@@ -86,7 +86,7 @@ export default function TikTok() {
       ) : !data.connected || !data.creator ? (
         <Card title="Compte TikTok">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'flex-start' }}>
-            <p style={note}>Connectez le compte TikTok de Bailio. TikTok vous demande de vous connecter et d’autoriser Bailio à lire le nom du compte et à publier des vidéos. Vous pouvez le déconnecter à tout moment.</p>
+            <p style={note}>TikTok vous demande d’autoriser Bailio à lire le nom du compte et à publier des vidéos. Déconnexion possible à tout moment.</p>
             <Btn onClick={connect} loading={connecting}>Connecter TikTok</Btn>
           </div>
         </Card>

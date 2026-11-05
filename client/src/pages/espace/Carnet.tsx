@@ -40,7 +40,7 @@ export default function Carnet() {
 
   return (
     <AppShell>
-      <PageHead title="Carnet" sub="Vos artisans, votre syndic, votre assureur : à portée de main, et repris dans les interventions." actions={<Btn onClick={() => setEdit({ ...EMPTY })}>Ajouter un contact</Btn>} />
+      <PageHead title="Carnet" sub="Artisans, syndic, assureur : saisis une fois, repris dans les interventions." actions={<Btn onClick={() => setEdit({ ...EMPTY })}>Ajouter un contact</Btn>} />
       {loading && !data ? (
         <Loader />
       ) : error ? (

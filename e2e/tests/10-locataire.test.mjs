@@ -90,6 +90,7 @@ test('autres courriers : réclamation reprise de l’intervention, envoyée à l
   await page.getByLabel('Problèmes constatés').fill('fuite au raccord depuis l’intervention')
   await shot(page, 'reclamation-artisan')
   await page.getByRole('button', { name: 'Enregistrer et envoyer par email' }).click()
+  await page.getByRole('button', { name: 'Oui, envoyer' }).click()
   await page.getByText('Courrier envoyé à contact@plomberie-martin.fr.').waitFor()
   await ctx.close()
   assert.deepEqual(errors, [])

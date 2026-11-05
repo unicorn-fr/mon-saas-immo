@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { GuideKey } from '../../lib/sources'
 import { BAI } from '../../constants/bailio-tokens'
 import { FicheSection, Fields, FlowHeader } from '../../components/FlowLayout'
-import { Btn, Callout, Chips, Computed, Input, LoadError, Loader, Money, NumberField, Select, TextArea, TextLink, Toggle, useLoad, useToast } from '../../components/kit'
+import { Btn, Callout, Chips, Computed, Input, LoadError, Loader, Money, NumberField, Select, TextArea, TextLink, Toggle, useLoad, useToast, useConfirm } from '../../components/kit'
 import { api } from '../../lib/api'
 import { openDoc } from '../../lib/docs'
 import { currentPeriod, dateNum, eurosCents, periodLabel, recentPeriods, todayIso } from '../../lib/format'
@@ -166,6 +166,7 @@ export default function Courriers() {
 
 function Receipt({ lease, onChange }: { lease: LeaseView; onChange: () => void }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const due = lease.columns.rentCents + lease.columns.chargesCents
   const [doc, setDoc] = useState<'RECEIPT' | 'PARTIAL' | 'NOTICE'>('RECEIPT')
   const [period, setPeriod] = useState(currentPeriod())
@@ -187,6 +188,7 @@ function Receipt({ lease, onChange }: { lease: LeaseView; onChange: () => void }
 
   const record = async (send: boolean) => {
     if (!amount) return toast.show('Indiquez le montant reçu.', 'error')
+    if (send && !(await confirm({ title: `Envoyer ${kind === 'PARTIAL' ? 'le reçu' : 'la quittance'} ?`, text: `Le loyer est enregistré et le document part par email à ${lease.tenantName || 'votre locataire'}.` }))) return
     await api(`/leases/${lease.id}/payments`, { method: 'POST', body: { period, amountCents: amount, receivedAt: date } })
     if (send) {
       const r = await api<{ sentTo: string[] }>(`/leases/${lease.id}/receipts/${period}/send`, { method: 'POST' })
@@ -338,6 +340,7 @@ function LetterComposer({ lease, type, n }: { lease: LeaseView; type: LetterType
 
 function LetterFrame({ lease, n, title, letter, note, recipient, savedAt, onReset, children }: { lease: LeaseView; n: number; title: string; letter: Letter; note: string | null; recipient: { name: string; address: string }; savedAt?: string | null; onReset?: () => Promise<void>; children: ReactNode }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const [saved, setSaved] = useState<string | null>(null)
   const info = INFO[letter.type]
   const guard = (fn: () => Promise<unknown>) => () => {
@@ -392,6 +395,7 @@ function LetterFrame({ lease, n, title, letter, note, recipient, savedAt, onRese
         {hasEmail ? (
           <Btn
             onClick={guard(async () => {
+              if (!(await confirm({ title: 'Envoyer ce courrier ?', text: `Il est enregistré et part par email à ${recipient.name || 'son destinataire'}.` }))) return
               const id = saved ?? (await save())
               const r = await api<{ sentTo: string[] }>(`/documents/${id}/send`, { method: 'POST' })
               toast.show(`Courrier envoyé à ${r.sentTo.join(', ')}.`)

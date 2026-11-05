@@ -5,7 +5,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { StepFlow, StepNote, StepTitle, Fields } from '../../../components/FlowLayout'
 import { uploadPhotos } from '../../../components/media'
 import { OwnerDocList } from '../../../components/DocFiles'
-import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, TextLink, errorMessage, useLoad, useToast, AddressInput } from '../../../components/kit'
+import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, TextLink, errorMessage, useLoad, useToast, AddressInput, useConfirm } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { SITUATION_LABEL, TENANT_DOCUMENTS, fullName, type DocEntry, type Situation, type TenantDocKey, type TenantFile } from '../../../lib/contract'
 import { openDoc } from '../../../lib/docs'
@@ -42,6 +42,7 @@ export default function AjoutLocataire() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const toast = useToast()
+  const confirm = useConfirm()
   const id = params.get('id')
   const [f, setF] = useState<TenantFile>({})
   const [propertyId, setPropertyId] = useState<string | null>(params.get('logement'))
@@ -81,6 +82,7 @@ export default function AjoutLocataire() {
 
   const invite = async () => {
     if (!f.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return setError('Indiquez l’adresse email de votre locataire : le lien lui sera envoyé.')
+    if (!(await confirm({ title: 'Envoyer le lien ?', text: `Votre locataire reçoit à ${f.email.trim()} un lien pour remplir son dossier.` }))) return
     setBusy(true)
     try {
       const created = await api<{ id: string }>('/tenants', { method: 'POST', body: { civility: f.civility, firstNames: f.firstNames, lastName: f.lastName, email: f.email.trim(), propertyId } })
@@ -154,7 +156,7 @@ export default function AjoutLocataire() {
             <Input label="Prénom (facultatif)" value={f.firstNames ?? ''} onChange={(v) => set({ firstNames: v })} />
             <Input label="Nom (facultatif)" value={f.lastName ?? ''} onChange={(v) => set({ lastName: v })} />
           </Fields>
-          <StepNote>Il remplira exactement les mêmes informations que vous : identité, naissance, coordonnées, situation, foyer, garant et justificatifs. Le lien est valable 30 jours.</StepNote>
+          <StepNote>Il remplit les mêmes informations que vous. Lien valable 30 jours.</StepNote>
         </>
       ) : null}
       {current === 'identity' && (id || mode === 'SELF') ? (
@@ -176,15 +178,15 @@ export default function AjoutLocataire() {
             <Input big label="Date de naissance" type="date" value={f.birthDate ?? ''} onChange={(v) => set({ birthDate: v || null })} />
             <Input big label="Lieu de naissance" value={f.birthPlace ?? ''} onChange={(v) => set({ birthPlace: v })} placeholder="Ville (et pays si à l’étranger)" />
           </Fields>
-          <StepNote>Ils identifient précisément le locataire dans le bail. Vous ne les avez pas ? Continuez : vous pourrez les lui demander à la fin.</StepNote>
+          <StepNote>Vous ne les avez pas ? Continuez : vous pourrez les lui demander à la fin.</StepNote>
         </>
       ) : null}
       {current === 'contact' ? (
         <>
           <StepTitle>Comment le joindre ?</StepTitle>
-          <Input big label="Email" type="email" inputMode="email" value={f.email ?? ''} onChange={(v) => set({ email: v })} hint="Pour lui demander ce qui manque, puis pour ses quittances (avec son accord)." />
+          <Input big label="Email" type="email" inputMode="email" value={f.email ?? ''} onChange={(v) => set({ email: v })} hint="Pour ses quittances (avec son accord) et lui demander ce qui manque." />
           <Input big label="Téléphone" type="tel" inputMode="tel" value={f.phone ?? ''} onChange={(v) => set({ phone: v })} />
-          <AddressInput big label="Adresse actuelle" value={f.currentAddress ?? ''} onChange={(v) => set({ currentAddress: v })} hint="Avant son entrée dans le logement. Elle sert pour lui écrire par courrier." />
+          <AddressInput big label="Adresse actuelle" value={f.currentAddress ?? ''} onChange={(v) => set({ currentAddress: v })} hint="Avant son entrée dans le logement." />
         </>
       ) : null}
       {current === 'situation' ? (
@@ -196,7 +198,7 @@ export default function AjoutLocataire() {
             <Input label="Métier ou formation" value={f.occupation ?? ''} onChange={(v) => set({ occupation: v })} />
           </Fields>
           <Money label="Revenus nets par mois" cents={f.monthlyIncomeCents ?? null} onChange={(c) => set({ monthlyIncomeCents: c })} hint="Salaires, bourses, allocations… Bailio calcule la part du loyer dans ses revenus." />
-          <StepNote>Ces informations restent dans votre espace. Elles ne figurent pas dans le bail.</StepNote>
+          <StepNote>Elles ne figurent pas dans le bail.</StepNote>
         </>
       ) : null}
       {current === 'home' ? (
@@ -209,7 +211,7 @@ export default function AjoutLocataire() {
               ))}
             </div>
           ) : (
-            <StepNote>Vous n’avez pas encore de logement. Ajoutez-le d’abord : le bail a besoin de toutes ses informations.</StepNote>
+            <StepNote>Aucun logement. Ajoutez-le d’abord.</StepNote>
           )}
           <TextLink to={`/espace/logements/nouveau?retour=locataire`}>+ Un autre logement</TextLink>
           <Chips big legend={`${who} loue`} value={f.living ?? null} onChange={(v) => set({ living: v })} options={[{ value: 'ALONE', label: f.civility === 'MONSIEUR' ? 'Seul' : f.civility === 'MADAME' ? 'Seule' : 'Seul(e)' }, { value: 'COUPLE', label: 'En couple' }, { value: 'COLOCATION', label: 'En colocation' }]} />
@@ -282,8 +284,7 @@ function Guarantee({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) =>
         <ChoiceCard column selected={f.guarantee === 'VISALE'} onClick={() => set({ guarantee: 'VISALE' })} title="Visale" sub="La garantie gratuite d’Action Logement" />
         <ChoiceCard column selected={f.guarantee === 'GLI'} onClick={() => set({ guarantee: 'GLI' })} title="Assurance" sub="Vous avez une assurance loyers impayés" />
       </div>
-      {f.guarantee === 'CAUTION' ? <StepNote>À l’étape suivante : l’identité du garant et son engagement. Bailio prépare l’acte de caution avec le bail.</StepNote> : null}
-      {f.guarantee === 'VISALE' ? <Input big label="Numéro de visa Visale" value={f.visaleNumber ?? ''} onChange={(v) => set({ visaleNumber: v })} hint="Il figure sur le visa délivré au locataire." /> : null}
+            {f.guarantee === 'VISALE' ? <Input big label="Numéro de visa Visale" value={f.visaleNumber ?? ''} onChange={(v) => set({ visaleNumber: v })} hint="Il figure sur le visa délivré au locataire." /> : null}
       {f.guarantee === 'GLI' ? <Callout tone="info">Avec une assurance loyers impayés, vous ne pouvez pas demander en plus un garant{insurance ? ', sauf pour un étudiant ou un apprenti' : ', sauf si le locataire est étudiant ou apprenti'} (article 22-1 de la loi du 6 juillet 1989).</Callout> : null}
     </>
   )
@@ -326,6 +327,7 @@ function GuarantorStep({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>
 /** Dernière étape : ce qui manque encore, à demander au locataire par email ou par courrier. */
 function Missing({ tenantId, f }: { tenantId: string; f: TenantFile }) {
   const toast = useToast()
+  const confirm = useConfirm()
   const { data, reload } = useLoad(() => api<{ missing: FileMissing[]; link: { url: string; sentAt: string } | null }>(`/tenants/${tenantId}/missing`), [tenantId])
   const [busy, setBusy] = useState(false)
   if (!data) return <Loader />
@@ -338,6 +340,7 @@ function Missing({ tenantId, f }: { tenantId: string; f: TenantFile }) {
       </>
     )
   const send = async () => {
+    if (!(await confirm({ title: 'Envoyer la demande ?', text: `Le lien pour compléter son dossier part par email à ${f.email}.` }))) return
     setBusy(true)
     try {
       await api(`/tenants/${tenantId}/request`, { method: 'POST', body: { send: true } })
@@ -420,7 +423,7 @@ function Documents({ f, set }: { f: TenantFile; set: (p: Partial<TenantFile>) =>
     <>
       <StepTitle>Les justificatifs</StepTitle>
       <StepNote>
-        Seules les pièces que la loi autorise à demander sont proposées (<Cite reference="décret n° 2015-1437" />). Vous ne les avez pas encore ? Continuez : vous pourrez les demander au locataire.
+        Seules les pièces autorisées par la loi sont proposées (<Cite reference="décret n° 2015-1437" />). Pas encore là ? Continuez : vous les demanderez au locataire.
       </StepNote>
       <DocList docs={f.documents ?? []} onChange={(documents) => set({ documents })} />
       {f.guarantee === 'CAUTION' ? (

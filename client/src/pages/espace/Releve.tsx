@@ -93,7 +93,7 @@ export default function Releve() {
 
       {done ? (
         <Callout tone="tip" title={`${done.count} loyer${done.count > 1 ? 's' : ''} enregistré${done.count > 1 ? 's' : ''}.`}>
-          Les quittances sont rangées avec chaque bail.{done.sent ? ` ${done.sent} envoyée${done.sent > 1 ? 's' : ''} automatiquement par email.` : ''}
+          Quittances rangées avec chaque bail.{done.sent ? ` ${done.sent} envoyée${done.sent > 1 ? 's' : ''} automatiquement par email.` : ''}
         </Callout>
       ) : null}
 
