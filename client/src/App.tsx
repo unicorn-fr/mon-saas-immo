@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ConfirmProvider, ToastProvider } from './components/kit'
+import { FixMissingProvider } from './components/FixMissing'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
@@ -166,10 +167,12 @@ export default function App() {
         <DraftProvider>
           <ToastProvider>
           <ConfirmProvider>
+          <FixMissingProvider>
             <ScrollToTop />
             <SkipLink />
             <PageTitle />
             <Pages />
+          </FixMissingProvider>
           </ConfirmProvider>
           </ToastProvider>
         </DraftProvider>

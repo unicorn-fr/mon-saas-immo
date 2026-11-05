@@ -68,6 +68,8 @@ test('signature au pavé tactile sans cliquer, puis avec le téléphone', async 
   watch(mobile, errors)
   await mobile.goto(`${BASE}/signature/${data.code}`)
   const mpad = mobile.getByLabel('Signez ici avec le doigt')
+  // Sur téléphone, un glissement ne signe pas : il faut d'abord toucher la case.
+  await mobile.getByRole('button', { name: 'Touchez ici pour signer' }).click()
   const mb = await mpad.boundingBox()
   await mobile.mouse.move(mb.x + 30, mb.y + 120)
   await mobile.mouse.down()

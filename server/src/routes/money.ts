@@ -32,7 +32,8 @@ import { splitPayment, taxSummary, type TaxProperty } from '../domain/tax.js'
 import { propertyReport } from '../domain/report.js'
 import { toTrash } from '../services/trash.js'
 import { parseIsoDate } from '../domain/lease.js'
-import { emailLetter, patchLeaseData } from './leases.js'
+import { assertComplete, emailLetter, patchLeaseData } from './leases.js'
+import { signatureMissing } from '../domain/checklist.js'
 import { fileSlug, filesAsDataUrls, iso, sendFile, sendPdf, storeFile, upload } from './helpers.js'
 import { isFurnished, isHousing } from '../domain/rules.js'
 import { leaseTaxItems, type LeaseTaxItemId } from '../domain/leaseTax.js'
@@ -860,11 +861,14 @@ export async function documentBytes(user: User, doc: DocRow): Promise<{ bytes: B
     case 'PARTIAL_RECEIPT':
     case 'RENT_NOTICE': {
       const r = snap as unknown as ReceiptInput
-      return { bytes: await renderReceiptPdf({ ...r, paidOn: r.paidOn ? new Date(r.paidOn) : null, dueDate: r.dueDate ? new Date(r.dueDate) : null }), mime: 'application/pdf' }
+      const sig = r.landlord?.signature || readProfile(user).signature || undefined
+      return { bytes: await renderReceiptPdf({ ...r, landlord: { ...r.landlord, signature: sig }, paidOn: r.paidOn ? new Date(r.paidOn) : null, dueDate: r.dueDate ? new Date(r.dueDate) : null }), mime: 'application/pdf' }
     }
     case 'LETTER': {
       const l = snap.letter as LetterRender
-      return { bytes: await renderLetterPdf({ ...l, date: new Date(l.date ?? doc.createdAt) }), mime: 'application/pdf' }
+      // Courrier enregistré avant que la signature soit ajoutée : elle est reprise du profil.
+      const sig = l.landlord?.signature || readProfile(user).signature || undefined
+      return { bytes: await renderLetterPdf({ ...l, landlord: { ...l.landlord, signature: sig }, date: new Date(l.date ?? doc.createdAt) }), mime: 'application/pdf' }
     }
     case 'INVENTORY': {
       const inv = snap as unknown as Omit<InventoryInput, 'photos'> & { photoIds: string[] }
@@ -893,6 +897,8 @@ router.post('/documents/:id/send', async (req, res) => {
   const user = req.user!
   const doc = await ownDocument(user.id, String(req.params.id))
   if (!doc.leaseId) throw new HttpError(400, 'Ce document n’est rattaché à aucun bail.')
+  // Courrier ou quittance envoyé par email : il part signé. La signature ajoutée depuis est reprise (documentBytes).
+  if (['LETTER', 'RECEIPT', 'PARTIAL_RECEIPT'].includes(doc.kind)) assertComplete(signatureMissing({ landlord: readProfile(user) }))
   const { bytes } = await documentBytes(user, doc)
   const to = await emailLetter(user, doc.leaseId, bytes, doc.title, doc.kind === 'LETTER' ? ((doc.snapshot as { input?: { type?: string; recipient?: { email?: string | null } } } | null)?.input ?? null) : null)
   res.json({ success: true, data: { sentTo: to } })

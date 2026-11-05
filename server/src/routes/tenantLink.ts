@@ -13,7 +13,7 @@ import { alignInsuranceReminders } from '../services/reminders.js'
 import { liveContract, leaseOwned, propertyName, readProperty, readTenant, tenantName } from '../services/contract.js'
 import { landlordName } from '../pdf/labels.js'
 import { storeFile, upload } from './helpers.js'
-import { patchLeaseData } from './leases.js'
+import { noTenantEmail, patchLeaseData } from './leases.js'
 import { complementAllowed, complementWindow, inventoryDataSchema } from '../domain/inventory.js'
 import { ISSUE_ADVICE, ISSUE_CATEGORIES, issueChoices, ISSUE_LABEL, issueProgress, issueTitle, isUrgent, readIssue, type IssueData } from '../domain/issues.js'
 
@@ -73,7 +73,7 @@ router.post('/leases/:id/tenant-link/send', requireUser, async (req, res) => {
   if (!lease.tenantCode) throw new HttpError(400, 'Activez d’abord le lien.')
   const c = await liveContract(user, lease)
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
-  if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le lien.')
+  if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le lien.')
   const from = landlordName(c.landlord) || 'Votre bailleur'
   const mail = layout({
     title: 'Vos documents de location',
