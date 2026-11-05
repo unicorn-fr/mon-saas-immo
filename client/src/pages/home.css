@@ -48,7 +48,7 @@
 
 /* ── Ouverture : photo dans un grand module arrondi, bloc bleu posé en bas à gauche ── */
 .hero { position: relative; padding: 0 var(--pad); }
-.hero-photo { height: min(calc(100svh - 80px), 860px); min-height: 560px; border-radius: var(--round); overflow: hidden; background: var(--stone); }
+.hero-photo { height: min(calc((100svh - 80px) * 0.8), 700px); min-height: 560px; border-radius: var(--round); overflow: hidden; background: var(--stone); }
 .hero-photo { position: relative; }
 /* Crédit de la photo : discret, en bas à droite. */
 .hero-credit { position: absolute; right: 14px; bottom: 10px; font-size: 11px; line-height: 1; color: var(--paper); text-shadow: 0 0 3px rgba(0, 0, 0, 0.55); letter-spacing: 0.01em; pointer-events: none; }
@@ -62,6 +62,11 @@
 .hero-block h1 em { color: var(--accent-soft); }
 .hero-lead { font-size: var(--step-lead); line-height: 1.4; max-width: 30ch; color: var(--paper); }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 28px; }
+/* Ordinateur : le contenu du bloc est centré. */
+@media (min-width: 1024px) {
+  .hero-block { align-items: center; text-align: center; }
+  .hero-actions { justify-content: center; }
+}
 .hero-link { color: var(--paper) !important; font-weight: 600; text-underline-offset: 6px; padding: 12px 0; }
 .hero-link:hover { text-decoration-thickness: 2px; }
 
@@ -225,7 +230,7 @@
 
 /* ── Tablette : le bloc passe sous la photo, l'Arbre Blanc reste entier ── */
 @media (min-width: 768px) and (max-width: 1023px) {
-  .hero-photo { height: 58svh; min-height: 420px; }
+  .hero-photo { height: 48svh; min-height: 360px; }
   .hero-block { position: relative; left: auto; bottom: auto; width: auto; margin: -48px 24px 0; }
   .hero-credit { bottom: 58px; }
 }
