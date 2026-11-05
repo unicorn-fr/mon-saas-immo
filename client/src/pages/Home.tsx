@@ -263,7 +263,12 @@ export default function Home() {
       <main>
         <section className="hero" data-section>
           <div className="hero-photo">
-            <img src="/accueil/arbre-blanc.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={960} height={1200} fetchPriority="high" />
+            {/* Photo large : recadrée pour que l’Arbre Blanc soit entier, à droite du bloc bleu ; en entier sur les très grands écrans. */}
+            <picture>
+              <source media="(min-width: 1600px)" srcSet="/accueil/arbre-blanc-panorama.webp" width={2000} height={1250} />
+              <img src="/accueil/arbre-blanc-large.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={1500} height={1050} fetchPriority="high" />
+            </picture>
+            <small className="hero-credit">© Ludwig Deguffroy/Getty Images</small>
           </div>
           <div className="hero-block fold fold--lg fold--ear">
             <h1 data-in style={{ ['--i' as string]: 0 }}>

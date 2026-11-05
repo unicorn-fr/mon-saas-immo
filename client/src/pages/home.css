@@ -48,14 +48,24 @@
 
 /* ── Ouverture : photo dans un grand module arrondi, bloc bleu posé en bas à gauche ── */
 .hero { position: relative; padding: 0 var(--pad); }
-.hero-photo { height: min(86svh, 860px); min-height: 560px; border-radius: var(--round); overflow: hidden; background: var(--stone); }
-.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block; }
+.hero-photo { height: min(calc(100svh - 80px), 860px); min-height: 560px; border-radius: var(--round); overflow: hidden; background: var(--stone); }
+.hero-photo { position: relative; }
+.hero-photo picture { display: contents; }
+/* Crédit de la photo : discret, en bas à droite. */
+.hero-credit { position: absolute; right: 14px; bottom: 10px; font-size: 11px; line-height: 1; color: var(--paper); text-shadow: 0 0 3px rgba(0, 0, 0, 0.55); letter-spacing: 0.01em; pointer-events: none; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: right 40%; display: block; }
+/* Très grand écran : photo entière, immeuble au milieu ; le bloc reste à sa gauche. */
+@media (min-width: 1600px) {
+  .hero-photo img { object-position: center 80%; }
+  .hero-block { width: 500px; }
+  .hero-block h1 { font-size: 4.25rem; }
+}
 .hero-block {
-  position: absolute; left: calc(var(--pad) + clamp(20px, 3vw, 48px)); bottom: clamp(20px, 3vw, 48px); width: min(720px, 56%);
+  position: absolute; left: calc(var(--pad) + clamp(20px, 3vw, 48px)); bottom: clamp(20px, 3vw, 48px); width: min(500px, 37%);
   background: var(--owner); color: var(--paper); border-radius: var(--round); --fold-back: rgba(255, 255, 255, 0.22);
   padding: clamp(32px, 4vw, 56px); display: flex; flex-direction: column; gap: 22px;
 }
-.hero-block h1 { font-size: clamp(2.75rem, 1.4rem + 3.6vw, 5rem); color: var(--paper); }
+.hero-block h1 { font-size: clamp(2.75rem, 1rem + 3.2vw, 4.25rem); color: var(--paper); }
 .hero-block h1 em { color: var(--accent-soft); }
 .hero-lead { font-size: var(--step-lead); line-height: 1.4; max-width: 30ch; color: var(--paper); }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 28px; }
@@ -220,11 +230,19 @@
   .foot-photo { display: none; }
 }
 
+/* ── Tablette : le bloc passe sous la photo, l'Arbre Blanc reste entier ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-photo { height: 58svh; min-height: 420px; }
+  .hero-block { position: relative; left: auto; bottom: auto; width: auto; margin: -48px 24px 0; }
+  .hero-credit { bottom: 58px; }
+}
+
 /* ── Téléphone : les blocs de couleur passent sous la photo, collés aux bords ── */
 @media (max-width: 767px) {
   .bar { padding: 4px 16px; }
   .hero { padding: 0 12px; }
   .hero-photo { height: 36svh; min-height: 220px; }
+  .hero-credit { bottom: 40px; right: 10px; font-size: 10px; }
   .hero-block { position: relative; left: auto; bottom: auto; width: auto; margin-top: -32px; padding: 30px 22px 26px; gap: 16px; }
   .hero-block h1 { font-size: 2.375rem; }
   .hero-lead { font-size: 1.0625rem; }
