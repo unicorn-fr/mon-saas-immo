@@ -359,7 +359,7 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
       </div>
       {mode === 'TRACKPAD' ? (
         <span aria-live="polite" style={{ fontSize: 14, color: BAI.owner, fontWeight: 600, lineHeight: 1.5 }}>
-          Glissez le doigt sur le pavé tactile, sans appuyer, aussi grand que vous voulez : la signature se cadre toute seule. Pour finir, cliquez ou appuyez sur une touche.
+          Signez en glissant le doigt sur le pavé tactile, sans appuyer : la signature se cadre toute seule. Pour finir, cliquez ou appuyez sur une touche.
         </span>
       ) : null}
       <div style={{ display: 'flex', gap: '6px 18px', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>

@@ -41,9 +41,9 @@ test('actions groupées : liens d’assurance et quittances en une fois', async 
 
     // Quittances : une seule, celle de A
     await page.getByRole('button', { name: /^Envoyer les quittances/ }).click()
-    await page.getByRole('button', { name: 'Oui, envoyer' }).click()
     const b2 = logSize()
     await page.getByRole('button', { name: 'Envoyer 1 quittance' }).click()
+    await page.getByRole('button', { name: 'Oui, envoyer' }).click()
     await page.getByText('Quittance envoyée').waitFor()
     await fromLog(/[Qq]uittance/g, b2)
     assert.equal((await api('/bulk', { token })).groups.RECEIPTS.length, 0)
