@@ -210,7 +210,7 @@ export default function Candidats() {
               ) : (
                 <Card>
                   <span style={{ fontSize: 17, fontWeight: 600 }}>Aucune candidature pour l’instant.</span>
-                  <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Partagez le lien dans votre annonce : les candidatures arrivent ici, avec un email.</span>
+                  <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Partagez le lien dans votre annonce : vous êtes prévenu par email à chaque candidature.</span>
                 </Card>
               )}
             </div>

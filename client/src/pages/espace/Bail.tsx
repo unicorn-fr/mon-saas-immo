@@ -543,7 +543,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             ? 'Bailio conserve cette version telle quelle, avec les actes de caution. Loyers, quittances et rappels démarrent.'
             : 'Bailio conserve cette version en plus de la précédente. Les loyers suivants en tiennent compte.'}
         </p>
-              </Modal>
+      </Modal>
       <EndModal open={endOpen} onClose={() => setEndOpen(false)} lease={l} onDone={setLease} />
       <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={reload} leaseId={l.id} dueCents={l.columns.rentCents + l.columns.chargesCents} tenantEmail={l.tenants.find((x) => x.email)?.email} emailConsent={Boolean(l.facts?.eReceiptConsent)} />
     </>

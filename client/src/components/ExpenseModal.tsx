@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { BAI } from '../constants/bailio-tokens'
 import { api } from '../lib/api'
 import { todayIso } from '../lib/format'
 import type { Expense, PropertySummary } from '../lib/space'
