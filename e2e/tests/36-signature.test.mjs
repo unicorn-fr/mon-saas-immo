@@ -22,6 +22,8 @@ test('relais du téléphone : une signature, une seule fois', async () => {
 test('signature au pavé tactile sans cliquer, puis avec le téléphone', async () => {
   const { token } = await newAccount()
   await completeLease(token)
+  // Pas encore de signature : la rubrique « Votre signature » du profil est ouverte.
+  await api('/profile', { method: 'PUT', token, body: { signature: '' } })
   const browser = await launch()
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()

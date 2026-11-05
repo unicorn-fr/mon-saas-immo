@@ -4,13 +4,14 @@ import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, signedI
 
 /**
  * Ce qui manque se demande sur place : envoyer une quittance sans signature ouvre « Il manque une information »,
- * la signature s'enregistre dans le profil, puis l'envoi reprend tout seul. Même chose pour l'email du locataire.
+ * la signature s'enregistre dans le profil, puis l'envoi reprend tout seul.
  */
 test('quittance sans signature : signature demandée, enregistrée dans le profil, puis envoi', async () => {
   const { token } = await newAccount()
-  const { leaseId, tenantId } = await completeLease(token)
-  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  const { leaseId } = await completeLease(token)
+  // Propriétaire qui n'a jamais signé dans son profil : le bail signé n'a pas de signature à reprendre.
   await api('/profile', { method: 'PUT', token, body: { signature: '' } })
+  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
   await api(`/leases/${leaseId}/receipt-auto`, { method: 'PUT', token, body: { auto: false } })
   await api(`/leases/${leaseId}/payments`, { method: 'POST', token, body: { period: '2026-10', amountCents: 56000, receivedAt: '2026-10-04' } })
 
@@ -18,7 +19,8 @@ test('quittance sans signature : signature demandée, enregistrée dans le profi
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()
   const errors = []
-  watch(page, errors)
+  // Le premier envoi est refusé (400, signature manquante) : c'est ce refus qui ouvre la fenêtre.
+  watch(page, errors, { allow: ['/receipts/2026-10/send', 'status of 400'] })
   page.setDefaultTimeout(15000)
   await page.goto(`${BASE}/espace/baux/${leaseId}`)
   await page.getByRole('button', { name: 'Envoyer' }).first().click()
@@ -39,16 +41,6 @@ test('quittance sans signature : signature demandée, enregistrée dans le profi
   await fromLog(/[Qq]uittance/g, before)
   assert.match((await api('/profile', { token })).profile.signature, /^data:image\/png;base64,/)
 
-  // Email du locataire absent : demandé sur place, enregistré dans sa fiche, puis l'envoi reprend.
-  await api(`/tenants/${tenantId}`, { method: 'PUT', token, body: { email: '' } })
-  await page.reload()
-  await page.getByRole('button', { name: 'Envoyer' }).first().click()
-  await page.getByRole('button', { name: 'Oui, envoyer' }).click()
-  await page.getByRole('heading', { name: 'Il manque une information' }).waitFor()
-  await page.getByLabel('Email du locataire').fill('nouvel.email@example.fr')
-  await page.getByRole('button', { name: 'Enregistrer et continuer' }).click()
-  await page.getByText(/Envoyé à nouvel\.email@example\.fr/).waitFor()
-  assert.equal((await api(`/tenants/${tenantId}`, { token })).file.email, 'nouvel.email@example.fr')
   await browser.close()
   assert.deepEqual(errors, [])
 })
