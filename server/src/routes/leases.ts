@@ -14,7 +14,7 @@ import { contractFor, landlordOf, liveContract, leaseKindOf, leaseOwned, propert
 import { resumptionAllowed } from '../domain/structure.js'
 import { leaseTermsSchema, type ContractInput, type LandlordProfile, type LeaseKind, type LeaseTerms } from '../domain/contract.js'
 import { termsCompletion } from '../domain/completion.js'
-import { essential, leaseMissing, partiesMissing, type Missing } from '../domain/checklist.js'
+import { essential, leaseMissing, partiesMissing, signatureMissing, tenantEmailMissing, type Missing } from '../domain/checklist.js'
 import { formatDateFr, formatEuros, monthYearFr, parseIsoDate } from '../domain/lease.js'
 import {
   allowedChargesModes,
@@ -132,7 +132,13 @@ function withLinks(missing: Missing[], lease: LeaseWithProperty) {
 export function assertComplete(missing: Missing[]) {
   if (!missing.length) return
   const list = missing.slice(0, 4).map((m) => m.label.charAt(0).toLowerCase() + m.label.slice(1))
-  throw new HttpError(400, `Pour que ce document soit valable, il manque : ${list.join(' ; ')}${missing.length > 4 ? ` (et ${missing.length - 4} autre${missing.length > 5 ? 's' : ''})` : ''}.`)
+  // `missing` dans les détails : le site demande sur place ce qui manque, l'enregistre au bon endroit, puis recommence.
+  throw new HttpError(400, `Pour que ce document soit valable, il manque : ${list.join(' ; ')}${missing.length > 4 ? ` (et ${missing.length - 4} autre${missing.length > 5 ? 's' : ''})` : ''}.`, { missing })
+}
+
+/** Email du locataire absent au moment d'un envoi : message clair, et le site propose de le saisir sur place. */
+export function noTenantEmail(lease: { tenantIds: string[] }, message: string): HttpError {
+  return new HttpError(400, message, { missing: [tenantEmailMissing(lease.tenantIds[0])] })
 }
 
 /**
@@ -525,7 +531,7 @@ router.post('/leases/:id/send', async (req, res) => {
   const lease = await leaseOwned(user.id, String(req.params.id))
   const c = await currentContract(user, lease)
   const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
-  if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le bail.')
+  if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer le bail.')
   const rendered = await renderLeasePdf(c, lease.propertyId)
   const pdf = lease.status === 'DRAFT' && essential(leaseMissing(c)).length ? await stampDraft(rendered) : rendered
   const landlord = personName({ firstNames: c.landlord.firstNames, lastName: c.landlord.lastName }, false) || 'Votre bailleur'
@@ -671,6 +677,8 @@ router.post('/leases/:id/receipts/:period/send', async (req, res) => {
   const user = req.user!
   const lease = await leaseOwned(user.id, String(req.params.id))
   const period = z.string().regex(periodRe).parse(req.params.period)
+  // Envoi demandé par le propriétaire : la quittance part signée. (Pas pour l'envoi automatique, qui garde le nom écrit.)
+  assertComplete(signatureMissing(await liveContract(user, lease)))
   res.json({ success: true, data: { sentTo: await sendReceipt(user, lease, period) } })
 })
 
@@ -684,7 +692,7 @@ export async function sendReceipt(user: User, lease: LeaseWithProperty, period: 
   const link = (lease.data as { tenantLink?: { eReceiptConsent?: { email: string } | null; eReceiptWithdrawnAt?: string | null } }).tenantLink
   if (link?.eReceiptWithdrawnAt && !link.eReceiptConsent) throw new HttpError(400, 'Votre locataire a retiré son accord pour recevoir ses quittances par email : remettez-la-lui sur papier.')
   const to = [...new Set([...c.tenants.map((t) => t.email), link?.eReceiptConsent?.email].filter((e): e is string => Boolean(e)))]
-  if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer sa quittance.')
+  if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer sa quittance.')
   const periodAmounts = amountsForPeriod(lease, period)
   const full = payment.amountCents >= periodAmounts.rentCents + periodAmounts.chargesCents
   const pdf = await renderReceiptPdf(receiptInput(c, lease, period, full ? 'RECEIPT' : 'PARTIAL', payment))
@@ -1082,7 +1090,7 @@ export async function emailLetter(user: User, leaseId: string, pdf: Buffer, subj
     from = landlordName(c.landlord) || 'un propriétaire'
   } else {
     to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
-    if (!to.length) throw new HttpError(400, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer ce courrier.')
+    if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer ce courrier.')
   }
   const mail = layout({ title: subject, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe un courrier de ${from}.`, 'Bonne journée.'] })
   for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: `${fileSlug(subject)}.pdf`, content: pdf }] })

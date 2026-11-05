@@ -17,6 +17,8 @@ export interface Missing {
   section: string
   /** Rang du locataire concerné (fiches locataire et caution). */
   tenant?: number
+  /** Fiche du locataire à compléter (email manquant au moment d'un envoi). */
+  tenantId?: string
   /**
    * ESSENTIAL : sans elle, pas de bail (création et signature bloquées).
    * RECOMMENDED : mention à compléter si possible ; le bail se fait, avec une ligne à remplir.
@@ -46,6 +48,14 @@ export function partiesMissing(c: ContractInput): Missing[] {
   if (!has(c.property.address)) out.push({ key: 'property.address', label: 'L’adresse du logement', where: 'PROPERTY', section: 'address' })
   return out
 }
+
+/** Signature du bailleur : demandée avant d'envoyer une quittance ou un courrier par email (pas pour le bail, signé à part). */
+export function signatureMissing(c: Pick<ContractInput, 'landlord'>): Missing[] {
+  return has(c.landlord.signature) ? [] : [{ key: 'landlord.signature', label: 'Votre signature', where: 'LANDLORD', section: 'signature' }]
+}
+
+/** Email du locataire, pour lui envoyer un document. */
+export const tenantEmailMissing = (tenantId: string | undefined): Missing => ({ key: 'tenant.email', label: 'L’email du locataire', where: 'TENANT', section: 'contact', ...(tenantId ? { tenantId } : {}) })
 
 /** Logement : tout ce que la rubrique II du contrat type, les diagnostics et le mobilier exigent avant le bail. */
 export function propertyLeaseMissing(p: ContractInput['property'], kind: NonNullable<ContractInput['terms']['kind']>): Missing[] {

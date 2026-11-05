@@ -22,6 +22,8 @@ test('relais du téléphone : une signature, une seule fois', async () => {
 test('signature au pavé tactile sans cliquer, puis avec le téléphone', async () => {
   const { token } = await newAccount()
   await completeLease(token)
+  // Pas encore de signature : la rubrique « Votre signature » du profil est ouverte.
+  await api('/profile', { method: 'PUT', token, body: { signature: '' } })
   const browser = await launch()
   const ctx = await signedInContext(browser, token)
   const page = await ctx.newPage()
@@ -68,6 +70,8 @@ test('signature au pavé tactile sans cliquer, puis avec le téléphone', async 
   watch(mobile, errors)
   await mobile.goto(`${BASE}/signature/${data.code}`)
   const mpad = mobile.getByLabel('Signez ici avec le doigt')
+  // Sur téléphone, un glissement ne signe pas : il faut d'abord toucher la case.
+  await mobile.getByRole('button', { name: 'Touchez ici pour signer' }).click()
   const mb = await mpad.boundingBox()
   await mobile.mouse.move(mb.x + 30, mb.y + 120)
   await mobile.mouse.down()

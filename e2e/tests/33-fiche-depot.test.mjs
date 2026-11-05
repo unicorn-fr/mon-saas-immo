@@ -10,6 +10,8 @@ import { API, BASE, api, completeLease, launch, newAccount, shot, signedInContex
 test('déclaration : parcours guidé, progression gardée, dossier PDF et fiches pratiques', async () => {
   const { token } = await newAccount()
   const { leaseId } = await completeLease(token, { furnished: true })
+  // Propriétaire sans signature dans son profil : elle lui est conseillée pour la CFE.
+  await api('/profile', { method: 'PUT', token, body: { signature: '' } })
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
   await api(`/leases/${leaseId}/payments`, { method: 'POST', token, body: { period: '2026-11', amountCents: 56000, receivedAt: '2026-11-04' } })
   const year = 2026

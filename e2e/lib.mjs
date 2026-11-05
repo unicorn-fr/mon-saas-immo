@@ -68,10 +68,13 @@ export async function signedInContext(browser, token, viewport = { width: 1280, 
   return browser.newContext({ viewport, storageState: { cookies: [], origins: [{ origin, localStorage: [{ name: 'bailio.session', value: token }] }] } })
 }
 
+/** Signature du bailleur (image PNG minimale) : quittances et courriers partent signés. */
+export const SIGNATURE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+
 /** Un bail complet (aucune mention manquante), prêt à signer. */
 export async function completeLease(token, { furnished = true } = {}) {
   const email = (await api('/auth/me', { token })).email
-  await api('/profile', { method: 'PUT', token, body: { kind: 'PERSON', civility: 'MADAME', firstNames: 'Claire', lastName: 'Dubois', birthDate: '1978-06-02', birthPlace: 'Nîmes', address: '8 rue de l’Aiguillerie', postalCode: '34000', city: 'Montpellier', email, agent: { enabled: false } } })
+  await api('/profile', { method: 'PUT', token, body: { kind: 'PERSON', civility: 'MADAME', firstNames: 'Claire', lastName: 'Dubois', birthDate: '1978-06-02', birthPlace: 'Nîmes', address: '8 rue de l’Aiguillerie', postalCode: '34000', city: 'Montpellier', email, agent: { enabled: false }, signature: SIGNATURE } })
   const p = await api('/properties', {
     method: 'POST',
     token,
@@ -158,6 +161,8 @@ export async function signAs(browser, url, { name, mobile = false } = {}) {
   await page.locator('textarea').fill(mention)
   const canvas = page.locator('canvas')
   await canvas.scrollIntoViewIfNeeded()
+  // Téléphone : la zone de signature se déverrouille d'un toucher.
+  if (mobile) await page.getByRole('button', { name: 'Touchez ici pour signer' }).click()
   const box = await canvas.boundingBox()
   await page.mouse.move(box.x + 20, box.y + 60)
   await page.mouse.down()

@@ -13,6 +13,30 @@ export class ApiError extends Error {
   }
 }
 
+/** Information manquante pour finir une action (renvoyée par le serveur dans `details.missing`). */
+export interface MissingItem {
+  key: string
+  label: string
+  where: string
+  section: string
+  tenantId?: string
+}
+
+/** Action abandonnée par le propriétaire (fenêtre fermée) : rien à afficher. */
+export class Cancelled extends Error {
+  name = 'Cancelled'
+}
+
+/**
+ * Quand le serveur répond qu'il manque une information (signature, email du locataire…), la fenêtre « Il manque une
+ * information » (components/FixMissing.tsx) la demande sur place, l'enregistre au bon endroit, puis l'action reprend.
+ */
+type MissingHandler = (items: MissingItem[], message: string) => Promise<boolean>
+let missingHandler: MissingHandler | null = null
+export const setMissingHandler = (h: MissingHandler | null) => {
+  missingHandler = h
+}
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
@@ -21,6 +45,8 @@ interface RequestOptions {
   signal?: AbortSignal
   /** Délai maximum en millisecondes (20 s par défaut) : au-delà, un message s'affiche au lieu d'une attente sans fin. */
   timeout?: number
+  /** Ne pas proposer de compléter une information manquante (déjà proposé une fois). */
+  noFix?: boolean
 }
 
 function headers(opts: RequestOptions): Headers {
@@ -67,6 +93,11 @@ async function raw(path: string, opts: RequestOptions = {}): Promise<Response> {
   }
   if (!res.ok) {
     const json = await res.json().catch(() => null)
+    const missing = (json?.details as { missing?: MissingItem[] } | undefined)?.missing
+    if (Array.isArray(missing) && missing.length && missingHandler && !opts.noFix) {
+      if (await missingHandler(missing, json?.message ?? '')) return raw(path, { ...opts, noFix: true })
+      throw new Cancelled()
+    }
     throw new ApiError(json?.message ?? 'Une erreur est survenue.', res.status, json?.details)
   }
   return res

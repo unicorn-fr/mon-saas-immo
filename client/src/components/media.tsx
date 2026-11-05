@@ -150,6 +150,31 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
   modeRef.current = mode
   // Pavé tactile et téléphone : proposés sur un ordinateur (pointeur précis qui survole).
   const [desktop] = useState(() => typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches)
+  // Écran tactile : la zone reste verrouillée tant qu'on ne l'a pas touchée exprès. Un geste pour faire défiler la page
+  // ne trace ni n'efface rien ; après le dernier trait, elle se reverrouille seule (3 s) ou avec « Terminé ».
+  const touchLock = !desktop
+  const [armed, setArmed] = useState(false)
+  const relock = useRef(0)
+  const locked = touchLock && !armed && mode === 'PRESS'
+  // Modifier : le cadre se vide pour la nouvelle signature, mais l'ancienne reste enregistrée tant qu'aucun trait n'est fait.
+  const [blank, setBlank] = useState(false)
+  const arm = () => {
+    if (value) {
+      const c = canvas.current!
+      c.getContext('2d')!.clearRect(0, 0, c.width, c.height)
+      setBlank(true)
+    }
+    dirty.current = false
+    setArmed(true)
+  }
+  const disarm = () => {
+    window.clearTimeout(relock.current)
+    setArmed(false)
+    // Rien de tracé : l'ancienne signature réapparaît, inchangée.
+    if (blank && value) paint(value)
+    setBlank(false)
+  }
+  useEffect(() => () => window.clearTimeout(relock.current), [])
 
   // Taille réelle du canevas = taille affichée × densité de l'écran, pour un trait net.
   useEffect(() => {
@@ -207,7 +232,14 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
     if (!drawing.current) return
     drawing.current = false
     last.current = null
-    if (dirty.current) onChange(canvas.current!.toDataURL('image/png'))
+    if (dirty.current) {
+      onChange(canvas.current!.toDataURL('image/png'))
+      setBlank(false)
+    }
+    if (touchLock) {
+      window.clearTimeout(relock.current)
+      relock.current = window.setTimeout(() => setArmed(false), 3000)
+    }
   }
   /**
    * Pavé tactile : la signature entière, où que le doigt soit allé, est mise à l'échelle et centrée dans le cadre
@@ -308,7 +340,7 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
 
   // Dans le cadre : l'invitation à signer, ou au pavé tactile le clic pour commencer. Pendant le tracé, la consigne
   // passe sous le cadre pour ne pas gêner la signature.
-  const hint = mode === 'TRACKPAD_ARMED' ? 'Cliquez une fois dans ce cadre pour commencer' : mode === 'PRESS' && !value ? label : null
+  const hint = mode === 'TRACKPAD_ARMED' ? 'Cliquez une fois dans ce cadre pour commencer' : locked ? null : mode === 'PRESS' && (!value || (touchLock && armed && blank)) ? label : null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -316,8 +348,10 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
         <canvas
           ref={canvas}
           aria-label={label}
-          style={{ width: '100%', height, display: 'block', background: BAI.surface, border: `1.5px ${mode === 'PRESS' || mode === 'PHONE' ? 'dashed' : 'solid'} ${mode === 'PRESS' || mode === 'PHONE' ? BAI.dashed : BAI.owner}`, borderRadius: 14, touchAction: 'none', cursor: 'crosshair' }}
+          style={{ width: '100%', height, display: 'block', background: BAI.surface, border: `1.5px ${mode === 'PRESS' || mode === 'PHONE' ? 'dashed' : 'solid'} ${mode === 'PRESS' || mode === 'PHONE' ? BAI.dashed : BAI.owner}`, borderRadius: 14, touchAction: locked ? 'pan-y' : 'none', cursor: 'crosshair' }}
           onPointerDown={(e) => {
+            if (locked) return
+            window.clearTimeout(relock.current)
             const m = modeRef.current
             if (m === 'TRACKPAD_ARMED') {
               // Premier clic : le cadre retient le curseur, la signature commence, sans garder le bouton appuyé.
@@ -351,6 +385,15 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
             if (modeRef.current === 'PRESS') end()
           }}
         />
+        {locked ? (
+          <button
+            type="button"
+            onClick={arm}
+            style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', borderRadius: 14, cursor: 'pointer', fontFamily: 'inherit', padding: 16 }}
+          >
+            <span style={{ background: BAI.surface, border: `1.5px solid ${BAI.owner}`, color: BAI.owner, fontSize: 15, fontWeight: 600, borderRadius: 999, padding: '10px 18px' }}>{value ? 'Touchez ici pour modifier la signature' : 'Touchez ici pour signer'}</span>
+          </button>
+        ) : null}
         {hint ? (
           <span aria-live="polite" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 16px', fontSize: 14, color: mode === 'PRESS' ? BAI.inkSoft : BAI.owner, fontWeight: mode === 'PRESS' ? 400 : 600, pointerEvents: 'none' }}>
             {hint}
@@ -370,7 +413,8 @@ export function SignaturePad({ value, onChange, height = 150, label = 'Signez av
           </>
         ) : null}
         {mode === 'TRACKPAD' || mode === 'TRACKPAD_ARMED' ? <PadLink onClick={finishTrackpad}>Terminé</PadLink> : null}
-        {value && mode === 'PRESS' ? <PadLink onClick={clear}>Effacer</PadLink> : null}
+        {touchLock && armed && mode === 'PRESS' ? <PadLink onClick={disarm}>Terminé</PadLink> : null}
+        {value && mode === 'PRESS' && !locked ? <PadLink onClick={clear}>Effacer</PadLink> : null}
       </div>
       {mode === 'PHONE' ? (
         <PhoneSignature

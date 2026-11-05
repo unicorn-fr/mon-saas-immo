@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { BAI } from './constants/bailio-tokens'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ConfirmProvider, ToastProvider } from './components/kit'
+import { FixMissingProvider } from './components/FixMissing'
 import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
@@ -22,6 +23,7 @@ import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
+import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
 
@@ -166,10 +168,12 @@ export default function App() {
         <DraftProvider>
           <ToastProvider>
           <ConfirmProvider>
+          <FixMissingProvider>
             <ScrollToTop />
             <SkipLink />
             <PageTitle />
             <Pages />
+          </FixMissingProvider>
           </ConfirmProvider>
           </ToastProvider>
         </DraftProvider>
@@ -266,6 +270,7 @@ function Pages() {
               <Route path="/conditions" element={<Conditions />} />
               <Route path="/confidentialite" element={<Confidentialite />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/avis-testeur" element={<AvisTesteur />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
               <Route path="/accessibilite" element={<Accessibilite />} />

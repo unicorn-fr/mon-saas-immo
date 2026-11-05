@@ -720,7 +720,8 @@ const ToastContext = createContext<ToastState | null>(null)
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [msg, setMsg] = useState<{ text: string; tone: 'ok' | 'error'; id: number } | null>(null)
   const show = useCallback((text: string, tone: 'ok' | 'error' = 'ok') => setMsg({ text, tone, id: Date.now() }), [])
-  const error = useCallback((err: unknown) => show(errorMessage(err), 'error'), [show])
+  // Action abandonnée par le propriétaire (fenêtre fermée) : pas de message d'erreur.
+  const error = useCallback((err: unknown) => (err as Error | null)?.name === 'Cancelled' ? undefined : show(errorMessage(err), 'error'), [show])
   useEffect(() => {
     if (!msg) return
     const t = setTimeout(() => setMsg(null), msg.tone === 'error' ? 10000 : 3500)
