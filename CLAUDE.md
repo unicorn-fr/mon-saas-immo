@@ -27,6 +27,8 @@
 - Une seule action principale par écran (variante `primary` des boutons, orange). Boutons et étiquettes en pilule. Champs de 60 px de haut, rayon 14 px ; cartes rayon 24 px.
 - Logo (`components/Logo.tsx`, `docs/design/direction-artistique.md`) : maison au toit en coin replié et porte en trou de serrure, puis « bailio » (serrure orange sur le i). En couleurs sur fond clair, `onDark` sur un aplat sombre, jamais en couleurs sur un aplat de couleur. Favicon et icône de téléphone (`client/public/`) à garder identiques.
 - Mobile d'abord : `clamp()` pour les tailles, classes `.col-md`, `.hide-md`, `.grid-*` pour les ruptures.
+- Pages courtes, sans avoir à descendre : une partie à la fois (onglets `Tabs` gardés dans l'adresse `?onglet=`, ou onglets seulement sur téléphone avec `.only-md` / `.hide-md` : Bail signé, Annonce, Locataire), listes limitées aux plus récents puis « Voir les … » (« Aujourd'hui » : 3 actions et 3 échéances), conseils repliés sur leur titre, une démarche ouverte à la fois (Impôts du bail). Apparition `panel-in`.
+- Erreurs bien visibles : `toast.error` s'affiche en haut de l'écran, « Erreur » en gras puis le message, bouton pour fermer (10 s) ; un encadré `Callout tone="warn"` apparu après une action fait défiler l'écran jusqu'à lui (`role="alert"`).
 - Accessibilité (RGAA 4.1 / WCAG 2.1 AA), contrôlée par axe-core sur toutes les pages (`e2e/tests/16-accessibilite.test.mjs`) :
   - texte ≥ 4,5:1 : `BAI.accent` seulement sur fond sombre (`night`), sur fond clair `BAI.accentInk` ;
   - bord des champs et boutons à choix `BAI.borderStrong` (≥ 3:1) ;

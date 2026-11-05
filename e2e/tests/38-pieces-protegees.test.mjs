@@ -53,6 +53,7 @@ test('candidat : filigrane, pièces cachées jusqu’à la visite, retrait', asy
   owner.setDefaultTimeout(15000)
   await owner.goto(`${BASE}/espace/logements/${propertyId}/candidats`)
   await owner.getByText(/Elles s’ouvrent dès que le candidat confirme avoir visité le logement/).waitFor()
+  await owner.getByRole('button', { name: 'Des dossiers sûrs, pour vous et pour eux' }).click()
   await owner.getByRole('link', { name: 'service de vérification des impôts' }).waitFor()
   assert.equal(await owner.getByRole('button', { name: 'Choisir ce candidat' }).count(), 0)
   await shot(owner, 'candidats-pieces-cachees')
