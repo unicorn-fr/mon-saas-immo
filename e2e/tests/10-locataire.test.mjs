@@ -62,6 +62,7 @@ test('lien locataire : assurance, chaudière et accord enregistrés avec le bail
   const errors2 = []
   watch(p2, errors2)
   await p2.goto(`${BASE}/espace/baux/${leaseId}`)
+  await p2.getByRole('tab', { name: 'Locataire' }).click()
   await p2.getByText('Documents du locataire').waitFor()
   await p2.getByText(`jusqu’au 30/09/${year}`).first().waitFor()
   await owner.close()

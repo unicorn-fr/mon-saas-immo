@@ -4,7 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
 import { display } from '../../components/ui'
-import { Btn, Card, LoadError, Loader, PageHead, Pill, TextLink, useLoad, useToast } from '../../components/kit'
+import { Btn, Card, Line, LoadError, Loader, PageHead, Pill, TextLink, useLoad, useToast } from '../../components/kit'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { MONTHS_SHORT_CAP, eurosCents, monthName } from '../../lib/format'
 import type { Expense, MoneyView } from '../../lib/space'
@@ -63,11 +63,21 @@ export default function Argent() {
         <>
           {/* Année vide : une phrase plutôt que trois cartes à 0,00 €. */}
           {data.incomeCents || data.expensesCents ? (
-            <div className="grid-3" style={{ gap: 20 }}>
-              <Total label="Loyers encaissés" value={eurosCents(data.incomeCents)} />
-              <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
-              <Total label="Reste" value={eurosCents(data.netCents)} dark />
-            </div>
+            <>
+              <div className="grid-3 hide-md" style={{ gap: 20 }}>
+                <Total label="Loyers encaissés" value={eurosCents(data.incomeCents)} />
+                <Total label="Dépenses" value={eurosCents(data.expensesCents)} />
+                <Total label="Reste" value={eurosCents(data.netCents)} dark />
+              </div>
+              {/* Téléphone : les trois montants dans une seule carte, pour ne pas descendre avant les outils. */}
+              <div className="only-md">
+              <Card dark style={{ gap: 10 }}>
+                <Line dark label="Loyers encaissés" value={eurosCents(data.incomeCents)} />
+                <Line dark label="Dépenses" value={eurosCents(data.expensesCents)} />
+                <Line dark border label="Reste" value={<span style={{ color: BAI.accent, fontWeight: 700 }}>{eurosCents(data.netCents)}</span>} />
+              </Card>
+              </div>
+            </>
           ) : (
             <Card>
               <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Rien d’enregistré pour {year} pour l’instant. Les loyers reçus et vos dépenses apparaîtront ici, avec ce qu’il vous reste.</span>
