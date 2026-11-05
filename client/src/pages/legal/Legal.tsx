@@ -6,7 +6,7 @@ import { ContactForm } from '../../components/ContactForm'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '28 octobre 2026'
+const UPDATED = '5 novembre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -270,6 +270,7 @@ export function Confidentialite() {
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date, les problèmes qu'il signale dans le logement (type, lieu, description, photos) et ses demandes pour compléter l'état des lieux d'entrée (description, photos, réponse du propriétaire). Ces éléments sont rangés avec le bail ou le logement et ne sont visibles que du propriétaire et des personnes à qui il en donne l'accès ; un problème signalé est conservé avec l'historique des interventions du logement ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
         <li>Si vous donnez votre avis depuis l'espace (« Votre avis ») : votre réponse, votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour améliorer Bailio et vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
+        <li>Si vous répondez au questionnaire des testeurs (« Votre avis sur Bailio ») : vos réponses et, si vous les donnez, votre nom ou compte Instagram et un email ou téléphone. Elles nous parviennent par email pour améliorer Bailio ; rien n'est enregistré par Bailio.</li>
         <li>Si vous demandez à être rappelé depuis la page « Contact » : votre besoin (choisi dans une liste) et votre numéro de téléphone ou votre email. Ils nous parviennent par email pour vous répondre ; rien n'est enregistré par Bailio.</li>
       </ul>
       <p>
@@ -286,6 +287,7 @@ export function Confidentialite() {
           ['Photo du signataire au moment de signer', 'Consentement du signataire, libre : il peut signer sans photo'],
           ['Relever les appareils connectés et limiter les tentatives de connexion', 'Intérêt légitime : la sécurité de votre compte'],
           ['Lire vos avis et vous répondre', 'Intérêt légitime : améliorer le service ; vous choisissez d’écrire'],
+          ['Lire les réponses au questionnaire des testeurs', 'Intérêt légitime : améliorer le service ; répondre est libre'],
           ['Vous rappeler après une demande de contact', 'Mesures précontractuelles prises à votre demande'],
           ['Compter l’usage du service (comptes, baux) et les visites du site (page publique vue, site d’où vous venez), en nombres par jour, sans cookie, sans adresse IP ni identifiant', 'Intérêt légitime : savoir si Bailio rend service et l’améliorer'],
           ['Données de vos locataires, candidats et garants', 'Traitées pour votre compte, sur la base qui vous revient (préparation et exécution du bail)'],
@@ -334,6 +336,7 @@ export function Confidentialite() {
         <li>Votre compte et vos documents : tant que vous gardez votre compte. Supprimer le compte efface immédiatement toutes vos données ;</li>
         <li>Vos avis envoyés depuis l'espace : dans notre messagerie, le temps de les lire et de vous répondre, deux ans au plus ;</li>
         <li>Vos demandes de rappel (page « Contact ») : dans notre messagerie, le temps de vous répondre, un an au plus ;</li>
+        <li>Vos réponses au questionnaire des testeurs : dans notre messagerie, deux ans au plus ;</li>
         <li>Les compteurs de visites du site (nombres par jour, sans identifiant) : 13 mois ;</li>
         <li>Les liens de connexion : 30 minutes, puis ils ne servent plus. Un appareil inutilisé pendant 30 jours est déconnecté et son relevé effacé. Les codes de confirmation : 10 minutes ;</li>
         <li>Les candidatures : trois mois au plus après leur envoi, pièces comprises. Celle que le propriétaire retient devient la fiche du locataire ;</li>

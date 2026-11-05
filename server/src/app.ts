@@ -29,6 +29,7 @@ import adminRoutes from './routes/admin.js'
 import tiktokRoutes from './routes/tiktok.js'
 import feedbackRoutes from './routes/feedback.js'
 import contactRequestRoutes from './routes/contact.js'
+import testerFeedbackRoutes from './routes/testerFeedback.js'
 import signatureRelayRoutes from './routes/signatureRelay.js'
 import visitRoutes from './routes/visits.js'
 
@@ -97,6 +98,7 @@ export function createApp() {
   app.use('/api', tiktokRoutes)
   app.use('/api', feedbackRoutes)
   app.use('/api', contactRequestRoutes)
+  app.use('/api', testerFeedbackRoutes)
   app.use('/api', visitRoutes)
   app.use('/api', signatureRelayRoutes)
   app.use((_req, _res, next) => next(new HttpError(404, 'Page introuvable.')))

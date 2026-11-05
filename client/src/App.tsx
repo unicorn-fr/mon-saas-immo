@@ -23,6 +23,7 @@ import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
+import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
 
@@ -269,6 +270,7 @@ function Pages() {
               <Route path="/conditions" element={<Conditions />} />
               <Route path="/confidentialite" element={<Confidentialite />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/avis-testeur" element={<AvisTesteur />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
               <Route path="/accessibilite" element={<Accessibilite />} />
