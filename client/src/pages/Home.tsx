@@ -6,6 +6,7 @@ import { Logo } from '../components/Logo'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../config'
+import { AVIS } from '../content/avis'
 
 /**
  * Accueil, direction « Midi » (docs/design/direction-artistique.md) : système de modules « page de bail »
@@ -67,6 +68,8 @@ const FAQ: Array<[string, string]> = [
 ]
 
 const LEGAL = [
+  { to: '/guides', label: 'Guides' },
+  { to: '/modeles', label: 'Modèles gratuits' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/conditions', label: 'Conditions' },
   { to: '/confidentialite', label: 'Confidentialité' },
@@ -207,6 +210,155 @@ function Check() {
 }
 
 const FIELDS = ['peach', 'sky', 'night'] as const
+
+/** Visite du produit : vraies captures de l'application (compte d'exemple), une étape à la fois. */
+const TOUR = [
+  { id: 'decrire', tab: 'Décrire', title: 'Une question à la fois', text: 'Vide ou meublé, l’adresse, le loyer : vous répondez, Bailio remplit le reste.', img: 'tunnel', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé' },
+  { id: 'bail', tab: 'Le bail', title: 'Un bail conforme, signé en ligne', text: 'Le contrat type officiel, rempli et vérifié, puis signé par le locataire et son garant sans créer de compte.', img: 'bail', alt: 'Page d’un bail signé : loyer, charges, dépôt de garantie, durée, et les boutons pour l’ouvrir ou l’envoyer' },
+  { id: 'jour', tab: 'Aujourd’hui', title: 'Ce qu’il y a à faire, déjà prêt', text: 'Un loyer en retard ? La relance est rédigée. Une démarche aux impôts ? Tout est prêt à copier.', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, puis une démarche aux impôts' },
+  { id: 'mois', tab: 'Chaque mois', title: 'Quittances et relances toutes seules', text: 'La quittance part dès le loyer reçu. S’il manque, les relances partent à vos dates.', img: 'loyers', alt: 'Réglages des loyers : quittance par email et relance automatique d’un loyer impayé' },
+] as const
+
+/** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */
+const YEARLY = [
+  { what: 'Quittances de loyer', each: 12 },
+  { what: 'Révision du loyer (IRL)', each: 1 },
+  { what: 'Attestation d’assurance du locataire', each: 1 },
+  { what: 'Régularisation des charges', each: 1 },
+] as const
+const COUNTS = [1, 2, 3, 5] as const
+
+function Tour() {
+  const [i, setI] = useState(0)
+  const tabs = useRef<Array<HTMLButtonElement | null>>([])
+  const step = TOUR[i]
+  const move = (to: number) => {
+    const n = (to + TOUR.length) % TOUR.length
+    setI(n)
+    tabs.current[n]?.focus()
+  }
+  return (
+    <section className="tour" data-section aria-labelledby="tour-title">
+      <div className="tour-intro">
+        <h2 id="tour-title" data-in>
+          Bailio <em>en quatre écrans.</em>
+        </h2>
+        <div className="tour-tabs" role="tablist" aria-label="Étapes de la visite" data-in style={{ ['--i' as string]: 1 }}>
+          {TOUR.map((t, j) => (
+            <button
+              key={t.id}
+              ref={(el) => void (tabs.current[j] = el)}
+              type="button"
+              role="tab"
+              id={`tour-tab-${t.id}`}
+              aria-selected={i === j}
+              aria-controls="tour-panel"
+              tabIndex={i === j ? 0 : -1}
+              onClick={() => setI(j)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') (e.preventDefault(), move(j + 1))
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') (e.preventDefault(), move(j - 1))
+              }}
+            >
+              <span className="tour-num" aria-hidden>
+                {j + 1}
+              </span>
+              {t.tab}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${step.id}`} className="tour-panel panel-in" key={step.id}>
+        <div className="tour-phone">
+          <img src={`/accueil/visite/${step.img}.webp`} alt={step.alt} width={780} height={1560} loading="lazy" decoding="async" />
+        </div>
+        <div className="tour-text fold fold--ear">
+          <h3>{step.title}</h3>
+          <p>{step.text}</p>
+          <small>Capture de l’application, données d’exemple.</small>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Yearly() {
+  const [n, setN] = useState<number>(1)
+  const total = YEARLY.reduce((a, r) => a + r.each * n, 0) + 1
+  return (
+    <section className="year" data-section aria-labelledby="year-title">
+      <div className="year-intro">
+        <h2 id="year-title" data-in>
+          <span className="year-count" aria-live="polite">
+            {total} démarches
+          </span>{' '}
+          par an, <em>préparées pour vous.</em>
+        </h2>
+        <div className="year-pick" data-in style={{ ['--i' as string]: 1 }}>
+          <span id="year-n" className="live-label">
+            Logements loués
+          </span>
+          <div className="year-buttons" role="group" aria-labelledby="year-n">
+            {COUNTS.map((c) => (
+              <button key={c} type="button" aria-pressed={n === c} onClick={() => setN(c)}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <dl className="year-list" data-in style={{ ['--i' as string]: 2 }}>
+        {YEARLY.map((r) => (
+          <div key={r.what}>
+            <dt>{r.what}</dt>
+            <dd>{r.each * n}</dd>
+          </div>
+        ))}
+        <div>
+          <dt>Déclaration des revenus, cases à recopier</dt>
+          <dd>1</dd>
+        </div>
+        <div className="year-plus">
+          <dt>Relances si un loyer manque</dt>
+          <dd>à vos dates</dd>
+        </div>
+      </dl>
+    </section>
+  )
+}
+
+const monthFr = (d: string) => new Date(`${d}-01T00:00:00Z`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+/** Avis de vrais propriétaires (content/avis.ts) ; rien tant qu'il n'y en a pas. */
+function Reviews() {
+  if (!AVIS.length) return null
+  return (
+    <section className="reviews" data-section aria-labelledby="reviews-title">
+      <h2 id="reviews-title" data-in>
+        Ils louent <em>avec Bailio.</em>
+      </h2>
+      <div className="reviews-list">
+        {AVIS.slice(0, 3).map((a, j) => (
+          <figure key={a.name + a.date} className="review" data-in style={{ ['--i' as string]: j + 1 }}>
+            <blockquote>{a.text}</blockquote>
+            <figcaption>
+              {a.url ? (
+                <a href={a.url} rel="noopener noreferrer" target="_blank">
+                  {a.name}
+                </a>
+              ) : (
+                <strong>{a.name}</strong>
+              )}
+              <span>
+                {a.role} · {monthFr(a.date)}
+              </span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  )
+}
 
 export default function Home() {
   const { user } = useAuth()
@@ -387,6 +539,8 @@ export default function Home() {
           ))}
         </div>
 
+        <Tour />
+
         <section className="itin" data-section aria-labelledby="itin-title">
           <div className="itin-intro">
             <h2 id="itin-title" data-in>
@@ -419,6 +573,10 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <Yearly />
+
+        <Reviews />
 
         <section id="tarifs" className="plans" aria-label="Tarif">
           <div className="plan plan--free" data-section>

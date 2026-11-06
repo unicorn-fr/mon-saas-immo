@@ -3,7 +3,7 @@ import { limitPerVisitor } from '../lib/rateLimit.js'
 import { z } from 'zod'
 import { searchAddress } from '../lib/geo.js'
 import { findDpe } from '../lib/dpe.js'
-import { latestIrl } from '../lib/irl.js'
+import { fetchIrl, latestIrl } from '../lib/irl.js'
 
 const router = Router()
 router.use(limitPerVisitor(1, 60))
@@ -31,6 +31,11 @@ router.get('/dpe', async (req, res) => {
 
 router.get('/irl', async (_req, res) => {
   res.json({ success: true, data: await latestIrl() })
+})
+
+// Série de l'IRL (publique) : simulateur de révision du loyer.
+router.get('/irl/series', async (_req, res) => {
+  res.json({ success: true, data: await fetchIrl().catch(() => []) })
 })
 
 export default router

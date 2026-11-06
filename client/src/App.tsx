@@ -23,6 +23,7 @@ import Importer from './pages/Importer'
 import Reprendre from './pages/Reprendre'
 import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
+import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
@@ -277,6 +278,9 @@ function Pages() {
               <Route path="/securite" element={<Securite />} />
               <Route path="/guides" element={<GuidesList />} />
               <Route path="/guides/:slug" element={<GuideArticle />} />
+              <Route path="/modeles" element={<ModelesList />} />
+              <Route path="/modeles/:slug" element={<ModeleArticle />} />
+              <Route path="/simulateurs/revision-loyer" element={<SimulateurRevision />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
