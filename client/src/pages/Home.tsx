@@ -7,6 +7,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel } from '../config'
 import { AVIS } from '../content/avis'
+import { SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 /**
@@ -333,6 +334,30 @@ function Yearly() {
 
 const monthFr = (d: string) => new Date(`${d}-01T00:00:00Z`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
+/** Outils gratuits, sans compte : la porte d'entrée de ceux qui arrivent par Google. */
+function FreeTools() {
+  return (
+    <section className="tools" data-section aria-labelledby="tools-title">
+      <h2 id="tools-title" data-in>
+        Outils gratuits, <em>sans compte.</em>
+      </h2>
+      <ul className="tools-list" data-in style={{ ['--i' as string]: 1 }}>
+        {SIMULATEURS.map((x) => (
+          <li key={x.path}>
+            <Link to={x.path}>
+              <strong>{x.name}</strong>
+              <span>{x.lead}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <Link to="/modeles" className="tools-more" data-in>
+        Tous les outils et modèles de lettres
+      </Link>
+    </section>
+  )
+}
+
 /** Avis de vrais propriétaires (content/avis.ts) ; rien tant qu'il n'y en a pas. */
 function Reviews() {
   if (!AVIS.length) return null
@@ -579,6 +604,8 @@ export default function Home() {
         </section>
 
         <Yearly />
+
+        <FreeTools />
 
         <Reviews />
 

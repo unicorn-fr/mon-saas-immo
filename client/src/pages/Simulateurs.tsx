@@ -4,6 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { SimplePage } from '../components/SiteChrome'
 import { Choices, QuestionScreen, useQuestion } from '../components/Questions'
 import { TextField } from '../components/ui'
+import { SignupCta } from '../components/SignupCta'
 
 const h2 = { margin: 0, fontSize: 22, fontWeight: 700, color: BAI.ink } as const
 const box = { background: BAI.sky, color: BAI.ink, borderRadius: 24, padding: 'clamp(20px, 4vw, 28px)', display: 'flex', flexDirection: 'column', gap: 8 } as const
@@ -21,9 +22,12 @@ const daysBefore = (iso: string, days: number) => new Date(Date.parse(`${iso}T00
 
 function Sources({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ marginTop: 40, fontSize: 15 }}>
-      {children} <Link to="/modeles">Tous les modèles et outils</Link>
-    </p>
+    <>
+      <SignupCta />
+      <p style={{ marginTop: 24, fontSize: 15 }}>
+        {children} <Link to="/modeles">Tous les modèles et outils</Link>
+      </p>
+    </>
   )
 }
 
