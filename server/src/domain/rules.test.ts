@@ -19,6 +19,8 @@ import {
   isFurnished,
   isHousing,
   renewalLabel,
+  isOverseas,
+  rentalBanDate,
 } from './rules.js'
 import { toIsoDate } from './lease.js'
 
@@ -220,4 +222,22 @@ test('garage loué seul : règles du contrat (Code civil), pas celles de la loi 
   // Aucun diagnostic pour un emplacement de stationnement.
   assert.deepEqual(diagnosticsFor({ nature: 'PARKING', constructionPeriod: 'BEFORE_1949' }), [])
   assert.ok(diagnosticsFor({ constructionPeriod: 'BEFORE_1949' }).length > 0)
+})
+
+test('décence énergétique en outre-mer : G interdit au 1er janvier 2028, F au 1er janvier 2031, pas de date pour E', () => {
+  assert.equal(isOverseas('97200'), true)
+  assert.equal(isOverseas('97600'), true)
+  assert.equal(isOverseas('97500'), false, 'Saint-Pierre-et-Miquelon : hors liste')
+  assert.equal(isOverseas('34000'), false)
+  assert.equal(rentalForbidden('G', new Date('2026-11-06'), '97400'), null, 'G encore louable à La Réunion')
+  assert.match(rentalForbidden('G', new Date('2028-01-01'), '97400') ?? '', /1er janvier 2028/)
+  assert.equal(rentalForbidden('F', new Date('2030-12-31'), '97100'), null)
+  assert.match(rentalForbidden('F', new Date('2031-01-01'), '97100') ?? '', /1er janvier 2031/)
+  assert.equal(rentalForbidden('E', new Date('2040-01-01'), '97300'), null)
+  assert.equal(rentalBanDate('E', '34000'), '2034-01-01')
+  assert.equal(energyRentalWarning('G', new Date('2026-11-06'), '97400'), 'Classe G : le loyer ne peut pas augmenter, et le logement ne pourra plus être loué à partir du 1er janvier 2028.')
+  assert.equal(energyRentalWarning('G', new Date('2026-11-06')), 'Classe G : le logement ne peut plus être loué depuis le 1er janvier 2025 (logement non décent).')
+  assert.equal(energyRentalWarning('F', new Date('2026-11-06')), 'Classe F : le loyer ne peut pas augmenter, et le logement ne pourra plus être loué à partir du 1er janvier 2028.')
+  assert.equal(energyRentalWarning('E', new Date('2030-06-01')), null)
+  assert.equal(energyRentalWarning('E', new Date('2031-06-01')), 'Classe E : le logement ne pourra plus être loué à partir du 1er janvier 2034.')
 })

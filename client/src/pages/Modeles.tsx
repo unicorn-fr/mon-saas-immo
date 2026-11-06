@@ -4,7 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { SimplePage } from '../components/SiteChrome'
 import { Choices, QuestionScreen, useQuestion } from '../components/Questions'
 import { TextField } from '../components/ui'
-import { MODELES, SIMULATEUR_REVISION, letterText, modelePath, type Modele } from '../content/modeles'
+import { MODELES, SIMULATEURS, letterText, modelePath, type Modele } from '../content/modeles'
 import { NotFound } from './legal/Legal'
 
 /** Description de la page pour les moteurs de recherche, remise comme avant en quittant la page. */
@@ -27,16 +27,18 @@ export function ModelesList() {
   useDescription('Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Et le simulateur de révision du loyer avec l’IRL.')
   return (
     <SimplePage title="Modèles de lettres gratuits">
-      <p style={{ margin: '0 0 28px' }}>À copier et compléter, avec les règles vérifiées sur les sources officielles.</p>
+      <p style={{ margin: '0 0 28px' }}>Lettres à copier et outils de calcul, avec les règles vérifiées sur les sources officielles.</p>
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <li style={{ ...card, background: BAI.sky }}>
-          <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
-            <Link to={SIMULATEUR_REVISION} style={{ color: BAI.ink }}>
-              Simulateur de révision du loyer
-            </Link>
-          </h2>
-          <p style={{ margin: 0, fontSize: 16 }}>Votre nouveau loyer avec le dernier indice publié, en trois questions.</p>
-        </li>
+        {SIMULATEURS.map((x) => (
+          <li key={x.path} style={{ ...card, background: BAI.sky }}>
+            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
+              <Link to={x.path} style={{ color: BAI.ink }}>
+                {x.name}
+              </Link>
+            </h2>
+            <p style={{ margin: 0, fontSize: 16 }}>{x.lead}</p>
+          </li>
+        ))}
         {MODELES.map((m) => (
           <li key={m.slug} style={card}>
             <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
@@ -134,9 +136,11 @@ function ModelePage({ m }: { m: Modele }) {
             <Link to={modelePath(x)}>{x.title}</Link>
           </li>
         ))}
-        <li>
-          <Link to={SIMULATEUR_REVISION}>Simulateur de révision du loyer</Link>
-        </li>
+        {SIMULATEURS.map((x) => (
+          <li key={x.path}>
+            <Link to={x.path}>{x.name}</Link>
+          </li>
+        ))}
       </ul>
     </SimplePage>
   )

@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { LAUNCH_OFFER, priceDetail } from './src/config'
 import { GUIDES, guidePath, type Guide } from './src/content/guides'
-import { MODELES, SIMULATEUR_REVISION, modelePath, type Modele } from './src/content/modeles'
+import { MODELES, SIMULATEURS, modelePath, type Modele } from './src/content/modeles'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -25,7 +25,7 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/changer-pour-bailio', 'monthly', '0.7'],
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
-  [SIMULATEUR_REVISION, 'monthly', '0.7'],
+  ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
 ]
 
 // Description du service pour les assistants et agents d'IA (format llms.txt) : informations publiques seulement.
@@ -57,7 +57,7 @@ ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description
 - [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
-- [Simulateur de révision du loyer](${SITE_URL}${SIMULATEUR_REVISION}): nouveau loyer avec le dernier IRL publié par l'Insee
+${SIMULATEURS.map((x) => `- [${x.name}](${SITE_URL}${x.path}): ${x.description}`).join('\n')}
 
 ## Documents officiels publics
 
@@ -83,7 +83,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
   '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
   '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },
-  [SIMULATEUR_REVISION]: { title: 'Simulateur de révision du loyer (IRL)', description: 'Simulateur gratuit de révision du loyer : votre nouveau loyer avec le dernier indice de référence des loyers (IRL) publié par l’Insee, et la lettre à envoyer.' },
+  ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
 }
 
@@ -118,7 +118,7 @@ function pageHtml(base: string, path: string) {
   const meta = guide ? { title: guide.title, description: guide.description } : modele ? { title: modele.title, description: modele.description } : PAGE_META[path]
   if (!meta) return null
   const title = `${meta.title} · Bailio`
-  const section = path.startsWith('/guides') ? { name: 'Guides du propriétaire', url: `${SITE_URL}/guides` } : modele || path === SIMULATEUR_REVISION || path === '/modeles' ? { name: 'Modèles gratuits', url: `${SITE_URL}/modeles` } : null
+  const section = path.startsWith('/guides') ? { name: 'Guides du propriétaire', url: `${SITE_URL}/guides` } : modele || SIMULATEURS.some((x) => x.path === path) || path === '/modeles' ? { name: 'Modèles gratuits', url: `${SITE_URL}/modeles` } : null
   const crumbs = [{ name: 'Bailio', url: `${SITE_URL}/` }, ...(section ? [section] : []), ...(section?.url !== url ? [{ name: meta.title, url }] : [])]
   const ld = [
     jsonLd({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })) }),
@@ -149,7 +149,7 @@ function pageHtml(base: string, path: string) {
     : modele
       ? modeleHtml(modele)
       : path === '/modeles'
-        ? `<h1>Modèles de lettres gratuits</h1><ul><li><a href="${SIMULATEUR_REVISION}">Simulateur de révision du loyer</a></li>${MODELES.map((m) => `<li><a href="${modelePath(m)}">${esc(m.title)}</a> : ${esc(m.lead)}</li>`).join('')}</ul>`
+        ? `<h1>Modèles de lettres gratuits</h1><ul>${SIMULATEURS.map((x) => `<li><a href="${x.path}">${esc(x.name)}</a> : ${esc(x.lead)}</li>`).join('')}${MODELES.map((m) => `<li><a href="${modelePath(m)}">${esc(m.title)}</a> : ${esc(m.lead)}</li>`).join('')}</ul>`
         : path === '/guides'
       ? `<h1>Guides du propriétaire bailleur</h1><ul>${GUIDES.map((g) => `<li><a href="${guidePath(g)}">${esc(g.title)}</a> : ${esc(g.description)}</li>`).join('')}</ul>`
       : `<h1>${esc(meta.title)}</h1><p>${esc(meta.description)}</p>`

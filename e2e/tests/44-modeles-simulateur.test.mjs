@@ -37,3 +37,26 @@ test('modèles gratuits et simulateur de révision du loyer', async () => {
   await browser.close()
   assert.deepEqual(errors, [])
 })
+
+test('outils gratuits : date limite du congé et DPE (métropole, outre-mer)', async () => {
+  const browser = await launch()
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/simulateurs/date-conge-bailleur`)
+  await page.getByRole('button', { name: /Vide/ }).click()
+  await page.getByLabel('Date de fin du bail').fill('2029-09-30')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'À recevoir au plus tard le 30 mars 2029' }).waitFor()
+
+  await page.goto(`${BASE}/simulateurs/dpe-location`)
+  await page.getByRole('button', { name: 'En France métropolitaine' }).click()
+  await page.getByRole('button', { name: 'G', exact: true }).click()
+  await page.getByRole('heading', { name: /Classe G : location interdite depuis le 1 janvier 2025|Classe G : location interdite depuis le 1er janvier 2025/ }).waitFor()
+  await page.getByRole('button', { name: 'Faire un autre calcul' }).click()
+  await page.getByRole('button', { name: /Guadeloupe/ }).click()
+  await page.getByRole('button', { name: 'G', exact: true }).click()
+  await page.getByRole('heading', { name: /Classe G : louable jusqu’au 31 décembre 2027/ }).waitFor()
+  await browser.close()
+  assert.deepEqual(errors, [])
+})

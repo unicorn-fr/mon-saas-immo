@@ -105,6 +105,13 @@ export const MODELES: Modele[] = [
 export const modelePath = (m: Pick<Modele, 'slug'>) => `/modeles/${m.slug}`
 export const SIMULATEUR_REVISION = '/simulateurs/revision-loyer'
 
+/** Outils gratuits (une question par écran) : plan du site, llms.txt, page HTML propre et liste des modèles les reprennent seuls. */
+export const SIMULATEURS = [
+  { path: SIMULATEUR_REVISION, title: 'Simulateur de révision du loyer (IRL)', name: 'Simulateur de révision du loyer', lead: 'Votre nouveau loyer avec le dernier indice publié, en trois questions.', description: 'Simulateur gratuit de révision du loyer : votre nouveau loyer avec le dernier indice de référence des loyers (IRL) publié par l’Insee, et la lettre à envoyer.' },
+  { path: '/simulateurs/date-conge-bailleur', title: 'Date limite du congé du propriétaire', name: 'Date limite pour donner congé', lead: 'Jusqu’à quand envoyer le congé à votre locataire, en deux questions.', description: 'Calculez gratuitement la date limite pour donner congé à votre locataire : 6 mois avant la fin du bail en location vide, 3 mois en meublé, avec la marge d’envoi conseillée.' },
+  { path: '/simulateurs/dpe-location', title: 'DPE : mon logement peut-il être loué ?', name: 'DPE et interdiction de louer', lead: 'Les dates d’interdiction de location selon la classe énergie de votre logement.', description: 'Logement classé G, F ou E au DPE : à partir de quand il ne peut plus être loué, et ce qui est déjà interdit (hausse et révision du loyer). Calendrier officiel, métropole et outre-mer.' },
+] as const
+
 /** Texte brut de la lettre, prêt à copier. */
 export const letterText = (m: Modele) =>
   [`Objet : ${m.letter.subject}`, '', '[Votre nom et adresse]', '[Nom et adresse du locataire]', '[Lieu], le [date]', '', 'Madame, Monsieur,', '', ...m.letter.paragraphs.flatMap((p) => [p, '']), 'Je vous prie d’agréer, Madame, Monsieur, mes salutations distinguées.', '', '[Signature]'].join('\n')

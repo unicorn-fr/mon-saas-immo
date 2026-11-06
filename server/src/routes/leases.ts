@@ -97,7 +97,7 @@ function computed(c: ContractInput) {
     maxDepositCents: t.rentCents ? maxDepositFor(kind, t.rentCents) : null,
     chargesModes: allowedChargesModes(kind, Boolean(t.colocation) || c.tenants.length > 1),
     revisionAllowed: kind === 'PARKING' || (kind !== 'MOBILITE' && rentRevisionAllowed(dpe)),
-    energyWarning: kind === 'PARKING' ? null : energyRentalWarning(dpe),
+    energyWarning: kind === 'PARKING' ? null : energyRentalWarning(dpe, new Date(), c.property.postalCode),
     /** Plafonds du loyer non respectés : la signature est refusée tant qu'ils restent. Aucun pour un garage loué seul. */
     rentIssues: kind === 'PARKING' ? [] : rentIssues({ rentCents: t.rentCents, surface: c.property.surface, dpe, zone: t.zone, previous: t.previous }),
     rentControlLikely: rentControlLikely(c.property.inseeCode),
@@ -268,7 +268,7 @@ router.post('/leases', async (req, res) => {
   const file = readProperty(property)
   // Logement interdit à la location (DPE) : pas de nouveau bail.
   const parking = file.nature === 'PARKING'
-  const forbidden = parking ? null : rentalForbidden(file.diagnostics?.dpe?.class)
+  const forbidden = parking ? null : rentalForbidden(file.diagnostics?.dpe?.class, new Date(), file.postalCode)
   if (forbidden) throw new HttpError(409, forbidden)
   if (!parking && body.terms?.kind === 'PARKING') throw new HttpError(400, 'Ce bien est un logement : choisissez un bail vide ou meublé.')
   if (parking && body.terms?.kind && body.terms.kind !== 'PARKING') throw new HttpError(400, 'Un garage loué seul a son propre contrat : ce n’est pas un bail d’habitation.')
@@ -488,7 +488,7 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
     throw new HttpError(400, `Il manque encore : ${missing.join(', ')}.`)
   }
   const c = await currentContract(user, lease)
-  const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class)
+  const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class, new Date(), c.property.postalCode)
   if (forbidden && lease.status === 'DRAFT') throw new HttpError(409, forbidden)
   const expired = expiredDiagnostics(c.property)
   if (expired.length && lease.status === 'DRAFT')

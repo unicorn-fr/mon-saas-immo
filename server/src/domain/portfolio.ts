@@ -1,3 +1,4 @@
+import { rentalBanDate } from './rules.js'
 /**
  * Tableau de bord de tous les logements : quelques chiffres (loyers par mois, ce qu'il reste après les crédits et les
  * dépenses, retards, logements loués) et les points à surveiller, du plus urgent au moins urgent. Tout est déduit de ce
@@ -24,6 +25,8 @@ export interface PortfolioItem {
   /** Logement libre depuis (fin du dernier bail), AAAA-MM-JJ. */
   vacantSince: string | null
   dpe: string | null
+  /** Code postal : calendrier de décence énergétique propre à l'outre-mer (`rentalBanDate`). */
+  postalCode?: string | null
   expiredDiagnostics: number
   purchasePriceCents: number | null
   /** Garage, box ou place loué seul : préavis du contrat. */
@@ -59,8 +62,7 @@ export interface Portfolio {
   rows: Array<PortfolioItem & { netCents: number; alertCount: number }>
 }
 
-const BAN: Record<string, string> = { G: '2025-01-01', F: '2028-01-01', E: '2034-01-01' }
-const YEAR_LABEL: Record<string, string> = { '2025-01-01': '1er janvier 2025', '2028-01-01': '1er janvier 2028', '2034-01-01': '1er janvier 2034' }
+const YEAR_LABEL = (iso: string) => `1er janvier ${iso.slice(0, 4)}`
 
 const addMonths = (isoDay: string, n: number) => {
   const d = new Date(`${isoDay}T00:00:00Z`)
@@ -72,12 +74,12 @@ const eur = (c: number) => `${(c / 100).toLocaleString('fr-FR', { minimumFractio
 /** Points à surveiller d'un logement. */
 export function alertsFor(p: PortfolioItem, today: string): PortfolioAlert[] {
   const out: PortfolioAlert[] = []
-  const ban = p.dpe ? BAN[p.dpe] : undefined
+  const ban = rentalBanDate(p.dpe, p.postalCode) ?? undefined
   if (p.unpaidCents > 0) out.push({ kind: 'UNPAID', propertyId: p.id, level: 1, title: `${eur(p.unpaidCents)} de loyer en retard`, text: p.tenantName ? `Loyers attendus et non reçus de ${p.tenantName}.` : 'Loyers attendus et non reçus.' })
-  if (ban && ban <= today) out.push({ kind: 'FORBIDDEN', propertyId: p.id, level: 1, title: `Classé ${p.dpe} : ne peut plus être loué`, text: `Depuis le ${YEAR_LABEL[ban]}, un logement ${p.dpe} n’est plus décent. Des travaux et un nouveau DPE sont nécessaires avant un nouveau bail.` })
+  if (ban && ban <= today) out.push({ kind: 'FORBIDDEN', propertyId: p.id, level: 1, title: `Classé ${p.dpe} : ne peut plus être loué`, text: `Depuis le ${YEAR_LABEL(ban)}, un logement ${p.dpe} n’est plus décent. Des travaux et un nouveau DPE sont nécessaires avant un nouveau bail.` })
   if (!p.rented && p.vacantSince) out.push({ kind: 'VACANT', propertyId: p.id, level: 2, title: `Libre depuis le ${frDate(p.vacantSince)}`, text: 'Pas de bail en cours : annonce et candidats sont prêts dans Bailio.' })
   if (p.expiredDiagnostics > 0) out.push({ kind: 'DIAGNOSTICS', propertyId: p.id, level: 2, title: `${p.expiredDiagnostics} diagnostic${p.expiredDiagnostics > 1 ? 's' : ''} à refaire`, text: 'Un diagnostic expiré bloque la signature du prochain bail.' })
-  if (ban && ban > today && ban <= addMonths(today, 48)) out.push({ kind: 'DPE_SOON', propertyId: p.id, level: 3, title: `Classé ${p.dpe} : interdit à la location le ${YEAR_LABEL[ban]}`, text: 'Les travaux prennent du temps : MaPrimeRénov’ et l’éco-prêt peuvent les financer en partie.' })
+  if (ban && ban > today && ban <= addMonths(today, 48)) out.push({ kind: 'DPE_SOON', propertyId: p.id, level: 3, title: `Classé ${p.dpe} : interdit à la location le ${YEAR_LABEL(ban)}`, text: 'Les travaux prennent du temps : MaPrimeRénov’ et l’éco-prêt peuvent les financer en partie.' })
   if (p.rented && p.leaseEnd && p.leaseEnd >= today && p.leaseEnd <= addMonths(today, 7)) out.push({ kind: 'LEASE_END', propertyId: p.id, level: p.leaseEnd <= addMonths(today, 6) ? 2 : 3, title: `Bail à échéance le ${frDate(p.leaseEnd)}`, text: p.parkingNoticeMonths != null ? `Sans rien faire, il est reconduit. Pour y mettre fin, le congé doit arriver ${p.parkingNoticeMonths} mois avant (préavis du contrat).` : 'Sans rien faire, il est reconduit. Pour donner congé, il faut s’y prendre à l’avance (6 mois en vide, 3 mois en meublé).' })
   return out
 }
