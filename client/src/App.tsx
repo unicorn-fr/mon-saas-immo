@@ -25,7 +25,7 @@ import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
 import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
 import { Changer } from './pages/Changer'
-import { SimulateurConge, SimulateurDpe } from './pages/Simulateurs'
+import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPreavis } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
@@ -286,6 +286,9 @@ function Pages() {
               <Route path="/simulateurs/revision-loyer" element={<SimulateurRevision />} />
               <Route path="/simulateurs/date-conge-bailleur" element={<SimulateurConge />} />
               <Route path="/simulateurs/dpe-location" element={<SimulateurDpe />} />
+              <Route path="/simulateurs/preavis-locataire" element={<SimulateurPreavis />} />
+              <Route path="/simulateurs/depot-de-garantie" element={<SimulateurDepot />} />
+              <Route path="/simulateurs/micro-foncier-ou-reel" element={<SimulateurMicroReel />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

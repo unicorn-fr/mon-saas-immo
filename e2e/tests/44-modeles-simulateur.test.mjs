@@ -60,3 +60,33 @@ test('outils gratuits : date limite du congé et DPE (métropole, outre-mer)', a
   await browser.close()
   assert.deepEqual(errors, [])
 })
+
+test('outils gratuits : préavis du locataire, dépôt de garantie, micro-foncier ou réel', async () => {
+  const browser = await launch()
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  const errors = []
+  watch(page, errors)
+  await page.goto(`${BASE}/simulateurs/preavis-locataire`)
+  await page.getByRole('button', { name: /Vide/ }).click()
+  await page.getByRole('button', { name: 'Oui, un mois' }).click()
+  await page.getByLabel('Date de réception du congé').fill('2027-01-31')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'Fin du préavis : le 28 février 2027' }).waitFor()
+
+  await page.goto(`${BASE}/simulateurs/depot-de-garantie`)
+  await page.getByLabel('Date de remise des clés').fill('2030-03-15')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('button', { name: 'Non, il y a des différences' }).click()
+  await page.getByLabel('Loyer hors charges, en euros par mois').fill('700')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'À rendre au plus tard le 15 mai 2030' }).waitFor()
+
+  await page.goto(`${BASE}/simulateurs/micro-foncier-ou-reel`)
+  await page.getByLabel('Loyers de l’année, en euros').fill('9600')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByLabel('Charges déductibles de l’année, en euros').fill('4500')
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: 'Le régime réel est le plus avantageux' }).waitFor()
+  await browser.close()
+  assert.deepEqual(errors, [])
+})

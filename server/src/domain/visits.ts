@@ -34,6 +34,9 @@ export const COUNTED_PATHS = [
   '/simulateurs/revision-loyer',
   '/simulateurs/date-conge-bailleur',
   '/simulateurs/dpe-location',
+  '/simulateurs/preavis-locataire',
+  '/simulateurs/depot-de-garantie',
+  '/simulateurs/micro-foncier-ou-reel',
 ] as const
 
 const COUNTED = new Set<string>(COUNTED_PATHS)
