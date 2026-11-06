@@ -28,7 +28,7 @@ test('modèles gratuits et simulateur de révision du loyer', async () => {
   await page.getByRole('button', { name: '3e trimestre' }).click()
   // Dernier IRL du 3e trimestre ÷ celui de l'année d'avant (812,57 € avec l'indice publié en octobre 2026).
   await page.getByRole('heading', { name: /Nouveau loyer : \d/ }).waitFor()
-  await page.getByText(/800,00 € × \d+,\d+ ÷ \d+,\d+ =/).waitFor()
+  await page.getByText(/800,00\s€ × \d+(,\d+)? ÷ \d+(,\d+)? =/).waitFor()
 
   // Logement F ou G : révision interdite.
   await page.getByRole('button', { name: 'Faire un autre calcul' }).click()
