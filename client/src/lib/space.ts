@@ -221,7 +221,7 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
-  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; receiptAssume?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null }
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; receiptAssume?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null; dunning?: { enabled: boolean; days: [number, number, number] } }
 }
 
 export interface Task {

@@ -6,6 +6,7 @@ import { TenantLink } from '../../components/TenantLink'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
+import { DunningSettings } from '../../components/DunningSettings'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
 import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, Toggle, btnStyle, useLoad, useToast, useConfirm } from '../../components/kit'
@@ -186,6 +187,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
                   ) : null}
                 </>
               ) : null}
+              {l.status !== 'ENDED' && l.facts?.dunning ? <DunningSettings leaseId={l.id} value={l.facts.dunning} tenantName={l.tenantName} onChange={reload} /> : null}
               {l.facts?.autoReceipt ? (
                 l.facts.autoReceipt.held ? (
                   <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>

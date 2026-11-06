@@ -38,6 +38,7 @@ import {
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { assumePaymentOn, receiptAutoOn, upcomingAutoReceipt } from '../domain/autoReceipt.js'
+import { dunningSettings } from '../domain/dunning.js'
 import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterAllowed, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderLeasePdf, stampDraft } from '../services/annexes.js'
@@ -193,7 +194,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data), receiptAssume: assumePaymentOn(lease.data),
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data), receiptAssume: assumePaymentOn(lease.data), dunning: dunningSettings(lease.data),
       autoReceipt:
         assumePaymentOn(lease.data) && (lease.status === 'ACTIVE' || lease.status === 'IMPORTED')
           ? upcomingAutoReceipt({ today: new Date().toISOString().slice(0, 10), paymentDay: lease.paymentDay, startDate: lease.startDate.toISOString().slice(0, 10), paid: new Set(payments.map((p) => p.period)), held: (lease.data as { receiptHold?: Record<string, string> }).receiptHold ?? {} })
@@ -907,7 +908,7 @@ function premisesLabel(p: ContractInput['property']): string {
   return parts.filter(Boolean).join(', ') + (annexes ? `, avec ${annexes.charAt(0).toLowerCase()}${annexes.slice(1)}` : '')
 }
 
-async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
+export async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
   const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
@@ -938,7 +939,7 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
 }
 
 /** Les faits utiles d'un courrier enregistré sont gardés avec le bail, et son brouillon est effacé. */
-async function rememberLetter(lease: Lease, letter: LetterInput) {
+export async function rememberLetter(lease: Lease, letter: LetterInput) {
   const today = iso(new Date())!
   await patchLeaseData(lease.id, (f) => {
     const { [letter.type]: _done, ...drafts } = f.letterDrafts ?? {}
