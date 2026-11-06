@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { SimplePage } from '../../components/SiteChrome'
 import { ContactForm } from '../../components/ContactForm'
-import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
+import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceDetail } from '../../config'
 import { CALLBACK_PROMISE } from '../../content/inclus'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
@@ -187,7 +187,7 @@ export function Conditions() {
       </p>
       <H2>7. Prix</H2>
       <p>
-        Le premier bail est gratuit. L'offre « Bailio, tout inclus » est affichée à {priceLabel()} par mois, toutes taxes comprises,
+        Le premier bail est gratuit. L'offre « Bailio, tout inclus » est affichée à {priceDetail()}, toutes taxes comprises,
         sans engagement. {LAUNCH_OFFER} : aucun paiement n'est demandé aujourd'hui et aucune carte bancaire n'est enregistrée. Avant tout
         paiement, vous serez prévenu par email et votre accord exprès vous sera demandé. Le détail, la rétractation et les
         remboursements sont expliqués sur la page <Link to="/prix-et-remboursement">Prix, rétractation et remboursement</Link>.
@@ -426,7 +426,7 @@ export function PrixRemboursement() {
       <H2>L'offre « Bailio, tout inclus »</H2>
       <p>Ce qui suit s'appliquera dès qu'une offre payante sera ouverte.</p>
       <p>
-        Prix affiché : {priceLabel()} par mois, toutes taxes comprises, sans engagement. Avant le premier paiement, vous serez prévenu par
+        Prix affiché : {priceDetail()}, toutes taxes comprises, sans engagement. Avant le premier paiement, vous serez prévenu par
         email, le prix et ce qu'il comprend vous seront rappelés, et votre accord exprès vous sera demandé. Sans votre accord, rien ne
         sera prélevé et vous gardez votre espace et vos documents.
       </p>

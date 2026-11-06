@@ -5,7 +5,7 @@ import './home.css'
 import { Logo } from '../components/Logo'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
-import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../config'
+import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel } from '../config'
 import { AVIS } from '../content/avis'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
@@ -598,7 +598,7 @@ export default function Home() {
             <h2>Tout inclus</h2>
             <p className="plan-for">Pour suivre la location, mois après mois.</p>
             <p className="plan-note">
-              {LAUNCH_OFFER}. Ensuite, un seul prix, sans engagement ni option payante ; un email vous prévient avant tout paiement.
+              {LAUNCH_OFFER}. Ensuite {YEARLY_PRICE} par an et par logement ({PARKING_PRICE} par mois pour un garage), sans engagement ni option payante ; un email vous prévient avant tout paiement.
             </p>
             <ul className="plan-list">
               {INCLUS.map((x) => (
@@ -611,7 +611,7 @@ export default function Home() {
             <div className="plan-foot">
               <span style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
                 <span className="plan-price">{priceLabel()}</span>
-                {MONTHLY_PRICE ? <span>par mois</span> : null}
+                {MONTHLY_PRICE ? <span>{PRICE_UNIT}</span> : null}
               </span>
               <Link to="/commencer" className="btn btn--paper">
                 Essayer

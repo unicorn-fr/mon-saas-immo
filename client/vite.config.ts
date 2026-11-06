@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { LAUNCH_OFFER, priceLabel } from './src/config'
+import { LAUNCH_OFFER, priceDetail } from './src/config'
 import { GUIDES, guidePath, type Guide } from './src/content/guides'
 import { MODELES, SIMULATEUR_REVISION, modelePath, type Modele } from './src/content/modeles'
 
@@ -33,7 +33,7 @@ const LLMS_TXT = `# Bailio
 
 > Bailio aide les propriétaires bailleurs particuliers en France à louer leur logement (résidence principale, vide ou meublé) : bail conforme au contrat type du décret n° 2015-587, signature électronique, états des lieux, quittances, révision du loyer, courriers, aide à la déclaration des revenus fonciers et rappels des échéances. Il n'y a pas d'espace locataire.
 
-- Premier bail gratuit, sans carte bancaire. Offre de suivi : ${priceLabel()} par mois, sans engagement (${LAUNCH_OFFER.toLowerCase()}).
+- Premier bail gratuit, sans carte bancaire. Offre de suivi : ${priceDetail()}, tout compris, sans engagement (${LAUNCH_OFFER.toLowerCase()}).
 - Connexion sans mot de passe, par lien envoyé par email.
 - Données hébergées en Suisse (Infomaniak). Aucun cookie, aucune publicité, aucune donnée envoyée à un service d'IA.
 - Règles contrôlées : loi n° 89-462 du 6 juillet 1989 (dépôt de garantie, durée, plafonds du loyer, logements interdits à la location selon le DPE, validité des diagnostics).
