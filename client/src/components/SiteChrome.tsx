@@ -35,6 +35,7 @@ export function SiteFooter() {
   const links = [
     { to: '/guides', label: 'Guides' },
     { to: '/modeles', label: 'Modèles gratuits' },
+    { to: '/changer-pour-bailio', label: 'Changer pour Bailio' },
     { to: '/mentions-legales', label: 'Mentions légales' },
     { to: '/conditions', label: 'Conditions' },
     { to: '/confidentialite', label: 'Confidentialité' },

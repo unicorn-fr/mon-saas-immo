@@ -7,6 +7,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, priceLabel } from '../config'
 import { AVIS } from '../content/avis'
+import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 /**
  * Accueil, direction « Midi » (docs/design/direction-artistique.md) : système de modules « page de bail »
@@ -63,6 +64,8 @@ const FAQ: Array<[string, string]> = [
   ['Un garage, une SCI ?', 'Les deux. Garage loué seul, location à plusieurs, SCI familiale : la durée et les règles suivent.'],
   ['Qui touche le loyer ?', 'Vous, directement. Bailio ne passe jamais par votre argent ni par le dépôt de garantie.'],
   ['Où sont mes données ?', 'Sur un serveur en Suisse. Elles ne sont ni revendues, ni confiées à une intelligence artificielle.'],
+  ['J’utilise déjà un autre logiciel.', `Prenez vos baux en photo : Bailio reprend loyers, dates et locataires, et le suivi repart. ${CALLBACK_PROMISE} Nous faisons la reprise avec vous.`],
+  ['Y a-t-il des options payantes ?', 'Non. Signature électronique, états des lieux, relances, révision du loyer et aide à la déclaration des revenus sont compris dans le même prix.'],
   ['Et si j’arrête ?', 'Vous exportez tout en un clic, puis vous supprimez votre compte. Sans engagement.'],
   ['Je suis locataire, c’est pour moi ?', 'Bailio sert aux propriétaires. Pour monter votre dossier, utilisez DossierFacile (dossierfacile.logement.gouv.fr), le service gratuit de l’État. Si votre propriétaire utilise Bailio, il vous envoie un lien : rien à créer.'],
 ]
@@ -70,6 +73,7 @@ const FAQ: Array<[string, string]> = [
 const LEGAL = [
   { to: '/guides', label: 'Guides' },
   { to: '/modeles', label: 'Modèles gratuits' },
+  { to: '/changer-pour-bailio', label: 'Changer pour Bailio' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/conditions', label: 'Conditions' },
   { to: '/confidentialite', label: 'Confidentialité' },
@@ -594,8 +598,16 @@ export default function Home() {
             <h2>Tout inclus</h2>
             <p className="plan-for">Pour suivre la location, mois après mois.</p>
             <p className="plan-note">
-              {LAUNCH_OFFER}. Ensuite, quittances, révision du loyer et rappels compris, sans engagement ; un email vous prévient avant tout paiement.
+              {LAUNCH_OFFER}. Ensuite, un seul prix, sans engagement ni option payante ; un email vous prévient avant tout paiement.
             </p>
+            <ul className="plan-list">
+              {INCLUS.map((x) => (
+                <li key={x}>
+                  <Check />
+                  {x}
+                </li>
+              ))}
+            </ul>
             <div className="plan-foot">
               <span style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
                 <span className="plan-price">{priceLabel()}</span>

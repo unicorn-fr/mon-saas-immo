@@ -211,6 +211,10 @@
 .plan--free .plan-price { color: var(--owner); }
 .plan--full { background: var(--night); color: var(--paper); --fold-back: rgba(255, 255, 255, 0.2); }
 .plan-note { max-width: 44ch; color: var(--on-dark); }
+.plan-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; color: var(--paper); font-size: var(--step-small); }
+.plan-list li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; }
+.plan-list .tick { background: var(--sky); color: var(--owner); }
+@media (max-width: 767px) { .plan-list { grid-template-columns: 1fr; } }
 
 /* ── Questions en texte courant ── */
 .faq { padding: clamp(96px, 11vw, 160px) var(--pad); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }

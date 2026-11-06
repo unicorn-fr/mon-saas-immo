@@ -30,6 +30,7 @@ export const COUNTED_PATHS = [
   '/accessibilite',
   '/guides',
   '/modeles',
+  '/changer-pour-bailio',
   '/simulateurs/revision-loyer',
 ] as const
 

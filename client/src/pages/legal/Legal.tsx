@@ -4,6 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { SimplePage } from '../../components/SiteChrome'
 import { ContactForm } from '../../components/ContactForm'
 import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceLabel } from '../../config'
+import { CALLBACK_PROMISE } from '../../content/inclus'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
 const UPDATED = '5 novembre 2026'
@@ -537,6 +538,7 @@ export function Securite() {
 export function Contact() {
   return (
     <SimplePage title="Contact">
+      <p style={{ margin: '-16px 0 8px', fontSize: 18 }}>{CALLBACK_PROMISE}</p>
       {/* Deux questions, pas plus : le besoin, puis le numéro. La demande arrive aussitôt sur notre téléphone. */}
       <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 24, padding: 'clamp(20px, 4vw, 32px)', margin: '8px 0 28px' }}>
         <ContactForm />

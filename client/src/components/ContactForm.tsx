@@ -10,6 +10,7 @@ const NEEDS = [
   { value: 'LEASE', label: 'Faire mon bail' },
   { value: 'QUESTION', label: 'Une question sur Bailio' },
   { value: 'PROBLEM', label: 'Un souci avec un document' },
+  { value: 'SWITCH', label: 'Passer à Bailio depuis un autre outil' },
   { value: 'OTHER', label: 'Autre chose' },
 ] as const
 type Need = (typeof NEEDS)[number]['value']

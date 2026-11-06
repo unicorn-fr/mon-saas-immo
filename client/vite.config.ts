@@ -22,6 +22,7 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/securite', 'yearly', '0.3'],
   ['/guides', 'weekly', '0.7'],
   ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
+  ['/changer-pour-bailio', 'monthly', '0.7'],
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
   [SIMULATEUR_REVISION, 'monthly', '0.7'],
@@ -53,6 +54,7 @@ const LLMS_TXT = `# Bailio
 - [Contact](${SITE_URL}/contact)
 - [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
 ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
+- [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
 - [Simulateur de révision du loyer](${SITE_URL}${SIMULATEUR_REVISION}): nouveau loyer avec le dernier IRL publié par l'Insee
@@ -79,6 +81,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/prix-et-remboursement': { title: 'Prix et remboursement', description: 'Premier bail gratuit, sans carte bancaire. Le suivi de la location, sans engagement : prix, rétractation et remboursement.' },
   '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
+  '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
   '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },
   [SIMULATEUR_REVISION]: { title: 'Simulateur de révision du loyer (IRL)', description: 'Simulateur gratuit de révision du loyer : votre nouveau loyer avec le dernier indice de référence des loyers (IRL) publié par l’Insee, et la lettre à envoyer.' },
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
