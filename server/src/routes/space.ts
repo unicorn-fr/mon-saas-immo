@@ -231,7 +231,7 @@ router.get('/properties/:id', async (req, res) => {
       /** Ce qui manque au logement pour faire un bail (contrat type, diagnostics, mobilier). */
       leaseMissing: propertyLeaseMissing(f, f.nature === 'PARKING' ? 'PARKING' : f.furnished ? 'MEUBLE' : 'VIDE'),
       journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [],
-      energyWarning: f.nature === 'PARKING' ? null : energyRentalWarning(f.diagnostics?.dpe?.class),
+      energyWarning: f.nature === 'PARKING' ? null : energyRentalWarning(f.diagnostics?.dpe?.class, new Date(), f.postalCode),
       rentControlLikely: rentControlLikely(f.inseeCode),
       /** D'après les listes officielles des communes : zone tendue (null si commune inconnue) et encadrement. */
       tenseOfficial: isTenseZone(f.inseeCode),
@@ -253,7 +253,7 @@ router.put('/properties/:id', async (req, res) => {
   const file = withOfficialZone(propertyFileSchema.parse(mergeFile(readProperty(p), patch)))
   await prisma.property.update({ where: { id: p.id }, data: { ...propertyColumns(file), data: file } })
   await rememberSyndic(req.user!.id, file)
-  res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class) } })
+  res.json({ success: true, data: { id: p.id, file, completion: propertyCompletion(file), diagnostics: diagnosticsFor(file), energyWarning: energyRentalWarning(file.diagnostics?.dpe?.class, new Date(), file.postalCode) } })
 })
 
 // Aides et dispositifs du logement (domain/aids.ts) : d'après la fiche, la structure, le bail en cours ou en préparation

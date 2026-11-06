@@ -1,7 +1,17 @@
-/** Prix mensuel de l'offre « Bailio, tout inclus » (suivi). */
-export const MONTHLY_PRICE: string | null = '9,99 €'
+/**
+ * Prix de l'offre « Bailio, tout inclus » (suivi), par logement loué : sous le prix du marché (Qalimo 4,90 €,
+ * docs/strategie/prix-2026-11.md), sans option payante. Garage, box ou place : prix réduit. Paiement à l'année mis en avant.
+ */
+export const MONTHLY_PRICE: string | null = '3,90 €'
+export const PRICE_UNIT = 'par logement et par mois'
+export const YEARLY_PRICE = '39 €'
+export const PARKING_PRICE = '1,90 €'
 
 export const priceLabel = () => MONTHLY_PRICE ?? 'Prix à venir'
+/** « 3,90 € par logement et par mois » */
+export const priceText = () => (MONTHLY_PRICE ? `${MONTHLY_PRICE} ${PRICE_UNIT}` : 'Prix à venir')
+/** Détail complet, pour les pages légales et Mon compte. */
+export const priceDetail = () => (MONTHLY_PRICE ? `${priceText()} (ou ${YEARLY_PRICE} par logement et par an), ${PARKING_PRICE} par mois pour un garage, un box ou une place` : 'Prix à venir')
 
 /** Aucun paiement n'est encore demandé : affiché partout où le prix apparaît (accueil, Mon compte). */
 export const LAUNCH_OFFER = 'Offert pendant le lancement'

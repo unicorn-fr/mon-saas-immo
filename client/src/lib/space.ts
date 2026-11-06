@@ -221,12 +221,12 @@ export interface LeaseView {
   leaseDocumentId: string | null
   inventories: Array<{ id: string; kind: 'ENTRY' | 'EXIT'; status: 'DRAFT' | 'SIGNED'; date: string | null }>
   reminders: Array<{ id: string; type: string; dueDate: string }>
-  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; receiptAssume?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null }
+  facts?: { tenantNotice: { receivedDate: string; reduced: boolean; reducedReason: string | null; endDate: string } | null; keysDate: string | null; eReceiptConsent?: { email: string; at: string } | null; receiptAuto?: boolean; receiptAssume?: boolean; autoReceipt?: { period: string; sendOn: string; held: boolean } | null; dunning?: { enabled: boolean; days: [number, number, number] } }
 }
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT' | 'TAX_DECLARE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT' | 'TAX_DECLARE' | 'NOTICE_UPDATE'
   /** Déclaration aux impôts : arrivée ou départ du locataire. */
   mode?: 'ARRIVAL' | 'DEPARTURE'
   tag: string

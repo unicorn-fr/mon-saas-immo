@@ -2,6 +2,7 @@ import { Document, Page, Text, View, renderToBuffer } from '@react-pdf/renderer'
 import { CONGE_NOTICE_BLOCKS, CONGE_NOTICE_FOOTNOTES, CONGE_NOTICE_REFERENCE, CONGE_NOTICE_TITLE, CONGE_NOTICE_URL } from './notice-conge-text.js'
 import { NOTICE_BLOCKS, NOTICE_DPE_TABLE, NOTICE_FOOTNOTES, NOTICE_REFERENCE, NOTICE_TITLE, NOTICE_URL, type NoticeBlock } from './notice-text.js'
 import { CHARGES_BLOCKS, REPAIRS_BLOCKS } from './annexes-text.js'
+import { NOTICE_2026_BLOCKS, NOTICE_2026_FOOTNOTES, NOTICE_2026_REFERENCE, NOTICE_2026_TABLES, leaseNoticeVersion } from './notice-text-2026.js'
 import { Footer, INK, MUTED, Table, s } from './theme.js'
 
 /**
@@ -17,9 +18,16 @@ interface OfficialNotice {
   url: string
   blocks: NoticeBlock[]
   footnotes: [string, string][]
+  /** Tableaux de la notice (décence énergétique) : colonnes et lignes par repère du bloc `table`. */
+  tables?: { columns: string[]; rows: Record<string, string[][]> }
 }
 
-export const LEASE_NOTICE: OfficialNotice = { heading: 'Notice d’information', title: NOTICE_TITLE, reference: NOTICE_REFERENCE, url: NOTICE_URL, blocks: NOTICE_BLOCKS, footnotes: NOTICE_FOOTNOTES }
+/** Notice des baux conclus ou renouvelés jusqu'au 17 octobre 2026 (arrêté du 16 février 2023). */
+export const LEASE_NOTICE_2023: OfficialNotice = { heading: 'Notice d’information', title: NOTICE_TITLE, reference: NOTICE_REFERENCE, url: NOTICE_URL, blocks: NOTICE_BLOCKS, footnotes: NOTICE_FOOTNOTES, tables: { columns: NOTICE_DPE_TABLE.columns, rows: { metro: NOTICE_DPE_TABLE.rows } } }
+/** Notice en vigueur : baux conclus ou renouvelés depuis le 18 octobre 2026 (arrêté du 9 octobre 2026). */
+export const LEASE_NOTICE: OfficialNotice = { heading: 'Notice d’information', title: NOTICE_TITLE, reference: NOTICE_2026_REFERENCE, url: NOTICE_URL, blocks: NOTICE_2026_BLOCKS, footnotes: NOTICE_2026_FOOTNOTES, tables: { columns: NOTICE_2026_TABLES.columns, rows: { metro: NOTICE_2026_TABLES.metro, dom: NOTICE_2026_TABLES.dom } } }
+/** Notice à joindre à un bail selon sa date de conclusion (art. 2 de l'arrêté du 9 octobre 2026). */
+export const leaseNoticeFor = (concludedOn?: string | null) => (leaseNoticeVersion(concludedOn) === '2026' ? LEASE_NOTICE : LEASE_NOTICE_2023)
 export const REPAIRS_LIST: OfficialNotice = {
   heading: 'Réparations locatives',
   title: 'Liste des réparations ayant le caractère de réparations locatives',
@@ -59,7 +67,10 @@ function Blocks({ notice }: { notice: OfficialNotice }) {
             </Text>
           )
         }
-        if (b.t === 'table') return <Table key={i} columns={NOTICE_DPE_TABLE.columns} widths={[16, 22, 36, 26]} rows={NOTICE_DPE_TABLE.rows} />
+        if (b.t === 'table') {
+          const rows = notice.tables?.rows[b.k ?? 'metro']
+          return rows ? <Table key={i} columns={notice.tables!.columns} widths={[16, 22, 36, 26]} rows={rows} /> : null
+        }
         if (b.t === 'sub')
           return (
             <Text key={i} style={st.sub} minPresenceAhead={24}>

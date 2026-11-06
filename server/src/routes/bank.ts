@@ -7,6 +7,7 @@ import { leaseOwned, propertyName, readTenant, tenantName } from '../services/co
 import { parseStatement } from '../domain/bankStatement.js'
 import { matchRents, type ExpectedRent } from '../domain/rentMatch.js'
 import { assumePaymentOn, receiptAutoOn } from '../domain/autoReceipt.js'
+import { dunningSettings, validDays } from '../domain/dunning.js'
 import { amountsForPeriod } from '../domain/rentHistory.js'
 import { upload } from './helpers.js'
 import { patchLeaseData, recordPayment } from './leases.js'
@@ -16,7 +17,7 @@ import { patchLeaseData, recordPayment } from './leases.js'
  * Le fichier est lu en mémoire sur notre serveur et n'est jamais enregistré : seuls les loyers validés le sont.
  */
 const router = Router()
-router.use(['/bank', '/leases/:id/receipt-auto', '/leases/:id/receipt-hold'], requireUser)
+router.use(['/bank', '/leases/:id/receipt-auto', '/leases/:id/receipt-hold', '/leases/:id/dunning'], requireUser)
 
 const periodOf = (d: string) => d.slice(0, 7)
 const nextPeriod = (p: string) => {
@@ -114,3 +115,13 @@ router.post('/leases/:id/receipt-hold', async (req, res) => {
 })
 
 export default router
+
+// Relances automatiques d'un loyer impayé : activées par le propriétaire, jours réglables (relance, second rappel, mise en demeure).
+router.put('/leases/:id/dunning', async (req, res) => {
+  const lease = await leaseOwned(req.user!.id, String(req.params.id))
+  const body = z.object({ enabled: z.boolean().optional(), days: z.array(z.number().int()).length(3).optional() }).parse(req.body)
+  if (body.days && !validDays(body.days)) throw new HttpError(400, 'Choisissez des jours croissants, entre 1 et 60 jours après l’échéance.')
+  await patchLeaseData(lease.id, (f) => ({ dunning: { ...dunningSettings(f), ...(body.enabled !== undefined ? { enabled: body.enabled } : {}), ...(body.days ? { days: body.days } : {}) } }))
+  const after = await leaseOwned(req.user!.id, lease.id)
+  res.json({ success: true, data: dunningSettings(after.data) })
+})

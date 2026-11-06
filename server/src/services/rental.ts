@@ -79,7 +79,7 @@ export async function rentalJourneys(user: User, propertyIds?: string[]): Promis
             }
           : null,
         today,
-        forbidden: rentalForbidden(file.diagnostics?.dpe?.class),
+        forbidden: rentalForbidden(file.diagnostics?.dpe?.class, new Date(), file.postalCode),
       }),
     )
   }

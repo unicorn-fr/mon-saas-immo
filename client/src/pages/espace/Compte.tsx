@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LAUNCH_OFFER, priceLabel } from '../../config'
+import { LAUNCH_OFFER, priceText } from '../../config'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -101,7 +101,7 @@ export default function Compte() {
               <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
             <Card title="Abonnement">
               <Line label="Formule" value="Bailio, tout inclus" />
-              <Line label="Prix" value={`${priceLabel()} par mois, ${LAUNCH_OFFER.charAt(0).toLowerCase()}${LAUNCH_OFFER.slice(1)}`} />
+              <Line label="Prix" value={`${priceText()}, ${LAUNCH_OFFER.charAt(0).toLowerCase()}${LAUNCH_OFFER.slice(1)}`} />
               <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Rien ne vous sera prélevé sans votre accord. Vous serez prévenu par email avant toute mise en place d’un abonnement.</span>
             </Card>
             <Card title="Emails de Bailio" style={{ gap: 0 }}>

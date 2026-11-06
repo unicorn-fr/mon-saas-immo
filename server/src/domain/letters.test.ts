@@ -107,3 +107,13 @@ test('garage loué seul : courriers du contrat, sans la loi de 1989', () => {
   assert.equal(letterAllowed('REVISION', 'PARKING'), true)
   assert.equal(letterAllowed('BOILER', 'VIDE'), true)
 })
+
+test('relance : première relance amiable puis second rappel (relances automatiques)', () => {
+  const first = letterContent(letterSchema.parse({ type: 'REMINDER', amountCents: 80000, periods: ['novembre 2026'], dueDate: '2026-11-04' }), ctx)
+  const second = letterContent(letterSchema.parse({ type: 'REMINDER', amountCents: 80000, periods: ['novembre 2026'], dueDate: '2026-11-04', second: true }), ctx)
+  assert.match(first.subject, /^Loyer de novembre 2026/)
+  assert.match(first.paragraphs.join(' '), /simple oubli/)
+  assert.match(second.subject, /^Second rappel/)
+  assert.match(second.paragraphs.join(' '), /précédente relance/)
+  assert.doesNotMatch(second.paragraphs.join(' '), /simple oubli/)
+})

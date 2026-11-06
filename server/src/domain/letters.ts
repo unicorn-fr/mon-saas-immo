@@ -28,7 +28,7 @@ export const letterSchema = z.discriminatedUnion('type', [
     effectiveDate: isoDate,
   }),
   z.object({ type: z.literal('INSURANCE'), expiresAt: isoDate.optional().nullable() }),
-  z.object({ type: z.literal('REMINDER'), amountCents: cents, periods: z.array(z.string()).min(1).max(24), dueDate: isoDate.optional().nullable() }),
+  z.object({ type: z.literal('REMINDER'), amountCents: cents, periods: z.array(z.string()).min(1).max(24), dueDate: isoDate.optional().nullable(), second: z.boolean().optional() }),
   z.object({ type: z.literal('FORMAL_NOTICE'), amountCents: cents, periods: z.array(z.string()).min(1).max(24), delayDays: z.number().int().min(8).max(60).default(8), guarantorInformed: z.boolean().default(true) }),
   z.object({
     type: z.literal('NOTICE_TO_LEAVE'),
@@ -366,11 +366,13 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
       }
     case 'REMINDER':
       return {
-        subject: `Loyer de ${l.periods.join(', ')}`,
+        subject: `${l.second ? 'Second rappel : loyer' : 'Loyer'} de ${l.periods.join(', ')}`,
         recommended: false,
         paragraphs: [
-          `Sauf erreur de ma part, je n’ai pas encore reçu le paiement du loyer et des charges de ${l.periods.join(', ')}, soit ${e(l.amountCents)}${l.dueDate ? `, attendu le ${d(l.dueDate)}` : ''}.`,
-          'Il s’agit peut-être d’un simple oubli. Pouvez-vous procéder au règlement dans les meilleurs délais ? Si vous rencontrez une difficulté, n’hésitez pas à m’en parler : nous trouverons une solution ensemble.',
+          `${l.second ? 'Je reviens vers vous après ma précédente relance : sauf erreur de ma part, je n’ai toujours pas reçu' : 'Sauf erreur de ma part, je n’ai pas encore reçu'} le paiement du loyer et des charges de ${l.periods.join(', ')}, soit ${e(l.amountCents)}${l.dueDate ? `, attendu le ${d(l.dueDate)}` : ''}.`,
+          l.second
+            ? 'Merci de régler cette somme sans attendre. Si vous rencontrez une difficulté, parlons-en dès maintenant : nous trouverons une solution ensemble.'
+            : 'Il s’agit peut-être d’un simple oubli. Pouvez-vous procéder au règlement dans les meilleurs délais ? Si vous rencontrez une difficulté, n’hésitez pas à m’en parler : nous trouverons une solution ensemble.',
           'Si votre paiement a été fait entre-temps, merci de ne pas tenir compte de ce message.',
         ],
       }

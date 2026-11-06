@@ -103,29 +103,40 @@ export function rentRevisionAllowed(dpe: string | null | undefined): boolean {
   return dpe !== 'F' && dpe !== 'G'
 }
 
+/** Guadeloupe (971), Martinique (972), Guyane (973), La Réunion (974), Mayotte (976) : calendrier de décence énergétique propre. */
+export const isOverseas = (postalCode?: string | null) => /^97[12346]/.test((postalCode ?? '').trim())
+
 /**
- * Décence énergétique (art. 6 et décret 2002-120) : logements classés G interdits à la location depuis le 1er janvier 2025,
- * F à partir du 1er janvier 2028, E à partir du 1er janvier 2034. Renvoie un avertissement ou null.
+ * Date à partir de laquelle un logement de cette classe ne peut plus être loué (critère de performance énergétique de la
+ * décence : art. 6 de la loi du 6 juillet 1989, décret n° 2002-120 ; tableaux de la notice d'information, § 2.1). Métropole :
+ * G au 1er janvier 2025, F au 1er janvier 2028, E au 1er janvier 2034. Outre-mer : G au 1er janvier 2028, F au 1er janvier 2031.
  */
-export function energyRentalWarning(dpe: string | null | undefined, onDate = new Date()): string | null {
-  const y = onDate.getUTCFullYear()
-  if (dpe === 'G') return 'Classe G : le logement ne peut plus être loué depuis le 1er janvier 2025 (logement non décent).'
-  if (dpe === 'F') return y >= 2028 ? 'Classe F : le logement ne peut plus être loué depuis le 1er janvier 2028.' : 'Classe F : le loyer ne peut pas augmenter, et le logement ne pourra plus être loué à partir du 1er janvier 2028.'
-  if (dpe === 'E' && y >= 2031) return 'Classe E : le logement ne pourra plus être loué à partir du 1er janvier 2034.'
-  return null
+export function rentalBanDate(dpe: string | null | undefined, postalCode?: string | null): string | null {
+  const calendar: Record<string, string> = isOverseas(postalCode) ? { G: '2028-01-01', F: '2031-01-01' } : { G: '2025-01-01', F: '2028-01-01', E: '2034-01-01' }
+  return dpe ? calendar[dpe] ?? null : null
+}
+const banLabel = (iso: string) => `1er janvier ${iso.slice(0, 4)}`
+
+/** Avertissement de décence énergétique pour la fiche du logement, ou null. */
+export function energyRentalWarning(dpe: string | null | undefined, onDate = new Date(), postalCode?: string | null): string | null {
+  const ban = rentalBanDate(dpe, postalCode)
+  if (!ban) return null
+  const day = onDate.toISOString().slice(0, 10)
+  if (ban <= day) return dpe === 'G' && ban === '2025-01-01' ? 'Classe G : le logement ne peut plus être loué depuis le 1er janvier 2025 (logement non décent).' : `Classe ${dpe} : le logement ne peut plus être loué depuis le ${banLabel(ban)}.`
+  if (dpe === 'F' || dpe === 'G') return `Classe ${dpe} : le loyer ne peut pas augmenter, et le logement ne pourra plus être loué à partir du ${banLabel(ban)}.`
+  // Classe E : prévenu dans les trois ans qui précèdent.
+  return onDate.getUTCFullYear() >= Number(ban.slice(0, 4)) - 3 ? `Classe ${dpe} : le logement ne pourra plus être loué à partir du ${banLabel(ban)}.` : null
 }
 
 /**
- * Logement interdit à la location à cette date (critère de performance énergétique de la décence : art. 6 de la loi
- * et décret n° 2002-120) : classe G depuis le 1er janvier 2025, F au 1er janvier 2028, E au 1er janvier 2034.
- * Aucun nouveau bail ne peut être fait ni signé. Renvoie le motif, ou null.
+ * Logement interdit à la location à cette date (décence énergétique, `rentalBanDate`). Aucun nouveau bail ne peut être
+ * fait ni signé. Renvoie le motif, ou null.
  */
-export function rentalForbidden(dpe: string | null | undefined, onDate = new Date()): string | null {
+export function rentalForbidden(dpe: string | null | undefined, onDate = new Date(), postalCode?: string | null): string | null {
   const day = onDate.toISOString().slice(0, 10)
-  const from: Record<string, string> = { G: '2025-01-01', F: '2028-01-01', E: '2034-01-01' }
-  const start = dpe ? from[dpe] : undefined
+  const start = rentalBanDate(dpe, postalCode)
   if (!start || day < start) return null
-  return `Logement classé ${dpe} au DPE : il ne peut plus être loué depuis le ${start === '2025-01-01' ? '1er janvier 2025' : start === '2028-01-01' ? '1er janvier 2028' : '1er janvier 2034'} (logement non décent, article 6 de la loi du 6 juillet 1989). Des travaux de rénovation énergétique et un nouveau DPE sont nécessaires avant de signer un bail.`
+  return `Logement classé ${dpe} au DPE : il ne peut plus être loué depuis le ${banLabel(start)} (logement non décent, article 6 de la loi du 6 juillet 1989). Des travaux de rénovation énergétique et un nouveau DPE sont nécessaires avant de signer un bail.`
 }
 
 export interface RentIssue {

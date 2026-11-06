@@ -7,6 +7,7 @@ import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { HttpError } from '../lib/http.js'
 import { layout, sendEmail } from '../lib/email.js'
+import { LEASE_NOTICE, renderNoticePdf } from '../pdf/notice.js'
 import { irlOneYearLater, latestIrl, quarterLabel } from '../lib/irl.js'
 import { requireUser } from '../services/session.js'
 import { ensureReminders } from '../services/reminders.js'
@@ -38,6 +39,7 @@ import {
 } from '../domain/rules.js'
 import { buildJourney, type JourneyInput } from '../domain/journeys.js'
 import { assumePaymentOn, receiptAutoOn, upcomingAutoReceipt } from '../domain/autoReceipt.js'
+import { dunningSettings } from '../domain/dunning.js'
 import { toTrash } from '../services/trash.js'
 import { LETTER_TITLES, THIRD_PARTY_LETTERS, letterAllowed, letterContent, letterSchema, revisedRent, tenantNoticeEnd, tenantNoticeMonths, type LetterInput, type LetterType } from '../domain/letters.js'
 import { renderLeasePdf, stampDraft } from '../services/annexes.js'
@@ -96,7 +98,7 @@ function computed(c: ContractInput) {
     maxDepositCents: t.rentCents ? maxDepositFor(kind, t.rentCents) : null,
     chargesModes: allowedChargesModes(kind, Boolean(t.colocation) || c.tenants.length > 1),
     revisionAllowed: kind === 'PARKING' || (kind !== 'MOBILITE' && rentRevisionAllowed(dpe)),
-    energyWarning: kind === 'PARKING' ? null : energyRentalWarning(dpe),
+    energyWarning: kind === 'PARKING' ? null : energyRentalWarning(dpe, new Date(), c.property.postalCode),
     /** Plafonds du loyer non respectés : la signature est refusée tant qu'ils restent. Aucun pour un garage loué seul. */
     rentIssues: kind === 'PARKING' ? [] : rentIssues({ rentCents: t.rentCents, surface: c.property.surface, dpe, zone: t.zone, previous: t.previous }),
     rentControlLikely: rentControlLikely(c.property.inseeCode),
@@ -193,7 +195,7 @@ async function leaseView(user: User, lease: LeaseWithProperty) {
     status: lease.status,
     ready: lease.status === 'DRAFT' && completion.percent === 100 && !checklist.some((m) => m.level === 'ESSENTIAL'),
     /** Ce que Bailio a retenu des courriers (fin du préavis, remise des clés) pour pré-remplir la suite. */
-    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data), receiptAssume: assumePaymentOn(lease.data),
+    facts: { tenantNotice: (lease.data as { tenantNotice?: unknown }).tenantNotice ?? null, keysDate: (lease.data as { keysDate?: string }).keysDate ?? null, eReceiptConsent: (lease.data as { tenantLink?: { eReceiptConsent?: { email: string; at: string } | null } }).tenantLink?.eReceiptConsent ?? null, receiptAuto: receiptAutoOn(lease.data), receiptAssume: assumePaymentOn(lease.data), dunning: dunningSettings(lease.data),
       autoReceipt:
         assumePaymentOn(lease.data) && (lease.status === 'ACTIVE' || lease.status === 'IMPORTED')
           ? upcomingAutoReceipt({ today: new Date().toISOString().slice(0, 10), paymentDay: lease.paymentDay, startDate: lease.startDate.toISOString().slice(0, 10), paid: new Set(payments.map((p) => p.period)), held: (lease.data as { receiptHold?: Record<string, string> }).receiptHold ?? {} })
@@ -267,7 +269,7 @@ router.post('/leases', async (req, res) => {
   const file = readProperty(property)
   // Logement interdit à la location (DPE) : pas de nouveau bail.
   const parking = file.nature === 'PARKING'
-  const forbidden = parking ? null : rentalForbidden(file.diagnostics?.dpe?.class)
+  const forbidden = parking ? null : rentalForbidden(file.diagnostics?.dpe?.class, new Date(), file.postalCode)
   if (forbidden) throw new HttpError(409, forbidden)
   if (!parking && body.terms?.kind === 'PARKING') throw new HttpError(400, 'Ce bien est un logement : choisissez un bail vide ou meublé.')
   if (parking && body.terms?.kind && body.terms.kind !== 'PARKING') throw new HttpError(400, 'Un garage loué seul a son propre contrat : ce n’est pas un bail d’habitation.')
@@ -457,7 +459,9 @@ router.get('/leases/:id/guarantee/:tenantId.pdf', async (req, res) => {
 export async function activateLease(user: User, lease: LeaseWithProperty, c: ContractInput, signed?: { leasePdf: Buffer; guarantees: Map<number, Buffer> }) {
   const view = await leaseView(user, lease)
   const pdf = signed?.leasePdf ?? (await renderLeasePdf(c, lease.propertyId))
-  const { version: _v, ...snapshot } = c
+  const { version: _v, ...rest } = c
+  // Copie figée du bail, avec sa date de conclusion (version de la notice d'information jointe).
+  const snapshot = { ...rest, concludedOn: rest.concludedOn ?? iso(lease.signedAt ?? new Date()) }
   await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `${view.kind === 'PARKING' ? 'Contrat de location du garage' : `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}`}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
   // Actes de caution : un document par garant.
   for (const g of view.guarantors) {
@@ -485,7 +489,7 @@ export async function assertReadyToSign(user: User, lease: LeaseWithProperty): P
     throw new HttpError(400, `Il manque encore : ${missing.join(', ')}.`)
   }
   const c = await currentContract(user, lease)
-  const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class)
+  const forbidden = rentalForbidden(c.property.diagnostics?.dpe?.class, new Date(), c.property.postalCode)
   if (forbidden && lease.status === 'DRAFT') throw new HttpError(409, forbidden)
   const expired = expiredDiagnostics(c.property)
   if (expired.length && lease.status === 'DRAFT')
@@ -907,7 +911,7 @@ function premisesLabel(p: ContractInput['property']): string {
   return parts.filter(Boolean).join(', ') + (annexes ? `, avec ${annexes.charAt(0).toLowerCase()}${annexes.slice(1)}` : '')
 }
 
-async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
+export async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInput) {
   const c = await liveContract(user, lease)
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
@@ -938,7 +942,7 @@ async function letterPdf(user: User, lease: LeaseWithProperty, letter: LetterInp
 }
 
 /** Les faits utiles d'un courrier enregistré sont gardés avec le bail, et son brouillon est effacé. */
-async function rememberLetter(lease: Lease, letter: LetterInput) {
+export async function rememberLetter(lease: Lease, letter: LetterInput) {
   const today = iso(new Date())!
   await patchLeaseData(lease.id, (f) => {
     const { [letter.type]: _done, ...drafts } = f.letterDrafts ?? {}
@@ -1019,6 +1023,21 @@ router.post('/leases/:id/letters', async (req, res) => {
     await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INSURANCE', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
   }
   res.status(201).json({ success: true, data: { documentId: doc.id, computed: content.computed ?? [] } })
+})
+
+// Nouvelle notice d'information (arrêté du 9 octobre 2026) envoyée au locataire d'un bail signé avec l'ancienne.
+router.post('/leases/:id/notice/send', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const c = await liveContract(user, lease)
+  const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+  if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer la notice.')
+  const pdf = await renderNoticePdf(LEASE_NOTICE)
+  const subject = 'Notice d’information de votre bail, version d’octobre 2026'
+  const mail = layout({ title: subject, paragraphs: ['Bonjour,', 'La notice d’information jointe aux baux d’habitation a été mise à jour par l’arrêté du 9 octobre 2026. Vous trouverez la nouvelle version en pièce jointe : elle complète votre bail, qui ne change pas.', 'Bonne journée.'] })
+  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: 'notice-information-bail.pdf', content: pdf }] })
+  await patchLeaseData(lease.id, () => ({ noticeUpdateSentAt: new Date().toISOString() }))
+  res.json({ success: true, data: { sentTo: to } })
 })
 
 // ── Parcours guidés « Que se passe-t-il ? » ─────────────────────────────────

@@ -251,6 +251,16 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
         { label: 'Me le rappeler dans un mois', variant: 'ghost', onClick: () => run(() => api(`/leases/${t.leaseId}/snooze/BOILER`, { method: 'POST' }), 'Rappel reporté d’un mois.') },
       ]
       break
+    case 'NOTICE_UPDATE':
+      actions = [
+        {
+          label: 'Envoyer la nouvelle notice',
+          onClick: () =>
+            run(() => api(`/leases/${t.leaseId}/notice/send`, { method: 'POST' }), 'Notice envoyée à votre locataire.', { title: 'Envoyer la notice ?', text: 'La notice d’information d’octobre 2026 part par email à votre locataire, en pièce jointe.' }),
+        },
+        { label: 'Voir la notice', variant: 'outline', onClick: () => window.open('/api/notice-information.pdf', '_blank', 'noopener') },
+      ]
+      break
     case 'STEP':
       if (t.step) {
         const step = t.step

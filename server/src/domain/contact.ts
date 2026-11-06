@@ -8,6 +8,7 @@ export const CONTACT_NEEDS = {
   LEASE: 'Faire mon bail',
   QUESTION: 'Une question sur Bailio',
   PROBLEM: 'Un souci avec un document',
+  SWITCH: 'Passer à Bailio depuis un autre outil',
   OTHER: 'Autre chose',
 } as const
 export type ContactNeed = keyof typeof CONTACT_NEEDS

@@ -8,7 +8,7 @@
 export type NoticeBlock =
  | { t: 'h'; n: string; x: string; lvl: number }
  | { t: 'p' | 'sub' | 'li'; x: string }
- | { t: 'table' }
+ | { t: 'table'; k?: 'metro' | 'dom' }
 
 export const NOTICE_TITLE = 'Notice d’information annexée aux contrats de location de logement à usage de résidence principale'
 export const NOTICE_REFERENCE = 'Arrêté du 29 mai 2015 modifié par l’arrêté du 16 février 2023'

@@ -15,6 +15,8 @@ test('audience : seules les pages publiques sont compt√©es, jamais un lien priv√
   assert.equal(countedPath('/guides'), '/guides')
   assert.equal(countedPath('/guides/depot-de-garantie?utm_source=pinterest'), '/guides/depot-de-garantie')
   assert.equal(countedPath('/guides/Depot_de_garantie'), null)
+  assert.equal(countedPath('/modeles/lettre-revision-loyer'), '/modeles/lettre-revision-loyer')
+  assert.equal(countedPath('/simulateurs/revision-loyer'), '/simulateurs/revision-loyer')
   assert.equal(countedPath('/guides/a/b'), null)
 })
 

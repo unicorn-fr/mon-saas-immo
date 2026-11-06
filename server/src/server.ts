@@ -6,6 +6,7 @@ import { purgeOldCandidates } from './routes/candidates.js'
 import { purgeOldVisits } from './routes/visits.js'
 import { purgeTrash } from './services/trash.js'
 import { runAutoReceipts } from './services/autoReceipts.js'
+import { runDunning } from './services/dunning.js'
 import { purgeAfterLease, purgeDocsAfterLease, purgeWithoutLease } from './services/retention.js'
 
 const app = createApp()
@@ -16,6 +17,8 @@ cron.schedule('0 8 * * *', () => {
   runDailyReminders().catch((err) => console.error('[rappels]', err))
   // Quittances automatiques : propriétaire prévenu, puis envoi 5 jours après l'échéance sauf annulation.
   runAutoReceipts().catch((err) => console.error('[quittances automatiques]', err))
+  // Relances automatiques des loyers impayés (relance, second rappel, mise en demeure), si le propriétaire les a activées.
+  runDunning().catch((err) => console.error('[relances]', err))
   // Candidatures de plus de trois mois : effacées.
   purgeOldCandidates().catch((err) => console.error('[candidatures]', err))
   // Corbeille : éléments supprimés depuis plus de 30 jours, effacés pour de bon.

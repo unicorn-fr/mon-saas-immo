@@ -1,3 +1,4 @@
+import { noticeUpdateDue } from '../domain/noticeUpdate.js'
 import { Router } from 'express'
 import { assumePaymentOn, upcomingAutoReceipt, warnDateOf } from '../domain/autoReceipt.js'
 import { z } from 'zod'
@@ -38,7 +39,7 @@ const short = (d: Date) => `${d.getUTCDate()} ${MONTHS_SHORT[d.getUTCMonth()]}`
 
 export interface Task {
   id: string
-  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT' | 'TAX_DECLARE'
+  type: 'LATE_RENT' | 'PARTIAL_RENT' | 'REVISION' | 'INSURANCE' | 'INVOICE' | 'INVENTORY' | 'LEASE_END' | 'CHARGES' | 'DRAFT_LEASE' | 'DEPARTURE' | 'SETTLEMENT' | 'BOILER' | 'STEP' | 'AUTO_RECEIPT' | 'ISSUE' | 'INVENTORY_COMPLEMENT' | 'TAX_DECLARE' | 'NOTICE_UPDATE'
   tag: string
   tone: 'error' | 'owner' | 'accent' | 'green'
   place: string
@@ -192,6 +193,10 @@ router.get('/today', async (req, res) => {
       if (today.getTime() - last.getTime() >= 365 * DAY)
         tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'accent', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
     }
+    // Bail signé entre le 18 octobre 2026 et la mise à jour de Bailio : il porte l'ancienne notice d'information.
+    // La nouvelle (arrêté du 9 octobre 2026) est à envoyer au locataire, une fois.
+    if (noticeUpdateDue(l.status, l.signedAt, l.data))
+      tasks.push({ id: `notice-${l.id}`, type: 'NOTICE_UPDATE', tag: 'Notice du bail', tone: 'owner', place, title: `Envoyer la nouvelle notice d’information à ${who}`, text: 'Elle a changé le 18 octobre 2026 : votre bail porte l’ancienne version. Un email suffit, la nouvelle est prête.', leaseId: l.id })
     // Arrivée ou départ du locataire : à signaler aux impôts (occupation du logement), sans attendre le printemps.
     const taxMode = leaseTaxMode({ status: l.status, startDate: iso(l.startDate)!, endDate: iso(l.endDate)!, housing: isHousing(leaseKindOf(l)) }, iso(today)!)
     const declared = (l.data as { taxDeclared?: Record<string, { occupancy?: string }> } | null)?.taxDeclared

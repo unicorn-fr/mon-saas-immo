@@ -1,7 +1,8 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { LAUNCH_OFFER, priceLabel } from './src/config'
+import { LAUNCH_OFFER, priceDetail } from './src/config'
 import { GUIDES, guidePath, type Guide } from './src/content/guides'
+import { MODELES, SIMULATEURS, modelePath, type Modele } from './src/content/modeles'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -21,6 +22,10 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/securite', 'yearly', '0.3'],
   ['/guides', 'weekly', '0.7'],
   ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
+  ['/changer-pour-bailio', 'monthly', '0.7'],
+  ['/modeles', 'monthly', '0.7'],
+  ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
+  ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
 ]
 
 // Description du service pour les assistants et agents d'IA (format llms.txt) : informations publiques seulement.
@@ -28,7 +33,7 @@ const LLMS_TXT = `# Bailio
 
 > Bailio aide les propriétaires bailleurs particuliers en France à louer leur logement (résidence principale, vide ou meublé) : bail conforme au contrat type du décret n° 2015-587, signature électronique, états des lieux, quittances, révision du loyer, courriers, aide à la déclaration des revenus fonciers et rappels des échéances. Il n'y a pas d'espace locataire.
 
-- Premier bail gratuit, sans carte bancaire. Offre de suivi : ${priceLabel()} par mois, sans engagement (${LAUNCH_OFFER.toLowerCase()}).
+- Premier bail gratuit, sans carte bancaire. Offre de suivi : ${priceDetail()}, tout compris, sans engagement (${LAUNCH_OFFER.toLowerCase()}).
 - Connexion sans mot de passe, par lien envoyé par email.
 - Données hébergées en Suisse (Infomaniak). Aucun cookie, aucune publicité, aucune donnée envoyée à un service d'IA.
 - Règles contrôlées : loi n° 89-462 du 6 juillet 1989 (dépôt de garantie, durée, plafonds du loyer, logements interdits à la location selon le DPE, validité des diagnostics).
@@ -49,6 +54,10 @@ const LLMS_TXT = `# Bailio
 - [Contact](${SITE_URL}/contact)
 - [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
 ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
+- [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
+- [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
+${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
+${SIMULATEURS.map((x) => `- [${x.name}](${SITE_URL}${x.path}): ${x.description}`).join('\n')}
 
 ## Documents officiels publics
 
@@ -72,6 +81,9 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/prix-et-remboursement': { title: 'Prix et remboursement', description: 'Premier bail gratuit, sans carte bancaire. Le suivi de la location, sans engagement : prix, rétractation et remboursement.' },
   '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
+  '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
+  '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },
+  ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
 }
 
@@ -88,16 +100,26 @@ function guideHtml(g: Guide) {
   return `<article><h1>${esc(g.title)}</h1><p>${esc(g.description)}</p>${body}<h2>Sources</h2><ul>${sources}</ul></article><p><a href="/guides">Tous les guides du propriétaire</a> · <a href="/">Bailio</a></p>`
 }
 
+/** Modèle de lettre en HTML simple pour les robots (dans <noscript>) : règles, lettre complète, envoi, sources. */
+function modeleHtml(m: Modele) {
+  const list = (xs: string[]) => `<ul>${xs.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>`
+  const letter = [`<p><strong>Objet : ${esc(m.letter.subject)}</strong></p>`, ...m.letter.paragraphs.map((p) => `<p>${esc(p)}</p>`)].join('')
+  const sources = m.sources.map((x) => `<li><a href="${esc(x.url)}">${esc(x.label)}</a> (vérifié le ${esc(x.checked)})</li>`).join('')
+  return `<article><h1>${esc(m.title)}</h1><p>${esc(m.lead)}</p><h2>Avant d’envoyer</h2>${list(m.rules)}<h2>La lettre</h2>${letter}${m.letter.annexes ? `<h2>À joindre</h2>${list(m.letter.annexes)}` : ''}<h2>Comment l’envoyer</h2><p>${esc(m.send)}</p><h2>Sources</h2><ul>${sources}</ul></article><p><a href="/modeles">Tous les modèles</a> · <a href="/">Bailio</a></p>`
+}
+
 const guideText = (g: Guide) => g.blocks.map((b) => ('h' in b ? b.h : 'p' in b ? b.p : 'list' in b ? b.list.join(' ') : b.note)).join('\n')
 
 /** Une page HTML par page publique : titre, description, adresse canonique, partage et données structurées propres. */
 function pageHtml(base: string, path: string) {
   const url = `${SITE_URL}${path}`
   const guide = GUIDES.find((g) => guidePath(g) === path)
-  const meta = guide ? { title: guide.title, description: guide.description } : PAGE_META[path]
+  const modele = MODELES.find((m) => modelePath(m) === path)
+  const meta = guide ? { title: guide.title, description: guide.description } : modele ? { title: modele.title, description: modele.description } : PAGE_META[path]
   if (!meta) return null
   const title = `${meta.title} · Bailio`
-  const crumbs = [{ name: 'Bailio', url: `${SITE_URL}/` }, ...(path.startsWith('/guides') ? [{ name: 'Guides du propriétaire', url: `${SITE_URL}/guides` }] : []), ...(path !== '/guides' ? [{ name: meta.title, url }] : [])]
+  const section = path.startsWith('/guides') ? { name: 'Guides du propriétaire', url: `${SITE_URL}/guides` } : modele || SIMULATEURS.some((x) => x.path === path) || path === '/modeles' ? { name: 'Modèles gratuits', url: `${SITE_URL}/modeles` } : null
+  const crumbs = [{ name: 'Bailio', url: `${SITE_URL}/` }, ...(section ? [section] : []), ...(section?.url !== url ? [{ name: meta.title, url }] : [])]
   const ld = [
     jsonLd({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })) }),
     guide
@@ -124,7 +146,11 @@ function pageHtml(base: string, path: string) {
   ].join('')
   const noscript = guide
     ? guideHtml(guide)
-    : path === '/guides'
+    : modele
+      ? modeleHtml(modele)
+      : path === '/modeles'
+        ? `<h1>Modèles de lettres gratuits</h1><ul>${SIMULATEURS.map((x) => `<li><a href="${x.path}">${esc(x.name)}</a> : ${esc(x.lead)}</li>`).join('')}${MODELES.map((m) => `<li><a href="${modelePath(m)}">${esc(m.title)}</a> : ${esc(m.lead)}</li>`).join('')}</ul>`
+        : path === '/guides'
       ? `<h1>Guides du propriétaire bailleur</h1><ul>${GUIDES.map((g) => `<li><a href="${guidePath(g)}">${esc(g.title)}</a> : ${esc(g.description)}</li>`).join('')}</ul>`
       : `<h1>${esc(meta.title)}</h1><p>${esc(meta.description)}</p>`
   return base

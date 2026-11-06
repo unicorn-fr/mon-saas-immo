@@ -150,7 +150,11 @@ type LeaseWithProperty = Lease & { property: Property }
 export async function contractFor(user: User, lease: LeaseWithProperty): Promise<ContractInput> {
   const data = lease.data as Record<string, unknown>
   if (isLegacy(data)) return legacyToContract(data)
-  if (data.snapshot && lease.status !== 'DRAFT') return data.snapshot as ContractInput
+  if (data.snapshot && lease.status !== 'DRAFT') {
+    // Bail signé : copie figée ; sa date de conclusion choisit la notice d'information jointe (arrêté du 9 octobre 2026).
+    const snap = data.snapshot as ContractInput
+    return { ...snap, concludedOn: snap.concludedOn ?? (lease.signedAt ? lease.signedAt.toISOString().slice(0, 10) : null) }
+  }
 
   const tenants = lease.tenantIds.length ? await prisma.tenant.findMany({ where: { id: { in: lease.tenantIds }, userId: user.id } }) : []
   const ordered = lease.tenantIds.map((id) => tenants.find((t) => t.id === id)).filter((t): t is Tenant => Boolean(t))

@@ -47,6 +47,7 @@ router.get('/portfolio', async (req, res) => {
       leaseEnd: lease ? iso(lease.endDate) : null,
       vacantSince: !lease && !signed.some((l) => l.startDate > now) && ended ? iso(ended.endDate) : null,
       dpe: f.diagnostics?.dpe?.class ?? null,
+      postalCode: f.postalCode ?? null,
       expiredDiagnostics: expiredDiagnostics(f, now).length,
       purchasePriceCents: f.purchase?.priceCents ?? null,
       parkingNoticeMonths: f.nature === 'PARKING' ? ((lease ? readTerms(lease).noticeMonths : null) ?? 1) : null,

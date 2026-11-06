@@ -10,7 +10,7 @@ import { useDraft } from '../lib/draft'
 import { addMonths, dateFr, parseIso } from '../lib/lease'
 import type { User } from '../lib/types'
 import type { LeaseView } from '../lib/space'
-import { priceLabel } from '../config'
+import { priceText } from '../config'
 
 export default function Bienvenue() {
   const { leaseId } = useParams()
@@ -197,7 +197,7 @@ export default function Bienvenue() {
               <>
                 <span style={{ fontSize: 17, fontWeight: 700, color: BAI.night }}>Votre bail est gratuit. Le suivi, c'est l'offre complète.</span>
                 <span style={{ fontSize: 14, color: BAI.night, lineHeight: 1.5 }}>
-                  {priceLabel()}{priceLabel() === 'Prix à venir' ? '' : ' par mois'}, sans engagement. Les rappels ci-dessus démarrent dès l'activation.
+                  {priceText()}, sans engagement. Les rappels ci-dessus démarrent dès l'activation.
                 </span>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <Button variant="dark" height={46} loading={busy === 'followup'} onClick={() => void activate()} style={{ padding: '0 18px', fontSize: 15 }}>

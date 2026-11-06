@@ -63,6 +63,48 @@
 .hero-lead { font-size: var(--step-lead); line-height: 1.4; max-width: 30ch; color: var(--paper); }
 .hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 28px; }
 /* Ordinateur : le contenu du bloc est centré. */
+
+/* Visite du produit : onglets à gauche, capture dans un téléphone, bloc de couleur posé en bas. */
+.tour { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 11vw, 160px) var(--pad); align-items: center; }
+.tour-intro { grid-column: 1 / 6; display: flex; flex-direction: column; gap: 32px; }
+.tour-intro h2 { font-size: var(--step-head); }
+.tour-tabs { display: flex; flex-direction: column; gap: 4px; padding: 4px; background: var(--stone); border-radius: 26px; max-width: 380px; }
+.tour-tabs button { display: flex; align-items: center; gap: 14px; text-align: left; background: transparent; border: 0; border-radius: 999px; padding: 8px 20px 8px 8px; min-height: 48px; font-family: var(--text); font-size: var(--step-body); font-weight: 500; color: var(--ink); cursor: pointer; }
+.tour-tabs button[aria-selected='true'] { background: var(--owner); color: var(--paper); font-weight: 600; }
+.tour-num { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); color: var(--owner); font-weight: 700; font-size: 0.9375rem; flex-shrink: 0; }
+.tour-panel { grid-column: 7 / 13; position: relative; display: flex; justify-content: center; padding-bottom: 72px; }
+.tour-phone { width: min(320px, 100%); border-radius: 40px; border: 8px solid var(--night); overflow: hidden; background: var(--paper); aspect-ratio: 1 / 2; }
+.tour-phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.tour-text { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; width: min(420px, 100%); box-sizing: border-box; background: var(--peach); color: var(--ink); border-radius: var(--round); padding: 26px 28px; display: flex; flex-direction: column; gap: 8px; }
+.tour-text h3 { font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem); }
+.tour-text p { margin: 0; line-height: 1.45; }
+.tour-text small { font-size: var(--step-small); color: var(--ink); }
+
+/* Démarches par an */
+.year { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 11vw, 160px) var(--pad) 0; align-items: start; }
+.year-intro { grid-column: 1 / 6; display: flex; flex-direction: column; gap: 32px; }
+.year-intro h2 { font-size: var(--step-head); }
+.year-count { color: var(--owner); font-variant-numeric: tabular-nums; }
+.year-pick { display: flex; flex-direction: column; gap: 10px; }
+.year-buttons { display: flex; gap: 4px; padding: 4px; background: var(--stone); border-radius: 999px; width: fit-content; }
+.year-buttons button { min-width: 56px; min-height: 48px; border: 0; border-radius: 999px; background: transparent; font-family: var(--text); font-size: var(--step-body); font-weight: 600; color: var(--ink); cursor: pointer; }
+.year-buttons button[aria-pressed='true'] { background: var(--owner); color: var(--paper); }
+.year-list { grid-column: 7 / 13; margin: 0; background: var(--stone); border-radius: var(--round); padding: 12px 36px; font-variant-numeric: tabular-nums; }
+.year-list > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 18px 0; border-top: 1px solid var(--line); }
+.year-list > div:first-child { border-top: 0; }
+.year-list dt { font-weight: 500; }
+.year-list dd { margin: 0; font-family: var(--display); font-size: 1.75rem; color: var(--owner); white-space: nowrap; }
+.year-list .year-plus dd { font-family: var(--text); font-size: var(--step-body); font-weight: 600; }
+
+/* Avis de propriétaires */
+.reviews { padding: clamp(96px, 11vw, 160px) var(--pad) 0; display: flex; flex-direction: column; gap: 40px; }
+.reviews h2 { font-size: var(--step-head); }
+.reviews-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.review { margin: 0; background: var(--stone); border-radius: var(--round); padding: 32px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+.review blockquote { margin: 0; font-size: var(--step-lead); line-height: 1.4; }
+.review figcaption { display: flex; flex-direction: column; gap: 2px; font-size: var(--step-small); color: var(--muted); }
+.review figcaption strong, .review figcaption a { color: var(--ink); font-size: var(--step-body); font-weight: 600; }
+
 @media (min-width: 1024px) {
   .hero-block { align-items: center; text-align: center; }
   .hero-actions { justify-content: center; }
@@ -169,6 +211,10 @@
 .plan--free .plan-price { color: var(--owner); }
 .plan--full { background: var(--night); color: var(--paper); --fold-back: rgba(255, 255, 255, 0.2); }
 .plan-note { max-width: 44ch; color: var(--on-dark); }
+.plan-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; color: var(--paper); font-size: var(--step-small); }
+.plan-list li { display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; }
+.plan-list .tick { background: var(--sky); color: var(--owner); }
+@media (max-width: 767px) { .plan-list { grid-template-columns: 1fr; } }
 
 /* ── Questions en texte courant ── */
 .faq { padding: clamp(96px, 11vw, 160px) var(--pad); display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
@@ -214,6 +260,9 @@
 
 /* ── Tablette ── */
 @media (max-width: 1023px) {
+  .tour-intro, .tour-panel, .year-intro, .year-list { grid-column: 1 / -1; }
+  .tour-panel, .year-list { margin-top: 48px; }
+  .reviews-list { grid-template-columns: 1fr; }
   .hero-block { width: min(600px, 72%); }
   .live-form, .live-visual { grid-column: 1 / -1; }
   .live-visual { margin-top: 56px; }
@@ -237,6 +286,13 @@
 
 /* ── Téléphone : les blocs de couleur passent sous la photo, collés aux bords ── */
 @media (max-width: 767px) {
+  .tour { padding: 80px 16px; }
+  .tour-phone { width: 260px; border-width: 6px; border-radius: 32px; }
+  .year-list dd { font-size: 1.5rem; }
+  .year { padding: 80px 16px 0; }
+  .year-list { padding: 4px 20px; }
+  .reviews { padding: 80px 16px 0; }
+  .review { padding: 24px; }
   .bar { padding: 4px 16px; }
   .hero { padding: 0 12px; }
   .hero-photo { height: 36svh; min-height: 220px; }
