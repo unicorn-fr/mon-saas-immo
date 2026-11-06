@@ -7,6 +7,7 @@ import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { HttpError } from '../lib/http.js'
 import { layout, sendEmail } from '../lib/email.js'
+import { LEASE_NOTICE, renderNoticePdf } from '../pdf/notice.js'
 import { irlOneYearLater, latestIrl, quarterLabel } from '../lib/irl.js'
 import { requireUser } from '../services/session.js'
 import { ensureReminders } from '../services/reminders.js'
@@ -1022,6 +1023,21 @@ router.post('/leases/:id/letters', async (req, res) => {
     await prisma.reminder.updateMany({ where: { leaseId: lease.id, type: 'INSURANCE', status: 'TODO', dueDate: { lte: new Date(Date.now() + 60 * 86_400_000) } }, data: { status: 'DONE', doneAt: new Date() } })
   }
   res.status(201).json({ success: true, data: { documentId: doc.id, computed: content.computed ?? [] } })
+})
+
+// Nouvelle notice d'information (arrêté du 9 octobre 2026) envoyée au locataire d'un bail signé avec l'ancienne.
+router.post('/leases/:id/notice/send', async (req, res) => {
+  const user = req.user!
+  const lease = await leaseOwned(user.id, String(req.params.id))
+  const c = await liveContract(user, lease)
+  const to = c.tenants.map((t) => t.email).filter((e): e is string => Boolean(e))
+  if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer la notice.')
+  const pdf = await renderNoticePdf(LEASE_NOTICE)
+  const subject = 'Notice d’information de votre bail, version d’octobre 2026'
+  const mail = layout({ title: subject, paragraphs: ['Bonjour,', 'La notice d’information jointe aux baux d’habitation a été mise à jour par l’arrêté du 9 octobre 2026. Vous trouverez la nouvelle version en pièce jointe : elle complète votre bail, qui ne change pas.', 'Bonne journée.'] })
+  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: 'notice-information-bail.pdf', content: pdf }] })
+  await patchLeaseData(lease.id, () => ({ noticeUpdateSentAt: new Date().toISOString() }))
+  res.json({ success: true, data: { sentTo: to } })
 })
 
 // ── Parcours guidés « Que se passe-t-il ? » ─────────────────────────────────
