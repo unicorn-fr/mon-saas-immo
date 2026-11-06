@@ -7,7 +7,7 @@ import { eurosInWords } from '../domain/words.js'
 import { quarterLabel } from '../lib/irl.js'
 import { CONSTRUCTION, ENERGY, NET, TV, annexesLabel, commonAreasLabel, dateLong, dateShort, durationText, equipmentsLabel, euros, guarantorName, landlordName, originalsCount, propertyAddress } from './labels.js'
 import { CertificatePage, type CertificateData } from './certificate.js'
-import { NoticePages } from './notice.js'
+import { NoticePages, leaseNoticeFor } from './notice.js'
 import { ParkingContractDocument } from './parkingContract.js'
 import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } from './theme.js'
 
@@ -622,7 +622,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
 
         <Footer left={`Bail ${lastNames || ''}${version}${signed?.certificate ? ` · signé électroniquement, réf. ${signed.certificate.requestId.slice(0, 8)}` : ''}`} paraphs={signed?.certificate ? 0 : paraphs} />
       </Page>
-      <NoticePages footer={`Bail ${lastNames || ''} · annexe : notice d’information`} paraphs={signed?.certificate ? 0 : paraphs} />
+      <NoticePages notice={leaseNoticeFor(c.concludedOn)} footer={`Bail ${lastNames || ''} · annexe : notice d’information`} paraphs={signed?.certificate ? 0 : paraphs} />
       {signed?.certificate ? <CertificatePage data={signed.certificate} /> : null}
     </Document>
   )

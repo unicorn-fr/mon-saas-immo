@@ -458,7 +458,9 @@ router.get('/leases/:id/guarantee/:tenantId.pdf', async (req, res) => {
 export async function activateLease(user: User, lease: LeaseWithProperty, c: ContractInput, signed?: { leasePdf: Buffer; guarantees: Map<number, Buffer> }) {
   const view = await leaseView(user, lease)
   const pdf = signed?.leasePdf ?? (await renderLeasePdf(c, lease.propertyId))
-  const { version: _v, ...snapshot } = c
+  const { version: _v, ...rest } = c
+  // Copie figée du bail, avec sa date de conclusion (version de la notice d'information jointe).
+  const snapshot = { ...rest, concludedOn: rest.concludedOn ?? iso(lease.signedAt ?? new Date()) }
   await saveGeneratedDocument({ userId: user.id, kind: 'LEASE', title: `${view.kind === 'PARKING' ? 'Contrat de location du garage' : `Bail ${view.kind === 'VIDE' ? 'vide' : 'meublé'}`}, ${view.tenantName}${signed ? ', signé électroniquement' : ''}`, pdf, snapshot: c, keepFile: Boolean(signed), leaseId: lease.id, propertyId: lease.propertyId })
   // Actes de caution : un document par garant.
   for (const g of view.guarantors) {

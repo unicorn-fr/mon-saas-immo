@@ -75,7 +75,7 @@ Elles sont codées dans `server/src/domain/lease.ts` (et reprises pour l'afficha
 Toute modification de ces règles s'accompagne d'un test dans `server/src/domain/lease.test.ts`.
 
 Textes officiels reproduits **à l'identique** (ne jamais les reformuler, seulement la mise en page) :
-- notice d'information de l'arrêté du 29 mai 2015 modifié (`server/src/pdf/notice-text.ts`), jointe à la fin de chaque bail et publique sur `/api/notice-information.pdf` ;
+- notice d'information de l'arrêté du 29 mai 2015 modifié, jointe à la fin de chaque bail selon sa date de conclusion (`concludedOn` de la copie figée, `leaseNoticeFor`) : rédaction de l'arrêté du 9 octobre 2026 pour les baux conclus ou renouvelés depuis le 18 octobre 2026 (`server/src/pdf/notice-text-2026.ts`, généré par `scripts/notice-2026.py` depuis `docs/legal/notice-2026.txt`, deux tableaux de décence énergétique : métropole et outre-mer), rédaction de 2023 avant (`notice-text.ts`) ; la version en vigueur est publique sur `/api/notice-information.pdf` ;
 - notice de l'arrêté du 13 décembre 2017 et article 15, II, alinéas 1 à 5 (`server/src/pdf/notice-conge-text.ts`), joints au congé pour vendre ou reprendre un logement vide.
 - listes des réparations locatives (décret 87-712) et des charges récupérables (décret 87-713) (`server/src/pdf/annexes-text.ts`), publiques sur `/api/reparations-locatives.pdf` et `/api/charges-recuperables.pdf`.
 Tests : `server/src/domain/notices.test.ts`, `server/src/domain/letters.test.ts`.

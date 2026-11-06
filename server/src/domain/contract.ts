@@ -471,4 +471,6 @@ export interface ContractInput {
   terms: LeaseTerms
   /** Mention en pied de page : « version 2 du 28/09/2026 ». */
   version?: { number: number; date: string }
+  /** Date de conclusion (signature) du bail, AAAA-MM-JJ : choisit la version de la notice d'information jointe. Absente : bail en préparation, notice en vigueur. */
+  concludedOn?: string | null
 }
