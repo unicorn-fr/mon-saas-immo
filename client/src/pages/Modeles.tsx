@@ -6,6 +6,7 @@ import { Choices, QuestionScreen, useQuestion } from '../components/Questions'
 import { TextField } from '../components/ui'
 import { MODELES, SIMULATEURS, letterText, modelePath, type Modele } from '../content/modeles'
 import { NotFound } from './legal/Legal'
+import { SignupCta } from '../components/SignupCta'
 
 /** Description de la page pour les moteurs de recherche, remise comme avant en quittant la page. */
 function useDescription(text: string) {
@@ -113,10 +114,7 @@ function ModelePage({ m }: { m: Modele }) {
       ) : null}
       <h2 style={h2}>Comment l’envoyer</h2>
       <p style={{ margin: 0 }}>{m.send}</p>
-      <p style={{ margin: '28px 0', background: BAI.sky, color: BAI.ink, borderRadius: 24, padding: 'clamp(18px, 3vw, 24px)' }}>
-        <strong>Avec Bailio : </strong>
-        {m.bailio}
-      </p>
+      <SignupCta text={m.bailio} />
       <h2 style={{ ...h2, fontSize: 18 }}>Sources</h2>
       <ul style={{ margin: 0, paddingLeft: 22, fontSize: 15 }}>
         {m.sources.map((s) => (
@@ -317,9 +315,7 @@ export function SimulateurRevision() {
   return (
     <SimplePage title="Simulateur de révision du loyer">
       <div style={{ maxWidth: 560 }}>{body}</div>
-      <p style={{ marginTop: 40, fontSize: 15 }}>
-        Avec Bailio, la lettre de révision est prête à la date anniversaire, avec le bon indice, et le nouveau loyer passe dans les quittances. <Link to="/commencer">Préparer mon bail, gratuitement</Link>
-      </p>
+      <SignupCta text="Avec Bailio, la lettre de révision est prête à la date anniversaire, avec le bon indice, et le nouveau loyer passe seul dans les quittances." />
       <p style={{ fontSize: 15 }}>
         Source :{' '}
         <a href="https://www.service-public.fr/particuliers/vosdroits/F1311" target="_blank" rel="noopener noreferrer">

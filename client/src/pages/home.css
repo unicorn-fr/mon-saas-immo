@@ -96,6 +96,16 @@
 .year-list dd { margin: 0; font-family: var(--display); font-size: 1.75rem; color: var(--owner); white-space: nowrap; }
 .year-list .year-plus dd { font-family: var(--text); font-size: var(--step-body); font-weight: 600; }
 
+/* Outils gratuits */
+.tools { padding: clamp(96px, 11vw, 160px) var(--pad) 0; display: flex; flex-direction: column; gap: 32px; }
+.tools h2 { font-size: var(--step-head); }
+.tools-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.tools-list a { display: flex; flex-direction: column; gap: 6px; height: 100%; box-sizing: border-box; padding: 24px 26px; border-radius: var(--round); background: var(--stone); color: var(--ink); text-decoration: none; }
+.tools-list a:hover strong { text-decoration: underline; text-underline-offset: 4px; }
+.tools-list strong { font-size: 1.125rem; color: var(--owner); }
+.tools-list span { font-size: var(--step-small); line-height: 1.45; color: var(--muted); }
+.tools-more { align-self: flex-start; color: var(--owner); font-weight: 600; text-underline-offset: 6px; padding: 12px 0; }
+
 /* Avis de propriétaires */
 .reviews { padding: clamp(96px, 11vw, 160px) var(--pad) 0; display: flex; flex-direction: column; gap: 40px; }
 .reviews h2 { font-size: var(--step-head); }
@@ -263,6 +273,7 @@
   .tour-intro, .tour-panel, .year-intro, .year-list { grid-column: 1 / -1; }
   .tour-panel, .year-list { margin-top: 48px; }
   .reviews-list { grid-template-columns: 1fr; }
+  .tools-list { grid-template-columns: 1fr 1fr; }
   .hero-block { width: min(600px, 72%); }
   .live-form, .live-visual { grid-column: 1 / -1; }
   .live-visual { margin-top: 56px; }
@@ -292,6 +303,8 @@
   .year { padding: 80px 16px 0; }
   .year-list { padding: 4px 20px; }
   .reviews { padding: 80px 16px 0; }
+  .tools { padding: 80px 16px 0; }
+  .tools-list { grid-template-columns: 1fr; }
   .review { padding: 24px; }
   .bar { padding: 4px 16px; }
   .hero { padding: 0 12px; }
