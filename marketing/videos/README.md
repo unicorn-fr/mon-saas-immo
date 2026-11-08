@@ -58,12 +58,19 @@ voix clonée : voix de la bibliothèque ElevenLabs, énergique.
 15. **Journal.** Ajouter chaque vidéo programmée à « Publiés » de `sujets.md` (date, heure, sujet, format, source) et
     retirer l'idée utilisée ; commit.
 
-## Coûts
+## Coûts : budget de voix fixe
 
 - Rendu, transcription, montage : gratuits (sur la machine).
-- Voix : environ 1 crédit ElevenLabs par caractère du script. Une semaine ≈ 7 × 500 + 1 × 4 000 ≈ 7 500 à 10 000
-  crédits. Surveiller le solde ; si le forfait ne suffit pas, raccourcir la vidéo YouTube ou passer au forfait
-  supérieur, après accord.
+- Voix : environ 1 crédit ElevenLabs par caractère du script. Forfait : **30 363 crédits par mois**, rien de plus avant
+  la remise à zéro mensuelle (pas d'achat sans accord écrit).
+- **Une seule voix par vidéo** : `generations_count: 1`, jamais de nouvel essai, jamais deux voix pour la même vidéo.
+  Une prise ratée se corrige au montage (couper, décaler), pas en régénérant.
+- **Budget par semaine : 7 000 crédits au plus** (4 semaines = 28 000, il reste une marge). Vidéos courtes :
+  450 caractères au plus (≈ 25 s) ; vidéo YouTube : 2 000 caractères au plus (≈ 2 min). 7 × 450 + 2 000 ≈ 5 200.
+- Avant chaque voix : `estimate_only: true` pour lire le coût, puis lancer seulement si la somme de la semaine reste
+  sous le budget. Noter le coût de chaque voix dans « Publiés » de `sujets.md`.
+- Ne lancer les voix qu'une à une et vérifier le résultat de la précédente : un refus pour solde insuffisant arrête
+  la semaine, on attend la remise à zéro.
 
 ## Accès
 
