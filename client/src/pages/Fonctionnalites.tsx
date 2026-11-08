@@ -1,10 +1,11 @@
-import { Fragment, useRef, useState, type ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { display } from '../components/ui'
 import { SiteFooter, SiteHeader } from '../components/SiteChrome'
 import { SignupCta } from '../components/SignupCta'
 import { AppWindow } from '../components/AppWindow'
+import { ProductTour } from '../components/ProductTour'
 import { priceText } from '../config'
 import { CALLBACK_PROMISE } from '../content/inclus'
 import { FEATURES, PROFILES, SECTIONS, SHOWCASE, featurePath, type Feature } from '../content/fonctionnalites'
@@ -45,60 +46,11 @@ function Check() {
   )
 }
 
-/** Vitrine : quatre écrans de l'application, un onglet chacun, la zone utile mise en avant. */
+/** Vitrine : les écrans de l'application qui défilent seuls, la zone utile montrée par le curseur. */
 function Showcase() {
-  const [i, setI] = useState(0)
-  const tabs = useRef<Array<HTMLButtonElement | null>>([])
-  const s = SHOWCASE[i]
-  const move = (to: number) => {
-    const n = (to + SHOWCASE.length) % SHOWCASE.length
-    setI(n)
-    tabs.current[n]?.focus()
-  }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
-      <div id="vitrine" role="tabpanel" aria-labelledby={`vitrine-${s.id}`} className="panel-in" key={s.id}>
-        <AppWindow img={s.img} alt={s.alt} spot={s.spot} eager={i === 0} />
-      </div>
-      <div role="tablist" aria-label="Écrans de l’application" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-        {SHOWCASE.map((t, j) => (
-          <button
-            key={t.id}
-            ref={(el) => void (tabs.current[j] = el)}
-            type="button"
-            role="tab"
-            id={`vitrine-${t.id}`}
-            aria-selected={i === j}
-            aria-controls="vitrine"
-            tabIndex={i === j ? 0 : -1}
-            onClick={() => setI(j)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') (e.preventDefault(), move(j + 1))
-              if (e.key === 'ArrowLeft') (e.preventDefault(), move(j - 1))
-            }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              minHeight: 44,
-              padding: '0 16px 0 6px',
-              borderRadius: 999,
-              border: `1.5px solid ${i === j ? BAI.owner : BAI.borderStrong}`,
-              background: i === j ? BAI.owner : BAI.surface,
-              color: i === j ? BAI.surface : BAI.ink,
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <span aria-hidden style={{ width: 30, height: 30, borderRadius: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i === j ? BAI.surface : BAI.sky, color: BAI.owner, fontSize: 14 }}>
-              {j + 1}
-            </span>
-            {t.tab}
-          </button>
-        ))}
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+      <ProductTour steps={SHOWCASE} />
       <p style={{ margin: 0, fontSize: 14, textAlign: 'center' }}>Capture de l’application sur ordinateur, compte d’exemple.</p>
     </div>
   )

@@ -1,0 +1,68 @@
+{
+ "videos": [
+  {
+   "date": "2026-11-09",
+   "heure": "18:30",
+   "nom": "sous-location",
+   "type": "vertical",
+   "fichier": "sortie/sous.mp4",
+   "textes": "textes/sous.json"
+  },
+  {
+   "date": "2026-11-10",
+   "heure": "18:30",
+   "nom": "preavis-zone-tendue",
+   "type": "vertical",
+   "fichier": "sortie/preavis.mp4",
+   "textes": "textes/preavis.json"
+  },
+  {
+   "date": "2026-11-11",
+   "heure": "10:30",
+   "nom": "charges-taxe-fonciere",
+   "type": "vertical",
+   "fichier": "sortie/charges.mp4",
+   "textes": "textes/charges.json"
+  },
+  {
+   "date": "2026-11-12",
+   "heure": "18:30",
+   "nom": "pieces-interdites",
+   "type": "vertical",
+   "fichier": "sortie/pieces.mp4",
+   "textes": "textes/pieces.json"
+  },
+  {
+   "date": "2026-11-13",
+   "heure": "18:30",
+   "nom": "etat-des-lieux-10-jours",
+   "type": "vertical",
+   "fichier": "sortie/edl.mp4",
+   "textes": "textes/edl.json"
+  },
+  {
+   "date": "2026-11-14",
+   "heure": "10:00",
+   "nom": "choisir-son-locataire",
+   "type": "youtube",
+   "fichier": "sortie/yt.mp4",
+   "textes": "textes/yt.json"
+  },
+  {
+   "date": "2026-11-14",
+   "heure": "11:30",
+   "nom": "visale",
+   "type": "vertical",
+   "fichier": "sortie/visale.mp4",
+   "textes": "textes/visale.json"
+  },
+  {
+   "date": "2026-11-15",
+   "heure": "10:30",
+   "nom": "impaye-3-ans",
+   "type": "vertical",
+   "fichier": "sortie/trois-ans.mp4",
+   "textes": "textes/trois-ans.json"
+  }
+ ]
+}

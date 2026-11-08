@@ -1,6 +1,7 @@
 import { ADD_PARKING_PATH } from '../lib/contract'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import { AppWindow } from '../components/AppWindow'
+import { ProductTour, type TourStep } from '../components/ProductTour'
+import { CountUp } from '../components/CountUp'
 import { Link } from 'react-router-dom'
 import './home.css'
 import { Logo } from '../components/Logo'
@@ -219,13 +220,15 @@ function Check() {
 
 const FIELDS = ['peach', 'sky', 'night'] as const
 
-/** Visite du produit : vraies captures de l'application (compte d'exemple), une étape à la fois. */
-const TOUR = [
-  { id: 'decrire', tab: 'Décrire', title: 'Une question à la fois', text: 'Vide ou meublé, l’adresse, le loyer : vous répondez, Bailio remplit le reste.', img: 'tunnel', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5' },
-  { id: 'bail', tab: 'Le bail', title: 'Un bail conforme, signé en ligne', text: 'Le contrat type officiel, rempli et vérifié, puis signé par le locataire et son garant sans créer de compte.', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail' },
-  { id: 'jour', tab: 'Aujourd’hui', title: 'Ce qu’il y a à faire, déjà prêt', text: 'Un loyer en retard ? La relance est rédigée. Une démarche aux impôts ? Tout est prêt à copier.', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances' },
-  { id: 'mois', tab: 'Chaque mois', title: 'Quittances et relances toutes seules', text: 'La quittance part dès le loyer reçu. S’il manque, les relances partent à vos dates.', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées' },
-] as const
+/** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
+const TOUR: TourStep[] = [
+  { id: 'decrire', tab: 'Décrire', img: 'tunnel', path: 'bailio.fr/commencer', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5', spot: { x: 25, y: 28, w: 50, h: 26, label: 'Une question à la fois : Bailio remplit le reste' } },
+  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 22.5, y: 8, w: 40, h: 14, label: 'Le contrat type officiel, signé en ligne' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 21.9, y: 22.7, w: 49, h: 18, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 22.8, y: 64.3, w: 41, h: 4, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
+  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 22.8, y: 20.7, w: 30, h: 13, label: 'Classés sur les ressources, la garantie et les pièces' } },
+  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 23, y: 45, w: 72, h: 19, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
+]
 
 /** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */
 const YEARLY = [
@@ -237,52 +240,18 @@ const YEARLY = [
 const COUNTS = [1, 2, 3, 5] as const
 
 function Tour() {
-  const [i, setI] = useState(0)
-  const tabs = useRef<Array<HTMLButtonElement | null>>([])
-  const step = TOUR[i]
-  const move = (to: number) => {
-    const n = (to + TOUR.length) % TOUR.length
-    setI(n)
-    tabs.current[n]?.focus()
-  }
   return (
     <section className="tour" data-section aria-labelledby="tour-title">
       <div className="tour-intro">
         <h2 id="tour-title" data-in>
-          Bailio <em>en quatre écrans.</em>
+          Bailio <em>en action.</em>
         </h2>
-        <div className="tour-tabs" role="tablist" aria-label="Étapes de la visite" data-in style={{ ['--i' as string]: 1 }}>
-          {TOUR.map((t, j) => (
-            <button
-              key={t.id}
-              ref={(el) => void (tabs.current[j] = el)}
-              type="button"
-              role="tab"
-              id={`tour-tab-${t.id}`}
-              aria-selected={i === j}
-              aria-controls="tour-panel"
-              tabIndex={i === j ? 0 : -1}
-              onClick={() => setI(j)}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') (e.preventDefault(), move(j + 1))
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') (e.preventDefault(), move(j - 1))
-              }}
-            >
-              <span className="tour-num" aria-hidden>
-                {j + 1}
-              </span>
-              {t.tab}
-            </button>
-          ))}
-        </div>
+        <p data-in style={{ ['--i' as string]: 1 }}>
+          Captures de l’application sur ordinateur, compte d’exemple. Survolez pour mettre en pause.
+        </p>
       </div>
-      <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${step.id}`} className="tour-panel panel-in" key={step.id}>
-        <AppWindow img={step.img} alt={step.alt} path={step.img === 'tunnel' ? 'bailio.fr/commencer' : 'bailio.fr/espace'} />
-        <div className="tour-text fold fold--ear">
-          <h3>{step.title}</h3>
-          <p>{step.text}</p>
-          <small>Capture de l’application, données d’exemple.</small>
-        </div>
+      <div className="tour-panel" data-in style={{ ['--i' as string]: 2 }}>
+        <ProductTour steps={TOUR} label="Étapes de la visite" />
       </div>
     </section>
   )
@@ -296,7 +265,7 @@ function Yearly() {
       <div className="year-intro">
         <h2 id="year-title" data-in>
           <span className="year-count" aria-live="polite">
-            {total} démarches
+            <CountUp value={total} /> démarches
           </span>{' '}
           par an, <em>préparées pour vous.</em>
         </h2>
@@ -396,6 +365,21 @@ export default function Home() {
   const [kind, setKind] = useState<Kind>('VIDE')
   const [rent, setRent] = useState(780)
   const current = KINDS.find((k) => k.id === kind)!
+  const [bar, setBar] = useState({ scrolled: false, cta: false })
+
+  // En-tête collant : un trait dès qu'on descend, et le bouton « Créer mon bail » (aussi sur téléphone) une fois celui du
+  // haut de page sorti de l'écran. Un seul bouton orange visible à la fois.
+  useEffect(() => {
+    const update = () => {
+      const hero = root.current?.querySelector('.hero-actions')
+      const r = hero?.getBoundingClientRect()
+      const next = { scrolled: window.scrollY > 12, cta: !r || r.bottom < 72 }
+      setBar((b) => (b.scrolled === next.scrolled && b.cta === next.cta ? b : next))
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [])
 
   // Entrées des sections : seulement quand le script tourne, jamais de contenu caché sinon.
   useEffect(() => {
@@ -418,7 +402,7 @@ export default function Home() {
 
   return (
     <div className="hm" ref={root} style={VARS}>
-      <header className="bar">
+      <header className={`bar${bar.scrolled ? ' bar--sc' : ''}${bar.cta ? ' bar--cta' : ''}`}>
         <Logo size={28} />
         <nav aria-label="Menu">
           <Link to="/fonctionnalites" className="bar-link hide-md">
@@ -431,15 +415,15 @@ export default function Home() {
             Tarif
           </a>
           {user ? (
-            <Link to="/espace" className="bar-link">
+            <Link to="/espace" className="bar-link bar-login">
               Mon espace
             </Link>
           ) : (
-            <Link to="/connexion" className="bar-link">
+            <Link to="/connexion" className="bar-link bar-login">
               Se connecter
             </Link>
           )}
-          <Link to="/commencer" className="btn btn--sm hide-md">
+          <Link to="/commencer" className="btn btn--sm bar-cta" tabIndex={bar.cta ? 0 : -1} aria-hidden={!bar.cta}>
             Créer mon bail
           </Link>
         </nav>

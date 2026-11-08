@@ -41,9 +41,14 @@
 .hm .btn--line:hover { background: var(--owner-light); border-color: var(--owner); }
 
 /* ── Barre du haut : logo en couleurs sur blanc, quelques liens, une action ── */
-.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px var(--pad); }
+.bar { position: sticky; top: 0; z-index: 20; background: var(--paper); display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px var(--pad); border-bottom: 1px solid transparent; transition: border-color .2s, padding .2s; }
+.bar--sc { border-bottom-color: var(--line); }
+/* Bouton de l'en-tête : caché tant que celui du haut de page est visible (un seul bouton orange à l'écran). */
+.bar-cta { opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .2s, transform .2s, visibility .2s; }
+.bar--cta .bar-cta { opacity: 1; visibility: visible; transform: none; }
+@media (max-width: 400px) { .bar--cta .bar-login { display: none; } }
 .bar nav { display: flex; align-items: center; gap: clamp(12px, 2.6vw, 32px); }
-.bar-link { text-decoration: none; font-weight: 500; font-size: 0.9375rem; padding: 12px 2px; color: var(--ink); }
+.bar-link { white-space: nowrap; text-decoration: none; font-weight: 500; font-size: 0.9375rem; padding: 12px 2px; color: var(--ink); }
 .bar-link:hover { color: var(--owner); text-decoration: underline; text-underline-offset: 6px; }
 
 /* ── Ouverture : photo dans un grand module arrondi, bloc bleu posé en bas à gauche ── */
@@ -66,17 +71,10 @@
 
 /* Visite du produit : onglets à gauche, capture dans un téléphone, bloc de couleur posé en bas. */
 .tour { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 11vw, 160px) var(--pad); align-items: center; }
-.tour-intro { grid-column: 1 / 6; display: flex; flex-direction: column; gap: 32px; }
+.tour-intro { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 12px; text-align: center; align-items: center; }
+.tour-intro p { margin: 0; color: var(--ink); }
 .tour-intro h2 { font-size: var(--step-head); }
-.tour-tabs { display: flex; flex-direction: column; gap: 4px; padding: 4px; background: var(--stone); border-radius: 26px; max-width: 380px; }
-.tour-tabs button { display: flex; align-items: center; gap: 14px; text-align: left; background: transparent; border: 0; border-radius: 999px; padding: 8px 20px 8px 8px; min-height: 48px; font-family: var(--text); font-size: var(--step-body); font-weight: 500; color: var(--ink); cursor: pointer; }
-.tour-tabs button[aria-selected='true'] { background: var(--owner); color: var(--paper); font-weight: 600; }
-.tour-num { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--paper); color: var(--owner); font-weight: 700; font-size: 0.9375rem; flex-shrink: 0; }
-.tour-panel { grid-column: 6 / 13; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-.tour-text { box-sizing: border-box; background: var(--peach); color: var(--ink); border-radius: var(--round); padding: 26px 28px; display: flex; flex-direction: column; gap: 8px; }
-.tour-text h3 { font-size: clamp(1.375rem, 1.1rem + 0.8vw, 1.75rem); }
-.tour-text p { margin: 0; line-height: 1.45; }
-.tour-text small { font-size: var(--step-small); color: var(--ink); }
+.tour-panel { grid-column: 2 / 12; min-width: 0; margin-top: 40px; }
 
 /* Démarches par an */
 .year { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 11vw, 160px) var(--pad) 0; align-items: start; }
@@ -304,6 +302,8 @@
   .tools-list { grid-template-columns: 1fr; }
   .review { padding: 24px; }
   .bar { padding: 4px 16px; }
+  .bar nav { gap: 12px; }
+  .hm .bar .btn--sm { padding: 0 16px; }
   .hero { padding: 0 12px; }
   .hero-photo { height: 36svh; min-height: 220px; }
   .hero-credit { bottom: 40px; right: 10px; font-size: 10px; }

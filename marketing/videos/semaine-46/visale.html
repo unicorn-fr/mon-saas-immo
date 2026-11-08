@@ -1,0 +1,67 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="visale.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 26.2
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1000px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Une caution', .05, t, { size: 150, color: C.white, stroke: true }) + '<br>' + sticker('gratuite', { bg: C.night, color: C.white, size: 96, rot: -4, t0: W('gratuite'), t, shadow: 14 })
+      const n = Math.round(36 * eo((t - W('36')) / .8))
+      $('b').innerHTML = t < W('36') ? '' : `<div style="display:inline-block;transform:scale(${lerp(1.5, 1, back((t - W('36')) / .4))})"><span style="font-family:Fraunces;font-weight:800;font-size:300px;line-height:1;color:#fff;-webkit-text-stroke:8px ${C.night};paint-order:stroke fill">${n}</span><span style="font-size:90px;font-weight:900;color:${C.night};margin-left:18px">mois</span></div>`
+      $('c').innerHTML = sticker('de loyers impayés', { bg: C.white, size: 64, rot: 3, t0: W('impayes'), t, shadow: 14 })
+    } },
+  { start: W('visale') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:340px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Visale', { bg: C.orange, size: 170, rot: -3, pad: '20px 80px', t0: W('visale'), t, shadow: 18 })
+      $('b').innerHTML = sticker('d’Action Logement', { bg: C.white, size: 70, rot: 3, t0: W('logement'), t, shadow: 14 })
+    } },
+  { start: W('ouverte') - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Ouverte aux locataires', this.start + .15, t, { size: 110, color: C.night })
+      $('b').innerHTML = sticker('≤ 30 ans', { bg: C.sky, size: 170, rot: -3, pad: '24px 70px', t0: W('30'), t, shadow: 16 })
+    } },
+  { start: W('certains') - .3, bg: C.sky, burst: C.blue, html: () => `
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:760px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Et certains', { bg: C.white, size: 80, rot: 2, t0: W('certains'), t })
+      $('b').innerHTML = sticker('salariés du privé', { bg: C.blue, color: C.white, size: 100, rot: -3, pad: '26px 50px', t0: W('salaries'), t, shadow: 16 })
+    } },
+  { start: W('gagnent') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:600px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1040px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Par exemple', { bg: C.white, size: 64, rot: -2, t0: W('exemple'), t })
+      $('b').innerHTML = sticker('≤ 1 710 €', { bg: C.orange, size: 150, rot: 3, pad: '24px 60px', t0: W('710'), t, shadow: 18 })
+      $('c').innerHTML = sticker('nets par mois', { bg: C.white, size: 70, rot: -3, t0: W('nets'), t, shadow: 14 })
+    } },
+  { start: W('elle', 3) - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1000px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Elle couvre aussi', this.start + .15, t, { size: 120, color: C.night })
+      $('b').innerHTML = sticker('les dégradations', { bg: C.night, color: C.white, size: 88, rot: -3, pad: '26px 50px', t0: W('degradations'), t, shadow: 16 })
+      $('c').innerHTML = sticker('au départ du locataire', { bg: C.white, size: 60, rot: 3, t0: W('depart'), t, shadow: 14 })
+    } },
+  { start: W('attention') - .3, bg: C.night, burst: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:240px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('⚠ Attention', { bg: C.orange, size: 90, rot: -3, t0: W('attention'), t, shadow: 14 })
+      const sh = t > W('avant') ? Math.sin(t * 40) * 6 * clamp(1 - (t - W('avant')) * 1.2) : 0
+      $('b').innerHTML = `<div style="transform:translateX(${sh}px)">${sticker('AVANT', { bg: C.white, size: 190, rot: 3, pad: '10px 70px', t0: W('avant'), t, shadow: 18 })}</div>`
+      $('c').innerHTML = sticker('la signature du bail', { bg: C.peach, size: 72, rot: -2, t0: W('signature'), t, shadow: 14 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F33453'),
+]
+</script></body></html>

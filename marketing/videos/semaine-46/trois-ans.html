@@ -1,0 +1,72 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="trois-ans.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 29.9
+window.SCENES = [
+  { start: 0, bg: C.cream, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Votre locataire vous doit des charges', .05, t, { size: 120, color: C.night })
+      $('b').innerHTML = sticker('depuis deux ans', { bg: C.orange, size: 90, rot: -3, pad: '24px 50px', t0: W('deux'), t, shadow: 16 })
+    } },
+  { start: W('trop') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Trop tard ?', { bg: C.white, size: 130, rot: -3, pad: '24px 70px', t0: W('tard'), t, shadow: 16 })
+      $('b').innerHTML = sticker('Non !', { bg: C.orange, size: 190, rot: 4, pad: '14px 90px', t0: W('non'), t, shadow: 18 })
+    } },
+  { start: W('vous', 2) - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:240px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:760px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('3 ans', { bg: C.orange, size: 230, rot: -3, pad: '10px 90px', t0: W('trois'), t, shadow: 20 })
+      $('b').innerHTML = sticker('pour réclamer', { bg: C.white, size: 74, rot: 3, t0: W('reclamer'), t, shadow: 14 })
+      $('c').innerHTML = sticker('un loyer', { bg: C.sky, size: 62, rot: -2, t0: W('loyer'), t, shadow: 12 }) + ' ' + sticker('des charges', { bg: C.peach, size: 62, rot: 2, t0: W('charges', 2), t, shadow: 12 })
+    } },
+  { start: W('exemple') - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:70px;right:70px;top:620px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Une dette d’octobre 2026', this.start + .15, t, { size: 110, color: C.night })
+      const pa = clamp((t - W('doctobre')) * 3), pl = eo((t - W('reclame')) / (W('2029') - W('reclame')))
+      $('b').innerHTML = `<div style="position:relative;height:520px;opacity:${pa}">
+        <div style="position:absolute;left:40px;top:210px;width:${lerp(0, 860, pl)}px;height:30px;background:${C.orange};border:5px solid ${C.night};border-radius:20px"></div>
+        <div style="position:absolute;left:0;top:190px;width:76px;height:76px;border-radius:50%;background:${C.night}"></div>
+        <div style="position:absolute;left:-30px;top:40px;width:220px;text-align:center;font-size:52px;font-weight:900;color:${C.night}">oct.<br>2026</div>
+        ${t >= W('octobre') ? `<div style="position:absolute;right:0;top:190px;width:76px;height:76px;border-radius:50%;background:${C.blue};transform:scale(${lerp(1.6, 1, back((t - W('octobre')) / .3))})"></div>
+        <div style="position:absolute;right:-30px;top:40px;width:220px;text-align:center;font-size:52px;font-weight:900;color:${C.blue}">oct.<br>2029</div>` : ''}
+        <div style="position:absolute;left:0;right:0;top:340px;text-align:center">${sticker('3 ans pour réclamer', { bg: C.white, size: 62, rot: -2, t0: W('2029'), t, shadow: 12 })}</div></div>`
+    } },
+  { start: W('mais') - .3, bg: C.night, burst: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:240px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:620px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1000px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('⚠ Attention', { bg: C.orange, size: 88, rot: -3, t0: W('attention'), t, shadow: 14 })
+      $('b').innerHTML = sticker('Régularisation<br>des charges', { bg: C.white, size: 84, rot: 2, pad: '24px 50px', t0: W('regularisation'), t, shadow: 16 })
+      $('c').innerHTML = sticker('après la fin de l’année suivante', { bg: C.peach, size: 56, rot: -2, t0: W('suivante'), t, shadow: 14 })
+    } },
+  { start: W('votre', 2) - .3, bg: C.sky, burst: C.blue, html: () => `
+      <div class="abs" id="a" style="left:0;right:0;top:240px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:560px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Votre locataire<br>peut exiger', { bg: C.white, size: 66, rot: -2, t0: W('exiger'), t })
+      $('b').innerHTML = sticker('12 mois', { bg: C.orange, size: 220, rot: 3, pad: '10px 80px', t0: W('douze'), t, shadow: 20 })
+      $('c').innerHTML = sticker('pour payer', { bg: C.blue, color: C.white, size: 72, rot: -3, t0: W('payer'), t, shadow: 14 })
+    } },
+  { start: W('et') - .3, bg: C.cream, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:700px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Les 3 ans valent aussi', { bg: C.white, size: 72, rot: -2, t0: W('trois', 2), t, shadow: 14 })
+      $('b').innerHTML = sticker('pour lui', { bg: C.blue, color: C.white, size: 150, rot: 3, pad: '16px 80px', t0: W('lui'), t, shadow: 18 })
+      $('c').innerHTML = sticker('s’il a trop payé', { bg: C.peach, size: 70, rot: -3, t0: W('trop', 2), t, shadow: 14 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F947'),
+]
+</script></body></html>

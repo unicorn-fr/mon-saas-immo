@@ -66,6 +66,11 @@ img { max-width: 100%; }
 @keyframes bailio-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .shell-main { animation: bailio-in .32s cubic-bezier(.2, .8, .2, 1) both; }
 .panel-in { animation: bailio-in .26s cubic-bezier(.2, .8, .2, 1) both; }
+/* Visite animée de l'application (components/ProductTour.tsx) : barre de l'étape en cours, onde du clic. */
+@keyframes tour-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.tour-bar { animation-name: tour-bar; animation-timing-function: linear; animation-fill-mode: forwards; }
+@keyframes tour-click { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.7); opacity: 0; } }
+.tour-click { animation: tour-click .45s ease-out forwards; }
 button:not(:disabled), a.btn, [role="tab"] { transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .12s ease; }
 button:not(:disabled):active { transform: scale(.98); }
 @media print {
