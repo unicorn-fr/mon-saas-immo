@@ -17,16 +17,30 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 | 2026-11-07 11 h 30 | DPE : G interdit depuis 2025, F en 2028, E en 2034 | Motion design | service-public F2042, F1311 (3 novembre 2026) |
 | 2026-11-08 10 h 30 | Quittance de loyer gratuite et obligatoire sur demande | Motion design | loi 1989 art. 4 et 21, notice officielle |
 
+## Préparés, en attente de validation (semaine 46)
+
+Scripts dans `semaine-46/scripts/`, textes dans `semaine-46/textes/`, guides en ligne le 8 novembre 2026. Voix faite :
+sous-location seulement (crédits ElevenLabs épuisés le 8 novembre).
+
+| Jour prévu | Sujet | Source vérifiée le 8 novembre 2026 |
+|---|---|---|
+| Lun 9, 18 h 30 | Sous-location sur Airbnb sans accord écrit | F2449 |
+| Mar 10, 18 h 30 | Préavis du locataire : 1 mois en zone tendue s'il l'écrit | F1168 |
+| Mer 11, 10 h 30 | Taxe foncière non récupérable, ordures ménagères oui | F947 |
+| Jeu 12, 18 h 30 | Pièces interdites dans un dossier (3 000 €) | F1169 |
+| Ven 13, 18 h 30 | État des lieux d'entrée : 10 jours pour le compléter | F31270 |
+| Sam 14, 10 h | YouTube : choisir son locataire, 4 règles | F1169, F33453, F31270 |
+| Sam 14, 11 h 30 | Visale, caution gratuite | F33453 |
+| Dim 15, 10 h 30 | 3 ans pour réclamer un impayé | F947 |
+
 ## Idées à creuser (à vérifier avant d'écrire)
 
-- État des lieux d'entrée : ce qui doit y figurer, photos, complément sous 10 jours.
-- Charges récupérables : ce que le locataire paie, ce qu'il ne paie pas (décret 87-713).
+- Encadrement des loyers après le 24 novembre 2026 : le Sénat a voté une prolongation de deux ans le 21 octobre ;
+  à faire seulement une fois la loi adoptée et publiée (et mettre à jour `RENT_CONTROL_END`).
+
 - Réparations locatives : qui paie quoi (décret 87-712), la chaudière.
 - Encadrement des loyers : villes concernées, fin ou prolongation de l'expérimentation (24 novembre 2026).
-- Zone tendue : préavis d'un mois pour le locataire.
 - Bail meublé : liste du mobilier obligatoire (décret 2015-981).
-- Visale : garantie gratuite, qui peut en bénéficier.
-- Pièces qu'on peut demander à un candidat, et celles interdites.
 - Location meublée : micro-BIC ou réel, le seuil.
 - Déclaration d'occupation des logements (« Gérer mes biens immobiliers »).
 - Impayé : les étapes, du rappel au commandement de payer.
@@ -41,3 +55,7 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 
 - 2026-11-03 : heures de départ choisies d'après les études publiées (soir de semaine, fin de matinée le week-end) ;
   à comparer dimanche 8 novembre avec les vidéos de 13 h.
+- 2026-11-08 : pas de statistiques exploitables. YouTube n'est pas relevé par le circuit, l'accès de Bailio à l'API de
+  Meta est bloqué depuis le 7 novembre (« API access blocked » : Instagram du 7 non publié) et les visites par
+  `utm_source` ne se lisent que dans le Pilotage. Heures gardées (soir de semaine, fin de matinée le week-end,
+  10 h 30 le 11 novembre, férié).
