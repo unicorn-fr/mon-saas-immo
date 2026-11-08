@@ -1,11 +1,13 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, useRef, useState, type ReactNode } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { display } from '../components/ui'
 import { SiteFooter, SiteHeader } from '../components/SiteChrome'
 import { SignupCta } from '../components/SignupCta'
+import { AppWindow } from '../components/AppWindow'
 import { priceText } from '../config'
-import { FEATURES, featurePath, type Feature } from '../content/fonctionnalites'
+import { CALLBACK_PROMISE } from '../content/inclus'
+import { FEATURES, PROFILES, SECTIONS, SHOWCASE, featurePath, type Feature } from '../content/fonctionnalites'
 
 /** « Titre [en italique] » : la partie entre crochets passe en <em>, une fois par écran. */
 function Title({ text }: { text: string }) {
@@ -17,30 +19,11 @@ function Title({ text }: { text: string }) {
   )
 }
 
-/** Capture d'écran dans un cadre de téléphone (images 780 × 1560, ou page de PDF). */
-function Phone({ img, alt, doc = false, width = 300 }: { img: string; alt: string; doc?: boolean; width?: number }) {
-  return (
-    <div
-      style={{
-        width: `min(${width}px, 100%)`,
-        borderRadius: doc ? 16 : 36,
-        border: `${doc ? 1 : 7}px solid ${doc ? BAI.borderStrong : BAI.night}`,
-        overflow: 'hidden',
-        background: BAI.surface,
-        aspectRatio: doc ? '909 / 900' : '1 / 2',
-        flexShrink: 0,
-      }}
-    >
-      <img src={`/fonctionnalites/${img}.webp`} alt={alt} width={780} height={doc ? 772 : 1560} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }} />
-    </div>
-  )
-}
-
-function Shell({ children }: { children: ReactNode }) {
+function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: BAI.surface }}>
       <SiteHeader />
-      <main id="contenu" className="container" style={{ flex: 1, maxWidth: 1080, paddingTop: 'clamp(32px, 6vw, 56px)', paddingBottom: 96, color: BAI.inkMid, fontSize: 17, lineHeight: 1.6 }}>
+      <main id="contenu" className="container" style={{ flex: 1, maxWidth: wide ? 1240 : 1080, paddingTop: 'clamp(24px, 5vw, 48px)', paddingBottom: 96, color: BAI.inkMid, fontSize: 17, lineHeight: 1.6 }}>
         {children}
       </main>
       <SiteFooter />
@@ -49,39 +32,184 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 const blueButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: 999, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' } as const
-const h2 = { margin: '0 0 16px', fontSize: 'clamp(24px, 3vw, 30px)', fontWeight: 700, color: BAI.ink, lineHeight: 1.25 } as const
+const outlineButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 26px', borderRadius: 999, border: `1.5px solid ${BAI.borderStrong}`, color: BAI.ink, fontWeight: 600, textDecoration: 'none' } as const
+const h2 = { margin: '0 0 16px', fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 700, color: BAI.ink, lineHeight: 1.2 } as const
+const pill = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: BAI.owner, background: BAI.sky, borderRadius: 999, padding: '4px 14px' } as const
 
-/** /fonctionnalites : toutes les fonctionnalités, chacune avec sa capture. */
+/** Pastille « ✓ » d'une ligne de liste (icône décorative). */
+function Check() {
+  return (
+    <span aria-hidden style={{ width: 28, height: 28, borderRadius: 9, background: BAI.sky, color: BAI.owner, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0, fontSize: 15 }}>
+      ✓
+    </span>
+  )
+}
+
+/** Vitrine : quatre écrans de l'application, un onglet chacun, la zone utile mise en avant. */
+function Showcase() {
+  const [i, setI] = useState(0)
+  const tabs = useRef<Array<HTMLButtonElement | null>>([])
+  const s = SHOWCASE[i]
+  const move = (to: number) => {
+    const n = (to + SHOWCASE.length) % SHOWCASE.length
+    setI(n)
+    tabs.current[n]?.focus()
+  }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0 }}>
+      <div id="vitrine" role="tabpanel" aria-labelledby={`vitrine-${s.id}`} className="panel-in" key={s.id}>
+        <AppWindow img={s.img} alt={s.alt} spot={s.spot} eager={i === 0} />
+      </div>
+      <div role="tablist" aria-label="Écrans de l’application" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+        {SHOWCASE.map((t, j) => (
+          <button
+            key={t.id}
+            ref={(el) => void (tabs.current[j] = el)}
+            type="button"
+            role="tab"
+            id={`vitrine-${t.id}`}
+            aria-selected={i === j}
+            aria-controls="vitrine"
+            tabIndex={i === j ? 0 : -1}
+            onClick={() => setI(j)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') (e.preventDefault(), move(j + 1))
+              if (e.key === 'ArrowLeft') (e.preventDefault(), move(j - 1))
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              minHeight: 44,
+              padding: '0 16px 0 6px',
+              borderRadius: 999,
+              border: `1.5px solid ${i === j ? BAI.owner : BAI.borderStrong}`,
+              background: i === j ? BAI.owner : BAI.surface,
+              color: i === j ? BAI.surface : BAI.ink,
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <span aria-hidden style={{ width: 30, height: 30, borderRadius: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i === j ? BAI.surface : BAI.sky, color: BAI.owner, fontSize: 14 }}>
+              {j + 1}
+            </span>
+            {t.tab}
+          </button>
+        ))}
+      </div>
+      <p style={{ margin: 0, fontSize: 14, textAlign: 'center' }}>Capture de l’application sur ordinateur, compte d’exemple.</p>
+    </div>
+  )
+}
+
+/** /fonctionnalites : tout Bailio, en écrans réels, du bail à la déclaration. */
 export function FonctionnalitesList() {
   return (
-    <Shell>
-      <h1 style={display('clamp(40px, 7vw, 64px)', { margin: '0 0 16px', maxWidth: 760 })}>
-        Tout ce que Bailio fait <em>pour vous</em>
-      </h1>
-      <p style={{ margin: '0 0 40px', fontSize: 19, maxWidth: 680 }}>
-        Du bail à la déclaration d’impôts, pour {priceText()}, tout compris. Captures de l’application, données d’exemple.
-      </p>
-      <ul className="grid-3" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 20 }}>
-        {FEATURES.map((f) => (
-          <li key={f.slug}>
-            <Link to={featurePath(f.slug)} style={{ display: 'flex', flexDirection: 'column', height: '100%', background: BAI.bg, borderRadius: 24, overflow: 'hidden', textDecoration: 'none', color: BAI.ink }}>
-              <span style={{ display: 'block', height: 220, overflow: 'hidden', background: BAI.sky, padding: '20px 20px 0' }}>
-                <img src={`/fonctionnalites/${f.img}.webp`} alt="" width={780} height={1560} loading="lazy" decoding="async" style={{ width: '70%', height: 'auto', margin: '0 auto', display: 'block', borderRadius: '20px 20px 0 0', border: `5px solid ${BAI.night}`, borderBottom: 'none' }} />
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 20 }}>
-                <strong style={{ fontSize: 20 }}>{f.name}</strong>
-                <span style={{ color: BAI.inkMid, fontSize: 16, lineHeight: 1.5 }}>{f.description}</span>
-              </span>
+    <Shell wide>
+      <section className="col-md" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 64px)', alignItems: 'center' }}>
+        <div style={{ flex: '0 1 440px', minWidth: 0 }}>
+          <p style={{ margin: '0 0 18px' }}>
+            <span style={pill}>Fonctionnalités</span>
+          </p>
+          <h1 style={display('clamp(38px, 5.4vw, 60px)', { margin: '0 0 20px' })}>
+            Tout Bailio, du bail à <em>la déclaration</em>
+          </h1>
+          <p style={{ margin: '0 0 28px', fontSize: 19 }}>Bail conforme, signature, quittances, relances, état des lieux et impôts : tout ce qu’il faut pour louer seul, dans une seule application.</p>
+          <p style={{ margin: '0 0 24px', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <Link to="/demo" style={blueButton}>
+              Essayer la démo
             </Link>
-          </li>
-        ))}
-      </ul>
-      <p style={{ margin: '40px 0 0', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-        <Link to="/demo" style={blueButton}>
-          Essayer la démo, sans compte
-        </Link>
-        <Link to="/changer-pour-bailio">Vous utilisez déjà un autre outil ?</Link>
-      </p>
+            <a href="/#tarifs" style={outlineButton}>
+              Voir le prix
+            </a>
+          </p>
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 15 }}>
+            <li>✓ {priceText()}, tout compris</li>
+            <li>✓ Signature en ligne incluse, sans engagement</li>
+            <li>✓ {CALLBACK_PROMISE}</li>
+          </ul>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: 0, width: '100%' }}>
+          <Showcase />
+        </div>
+      </section>
+
+      <nav aria-label="Parties de la page" style={{ position: 'sticky', top: 0, zIndex: 2, background: BAI.surface, margin: 'clamp(40px, 6vw, 64px) 0 0', padding: '12px 0', borderBottom: `1px solid ${BAI.border}`, overflowX: 'auto' }}>
+        <ul style={{ display: 'flex', gap: 8, margin: 0, padding: 0, listStyle: 'none', whiteSpace: 'nowrap' }}>
+          {[...SECTIONS.map((s) => ({ id: s.id, title: s.title })), { id: 'pour-qui', title: 'Pour qui' }].map((s) => (
+            <li key={s.id}>
+              <a href={`#${s.id}`} style={{ display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 16px', borderRadius: 999, border: `1px solid ${BAI.borderStrong}`, color: BAI.ink, textDecoration: 'none', fontSize: 15, fontWeight: 500 }}>
+                {s.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      {SECTIONS.map((s, n) => (
+        <section key={s.id} id={s.id} aria-labelledby={`${s.id}-titre`} style={{ scrollMarginTop: 80, paddingTop: 'clamp(48px, 7vw, 88px)' }}>
+          <p style={{ margin: '0 0 8px', color: BAI.owner, fontWeight: 600, fontSize: 15 }}>
+            <span aria-hidden>— </span>
+            {n + 1}. {s.title}
+          </p>
+          <div className="col-md" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 56px)', alignItems: 'flex-start', flexDirection: n % 2 ? 'row-reverse' : 'row' }}>
+            <div style={{ flex: '0 1 420px', minWidth: 0 }}>
+              <h2 id={`${s.id}-titre`} style={h2}>
+                {s.title}
+              </h2>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {s.items.map((it) => (
+                  <li key={it.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <Check />
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <strong style={{ color: BAI.ink }}>{it.title}</strong>
+                      <span style={{ fontSize: 16, lineHeight: 1.5 }}>{it.text}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p style={{ margin: '20px 0 0', display: 'flex', flexWrap: 'wrap', gap: '6px 18px', fontSize: 15, fontWeight: 600 }}>
+                {s.links.map((slug) => {
+                  const f = FEATURES.find((x) => x.slug === slug)
+                  return f ? (
+                    <Link key={slug} to={featurePath(slug)}>
+                      {f.name} <span aria-hidden>→</span>
+                    </Link>
+                  ) : null
+                })}
+              </p>
+            </div>
+            <div style={{ flex: '1 1 0', minWidth: 0, width: '100%' }}>
+              <AppWindow img={s.img} alt={s.alt} />
+            </div>
+          </div>
+        </section>
+      ))}
+
+      <section id="pour-qui" aria-labelledby="pour-qui-titre" style={{ scrollMarginTop: 80, paddingTop: 'clamp(48px, 7vw, 88px)' }}>
+        <h2 id="pour-qui-titre" style={h2}>
+          Pour qui ?
+        </h2>
+        <ul className="grid-4" style={{ listStyle: 'none', margin: 0, padding: 0, gap: 16 }}>
+          {PROFILES.map((p) => (
+            <li key={p.title} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: BAI.bg, borderRadius: 24, padding: 22 }}>
+              <span style={{ ...pill, alignSelf: 'flex-start', fontSize: 13 }}>{p.tag}</span>
+              <strong style={{ color: BAI.ink, fontSize: 19 }}>{p.title}</strong>
+              <span style={{ fontSize: 16, lineHeight: 1.5, flex: 1 }}>{p.text}</span>
+              <Link to={p.to} style={{ fontWeight: 600, fontSize: 15 }}>
+                Découvrir <span aria-hidden>→</span>
+                <span className="sr-only"> : {p.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div style={{ maxWidth: 800, marginTop: 24 }}>
+        <SignupCta />
+      </div>
     </Shell>
   )
 }
@@ -97,13 +225,13 @@ export function FonctionnaliteArticle() {
 function Article({ f }: { f: Feature }) {
   const others = FEATURES.filter((x) => x.slug !== f.slug)
   return (
-    <Shell>
+    <Shell wide>
       <nav aria-label="Fil d’Ariane" style={{ fontSize: 15, marginBottom: 20 }}>
         <Link to="/fonctionnalites">Fonctionnalités</Link> <span aria-hidden>/</span> {f.name}
       </nav>
-      <section className="col-md" style={{ display: 'flex', gap: 'clamp(28px, 6vw, 72px)', alignItems: 'center' }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={display('clamp(38px, 6vw, 60px)', { margin: '0 0 20px' })}>
+      <section className="col-md" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 64px)', alignItems: 'center' }}>
+        <div style={{ flex: '0 1 440px', minWidth: 0 }}>
+          <h1 style={display('clamp(36px, 5vw, 56px)', { margin: '0 0 20px' })}>
             <Title text={f.title} />
           </h1>
           <p style={{ margin: '0 0 28px', fontSize: 19 }}>{f.lead}</p>
@@ -114,17 +242,19 @@ function Article({ f }: { f: Feature }) {
             <span style={{ fontSize: 15 }}>Compris dans {priceText()}</span>
           </p>
         </div>
-        <Phone img={f.img} alt={f.alt} />
+        <div style={{ flex: '1 1 0', minWidth: 0, width: '100%' }}>
+          <AppWindow img={f.img} alt={f.alt} spot={f.spot} eager />
+        </div>
       </section>
 
-      <section aria-labelledby="etapes" style={{ marginTop: 'clamp(56px, 9vw, 96px)' }}>
+      <section aria-labelledby="etapes" style={{ marginTop: 'clamp(56px, 8vw, 96px)' }}>
         <h2 id="etapes" style={h2}>
           Comment ça marche
         </h2>
         <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {f.steps.map((s, i) => (
-            <li key={s.title} className="col-md" style={{ display: 'flex', gap: 24, alignItems: 'center', background: BAI.bg, borderRadius: 24, padding: 'clamp(20px, 3vw, 28px)' }}>
-              <span style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: 1 }}>
+            <li key={s.title} className="col-md" style={{ display: 'flex', gap: 'clamp(20px, 4vw, 40px)', alignItems: 'center', background: BAI.bg, borderRadius: 24, padding: 'clamp(20px, 3vw, 32px)' }}>
+              <span style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flex: '1 1 0', minWidth: 0 }}>
                 <span aria-hidden style={{ width: 36, height: 36, borderRadius: 18, background: BAI.owner, color: BAI.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
                   {i + 1}
                 </span>
@@ -133,7 +263,15 @@ function Article({ f }: { f: Feature }) {
                   <span>{s.text}</span>
                 </span>
               </span>
-              {s.img ? <Phone img={s.img} alt={s.alt ?? ''} doc={s.img === 'contrat-pdf'} width={s.img === 'contrat-pdf' ? 360 : 220} /> : null}
+              {s.img ? (
+                <span style={{ flex: '1.4 1 0', minWidth: 0, width: '100%' }}>
+                  {s.img === 'contrat-pdf' ? (
+                    <img src="/fonctionnalites/contrat-pdf.webp" alt={s.alt ?? ''} width={780} height={772} loading="lazy" decoding="async" style={{ width: '100%', maxWidth: 520, height: 'auto', display: 'block', margin: '0 auto', borderRadius: 12, border: `1px solid ${BAI.borderStrong}` }} />
+                  ) : (
+                    <AppWindow img={s.img} alt={s.alt ?? ''} />
+                  )}
+                </span>
+              ) : null}
             </li>
           ))}
         </ol>
@@ -144,11 +282,11 @@ function Article({ f }: { f: Feature }) {
           <h2 id="verifie" style={{ ...h2, fontSize: 22 }}>
             Ce que Bailio vérifie pour vous
           </h2>
-          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <ul className="grid-2" style={{ margin: 0, padding: 0, listStyle: 'none', gap: 10 }}>
             {f.checks.map((c) => (
-              <li key={c}>
-                <span aria-hidden>✓ </span>
-                {c}
+              <li key={c} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <Check />
+                <span>{c}</span>
               </li>
             ))}
           </ul>
