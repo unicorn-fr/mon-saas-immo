@@ -31,6 +31,8 @@ export const COUNTED_PATHS = [
   '/guides',
   '/modeles',
   '/changer-pour-bailio',
+  '/demo',
+  '/fonctionnalites',
   '/simulateurs/revision-loyer',
   '/simulateurs/date-conge-bailleur',
   '/simulateurs/dpe-location',
@@ -41,8 +43,8 @@ export const COUNTED_PATHS = [
 
 const COUNTED = new Set<string>(COUNTED_PATHS)
 
-/** Guides et modèles publics (/guides/:slug, /modeles/:slug, client/src/content/) : comptés chacun, sans en tenir la liste ici. */
-const GUIDE = /^\/(guides|modeles)\/[a-z0-9]+(-[a-z0-9]+)*$/
+/** Guides, modèles et fonctionnalités publics (/guides/:slug, /modeles/:slug, /fonctionnalites/:slug, client/src/content/) : comptés chacun, sans en tenir la liste ici. */
+const GUIDE = /^\/(guides|modeles|fonctionnalites)\/[a-z0-9]+(-[a-z0-9]+)*$/
 
 /** Chemin compté, sans paramètres ni barre finale ; null pour toute autre page (espace, liens privés…). */
 export function countedPath(raw: string): string | null {

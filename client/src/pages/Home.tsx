@@ -74,6 +74,8 @@ const FAQ: Array<[string, string]> = [
 const LEGAL = [
   { to: '/guides', label: 'Guides' },
   { to: '/modeles', label: 'Modèles gratuits' },
+  { to: '/fonctionnalites', label: 'Fonctionnalités' },
+  { to: '/demo', label: 'Essayer la démo' },
   { to: '/changer-pour-bailio', label: 'Changer pour Bailio' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/conditions', label: 'Conditions' },
@@ -420,6 +422,9 @@ export default function Home() {
       <header className="bar">
         <Logo size={28} />
         <nav aria-label="Menu">
+          <Link to="/fonctionnalites" className="bar-link hide-md">
+            Fonctionnalités
+          </Link>
           <Link to="/importer" className="bar-link hide-md">
             J’ai déjà un bail
           </Link>
@@ -461,6 +466,9 @@ export default function Home() {
               <Link to="/commencer" className="btn">
                 Créer mon bail gratuit
                 <Arrow />
+              </Link>
+              <Link to="/demo" className="hero-link">
+                Essayer la démo
               </Link>
               <Link to="/importer" className="hero-link">
                 J’ai déjà un bail

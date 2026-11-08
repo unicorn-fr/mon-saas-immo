@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { LAUNCH_OFFER, priceDetail } from './src/config'
 import { GUIDES, guidePath, type Guide } from './src/content/guides'
 import { MODELES, SIMULATEURS, modelePath, type Modele } from './src/content/modeles'
+import { FEATURES, featurePath } from './src/content/fonctionnalites'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -23,6 +24,9 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/guides', 'weekly', '0.7'],
   ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
   ['/changer-pour-bailio', 'monthly', '0.7'],
+  ['/demo', 'monthly', '0.7'],
+  ['/fonctionnalites', 'monthly', '0.8'],
+  ...FEATURES.map((f): [string, string, string] => [featurePath(f.slug), 'monthly', '0.8']),
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
   ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
@@ -55,6 +59,9 @@ const LLMS_TXT = `# Bailio
 - [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
 ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
 - [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
+- [Essayer Bailio sans compte](${SITE_URL}/demo): espace d'exemple à manipuler en une minute, données fictives, rien d'enregistré
+- [Fonctionnalités](${SITE_URL}/fonctionnalites): ce que fait Bailio, avec des captures de l'application
+${FEATURES.map((f) => `- [${f.name}](${SITE_URL}${featurePath(f.slug)}): ${f.description}`).join('\n')}
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
 ${SIMULATEURS.map((x) => `- [${x.name}](${SITE_URL}${x.path}): ${x.description}`).join('\n')}
@@ -82,8 +89,11 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
   '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
+  '/demo': { title: 'Essayez Bailio sans compte', description: 'Manipulez un espace d’exemple en une minute : noter un loyer reçu, relancer un impayé, créer un bail, préparer la déclaration. Données fictives, rien n’est enregistré.' },
   '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },
   ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
+  '/fonctionnalites': { title: 'Fonctionnalités de Bailio', description: 'Bail conforme signé en ligne, quittances automatiques, relances d’impayés, état des lieux sur téléphone, candidatures et déclaration d’impôts : tout Bailio en captures.' },
+  ...Object.fromEntries(FEATURES.map((f) => [featurePath(f.slug), { title: f.title.replace(/[[\]]/g, ''), description: f.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
 }
 
