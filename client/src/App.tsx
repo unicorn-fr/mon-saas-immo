@@ -26,6 +26,7 @@ import { GuideArticle, GuidesList } from './pages/Guides'
 import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
 import { Changer } from './pages/Changer'
 import Demo from './pages/Demo'
+import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
 import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPreavis } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
@@ -283,6 +284,8 @@ function Pages() {
               <Route path="/guides/:slug" element={<GuideArticle />} />
               <Route path="/changer-pour-bailio" element={<Changer />} />
               <Route path="/demo" element={<Demo />} />
+              <Route path="/fonctionnalites" element={<FonctionnalitesList />} />
+              <Route path="/fonctionnalites/:slug" element={<FonctionnaliteArticle />} />
               <Route path="/modeles" element={<ModelesList />} />
               <Route path="/modeles/:slug" element={<ModeleArticle />} />
               <Route path="/simulateurs/revision-loyer" element={<SimulateurRevision />} />
