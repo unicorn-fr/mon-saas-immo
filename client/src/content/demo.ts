@@ -33,7 +33,7 @@ export function rentTable(now: Date, lyonReceived: boolean): Array<{ home: DemoH
   const months = lastMonths(now)
   return HOMES.map((home) => ({
     home,
-    cells: months.map((m, i) => ({ ...m, state: home.id === 'lyon' && i === months.length - 1 && !lyonReceived ? 'UNPAID' : 'PAID' })),
+    cells: months.map((m, i) => ({ ...m, state: home.id === 'lyon' && i === months.length - 1 && !lyonReceived ? ('UNPAID' as RentCell) : ('PAID' as RentCell) })),
   }))
 }
 

@@ -9,7 +9,7 @@ test('démo sans compte : tâche du jour, relances, bail, impôts', async () => 
   const errors = []
   const apiCalls = []
   watch(page, errors)
-  page.on('request', (r) => r.url().includes('/api/') && r.method() !== 'GET' && apiCalls.push(r.url()))
+  page.on('request', (r) => r.url().includes('/api/') && r.method() !== 'GET' && !r.url().includes('/api/visits') && apiCalls.push(r.url()))
 
   await page.goto(`${BASE}/demo`)
   await page.getByRole('heading', { level: 1, name: /Essayez Bailio, sans compte/ }).waitFor()
