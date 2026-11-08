@@ -1,5 +1,6 @@
 import { ADD_PARKING_PATH } from '../lib/contract'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { AppWindow } from '../components/AppWindow'
 import { Link } from 'react-router-dom'
 import './home.css'
 import { Logo } from '../components/Logo'
@@ -220,10 +221,10 @@ const FIELDS = ['peach', 'sky', 'night'] as const
 
 /** Visite du produit : vraies captures de l'application (compte d'exemple), une étape à la fois. */
 const TOUR = [
-  { id: 'decrire', tab: 'Décrire', title: 'Une question à la fois', text: 'Vide ou meublé, l’adresse, le loyer : vous répondez, Bailio remplit le reste.', img: 'tunnel', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé' },
-  { id: 'bail', tab: 'Le bail', title: 'Un bail conforme, signé en ligne', text: 'Le contrat type officiel, rempli et vérifié, puis signé par le locataire et son garant sans créer de compte.', img: 'bail', alt: 'Page d’un bail signé : loyer, charges, dépôt de garantie, durée, et les boutons pour l’ouvrir ou l’envoyer' },
-  { id: 'jour', tab: 'Aujourd’hui', title: 'Ce qu’il y a à faire, déjà prêt', text: 'Un loyer en retard ? La relance est rédigée. Une démarche aux impôts ? Tout est prêt à copier.', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, puis une démarche aux impôts' },
-  { id: 'mois', tab: 'Chaque mois', title: 'Quittances et relances toutes seules', text: 'La quittance part dès le loyer reçu. S’il manque, les relances partent à vos dates.', img: 'loyers', alt: 'Réglages des loyers : quittance par email et relance automatique d’un loyer impayé' },
+  { id: 'decrire', tab: 'Décrire', title: 'Une question à la fois', text: 'Vide ou meublé, l’adresse, le loyer : vous répondez, Bailio remplit le reste.', img: 'tunnel', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5' },
+  { id: 'bail', tab: 'Le bail', title: 'Un bail conforme, signé en ligne', text: 'Le contrat type officiel, rempli et vérifié, puis signé par le locataire et son garant sans créer de compte.', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail' },
+  { id: 'jour', tab: 'Aujourd’hui', title: 'Ce qu’il y a à faire, déjà prêt', text: 'Un loyer en retard ? La relance est rédigée. Une démarche aux impôts ? Tout est prêt à copier.', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances' },
+  { id: 'mois', tab: 'Chaque mois', title: 'Quittances et relances toutes seules', text: 'La quittance part dès le loyer reçu. S’il manque, les relances partent à vos dates.', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées' },
 ] as const
 
 /** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */
@@ -276,9 +277,7 @@ function Tour() {
         </div>
       </div>
       <div id="tour-panel" role="tabpanel" aria-labelledby={`tour-tab-${step.id}`} className="tour-panel panel-in" key={step.id}>
-        <div className="tour-phone">
-          <img src={`/accueil/visite/${step.img}.webp`} alt={step.alt} width={780} height={1560} loading="lazy" decoding="async" />
-        </div>
+        <AppWindow img={step.img} alt={step.alt} path={step.img === 'tunnel' ? 'bailio.fr/commencer' : 'bailio.fr/espace'} />
         <div className="tour-text fold fold--ear">
           <h3>{step.title}</h3>
           <p>{step.text}</p>
