@@ -1,0 +1,48 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="sous.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 26.4
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Votre locataire sous-loue ?', .05, t, { size: 132, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('sur Airbnb 🏠', { bg: C.night, color: C.white, size: 76, rot: -3, t0: W('airbnb'), t, shadow: 14 })
+    } },
+  { start: W('sans') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:800px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Sans votre<br>accord écrit', { bg: C.white, size: 110, rot: -3, pad: '30px 60px', t0: W('accord'), t, shadow: 18 })
+      $('b').innerHTML = sticker('Interdit', { bg: C.orange, size: 150, rot: 4, pad: '14px 70px', t0: W('droit.'), t, shadow: 16 })
+    } },
+  { start: W('il', 2) - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:640px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Votre autorisation écrite', this.start + .15, t, { size: 120, color: C.night })
+      $('b').innerHTML = `<div>${sticker('✔ sur la sous-location', { bg: C.sky, size: 70, rot: -2, t0: W('sous-location'), t })}</div><div style="margin-top:40px">${sticker('✔ sur le loyer demandé', { bg: C.peach, size: 70, rot: 2, t0: W('demande.'), t })}</div>`
+    } },
+  { start: W('et') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:80px;right:80px;top:560px"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Loyer au m²', { bg: C.white, size: 100, rot: -3, t0: W('metre'), t, shadow: 16 })
+      const o = clamp((t - W('depasser')) * 4)
+      $('b').innerHTML = `<div style="background:${C.white};border:${OUT};border-radius:36px;box-shadow:${SH(14)};padding:44px 50px;opacity:${o}">
+        <div style="font-size:52px;font-weight:800">Sous-locataire</div><div style="font-family:Fraunces;font-weight:800;font-size:160px;line-height:1.1;color:${C.blue}">≤</div>
+        <div style="font-size:52px;font-weight:800">votre locataire</div></div>`
+    } },
+  { start: W('sans', 2) - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:700px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1060px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Sans autorisation…', this.start + .15, t, { size: 130, color: C.night, italic: true })
+      $('b').innerHTML = sticker('Bail résilié', { bg: C.night, color: C.white, size: 100, rot: -4, t0: W('resilie.'), t, shadow: 16 })
+      $('c').innerHTML = sticker('Sous-loyers à vous reverser 💶', { bg: C.white, size: 64, rot: 3, t0: W('reverser'), t, shadow: 14 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F2449'),
+]
+</script></body></html>
