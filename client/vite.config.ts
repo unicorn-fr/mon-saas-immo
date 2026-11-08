@@ -23,6 +23,7 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/guides', 'weekly', '0.7'],
   ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
   ['/changer-pour-bailio', 'monthly', '0.7'],
+  ['/demo', 'monthly', '0.7'],
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
   ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
@@ -55,6 +56,7 @@ const LLMS_TXT = `# Bailio
 - [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
 ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
 - [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
+- [Essayer Bailio sans compte](${SITE_URL}/demo): espace d'exemple à manipuler en une minute, données fictives, rien d'enregistré
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
 ${SIMULATEURS.map((x) => `- [${x.name}](${SITE_URL}${x.path}): ${x.description}`).join('\n')}
@@ -82,6 +84,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
   '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
+  '/demo': { title: 'Essayez Bailio sans compte', description: 'Manipulez un espace d’exemple en une minute : noter un loyer reçu, relancer un impayé, créer un bail, préparer la déclaration. Données fictives, rien n’est enregistré.' },
   '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },
   ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
