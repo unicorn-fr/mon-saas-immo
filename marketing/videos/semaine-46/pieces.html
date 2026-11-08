@@ -1,0 +1,54 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="pieces.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 29.8
+const ok = (txt, t0, t, bg, rot) => `<div style="margin-top:34px">${sticker('<span style="color:' + C.green + '">✔</span> ' + txt, { bg, size: 66, rot, t0, t })}</div>`
+const no = (txt, t0, t, rot) => `<div style="margin-top:44px;position:relative;display:inline-block">${sticker('<span style="text-decoration:line-through;text-decoration-thickness:10px;text-decoration-color:' + C.orange + '">' + txt + '</span>', { bg: C.white, size: 74, rot, t0, t, shadow: 14 })}</div>`
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:880px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Un relevé bancaire demandé ?', .05, t, { size: 128, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('3 000 € d’amende', { bg: C.night, color: C.white, size: 104, rot: -3, pad: '28px 56px', t0: W('3'), t, shadow: 16 })
+    } },
+  { start: W('la') - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('La loi fixe la liste', this.start + .15, t, { size: 124, color: C.night })
+      $('b').innerHTML = sticker('Pièces autorisées', { bg: C.sky, size: 88, rot: 3, pad: '26px 50px', t0: W('autorisées.'), t, shadow: 16 })
+    } },
+  { start: W('une') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:200px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:420px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Autorisé', { bg: C.mint, size: 84, rot: -3, t0: this.start + .1, t })
+      $('b').innerHTML = ok('Pièce d’identité', W('piece'), t, C.white, -2) + ok('Justificatif de domicile', W('justificatif'), t, C.peach, 2) + ok('Justificatif d’activité', W('justificatif', 2), t, C.sky, -2)
+    } },
+  { start: W('et') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:200px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:520px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('<span style="color:' + C.green + '">✔</span> Justificatifs de ressources', { bg: C.white, size: 64, rot: -2, t0: W('justificatifs'), t, shadow: 14 })
+      $('b').innerHTML = `<div>${sticker('3 dernières fiches de paie', { bg: C.orange, size: 70, rot: 3, t0: W('fiches'), t, shadow: 14 })}</div>
+        <div style="margin-top:44px;font-size:60px;font-weight:900;color:#fff;opacity:${clamp((t - W('ou')) * 4)}">ou</div>
+        <div style="margin-top:34px">${sticker('l’avis d’imposition', { bg: C.peach, size: 70, rot: -3, t0: W('l’avis'), t, shadow: 14 })}</div>`
+    } },
+  { start: W('le') - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:180px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:520px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Le reste est interdit', this.start + .15, t, { size: 124, color: C.night, italic: true })
+      $('b').innerHTML = no('Relevé de compte', W('relevé', 2), t, -3) + '<br>' + no('Carte Vitale', W('carte'), t, 3)
+    } },
+  { start: W('et', 2) - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:260px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:820px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('0 €', { bg: C.orange, size: 230, rot: -4, pad: '20px 90px', t0: W('aucune'), t, shadow: 18 })
+      $('b').innerHTML = sticker('avant la signature<br>du bail', { bg: C.white, size: 76, rot: 3, pad: '28px 54px', t0: W('avant'), t, shadow: 14 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F1169'),
+]
+</script></body></html>

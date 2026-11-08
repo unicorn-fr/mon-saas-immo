@@ -19,8 +19,9 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 
 ## Préparés, en attente de validation (semaine 46)
 
-Scripts dans `semaine-46/scripts/`, textes dans `semaine-46/textes/`, guides en ligne le 8 novembre 2026. Voix faite :
-sous-location seulement (crédits ElevenLabs épuisés le 8 novembre).
+Scripts dans `semaine-46/scripts/`, textes dans `semaine-46/textes/`, guides en ligne le 8 novembre 2026. Voix (une
+prise chacune) : 459 + 529 + 511 + 508 + 513 + 468 + 506 + 1 218 (YouTube raccourcie) = 4 712 crédits. Forfait
+ElevenLabs remis à zéro le 19 de chaque mois.
 
 | Jour prévu | Sujet | Source vérifiée le 8 novembre 2026 |
 |---|---|---|

@@ -1,0 +1,52 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="edl.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 28.1
+const days = (t, t0) => Array.from({ length: 10 }, (_, i) => {
+  const on = t >= t0 + i * .12
+  return `<div style="display:inline-block;width:132px;height:132px;margin:10px;border:${OUT};border-radius:26px;background:${on ? C.orange : C.white};box-shadow:${SH(8)};font-size:64px;font-weight:900;line-height:120px;color:${C.night}">${i + 1}</div>`
+}).join('')
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:200px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Une tache, une semaine après', .05, t, { size: 124, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('Trop tard ?', { bg: C.night, color: C.white, size: 120, rot: -3, pad: '26px 70px', t0: W('trop'), t, shadow: 16 })
+    } },
+  { start: W('non') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:170px;text-align:center"></div>
+      <div class="abs" id="b" style="left:50px;right:50px;top:420px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:1010px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Non !', { bg: C.orange, size: 120, rot: -4, pad: '14px 70px', t0: W('non'), t, shadow: 16 })
+      $('b').innerHTML = `<div style="opacity:${clamp((t - W('10')) * 4)}">${days(t, W('10', 2))}</div>`
+      $('c').innerHTML = sticker('10 jours après l’état des lieux d’entrée', { bg: C.white, size: 54, rot: 2, t0: W('jours', 2), t })
+    } },
+  { start: W('pour', 2) - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:220px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:620px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Pour le chauffage', this.start + .15, t, { size: 124, color: C.night })
+      $('b').innerHTML = sticker('1er mois', { bg: C.peach, size: 120, rot: -3, pad: '24px 70px', t0: W('premier'), t, shadow: 16 }) + `<div style="margin-top:44px">${sticker('de la période de chauffe', { bg: C.sky, size: 64, rot: 3, t0: W('chauffe.'), t, shadow: 14 })}</div>`
+    } },
+  { start: W('si') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:230px;text-align:center"></div>
+      <div class="abs" id="b" style="left:80px;right:80px;top:600px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Vous refusez ?', { bg: C.white, size: 100, rot: -3, pad: '24px 60px', t0: W('refusez,'), t, shadow: 16 })
+      $('b').innerHTML = sticker('Commission départementale de conciliation', { bg: C.orange, size: 72, rot: 2, pad: '34px 50px', t0: W('commission'), t, shadow: 16 })
+    } },
+  { start: W('notre') - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:180px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:520px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Notre conseil', this.start + .15, t, { size: 130, color: C.night, italic: true })
+      const o = clamp((t - W('photos')) * 4)
+      $('b').innerHTML = `<div style="font-size:230px;line-height:1;opacity:${o};transform:scale(${lerp(1.6, 1, back((t - W('photos')) / .3))})">📷</div>
+        <div style="margin-top:20px">${sticker('Photos datées', { bg: C.white, size: 96, rot: -3, pad: '24px 56px', t0: W('datées'), t, shadow: 16 })}</div>
+        <div style="margin-top:36px">${sticker('de chaque pièce', { bg: C.sky, size: 64, rot: 3, t0: W('pièce,'), t })}</div>`
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F31270'),
+]
+</script></body></html>

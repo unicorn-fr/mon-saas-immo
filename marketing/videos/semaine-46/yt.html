@@ -1,0 +1,74 @@
+<!doctype html><html lang="fr" class="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="yt.data.js"></script><script src="../kit.js"></script>
+<script>
+/* Vidéo YouTube paysage (1920 × 1080) : choisir son locataire, 4 règles. Voix de 63,4 s. */
+window.DURATION = 66
+const A = (word, after) => { const norm = (x) => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9%€]/g, ''); const w = window.WORDS.find((x) => x.s >= after && norm(x.t) === norm(word)); if (!w) console.warn('mot introuvable', word, after); return w ? w.s : after }
+const CAP = 905
+const big = (txt, t0, t, size = 230, color = C.night) => `<div style="font-family:Fraunces;font-weight:800;font-size:${size}px;line-height:1;color:${color};transform:scale(${lerp(2, 1, back((t - t0) / .35))});opacity:${clamp((t - t0) * 5)}">${txt}</div>`
+const S = (start, bg, burst, html, update, extra = {}) => ({ start, bg, burst, capTop: CAP, html, update, ...extra })
+const center = (id, top) => `<div class="abs" id="${id}" style="left:0;right:0;top:${top}px;text-align:center"></div>`
+const chapter = (n, title, start, color = C.orange) => S(start, color, color, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>${center('a', 190)}${center('b', 450)}`,
+  function (lt, t) {
+    $('a').innerHTML = sticker(`Règle n° ${n}`, { bg: C.night, color: C.white, size: 90, rot: -3, t0: this.start + .1, t, shadow: 14 })
+    $('b').innerHTML = `<div style="padding:0 140px">${slam(title, this.start + .4, t, { size: 140, color: C.white, stroke: true })}</div>`
+  })
+const tick = (label, t0, t, bg = C.white) => `<div style="margin:16px 0;opacity:${clamp((t - t0) * 5)};transform:translateX(${(1 - eo((t - t0) / .4)) * -60}px)">${sticker('✓ ' + label, { bg, size: 58, rot: 0, t0, t, pad: '16px 34px' })}</div>`
+const cross = (label, t0, t) => `<span style="display:inline-block;margin:0 22px;position:relative">${sticker(label, { bg: C.white, size: 64, rot: -2, t0, t })}<i style="position:absolute;left:-10px;right:-10px;top:50%;height:12px;background:${C.orange};border-radius:6px;transform:rotate(-8deg) scaleX(${eo((t - t0 - .3) / .3)});transform-origin:left"></i></span>`
+
+window.SCENES = [
+  S(0, C.night, C.night, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div><div class="abs" id="n" style="left:150px;top:150px"></div><div class="abs" id="a" style="left:660px;right:120px;top:220px"></div><div class="abs" id="b" style="left:660px;top:640px"></div>`,
+    function (lt, t) {
+      $('n').innerHTML = big('4', .05, t, 620, C.orange)
+      $('a').innerHTML = slam('règles avant de choisir votre locataire', .3, t, { size: 112, color: C.white, per: .09 })
+      $('b').innerHTML = sticker('Amende, impayé, litige : évitez-les', { bg: C.peach, size: 56, rot: -2, t0: A('voici', 1), t })
+    }),
+  chapter(1, 'Seulement les pièces autorisées', A('regle', 4) - .3),
+  S(A('une', 7) - .3, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>${center('h', 90)}<div class="abs" id="a" style="left:260px;top:230px"></div>`,
+    function (lt, t) {
+      $('h').innerHTML = sticker('La liste fixée par la loi', { bg: C.white, size: 64, rot: -2, t0: this.start + .1, t })
+      $('a').innerHTML = tick('Pièce d’identité', A('didentite', 7), t) + tick('Justificatif de domicile', A('domicile', 9), t, C.sky) + tick('Justificatif d’activité', A('dactivite', 10), t, C.peach) + tick('Ressources : avis d’imposition, 3 fiches de paie', A('ressources', 11), t, C.mint)
+    }),
+  S(A('releve', 14) - .3, C.cream, C.orange, () => `${center('a', 130)}${center('b', 400)}${center('c', 660)}`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Interdit', this.start + .1, t, { size: 150, color: C.night })
+      $('b').innerHTML = cross('Relevé de compte', A('releve', 14), t) + cross('Carte Vitale', A('carte', 15), t)
+      $('c').innerHTML = sticker('Jusqu’à 3 000 € d’amende', { bg: C.orange, size: 84, rot: 2, t0: A('lamende', 16), t, shadow: 16 })
+    }),
+  chapter(2, 'Aucun argent avant le bail', A('regle', 19) - .3, C.blue),
+  S(A('pas', 22.8) - .3, C.peach, C.orange, () => `${center('a', 150)}${center('b', 400)}`,
+    function (lt, t) {
+      $('a').innerHTML = `<span style="display:inline-block;margin:0 30px">${cross('Chèque de réservation', A('cheque', 23), t)}</span><span style="display:inline-block;margin:0 30px">${cross('Acompte', A('dacompte', 24), t)}</span>`
+      $('b').innerHTML = big('0 €', A('pas', 22.8) + .3, t, 210, C.night) + `<div style="margin-top:30px">${sticker('avant la signature', { bg: C.white, size: 60, rot: -2, t0: A('pas', 22.8) + .6, t })}</div>`
+    }),
+  chapter(3, 'Pensez à Visale', A('regle', 25) - .3, C.night),
+  S(A('cest', 27.5) - .3, C.sky, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(31,67,150,.12)')}"></div><div class="abs" id="a" style="left:160px;top:150px;width:760px"></div><div class="abs" id="b" style="left:1000px;right:140px;top:170px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = `${sticker('Caution gratuite', { bg: C.white, size: 72, rot: -3, t0: A('caution', 27.9), t })}<div style="margin-top:50px">${big('36 mois', A('36', 30), t, 190, C.blue)}</div><div style="margin-top:20px;font-size:52px;font-weight:900;color:${C.night};opacity:${clamp((t - A('loyers', 31)) * 4)}">de loyers impayés, sur 3 ans</div>`
+      $('b').innerHTML = tick('Dégradations au départ', A('degradations', 33), t) + tick('30 ans et moins', A('moins', 35), t, C.peach) + tick('Certains salariés du privé', A('salaries', 36.5), t, C.mint)
+    }),
+  S(A('le', 38) - .3, C.orange, C.orange, () => `${center('a', 260)}${center('b', 560)}`,
+    function (lt, t) {
+      $('a').innerHTML = slam('Le visa, AVANT la signature', this.start + .15, t, { size: 140, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('Après, c’est trop tard', { bg: C.night, color: C.white, size: 70, rot: -3, t0: A('signature', 40) + .2, t, shadow: 14 })
+    }),
+  chapter(4, 'Soignez l’état des lieux d’entrée', A('regle', 41) - .3, C.blue),
+  S(A('faites-le', 44) - .3, C.cream, C.blue, () => `<div class="abs" id="a" style="left:120px;top:150px"></div><div class="abs" id="b" style="left:1260px;right:60px;top:230px"></div>`,
+    function (lt, t) {
+      $('a').innerHTML = tick('Ensemble, à la remise des clés', A('faites-le', 44), t, C.sky) + tick('Chaque pièce décrite', A('decrivez', 46), t) + tick('Compteurs et clés notés', A('notez', 47.5), t, C.peach) + tick('Photos', A('ajoutez', 49), t, C.mint)
+      const p = (t - A('10', 51)) / .8
+      $('b').innerHTML = p > 0 ? `<div style="text-align:center">${big(Math.max(1, Math.round(lerp(1, 10, eo(p)))) + ' jours', A('10', 51), t, 140, C.blue)}<div style="margin-top:24px">${sticker('pour demander un complément', { bg: C.white, size: 50, rot: 2, t0: A('demander', 52), t })}</div></div>` : ''
+    }),
+  S(A('resume', 53) - .3, C.night, C.night, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>${center('h', 90)}<div class="abs" id="a" style="left:420px;top:250px"></div>`,
+    function (lt, t) {
+      $('h').innerHTML = slam('En résumé', this.start + .1, t, { size: 120, color: C.white })
+      $('a').innerHTML = tick('Des pièces autorisées', A('pieces', 54), t) + tick('Aucun argent avant le bail', A('aucun', 55), t, C.sky) + tick('Visale avant la signature', A('visale', 56), t, C.peach) + tick('Un état des lieux précis', A('etat', 58), t, C.mint)
+    }),
+  S(A('abonnez-vous', 59) - .2, C.blue, C.blue, () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.12)')}"></div><div class="abs" id="l" style="left:200px;top:300px"></div><div class="abs" id="r" style="left:900px;right:140px;top:250px;text-align:center"></div>`,
+    function (lt, t) {
+      const s = this.start
+      $('l').innerHTML = `<div style="display:inline-block;transform:scale(${lerp(.3, 1, back((t - s) / .45))})">${LOGO(300)}</div><div style="font-family:Fraunces;font-weight:800;font-size:130px;color:#fff;-webkit-text-stroke:5px ${C.night};paint-order:stroke fill;opacity:${eo((t - s - .2) / .3)}">bailio</div>`
+      $('r').innerHTML = `${sticker('+ S’abonner', { bg: C.orange, size: 96, pad: '26px 60px', rot: -3, t0: s + .05, t, shadow: 16 })}<div style="margin-top:60px">${sticker('Le guide complet, gratuit', { bg: C.white, size: 56, rot: -2, t0: A('guide', 60.5), t })}</div><div style="margin-top:34px">${sticker('bailio.fr/guides', { bg: C.orange, size: 80, pad: '24px 56px', rot: 2, t0: A('guide', 60.5) + .3, t, shadow: 14 })}</div><div style="margin-top:56px;font-size:28px;font-weight:800;color:#fff;opacity:${eo((t - A('guide', 60.5) - .6) / .4)}">Sources : service-public.fr, fiches F1169, F33453 et F31270. Information générale, pas un conseil personnalisé.</div>`
+    }, { noCaption: true }),
+]
+</script></body></html>

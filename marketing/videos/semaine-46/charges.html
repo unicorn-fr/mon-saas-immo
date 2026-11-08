@@ -1,0 +1,59 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="charges.data.js"></script><script src="../kit.js"></script>
+<script>
+window.DURATION = 28.7
+window.SCENES = [
+  { start: 0, bg: C.orange, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(15,31,61,.10)')}"></div>
+      <div class="abs" id="a" style="left:60px;right:60px;top:180px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Refacturer la taxe foncière ?', .05, t, { size: 124, color: C.white, stroke: true })
+      $('b').innerHTML = sticker('Taxe foncière ❌', { bg: C.night, color: C.white, size: 92, rot: -3, pad: '26px 54px', t0: W('non'), t, shadow: 16 })
+    } },
+  { start: W('les') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:230px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:560px;text-align:center"></div>
+      <div class="abs" id="c" style="left:0;right:0;top:900px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Charges récupérables', { bg: C.white, size: 76, rot: -3, t0: W('recuperables'), t, shadow: 14 })
+      $('b').innerHTML = sticker('Liste officielle 📋', { bg: C.sky, size: 84, rot: 3, t0: W('officielle'), t, shadow: 14 })
+      $('c').innerHTML = sticker('Taxe foncière ❌', { bg: C.orange, size: 90, rot: -2, pad: '24px 54px', t0: W('fonciere', 2), t, shadow: 16 })
+    } },
+  { start: W('revanche') - .3, bg: C.cream, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:800px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Ordures ménagères ✅', { bg: C.mint, size: 88, rot: -3, pad: '28px 50px', t0: W('menageres'), t, shadow: 16 })
+      $('b').innerHTML = sticker('Oui', { bg: C.white, size: 160, rot: 4, pad: '16px 80px', t0: W('oui'), t, shadow: 18 })
+    } },
+  { start: W('comme') - .3, bg: C.blue, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.10)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:720px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Parties communes 🧹', { bg: C.white, size: 84, rot: -3, t0: W('communes'), t, shadow: 16 })
+      $('b').innerHTML = sticker('Ascenseur 🛗', { bg: C.peach, size: 84, rot: 3, t0: W('lascenseur'), t, shadow: 16 })
+    } },
+  { start: W('une', 2) - .3, bg: C.peach, burst: C.orange, html: () => `
+      <div class="abs" id="a" style="left:60px;right:60px;top:240px"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:760px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = slam('Une fois par an', this.start + .15, t, { size: 140, color: C.night, italic: true })
+      $('b').innerHTML = sticker('Régularisation 🧾', { bg: C.night, color: C.white, size: 88, rot: -3, t0: W('regularisez'), t, shadow: 16 })
+    } },
+  { start: W('un') - .3, bg: C.sky, burst: C.blue, html: () => `
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:760px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('1 mois avant', { bg: C.white, size: 100, rot: -3, t0: W('mois'), t, shadow: 16 })
+      $('b').innerHTML = sticker('Le décompte ✉️', { bg: C.orange, size: 96, rot: 3, t0: W('decompte'), t, shadow: 16 })
+    } },
+  { start: W('puis') - .3, bg: C.night, burst: C.blue, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.07)')}"></div>
+      <div class="abs" id="a" style="left:0;right:0;top:300px;text-align:center"></div>
+      <div class="abs" id="b" style="left:0;right:0;top:760px;text-align:center"></div>`,
+    update(lt, t) {
+      $('a').innerHTML = sticker('Justificatifs 📎', { bg: C.white, size: 96, rot: -3, t0: W('justificatifs'), t, shadow: 16 })
+      $('b').innerHTML = sticker('6 mois à sa disposition', { bg: C.orange, size: 76, rot: 3, t0: W('six'), t, shadow: 16 })
+    } },
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F947'),
+]
+</script></body></html>
