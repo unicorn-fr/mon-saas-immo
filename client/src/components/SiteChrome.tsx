@@ -3,29 +3,33 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { Logo } from './Logo'
+import { MegaMenu, MobileMenu } from './SiteMenu'
 import { display } from './ui'
 
 export function SiteHeader() {
   const { user } = useAuth()
   return (
-    <header className="container" style={{ height: 'clamp(72px, 9vw, 88px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+    <header className="container" style={{ position: 'relative', zIndex: 30, height: 'clamp(72px, 9vw, 88px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
       <Logo size={26} />
-      <nav aria-label="Menu" className="site-nav" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 32px)', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>
-        <Link to="/fonctionnalites" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
-          Fonctionnalités
-        </Link>
-        <Link to="/tarifs" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
-          Tarifs
-        </Link>
+      <nav aria-label="Menu" className="site-nav" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 2vw, 24px)', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>
+        <MegaMenu linkStyle={{ textDecoration: 'none', color: BAI.ink, display: 'inline-flex', alignItems: 'center', minHeight: 44, padding: '0 12px' }} />
         {user ? (
-          <Link to="/espace" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
+          <Link to="/espace" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
             Mon espace
           </Link>
         ) : (
-          <Link to="/connexion" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
+          <Link to="/connexion" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
             Se connecter
           </Link>
         )}
+        <MobileMenu
+          account={
+            <Link to={user ? '/espace' : '/connexion'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 52, borderRadius: 999, border: `1.5px solid ${BAI.borderStrong}`, color: BAI.ink, fontWeight: 600, textDecoration: 'none' }}>
+              {user ? 'Mon espace' : 'Se connecter'}
+            </Link>
+          }
+          cta={null}
+        />
         <Link to="/commencer" className="btn btn-primary" style={{ textDecoration: 'none', background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}`, padding: '12px clamp(14px, 2vw, 24px)', borderRadius: 999, fontWeight: 600 }}>
           Créer mon bail
         </Link>
