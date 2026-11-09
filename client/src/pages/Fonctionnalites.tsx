@@ -7,6 +7,7 @@ import { SignupCta } from '../components/SignupCta'
 import { AppWindow } from '../components/AppWindow'
 import { ProductTour } from '../components/ProductTour'
 import { priceText } from '../config'
+import { SolutionLinks } from './Solutions'
 import { CALLBACK_PROMISE } from '../content/inclus'
 import { FEATURES, PROFILES, SECTIONS, SHOWCASE, featurePath, type Feature } from '../content/fonctionnalites'
 
@@ -158,6 +159,8 @@ export function FonctionnalitesList() {
           ))}
         </ul>
       </section>
+
+      <SolutionLinks />
 
       <div style={{ maxWidth: 800, marginTop: 24 }}>
         <SignupCta />

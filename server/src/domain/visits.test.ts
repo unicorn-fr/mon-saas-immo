@@ -19,6 +19,11 @@ test('audience : seules les pages publiques sont comptées, jamais un lien priv�
   assert.equal(countedPath('/fonctionnalites/etat-des-lieux'), '/fonctionnalites/etat-des-lieux')
   assert.equal(countedPath('/simulateurs/revision-loyer'), '/simulateurs/revision-loyer')
   assert.equal(countedPath('/guides/a/b'), null)
+  assert.equal(countedPath('/a-propos'), '/a-propos')
+  assert.equal(countedPath('/bail/location-vide?utm_source=google'), '/bail/location-vide')
+  assert.equal(countedPath('/gestion-locative/sci'), '/gestion-locative/sci')
+  assert.equal(countedPath('/bail/a/b'), null)
+  assert.equal(countedPath('/bail'), null)
 })
 
 test('audience : provenance regroupée, lien marqué, accès direct, rechargement', () => {

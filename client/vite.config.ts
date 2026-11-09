@@ -4,6 +4,7 @@ import { LAUNCH_OFFER, priceDetail } from './src/config'
 import { GUIDES, guidePath, type Guide } from './src/content/guides'
 import { MODELES, SIMULATEURS, modelePath, type Modele } from './src/content/modeles'
 import { FEATURES, featurePath } from './src/content/fonctionnalites'
+import { ABOUT_FAQ, SOLUTIONS, solutionPath, type Solution } from './src/content/solutions'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -30,6 +31,8 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ...FEATURES.map((f): [string, string, string] => [featurePath(f.slug), 'monthly', '0.8']),
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
+  ['/a-propos', 'monthly', '0.5'],
+  ...SOLUTIONS.map((x): [string, string, string] => [solutionPath(x), 'monthly', '0.8']),
   ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
 ]
 
@@ -64,6 +67,8 @@ ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description
 - [Essayer Bailio sans compte](${SITE_URL}/demo): espace d'exemple à manipuler en une minute, données fictives, rien d'enregistré
 - [Fonctionnalités](${SITE_URL}/fonctionnalites): ce que fait Bailio, avec des captures de l'application
 ${FEATURES.map((f) => `- [${f.name}](${SITE_URL}${featurePath(f.slug)}): ${f.description}`).join('\n')}
+- [À propos de Bailio](${SITE_URL}/a-propos): pourquoi Bailio existe, comment il est fait, qui l'a créé
+${SOLUTIONS.map((x) => `- [${x.title}](${SITE_URL}${solutionPath(x)}): ${x.description}`).join('\n')}
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
 ${SIMULATEURS.map((x) => `- [${x.name}](${SITE_URL}${x.path}): ${x.description}`).join('\n')}
@@ -97,6 +102,8 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
   '/fonctionnalites': { title: 'Fonctionnalités de Bailio', description: 'Bail conforme signé en ligne, quittances automatiques, relances d’impayés, état des lieux sur téléphone, candidatures et déclaration d’impôts : tout Bailio en captures.' },
   ...Object.fromEntries(FEATURES.map((f) => [featurePath(f.slug), { title: f.title.replace(/[[\]]/g, ''), description: f.description }])),
+  '/a-propos': { title: 'À propos de Bailio', description: 'Bailio aide les propriétaires bailleurs particuliers à faire un bail conforme et à suivre leur location. Pourquoi, comment, et qui est derrière.' },
+  ...Object.fromEntries(SOLUTIONS.map((x) => [solutionPath(x), { title: x.title, description: x.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },
 }
 
@@ -121,6 +128,22 @@ function modeleHtml(m: Modele) {
   return `<article><h1>${esc(m.title)}</h1><p>${esc(m.lead)}</p><h2>Avant d’envoyer</h2>${list(m.rules)}<h2>La lettre</h2>${letter}${m.letter.annexes ? `<h2>À joindre</h2>${list(m.letter.annexes)}` : ''}<h2>Comment l’envoyer</h2><p>${esc(m.send)}</p><h2>Sources</h2><ul>${sources}</ul></article><p><a href="/modeles">Tous les modèles</a> · <a href="/">Bailio</a></p>`
 }
 
+/** Page type de bail ou profil en HTML simple pour les robots (dans <noscript>) : essentiel, plan complet, questions, sources. */
+function solutionHtml(x: Solution) {
+  const list = (xs: string[]) => `<ul>${xs.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>`
+  const body = x.blocks
+    .map((b) =>
+      'h' in b ? `<h2>${esc(b.h)}</h2>` : 'p' in b ? `<p>${esc(b.p)}</p>` : 'list' in b ? list(b.list) : 'note' in b ? `<p><strong>À retenir :</strong> ${esc(b.note)}</p>` : 'steps' in b ? `<ol>${b.steps.map((s) => `<li><strong>${esc(s.title)}</strong> ${esc(s.text)}</li>`).join('')}</ol>` : `<h2>Le prix</h2><p>${esc(priceDetail())}, tout compris. ${esc(LAUNCH_OFFER)}.</p>`,
+    )
+    .join('')
+  const facts = `<h2>L’essentiel</h2><ul>${x.facts.map(([k, v]) => `<li><strong>${esc(k)}</strong> : ${esc(v)}</li>`).join('')}</ul>`
+  const faq = `<h2>Questions</h2>${x.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join('')}`
+  const sources = x.sources.map((s) => `<li><a href="${esc(s.url)}">${esc(s.label)}</a> (vérifié le ${esc(s.checked)})</li>`).join('')
+  return `<article><h1>${esc(x.title)}</h1><p>${esc(x.lead)}</p>${facts}${body}${faq}<h2>Sources</h2><ul>${sources}</ul></article><p><a href="/commencer">Créer mon bail gratuit</a> · <a href="/">Bailio</a></p>`
+}
+
+const faqLd = (qa: Array<[string, string]>) => jsonLd({ '@context': 'https://schema.org', '@type': 'FAQPage', inLanguage: 'fr-FR', mainEntity: qa.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) })
+
 const guideText = (g: Guide) => g.blocks.map((b) => ('h' in b ? b.h : 'p' in b ? b.p : 'list' in b ? b.list.join(' ') : b.note)).join('\n')
 
 /** Une page HTML par page publique : titre, description, adresse canonique, partage et données structurées propres. */
@@ -128,6 +151,7 @@ function pageHtml(base: string, path: string) {
   const url = `${SITE_URL}${path}`
   const guide = GUIDES.find((g) => guidePath(g) === path)
   const modele = MODELES.find((m) => modelePath(m) === path)
+  const solution = SOLUTIONS.find((x) => solutionPath(x) === path)
   const meta = guide ? { title: guide.title, description: guide.description } : modele ? { title: modele.title, description: modele.description } : PAGE_META[path]
   if (!meta) return null
   const title = `${meta.title} · Bailio`
@@ -153,13 +177,19 @@ function pageHtml(base: string, path: string) {
           articleBody: guideText(guide),
           citation: guide.sources.map((x) => x.url),
         })
-      : path === '/guides'
+      : solution
+        ? faqLd(solution.faq)
+        : path === '/a-propos'
+          ? faqLd(ABOUT_FAQ)
+          : path === '/guides'
         ? jsonLd({ '@context': 'https://schema.org', '@type': 'ItemList', itemListElement: GUIDES.map((g, i) => ({ '@type': 'ListItem', position: i + 1, url: `${SITE_URL}${guidePath(g)}`, name: g.title })) })
         : '',
   ].join('')
   const noscript = guide
     ? guideHtml(guide)
-    : modele
+    : solution
+      ? solutionHtml(solution)
+      : modele
       ? modeleHtml(modele)
       : path === '/modeles'
         ? `<h1>Modèles de lettres gratuits</h1><ul>${SIMULATEURS.map((x) => `<li><a href="${x.path}">${esc(x.name)}</a> : ${esc(x.lead)}</li>`).join('')}${MODELES.map((m) => `<li><a href="${modelePath(m)}">${esc(m.title)}</a> : ${esc(m.lead)}</li>`).join('')}</ul>`
