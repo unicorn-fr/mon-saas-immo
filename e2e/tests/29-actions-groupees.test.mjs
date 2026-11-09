@@ -26,9 +26,13 @@ test('actions groupées : liens d’assurance et quittances en une fois', async 
     page.setDefaultTimeout(20000)
     await page.goto(`${BASE}/espace/actions`)
     await page.getByRole('heading', { name: 'Actions groupées', level: 1 }).waitFor()
-    // Premier groupe ouvert : les assurances (pas d'impayé)
-    await page.getByRole('button', { name: /^Demander les attestations d’assurance/ }).waitFor()
-    assert.equal(await page.getByRole('button', { name: /^Demander les attestations d’assurance/ }).getAttribute('aria-expanded'), 'true')
+    // Premier groupe ouvert : les impayés s'il y en a (selon le jour du mois), sinon les assurances
+    const insurance = page.getByRole('button', { name: /^Demander les attestations d’assurance/ })
+    await insurance.waitFor()
+    const first = v.groups.UNPAID.length ? /^Relancer les loyers impayés/ : /^Demander les attestations d’assurance/
+    assert.equal(await page.getByRole('button', { name: first }).getAttribute('aria-expanded'), 'true')
+    if ((await insurance.getAttribute('aria-expanded')) !== 'true') await insurance.click()
+    assert.equal(await insurance.getAttribute('aria-expanded'), 'true')
     await page.getByText('Aucune attestation enregistrée').first().waitFor()
     const before = logSize()
     await page.getByRole('button', { name: 'Envoyer le lien à 2 locataires' }).click()
