@@ -31,6 +31,7 @@ export const COUNTED_PATHS = [
   '/guides',
   '/modeles',
   '/changer-pour-bailio',
+  '/tarifs',
   '/demo',
   '/fonctionnalites',
   '/simulateurs/revision-loyer',
