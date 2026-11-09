@@ -51,6 +51,10 @@ img { max-width: 100%; }
   .split { flex-direction: column; gap: 40px; }
   .hide-lg { display: none !important; }
 }
+@media (max-width: 399px) {
+  .site-nav { gap: 10px !important; font-size: 14px !important; }
+  .site-nav .btn-primary { padding: 10px 12px !important; }
+}
 @media (max-width: 768px) {
   .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 28px; }
   .hide-md { display: none !important; }

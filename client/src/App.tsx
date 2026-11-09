@@ -25,6 +25,7 @@ import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
 import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
 import { Changer } from './pages/Changer'
+import { Tarifs } from './pages/Tarifs'
 import Demo from './pages/Demo'
 import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
 import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPreavis } from './pages/Simulateurs'
@@ -285,6 +286,7 @@ function Pages() {
               <Route path="/guides" element={<GuidesList />} />
               <Route path="/guides/:slug" element={<GuideArticle />} />
               <Route path="/changer-pour-bailio" element={<Changer />} />
+              <Route path="/tarifs" element={<Tarifs />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/fonctionnalites" element={<FonctionnalitesList />} />
               <Route path="/fonctionnalites/:slug" element={<FonctionnaliteArticle />} />
