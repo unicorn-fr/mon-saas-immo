@@ -61,6 +61,9 @@ function List({ items }: { items: PropertySummary[] }) {
             <Btn variant="outline" to="/espace/structures">
               Vos structures
             </Btn>
+            <Btn variant="outline" to="/espace/logements/importer">
+              Importer depuis un fichier (Qalimo, tableur…)
+            </Btn>
             <Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>
           </>
         }

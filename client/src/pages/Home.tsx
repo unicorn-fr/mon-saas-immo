@@ -7,7 +7,9 @@ import './home.css'
 import { Logo } from '../components/Logo'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
-import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel } from '../config'
+import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
+import { AppWindow } from '../components/AppWindow'
+import { ALL_FEATURES, AUTOMATIONS, CHOOSE, COMPARE, EXPERTISE, GUARANTEES, MANUAL, REASONS, START, TRUST } from '../content/accueil'
 import { AVIS } from '../content/avis'
 import { SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
@@ -328,6 +330,299 @@ function FreeTools() {
   )
 }
 
+/** Croix des conseils repliés (devient un « moins » à l'ouverture, comme les questions). */
+function Plus() {
+  return (
+    <svg className="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden focusable="false">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+const stagger = (i: number) => ({ ['--i' as string]: i }) as CSSProperties
+
+/** « Tout ce que vous faisiez à la main » : liste de points cliquables, la capture de l'écran à côté (onglets, flèches). */
+function Manual() {
+  const [i, setI] = useState(0)
+  const tabs = useRef<Array<HTMLButtonElement | null>>([])
+  const s = MANUAL[i]
+  const go = (n: number) => {
+    const k = (n + MANUAL.length) % MANUAL.length
+    setI(k)
+    tabs.current[k]?.focus()
+  }
+  return (
+    <section className="manual" data-section aria-labelledby="manual-title">
+      <h2 id="manual-title" data-in>
+        Tout ce que vous faisiez à la main, <em>Bailio le fait.</em>
+      </h2>
+      <div className="manual-tabs" role="tablist" aria-label="Ce que Bailio fait pour vous" data-in style={stagger(1)}>
+        {MANUAL.map((m, j) => (
+          <button
+            key={m.img}
+            ref={(el) => void (tabs.current[j] = el)}
+            type="button"
+            role="tab"
+            id={`manual-tab-${j}`}
+            aria-selected={i === j}
+            aria-controls="manual-panel"
+            tabIndex={i === j ? 0 : -1}
+            onClick={() => setI(j)}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') (e.preventDefault(), go(j + 1))
+              else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') (e.preventDefault(), go(j - 1))
+              else if (e.key === 'Home') (e.preventDefault(), go(0))
+              else if (e.key === 'End') (e.preventDefault(), go(MANUAL.length - 1))
+            }}
+          >
+            <span className="manual-n" aria-hidden>
+              {j + 1}
+            </span>
+            {m.title}
+          </button>
+        ))}
+      </div>
+      <div id="manual-panel" className="manual-panel fold fold--ear" role="tabpanel" aria-labelledby={`manual-tab-${i}`} data-in style={stagger(2)}>
+        <div className="panel-in" key={s.img}>
+          <p className="manual-text">{s.text}</p>
+          <AppWindow img={s.img} alt={s.alt} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** Six automatismes : ce qui tourne sans vous. */
+function Automations() {
+  return (
+    <section className="autos" data-section aria-labelledby="autos-title">
+      <h2 id="autos-title" data-in>
+        Six <em>automatismes.</em>
+      </h2>
+      <div className="autos-grid">
+        {AUTOMATIONS.map((a, j) => (
+          <article key={a.title} className="auto" data-in style={stagger(j % 3)}>
+            <span className="auto-n" aria-hidden>
+              {String(j + 1).padStart(2, '0')}
+            </span>
+            <h3>{a.title}</h3>
+            <p>{a.text}</p>
+            <Link to={a.to} className="auto-more">
+              En savoir plus
+              <span className="sr-only"> sur : {a.title}</span>
+              <Arrow />
+            </Link>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/** Toutes les fonctionnalités, toutes comprises dans le prix. */
+function AllFeatures() {
+  return (
+    <section className="feats" data-section aria-labelledby="feats-title">
+      <div className="feats-head">
+        <h2 id="feats-title" data-in>
+          Toutes les fonctionnalités. <em>Toutes incluses.</em>
+        </h2>
+        <Link to="/fonctionnalites" className="btn btn--paper" data-in style={stagger(1)}>
+          Voir les fonctionnalités
+          <Arrow />
+        </Link>
+      </div>
+      <ul className="feats-list" data-in style={stagger(1)}>
+        {ALL_FEATURES.map((f) => (
+          <li key={f}>
+            <Check />
+            {f}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Six raisons de choisir Bailio. */
+function Reasons() {
+  return (
+    <section className="why" data-section aria-labelledby="why-title">
+      <h2 id="why-title" data-in>
+        Six raisons de <em>choisir Bailio.</em>
+      </h2>
+      <div className="why-grid">
+        {REASONS.map((r, j) => (
+          <article key={r.title} className="why-card" data-in style={stagger(j % 3)}>
+            <Check />
+            <h3>{r.title}</h3>
+            <p>{r.text}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/** Derrière chaque règle, une source officielle : bloc sombre, texte clair. */
+function Expertise() {
+  const [head, tail] = EXPERTISE.title.split(', ')
+  return (
+    <section className="expert fold fold--lg fold--ear" data-section aria-labelledby="expert-title">
+      <div className="expert-intro">
+        <h2 id="expert-title" data-in>
+          {head}, <em>{tail}</em>
+        </h2>
+        <div className="expert-links" data-in style={stagger(1)}>
+          <Link to="/guides" className="btn btn--paper">
+            Lire les guides
+            <Arrow />
+          </Link>
+          <Link to="/modeles" className="btn btn--paper">
+            Modèles de lettres
+            <Arrow />
+          </Link>
+        </div>
+      </div>
+      <ul className="expert-list" data-in style={stagger(2)}>
+        {EXPERTISE.points.map((p) => (
+          <li key={p}>
+            <Check />
+            {p}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Vos garanties : une ligne, juste sous les offres. */
+function Guarantees() {
+  return (
+    <section className="guar" data-section aria-labelledby="guar-title">
+      <h2 id="guar-title" data-in>
+        Vos <em>garanties.</em>
+      </h2>
+      <ul data-in style={stagger(1)}>
+        {GUARANTEES.map((g) => (
+          <li key={g}>
+            <Check />
+            {g}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Tableur, agence ou Bailio : vrai tableau, colonne Bailio mise en avant, défilement horizontal sur téléphone. */
+function Compare() {
+  const cell = (v: string) => (v === 'PRICE' ? priceText() : v)
+  return (
+    <section className="cmp" data-section aria-labelledby="cmp-title">
+      <h2 id="cmp-title" data-in>
+        Tableur, agence ou <em>Bailio</em> : que choisir ?
+      </h2>
+      <div className="cmp-scroll" role="region" aria-labelledby="cmp-title" tabIndex={0} data-in style={stagger(1)}>
+        <table>
+          <caption className="sr-only">Comparaison du tableur, de l’agence et de Bailio</caption>
+          <thead>
+            <tr>
+              <th scope="col">Ce qui compte</th>
+              {COMPARE.columns.map((c) => (
+                <th key={c} scope="col" className={c === 'Bailio' ? 'cmp-me' : undefined}>
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {COMPARE.rows.map((r) => (
+              <tr key={r.label}>
+                <th scope="row">{r.label}</th>
+                {r.values.map((v, j) => (
+                  <td key={j} className={COMPARE.columns[j] === 'Bailio' ? 'cmp-me' : undefined}>
+                    {cell(v)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="cmp-hint" data-in style={stagger(1)}>
+        Faites glisser le tableau pour voir toutes les colonnes.
+      </p>
+    </section>
+  )
+}
+
+/** Opérationnel en quelques minutes : trois étapes, et l'import par fichier. */
+function Start() {
+  return (
+    <section className="start" data-section aria-labelledby="start-title">
+      <h2 id="start-title" data-in>
+        Opérationnel <em>en quelques minutes.</em>
+      </h2>
+      <ol className="start-list">
+        {START.map((s, j) => (
+          <li key={s.title} data-in style={stagger(j + 1)}>
+            <span className="start-n" aria-hidden>
+              {j + 1}
+            </span>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+      <div data-in style={stagger(4)}>
+        <Link to="/espace/logements/importer" className="btn btn--paper">
+          Ajouter mes logements depuis un fichier
+          <Arrow />
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+/** Comment choisir son logiciel : six critères, conseils repliés sur leur titre. */
+function Choose() {
+  return (
+    <section className="faq choose" data-section aria-labelledby="choose-title">
+      <h2 id="choose-title" data-in>
+        Comment choisir son logiciel de gestion locative <em>en 2026 ?</em>
+      </h2>
+      <div className="faq-list" data-in style={stagger(1)}>
+        {CHOOSE.map((c) => (
+          <details key={c.title}>
+            <summary>
+              <span>{c.title}</span>
+              <Plus />
+            </summary>
+            <p>{c.text}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+/** Bandeau de confiance, avant le pied de page. */
+function Trust() {
+  return (
+    <section className="trust" aria-label="Nos engagements">
+      <ul>
+        {TRUST.map((t) => (
+          <li key={t.title}>
+            <strong>{t.title}</strong>
+            <span>{t.text}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 /** Avis de vrais propriétaires (content/avis.ts) ; rien tant qu'il n'y en a pas. */
 function Reviews() {
   if (!AVIS.length) return null
@@ -460,6 +755,12 @@ export default function Home() {
           </div>
         </section>
 
+        <Tour />
+
+        <Manual />
+
+        <Automations />
+
         <section className="live" data-section aria-labelledby="live-title">
           <div className="live-form">
             <h2 id="live-title" data-in style={{ ['--i' as string]: 0 }}>
@@ -527,6 +828,12 @@ export default function Home() {
           </div>
         </section>
 
+        <AllFeatures />
+
+        <Reasons />
+
+        <Expertise />
+
         <section className="dossier" data-section aria-labelledby="dossier-title">
           <h2 id="dossier-title" data-in>
             Tout le dossier, <em>au même endroit.</em>
@@ -558,8 +865,6 @@ export default function Home() {
             <img key={f} data-in style={{ ['--i' as string]: i }} src={`/accueil/${f}.webp`} alt={alt} width={960} height={1200} loading="lazy" decoding="async" />
           ))}
         </div>
-
-        <Tour />
 
         <section className="itin" data-section aria-labelledby="itin-title">
           <div className="itin-intro">
@@ -595,8 +900,6 @@ export default function Home() {
         </section>
 
         <Yearly />
-
-        <FreeTools />
 
         <Reviews />
 
@@ -639,6 +942,16 @@ export default function Home() {
           </div>
         </section>
 
+        <Guarantees />
+
+        <Compare />
+
+        <Start />
+
+        <FreeTools />
+
+        <Choose />
+
         <section className="faq" data-section aria-labelledby="faq-title">
           <h2 id="faq-title" data-in>
             Questions
@@ -677,6 +990,8 @@ export default function Home() {
             </span>
           </div>
         </section>
+
+        <Trust />
       </main>
 
       <footer className="foot">

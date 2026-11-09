@@ -22,6 +22,7 @@ import leaseRoutes from './routes/leases.js'
 import todayRoutes from './routes/today.js'
 import moneyRoutes from './routes/money.js'
 import bankRoutes from './routes/bank.js'
+import tableImportRoutes from './routes/tableImport.js'
 import inventoryRoutes from './routes/inventories.js'
 import portfolioRoutes from './routes/portfolio.js'
 import bulkRoutes from './routes/bulk.js'
@@ -91,6 +92,7 @@ export function createApp() {
   app.use('/api', leaseRoutes)
   app.use('/api', moneyRoutes)
   app.use('/api', bankRoutes)
+  app.use('/api', tableImportRoutes)
   app.use('/api', inventoryRoutes)
   app.use('/api', portfolioRoutes)
   app.use('/api', bulkRoutes)

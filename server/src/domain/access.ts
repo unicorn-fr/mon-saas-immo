@@ -53,6 +53,7 @@ export function routeDenied(role: AccessRole, method: string, rawPath: string): 
   // Associé : tout sur les logements partagés, sauf supprimer, créer un logement et toucher au compte ou aux structures.
   if (m === 'DELETE') return 'Votre accès ne permet pas de supprimer. Demandez au propriétaire.'
   if (m === 'POST' && path === '/properties') return 'Seul le propriétaire peut ajouter un logement.'
+  if (path === '/import' || path.startsWith('/import/')) return 'Seul le propriétaire peut importer des logements.'
   if (/^\/properties\/[^/]+\/structure$/.test(path)) return 'Seul le propriétaire peut changer la structure d’un logement.'
   if (!read && (path === '/structures' || path.startsWith('/structures/'))) return 'Seul le propriétaire peut modifier ses structures.'
   if (!read && path === '/profile') return 'Seul le propriétaire peut modifier son profil.'

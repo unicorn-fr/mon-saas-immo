@@ -5,6 +5,7 @@ import { LAUNCH_OFFER } from '../config'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 const STEPS = [
+  { title: 'Tous vos logements et locataires d’un coup, depuis un fichier Excel ou CSV', text: 'Exportez la liste de votre ancien outil ou de votre tableur : Bailio reconnaît les colonnes, vous vérifiez, tout est ajouté. Rien à ressaisir.' },
   { title: 'Votre bail en photo', text: 'Photo ou PDF du bail signé : Bailio lit le locataire, le loyer, les charges, le dépôt et les dates. Vous vérifiez.' },
   { title: 'Le suivi repart seul', text: 'Quittances, révision du loyer, rappels d’assurance et échéances reprennent à partir d’aujourd’hui.' },
   { title: 'Vos anciens papiers rangés', text: 'Déposez états des lieux, diagnostics et quittances passées dans le dossier du logement.' },

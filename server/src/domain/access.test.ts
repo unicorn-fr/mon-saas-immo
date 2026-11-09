@@ -14,6 +14,10 @@ test('accès : adresses permises selon le rôle (refus par défaut)', () => {
   assert.ok(routeDenied('ASSOCIATE', 'PUT', '/properties/p1/structure'))
   assert.equal(routeDenied('ASSOCIATE', 'PUT', '/properties/p1'), null)
   assert.ok(routeDenied('ASSOCIATE', 'POST', '/structures'))
+  assert.ok(routeDenied('ASSOCIATE', 'POST', '/import/table/confirm'))
+  assert.ok(routeDenied('ASSOCIATE', 'POST', '/IMPORT/table/preview/'))
+  assert.ok(routeDenied('ACCOUNTANT', 'POST', '/import/table/preview'))
+  assert.ok(routeDenied('CONTRACTOR', 'POST', '/import/table/preview'))
   assert.ok(routeDenied('ASSOCIATE', 'PUT', '/profile'))
   // Express ignore les majuscules, la barre finale et décode l'adresse : routeDenied aussi.
   assert.ok(routeDenied('ASSOCIATE', 'PUT', '/STRUCTURES/s1'))
