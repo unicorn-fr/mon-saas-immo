@@ -5,6 +5,7 @@ import { CountUp } from '../components/CountUp'
 import { Link } from 'react-router-dom'
 import './home.css'
 import { Logo } from '../components/Logo'
+import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
@@ -700,24 +701,24 @@ export default function Home() {
       <header className={`bar${bar.scrolled ? ' bar--sc' : ''}${bar.cta ? ' bar--cta' : ''}`}>
         <Logo size={28} />
         <nav aria-label="Menu">
-          <Link to="/fonctionnalites" className="bar-link hide-md">
-            Fonctionnalités
-          </Link>
-          <Link to="/importer" className="bar-link hide-md">
-            J’ai déjà un bail
-          </Link>
-          <Link to="/tarifs" className="bar-link hide-md">
-            Tarifs
-          </Link>
+          <MegaMenu linkClass="bar-link" />
           {user ? (
-            <Link to="/espace" className="bar-link bar-login">
+            <Link to="/espace" className="bar-link bar-login hide-md">
               Mon espace
             </Link>
           ) : (
-            <Link to="/connexion" className="bar-link bar-login">
+            <Link to="/connexion" className="bar-link bar-login hide-md">
               Se connecter
             </Link>
           )}
+          <MobileMenu
+            account={
+              <Link to={user ? '/espace' : '/connexion'} className="btn btn--line" style={{ justifyContent: 'center' }}>
+                {user ? 'Mon espace' : 'Se connecter'}
+              </Link>
+            }
+            cta={null}
+          />
           <Link to="/commencer" className="btn btn--sm bar-cta" tabIndex={bar.cta ? 0 : -1} aria-hidden={!bar.cta}>
             Créer mon bail
           </Link>
