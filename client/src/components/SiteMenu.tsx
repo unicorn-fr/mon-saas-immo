@@ -60,6 +60,8 @@ const FEATURE_TEXT: Record<string, [string, IconName]> = {
   'etat-des-lieux': ['Sur téléphone, sortie comparée', 'camera'],
   candidatures: ['Dossiers triés, pièces protégées', 'people'],
   'declaration-impots': ['Les cases à recopier, 2044 remplie', 'doc'],
+  'rapprochement-bancaire': ['CSV ou OFX, loyers retrouvés', 'euro'],
+  'plusieurs-logements': ['Reste, rendement, SCI, accès', 'house'],
 }
 const PROFILE_TEXT: Record<string, string> = { particulier: 'Vous louez en votre nom', sci: 'Associés, parts, déclaration 2072', lmnp: 'Location meublée, micro-BIC ou réel' }
 const LEASE_TEXT: Record<string, string> = { 'location-vide': '3 ans en nom propre', 'location-meublee': '1 an, mobilier obligatoire', 'bail-etudiant': '9 mois, non reconduit', 'bail-mobilite': '1 à 10 mois, sans dépôt', colocation: 'Plusieurs locataires, solidarité', 'garage-parking': 'Contrat libre, sans DPE' }

@@ -23,6 +23,15 @@ test('fonctionnalités : liste, page avec captures, lien vers la démo', async (
   assert.ok(await img.evaluate((e) => e.complete && e.naturalWidth > 0), 'capture chargée')
   await page.getByText('Les relances sont-elles activées d’office ?').click()
   await page.getByText(/restent coupées tant que vous ne les activez pas/).waitFor()
+  // Nouvelle page : relevé bancaire, avec son titre et sa capture chargée.
+  await page.goto(`${BASE}/fonctionnalites/rapprochement-bancaire`)
+  await page.getByRole('heading', { level: 1, name: /les loyers se retrouvent/ }).waitFor()
+  assert.match(await page.title(), /les loyers se retrouvent/)
+  const releve = page.getByRole('img', { name: /Vos loyers reçus, en un clic/ }).first()
+  await releve.scrollIntoViewIfNeeded()
+  assert.ok(await releve.evaluate((e) => e.complete && e.naturalWidth > 0), 'capture du relevé chargée')
+  await page.getByText('Puis-je relier ma banque directement ?').click()
+  await page.getByText(/connexion bancaire directe n’existe pas/).waitFor()
   await page.getByRole('link', { name: 'Essayer la démo' }).first().click()
   await page.getByRole('heading', { level: 1, name: /Essayez Bailio/ }).waitFor()
   } finally {
