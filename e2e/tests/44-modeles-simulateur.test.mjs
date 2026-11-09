@@ -16,10 +16,10 @@ test('modèles gratuits et simulateur de révision du loyer', async () => {
   await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
   assert.match(await page.title(), /Mise en demeure/)
 
-  // La liste affiche les 26 modèles ; deux nouveaux s'ouvrent avec leur titre et leur source.
+  // La liste affiche les 29 modèles ; l'acte de caution et deux autres s'ouvrent avec leur titre et leur source.
   await page.goto(`${BASE}/modeles`)
   await page.getByRole('heading', { level: 1, name: 'Modèles de lettres gratuits' }).waitFor()
-  assert.equal(await page.locator('main a[href^="/modeles/"]').count(), 26)
+  assert.equal(await page.locator('main a[href^="/modeles/"]').count(), 29)
   await page.goto(`${BASE}/modeles/conge-proprietaire-reprise`)
   await page.getByRole('heading', { level: 1, name: 'Congé pour reprise du logement : modèle gratuit' }).waitFor()
   await page.getByText('Service-public.fr : préavis et formalités du congé donné par le propriétaire').first().waitFor()
@@ -27,6 +27,12 @@ test('modèles gratuits et simulateur de révision du loyer', async () => {
   await page.goto(`${BASE}/modeles/appel-a-la-caution`)
   await page.getByRole('heading', { level: 1, name: /Appel à la caution/ }).waitFor()
   await page.getByText('Service-public.fr : loyer impayé et expulsion du locataire').first().waitFor()
+
+  await page.goto(`${BASE}/modeles/acte-de-caution-solidaire`)
+  await page.getByRole('heading', { level: 1, name: /Acte de caution solidaire/ }).waitFor()
+  await page.getByText('Légifrance : code civil, article 2297').first().waitFor()
+  await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
+  assert.match(await page.title(), /caution solidaire/i)
 
   // Simulateur : DPE, loyer, trimestre, puis le résultat avec la formule.
   await page.goto(`${BASE}/simulateurs/revision-loyer`)

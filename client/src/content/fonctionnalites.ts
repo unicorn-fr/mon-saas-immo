@@ -179,6 +179,59 @@ export const FEATURES: Feature[] = [
       { label: 'Simulateur : micro-foncier ou réel', to: '/simulateurs/micro-foncier-ou-reel' },
     ],
   },
+  {
+    slug: 'rapprochement-bancaire',
+    name: 'Relevé bancaire et loyers reçus',
+    title: 'Déposez votre relevé, [les loyers se retrouvent]',
+    description: 'Déposez le CSV ou l’OFX de votre banque : Bailio retrouve les virements de vos locataires, vous cochez, les loyers sont enregistrés et les quittances partent.',
+    lead: 'Plus besoin de noter chaque virement à la main. Vous déposez le relevé du compte qui reçoit vos loyers, Bailio propose les loyers qu’il reconnaît, vous validez.',
+    img: 'releve',
+    alt: 'Page « Vos loyers reçus, en un clic » de Bailio : comment télécharger le relevé de sa banque puis le déposer, au format CSV ou OFX.',
+    spot: { x: 22.9, y: 54.1, w: 71, h: 11.7, label: 'CSV ou OFX, lu sur le serveur et jamais enregistré' },
+    steps: [
+      { title: 'Vous téléchargez le relevé', text: 'Depuis l’espace en ligne de votre banque, au format CSV ou OFX, sur le dernier mois ou plus. Bailio vous indique où le trouver.' },
+      { title: 'Les loyers sont rapprochés', text: 'Un virement est associé à un loyer attendu quand le montant est juste à 1 € près, qu’il tombe de 20 jours avant à 45 jours après l’échéance, et que le libellé porte le nom du locataire ou de son garant.', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail dans Bailio : loyer du mois payé et envoi automatique des quittances.' },
+      { title: 'Vous validez, la quittance part', text: 'Un virement partiel ou ambigu est marqué « À vérifier » et n’est jamais coché à votre place. Chaque loyer validé est enregistré comme à la main, et sa quittance part tout de suite si l’envoi automatique est actif.' },
+    ],
+    checks: ['Relevé lu en mémoire, jamais enregistré : seuls les loyers que vous validez sont gardés', 'Montant à 1 € près, entre 20 jours avant et 45 jours après l’échéance', 'Nom du locataire ou du garant cherché dans le libellé', 'Cas douteux « À vérifier », décochés', 'Accord du locataire respecté avant l’envoi d’une quittance'],
+    faq: [
+      { q: 'Puis-je relier ma banque directement ?', a: 'Pas encore. La connexion bancaire directe n’existe pas dans Bailio : à la place, vous déposez le relevé téléchargé depuis votre banque, en quelques secondes.' },
+      { q: 'Bailio garde-t-il mon relevé ?', a: 'Non. Le fichier est lu sur le serveur le temps du rapprochement, puis oublié. Seuls les loyers que vous cochez sont enregistrés.' },
+      { q: 'Et si un virement n’est pas reconnu ?', a: 'Il reste de côté. Vous pouvez noter le loyer à la main depuis le bail.' },
+    ],
+    links: [
+      { label: 'Fonctionnalité : loyers et quittances', to: '/fonctionnalites/quittance-de-loyer' },
+      { label: 'Guide : la quittance de loyer', to: '/guides/quittance-de-loyer' },
+      { label: 'Fonctionnalité : impayés et relances', to: '/fonctionnalites/loyers-impayes' },
+    ],
+  },
+  {
+    slug: 'plusieurs-logements',
+    name: 'Plusieurs logements',
+    title: 'Plusieurs logements, [un seul tableau de bord]',
+    description: 'Loyers attendus, crédits, ce qu’il vous reste et rendement brut de tous vos logements, avec ce qu’il faut surveiller en premier, vos SCI et des accès pour votre associé ou votre comptable.',
+    lead: 'Chaque mois, Bailio additionne les loyers de tous vos logements, retire les crédits et les dépenses, et vous montre ce qu’il vous reste avant impôt. Ce qui demande votre attention vient en premier.',
+    img: 'patrimoine',
+    alt: 'Tableau de bord de Bailio : loyers et charges attendus chaque mois, ce qu’il reste, les logements à surveiller et la liste des trois logements.',
+    spot: { x: 21.1, y: 22.7, w: 75, h: 16.4, label: 'Loyers attendus et ce qu’il vous reste, chaque mois avant impôt' },
+    steps: [
+      { title: 'Un tableau de bord pour tout le patrimoine', text: 'Loyers et charges attendus, crédits et assurances, dépenses moyennes des 12 derniers mois, reste avant impôt, et rendement brut quand le prix d’achat est connu.' },
+      { title: '« À surveiller », du plus urgent au moins urgent', text: 'Loyer en retard, logement interdit à la location, logement libre, diagnostic à refaire, interdiction liée au DPE dans les 4 ans, bail qui arrive à échéance.', img: 'logements', alt: 'Page « Vos logements » de Bailio : trois logements loués, un loyer en retard, et le lien vers le tableau de bord.' },
+      { title: 'Des outils pour aller vite', text: 'Logements d’un même immeuble regroupés, import de tous vos logements et locataires depuis un fichier CSV ou Excel, actions groupées (relances, attestations d’assurance, révisions de loyer, quittances) relues avant l’envoi.' },
+      { title: 'Chaque logement dans sa structure', text: 'En votre nom, à plusieurs, en SCI ou en société : associés, parts et déclaration propres à chacune. Vous pouvez inviter un associé, un comptable en lecture seule ou un intervenant limité à un logement.' },
+    ],
+    checks: ['Retards de loyer calculés comme dans les courriers et les relances', 'Crédits et assurances repris des emprunts du logement', 'Fichier d’import lu en mémoire, jamais enregistré, avec l’aperçu des problèmes avant de confirmer', 'Chaque envoi groupé relu, avec la raison quand un bail ne peut pas partir', 'Accès retirable à tout moment, un comptable ne peut que lire'],
+    faq: [
+      { q: 'Le rendement est-il garanti ?', a: 'C’est un rendement brut calculé avec le prix d’achat que vous avez indiqué, avant impôt. Il n’est montré que pour les logements loués dont le prix d’achat est connu.' },
+      { q: 'Puis-je reprendre mes logements depuis un tableur ?', a: 'Oui. Un fichier CSV ou Excel suffit : Bailio reconnaît les colonnes, vous montre ce qu’il a compris puis crée les logements et leurs locataires. Aucun bail n’est créé.' },
+      { q: 'Mon comptable peut-il tout modifier ?', a: 'Non. Un comptable a un accès en lecture seule. Un associé peut presque tout faire, sauf supprimer un logement ou toucher à votre compte.' },
+    ],
+    links: [
+      { label: 'Fonctionnalité : les impôts', to: '/fonctionnalites/declaration-impots' },
+      { label: 'Simulateur : rentabilité locative', to: '/simulateurs/rentabilite-locative' },
+      { label: 'Reprendre vos locations', to: '/changer-pour-bailio' },
+    ],
+  },
 ]
 
 /** Vitrine de /fonctionnalites : quatre écrans, une zone mise en avant chacun. */
@@ -216,7 +269,7 @@ export const SECTIONS: Array<{ id: string; title: string; img: string; alt: stri
       { title: 'Relances d’impayés', text: 'Trois lettres à vos dates, une copie pour vous, tout s’arrête au paiement.' },
       { title: 'Suivi des loyers', text: 'Par logement : attendu, reçu, en retard, avec toute la dette d’un coup d’œil.' },
     ],
-    links: ['quittance-de-loyer', 'loyers-impayes'],
+    links: ['quittance-de-loyer', 'rapprochement-bancaire', 'loyers-impayes'],
   },
   {
     id: 'gerer',
@@ -230,7 +283,7 @@ export const SECTIONS: Array<{ id: string; title: string; img: string; alt: stri
       { title: 'Courriers prêts', text: 'Congé, mise en demeure, attestation, appel à la caution : remplis avec les données du bail.' },
       { title: 'Signalements du locataire', text: 'Il signale une fuite depuis son lien, vous organisez l’intervention et il suit l’avancement.' },
     ],
-    links: ['loyers-impayes'],
+    links: ['loyers-impayes', 'plusieurs-logements'],
   },
   {
     id: 'impots',
