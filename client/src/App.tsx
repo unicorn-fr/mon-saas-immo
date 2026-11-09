@@ -28,6 +28,7 @@ import { Changer } from './pages/Changer'
 import { Tarifs } from './pages/Tarifs'
 import Demo from './pages/Demo'
 import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
+import { APropos, SolutionPage } from './pages/Solutions'
 import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPiece, SimulateurPreavis, SimulateurRentabilite } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
@@ -290,6 +291,9 @@ function Pages() {
               <Route path="/demo" element={<Demo />} />
               <Route path="/fonctionnalites" element={<FonctionnalitesList />} />
               <Route path="/fonctionnalites/:slug" element={<FonctionnaliteArticle />} />
+              <Route path="/bail/:slug" element={<SolutionPage kind="bail" />} />
+              <Route path="/gestion-locative/:slug" element={<SolutionPage kind="profil" />} />
+              <Route path="/a-propos" element={<APropos />} />
               <Route path="/modeles" element={<ModelesList />} />
               <Route path="/modeles/:slug" element={<ModeleArticle />} />
               <Route path="/simulateurs/revision-loyer" element={<SimulateurRevision />} />

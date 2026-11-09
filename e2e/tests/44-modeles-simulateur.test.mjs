@@ -16,6 +16,18 @@ test('modèles gratuits et simulateur de révision du loyer', async () => {
   await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
   assert.match(await page.title(), /Mise en demeure/)
 
+  // La liste affiche les 26 modèles ; deux nouveaux s'ouvrent avec leur titre et leur source.
+  await page.goto(`${BASE}/modeles`)
+  await page.getByRole('heading', { level: 1, name: 'Modèles de lettres gratuits' }).waitFor()
+  assert.equal(await page.locator('main a[href^="/modeles/"]').count(), 26)
+  await page.goto(`${BASE}/modeles/conge-proprietaire-reprise`)
+  await page.getByRole('heading', { level: 1, name: 'Congé pour reprise du logement : modèle gratuit' }).waitFor()
+  await page.getByText('Service-public.fr : préavis et formalités du congé donné par le propriétaire').first().waitFor()
+  assert.match(await page.title(), /Congé pour reprise/)
+  await page.goto(`${BASE}/modeles/appel-a-la-caution`)
+  await page.getByRole('heading', { level: 1, name: /Appel à la caution/ }).waitFor()
+  await page.getByText('Service-public.fr : loyer impayé et expulsion du locataire').first().waitFor()
+
   // Simulateur : DPE, loyer, trimestre, puis le résultat avec la formule.
   await page.goto(`${BASE}/simulateurs/revision-loyer`)
   await page.getByText('Question 1 sur 3').waitFor()

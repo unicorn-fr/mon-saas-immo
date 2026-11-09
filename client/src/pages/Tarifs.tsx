@@ -2,6 +2,7 @@ import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { SimplePage } from '../components/SiteChrome'
+import { SolutionLinks } from './Solutions'
 import { LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE } from '../config'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
@@ -186,6 +187,7 @@ export function Tarifs() {
       <p style={{ marginTop: 32 }}>
         Plusieurs logements à reprendre ? {CALLBACK_PROMISE} <Link to="/contact">Être rappelé</Link>. Détail des conditions : <Link to="/prix-et-remboursement">prix, rétractation et remboursement</Link>.
       </p>
+      <SolutionLinks />
     </SimplePage>
   )
 }

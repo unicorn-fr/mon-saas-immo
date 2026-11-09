@@ -8,7 +8,7 @@ import { NotFound } from './legal/Legal'
 const dateLabel = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 
 /** Description de la page pour les moteurs de recherche, remise comme avant en quittant la page. */
-function useDescription(text: string) {
+export function useDescription(text: string) {
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]')
     if (!meta) return
