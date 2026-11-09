@@ -12,7 +12,7 @@ export function SignupCta({ text }: { text?: string }) {
       <strong style={{ fontSize: 20, lineHeight: 1.3 }}>Bailio le fait pour vous, sans erreur</strong>
       <span style={{ fontSize: 16, lineHeight: 1.5 }}>{text ?? 'Bail conforme, signature en ligne, quittances, relances et rappels : tout se prépare seul, avec les bonnes dates et les bons montants.'}</span>
       <span style={{ fontSize: 15 }}>
-        Premier bail gratuit. Ensuite {priceText()}, {PARKING_PRICE} pour un garage, tout compris.
+        Premier mois offert, sans carte bancaire. Ensuite {priceText()}, {PARKING_PRICE} pour un garage, tout compris.
       </span>
       <Link to="/commencer" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', minHeight: 52, padding: '0 26px', borderRadius: 999, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' }}>
         Créer mon bail gratuit
