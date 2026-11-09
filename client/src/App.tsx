@@ -28,7 +28,7 @@ import { Changer } from './pages/Changer'
 import { Tarifs } from './pages/Tarifs'
 import Demo from './pages/Demo'
 import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
-import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPreavis } from './pages/Simulateurs'
+import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPiece, SimulateurPreavis, SimulateurRentabilite } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
@@ -298,6 +298,8 @@ function Pages() {
               <Route path="/simulateurs/preavis-locataire" element={<SimulateurPreavis />} />
               <Route path="/simulateurs/depot-de-garantie" element={<SimulateurDepot />} />
               <Route path="/simulateurs/micro-foncier-ou-reel" element={<SimulateurMicroReel />} />
+              <Route path="/simulateurs/rentabilite-locative" element={<SimulateurRentabilite />} />
+              <Route path="/simulateurs/piece-autorisee" element={<SimulateurPiece />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
