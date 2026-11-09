@@ -706,9 +706,9 @@ export default function Home() {
           <Link to="/importer" className="bar-link hide-md">
             J’ai déjà un bail
           </Link>
-          <a href="#tarifs" className="bar-link hide-md">
-            Tarif
-          </a>
+          <Link to="/tarifs" className="bar-link hide-md">
+            Tarifs
+          </Link>
           {user ? (
             <Link to="/espace" className="bar-link bar-login">
               Mon espace
@@ -1006,7 +1006,7 @@ export default function Home() {
                 <Link to="/importer">Importer un bail</Link>
               </li>
               <li>
-                <a href="#tarifs">Tarif</a>
+                <Link to="/tarifs">Tarifs</Link>
               </li>
               <li>
                 <Link to="/connexion">Se connecter</Link>

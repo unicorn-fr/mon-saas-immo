@@ -24,6 +24,7 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/guides', 'weekly', '0.7'],
   ...GUIDES.map((g): [string, string, string] => [guidePath(g), 'monthly', '0.6']),
   ['/changer-pour-bailio', 'monthly', '0.7'],
+  ['/tarifs', 'monthly', '0.8'],
   ['/demo', 'monthly', '0.7'],
   ['/fonctionnalites', 'monthly', '0.8'],
   ...FEATURES.map((f): [string, string, string] => [featurePath(f.slug), 'monthly', '0.8']),
@@ -58,6 +59,7 @@ const LLMS_TXT = `# Bailio
 - [Contact](${SITE_URL}/contact)
 - [Guides du propriétaire](${SITE_URL}/guides): règles de la location expliquées, sources officielles
 ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description}`).join('\n')}
+- [Tarifs](${SITE_URL}/tarifs): un seul prix tout compris par logement, calculé selon le nombre de logements et de garages, comparé à une agence
 - [Changer pour Bailio](${SITE_URL}/changer-pour-bailio): reprendre ses locations depuis un autre outil, un bail en photo, rappel le jour même
 - [Essayer Bailio sans compte](${SITE_URL}/demo): espace d'exemple à manipuler en une minute, données fictives, rien d'enregistré
 - [Fonctionnalités](${SITE_URL}/fonctionnalites): ce que fait Bailio, avec des captures de l'application
@@ -88,6 +90,7 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   '/prix-et-remboursement': { title: 'Prix et remboursement', description: 'Premier bail gratuit, sans carte bancaire. Le suivi de la location, sans engagement : prix, rétractation et remboursement.' },
   '/accessibilite': { title: 'Accessibilité', description: 'Déclaration d’accessibilité de Bailio (RGAA 4.1).' },
   '/securite': { title: 'Sécurité de vos données', description: 'Hébergement en Suisse, sauvegardes, connexion par lien, appareils connectés : ce que Bailio met réellement en place.' },
+  '/tarifs': { title: 'Tarifs : un prix, tout compris', description: 'Bailio coûte un seul prix par logement et par mois, signature électronique, quittances, relances et aide à la déclaration compris. Premier mois offert, sans engagement. Calculez votre prix.' },
   '/changer-pour-bailio': { title: 'Changer pour Bailio', description: 'Vous gérez déjà vos locations avec un autre logiciel ? Passez à Bailio en 10 minutes par logement : votre bail en photo, le suivi repart seul, un seul prix tout compris.' },
   '/demo': { title: 'Essayez Bailio sans compte', description: 'Manipulez un espace d’exemple en une minute : noter un loyer reçu, relancer un impayé, créer un bail, préparer la déclaration. Données fictives, rien n’est enregistré.' },
   '/modeles': { title: 'Modèles de lettres gratuits pour propriétaires', description: 'Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Règles vérifiées sur les sources officielles.' },

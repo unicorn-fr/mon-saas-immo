@@ -10,13 +10,13 @@ export function SiteHeader() {
   return (
     <header className="container" style={{ height: 'clamp(72px, 9vw, 88px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
       <Logo size={26} />
-      <nav aria-label="Menu" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 32px)', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>
+      <nav aria-label="Menu" className="site-nav" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 32px)', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>
         <Link to="/fonctionnalites" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
           Fonctionnalités
         </Link>
-        <a href="/#tarifs" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
-          Tarif
-        </a>
+        <Link to="/tarifs" className="hide-md" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
+          Tarifs
+        </Link>
         {user ? (
           <Link to="/espace" style={{ textDecoration: 'none', color: BAI.inkMid, display: 'inline-block', padding: '13px 2px' }}>
             Mon espace
@@ -39,6 +39,7 @@ export function SiteFooter() {
     { to: '/guides', label: 'Guides' },
     { to: '/modeles', label: 'Modèles gratuits' },
     { to: '/fonctionnalites', label: 'Fonctionnalités' },
+    { to: '/tarifs', label: 'Tarifs' },
     { to: '/demo', label: 'Essayer la démo' },
     { to: '/changer-pour-bailio', label: 'Changer pour Bailio' },
     { to: '/mentions-legales', label: 'Mentions légales' },

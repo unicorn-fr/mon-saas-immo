@@ -25,9 +25,10 @@ import Connexion, { Inscription, ConnexionLien } from './pages/Connexion'
 import { GuideArticle, GuidesList } from './pages/Guides'
 import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
 import { Changer } from './pages/Changer'
+import { Tarifs } from './pages/Tarifs'
 import Demo from './pages/Demo'
 import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
-import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPreavis } from './pages/Simulateurs'
+import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPiece, SimulateurPreavis, SimulateurRentabilite } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
 import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
@@ -285,6 +286,7 @@ function Pages() {
               <Route path="/guides" element={<GuidesList />} />
               <Route path="/guides/:slug" element={<GuideArticle />} />
               <Route path="/changer-pour-bailio" element={<Changer />} />
+              <Route path="/tarifs" element={<Tarifs />} />
               <Route path="/demo" element={<Demo />} />
               <Route path="/fonctionnalites" element={<FonctionnalitesList />} />
               <Route path="/fonctionnalites/:slug" element={<FonctionnaliteArticle />} />
@@ -296,6 +298,8 @@ function Pages() {
               <Route path="/simulateurs/preavis-locataire" element={<SimulateurPreavis />} />
               <Route path="/simulateurs/depot-de-garantie" element={<SimulateurDepot />} />
               <Route path="/simulateurs/micro-foncier-ou-reel" element={<SimulateurMicroReel />} />
+              <Route path="/simulateurs/rentabilite-locative" element={<SimulateurRentabilite />} />
+              <Route path="/simulateurs/piece-autorisee" element={<SimulateurPiece />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

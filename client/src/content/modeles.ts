@@ -220,6 +220,77 @@ export const MODELES: Modele[] = [
     bailio: 'Dans Bailio, le congé reprend la date de fin du bail et le motif, vérifie le délai et joint la notice officielle quand elle est obligatoire.',
     sources: [{ label: 'Service-public.fr : préavis et formalités du congé donné par le propriétaire', url: 'https://www.service-public.fr/particuliers/vosdroits/F929', checked: '29 octobre 2026' }],
   },
+  {
+    slug: 'quittance-de-loyer',
+    title: 'Quittance de loyer : modèle gratuit à copier',
+    description: 'Modèle de quittance de loyer gratuit à compléter : loyer et charges détaillés, paiement partiel, envoi par email avec l’accord du locataire. Ce que dit la loi.',
+    lead: 'Le reçu qui prouve que le loyer et les charges d’un mois sont payés.',
+    rules: [
+      'Vous devez remettre gratuitement une quittance au locataire qui vous la demande (article 21 de la loi du 6 juillet 1989).',
+      'Elle porte le détail des sommes versées, en distinguant le loyer et les charges.',
+      'Aucuns frais liés à la gestion de l’avis d’échéance ou de la quittance ne peuvent être facturés au locataire.',
+      'L’envoi par voie dématérialisée (email) demande l’accord exprès du locataire.',
+      'Si le locataire ne paie qu’une partie de la somme due, vous devez lui délivrer un reçu.',
+    ],
+    letter: {
+      subject: 'Quittance de loyer de [mois et année]',
+      paragraphs: [
+        'Je soussigné(e) [votre nom], propriétaire du logement situé [adresse du logement], déclare avoir reçu de [nom du locataire], le [date du paiement], la somme de [total] € ([total en lettres]) au titre du loyer et des charges de la période du [début de période] au [fin de période], et lui en donne quittance.',
+        'Détail du règlement : loyer hors charges : [montant du loyer] € ; charges : [montant des charges] € ; total : [total] €.',
+        '[Si le paiement est partiel, remplacer le paragraphe précédent par :] J’ai reçu de [nom du locataire], le [date du paiement], la somme de [montant reçu] € à valoir sur le loyer et les charges de [mois et année], soit [total dû] € au total. Il reste dû [reste à payer] €. Ce document est un reçu de paiement partiel.',
+      ],
+    },
+    send: 'Par email si le locataire a donné son accord exprès, sinon par courrier ou en main propre. Gardez un double de chaque quittance.',
+    bailio: 'Dans Bailio, la quittance se fait et part toute seule par email dès que vous enregistrez le loyer reçu, avec le loyer et les charges séparés, si votre locataire a donné son accord.',
+    sources: [{ label: 'Légifrance : loi n° 89-462 du 6 juillet 1989, article 21', url: 'https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000028806698', checked: '9 novembre 2026' }],
+  },
+  {
+    slug: 'avis-echeance-loyer',
+    title: 'Avis d’échéance de loyer : modèle gratuit',
+    description: 'Modèle d’avis d’échéance de loyer à compléter : somme à payer, date limite, loyer et charges séparés. Ce qui est facultatif et ce qui ne se facture pas.',
+    lead: 'Le rappel envoyé avant la date de paiement : ce qu’il faut régler, et quand.',
+    rules: [
+      'La loi de 1989 ne l’impose pas : son article 21 se borne à interdire de facturer au locataire la gestion de l’avis d’échéance.',
+      'Un avis d’échéance annonce une somme à payer. Il ne prouve pas le paiement : la preuve, c’est la quittance, remise une fois le loyer reçu.',
+      'Indiquez le loyer et les charges séparément, comme sur la quittance.',
+      'Le montant reprend celui du bail, ou le dernier loyer révisé s’il y a eu une révision.',
+    ],
+    letter: {
+      subject: 'Avis d’échéance du loyer de [mois et année]',
+      paragraphs: [
+        'Voici l’avis d’échéance du loyer du logement situé [adresse du logement], pour la période du [début de période] au [fin de période].',
+        'Loyer hors charges : [montant du loyer] €. Charges : [montant des charges] €. Total à payer : [total] €.',
+        'Ce montant est à régler au plus tard le [date d’échéance], par [mode de paiement] sur le compte [IBAN].',
+        'Une quittance vous sera remise une fois le paiement reçu.',
+      ],
+    },
+    send: 'Par email ou courrier, quelques jours avant l’échéance. Aucun frais d’envoi ne peut être demandé au locataire.',
+    bailio: 'Dans Bailio, les loyers attendus de chaque mois sont suivis pour vous, et la quittance part dès que vous enregistrez le paiement.',
+    sources: [{ label: 'Légifrance : loi n° 89-462 du 6 juillet 1989, article 21', url: 'https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000028806698', checked: '9 novembre 2026' }],
+  },
+  {
+    slug: 'attestation-paiement-loyers',
+    title: 'Attestation de paiement des loyers : modèle gratuit',
+    description: 'Modèle d’attestation de paiement des loyers (attestation de loyer à jour) pour le dossier de location de votre locataire, à copier et compléter.',
+    lead: 'Votre locataire déménage : la lettre qui dit qu’il est à jour de ses loyers et charges.',
+    rules: [
+      'Un futur propriétaire peut demander, comme justificatif de domicile, les 3 dernières quittances de loyer ou, si nécessaire, une attestation du précédent propriétaire (ou de son mandataire) indiquant que le locataire est à jour de ses loyers et charges.',
+      'Cette attestation tient donc lieu des quittances quand elles manquent. Un justificatif de domicile suffit : le futur propriétaire n’a pas le droit d’en exiger d’autres.',
+      'N’attestez que ce qui est exact : si un loyer est en retard, ne le déclarez pas à jour.',
+    ],
+    letter: {
+      subject: 'Attestation de paiement des loyers',
+      paragraphs: [
+        'Je soussigné(e) [votre nom], propriétaire (ou mandataire du propriétaire) du logement situé [adresse du logement], atteste que [nom du locataire] occupe ce logement depuis le [date d’entrée] en qualité de locataire.',
+        'Le loyer mensuel actuel est de [montant du loyer] € hors charges, plus [montant des charges] € de charges.',
+        'À la date de cette attestation, le [date], [nom du locataire] est à jour du paiement de ses loyers et de ses charges.',
+        'Cette attestation est établie pour servir et valoir ce que de droit, notamment à l’appui d’un dossier de location.',
+      ],
+    },
+    send: 'Par email ou courrier, à la demande du locataire, qui la remet à son futur propriétaire.',
+    bailio: 'Dans Bailio, l’attestation de loyer se remplit seule avec le loyer, les charges et la date d’entrée du bail, et part au locataire.',
+    sources: [{ label: 'Service-public.fr : justificatifs à donner au propriétaire par le futur locataire (décret n° 2015-1437 du 5 novembre 2015)', url: 'https://www.service-public.gouv.fr/particuliers/vosdroits/F1169', checked: '9 novembre 2026' }],
+  },
 ]
 
 export const modelePath = (m: Pick<Modele, 'slug'>) => `/modeles/${m.slug}`
@@ -233,6 +304,8 @@ export const SIMULATEURS = [
   { path: '/simulateurs/depot-de-garantie', title: 'Dépôt de garantie : date limite de restitution', name: 'Restitution du dépôt de garantie', lead: 'Jusqu’à quand rendre le dépôt, et la pénalité en cas de retard.', description: 'Calculez gratuitement la date limite de restitution du dépôt de garantie (un ou deux mois après la remise des clés) et la majoration de 10 % du loyer par mois de retard.' },
   { path: '/simulateurs/micro-foncier-ou-reel', title: 'Micro-foncier ou régime réel : le comparatif', name: 'Micro-foncier ou réel', lead: 'Le régime le plus avantageux pour vos loyers d’une location vide.', description: 'Comparez gratuitement le micro-foncier (abattement de 30 %, jusqu’à 15 000 € de loyers) et le régime réel (charges réelles déduites) pour votre location vide.' },
   { path: '/simulateurs/dpe-location', title: 'DPE : mon logement peut-il être loué ?', name: 'DPE et interdiction de louer', lead: 'Les dates d’interdiction de location selon la classe énergie de votre logement.', description: 'Logement classé G, F ou E au DPE : à partir de quand il ne peut plus être loué, et ce qui est déjà interdit (hausse et révision du loyer). Calendrier officiel, métropole et outre-mer.' },
+  { path: '/simulateurs/rentabilite-locative', title: 'Rentabilité locative : rendement brut et net', name: 'Rentabilité locative', lead: 'Rendement brut et net de charges de votre logement, en cinq questions.', description: 'Calculez gratuitement la rentabilité locative de votre logement : rendement brut et rendement net de charges, avant impôt, à partir du prix d’achat, des frais, du loyer et des charges.' },
+  { path: '/simulateurs/piece-autorisee', title: 'Pièce autorisée dans un dossier de location ?', name: 'Pièce autorisée dans un dossier de location', lead: 'Choisissez une pièce : autorisée ou interdite, avec la raison.', description: 'Carte Vitale, relevé de compte, photo d’identité, chèque de réservation… Quelles pièces pouvez-vous demander à un locataire ? Autorisée ou interdite, selon la liste officielle du décret du 5 novembre 2015.' },
 ] as const
 
 /** Texte brut de la lettre, prêt à copier. */

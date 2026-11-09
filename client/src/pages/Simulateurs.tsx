@@ -370,3 +370,201 @@ export function SimulateurMicroReel() {
     </SimplePage>
   )
 }
+
+const toCents = (v: string) => Math.round(Number(v.replace(/\s/g, '').replace(',', '.')) * 100)
+const pct = (x: number) => `${(Math.round(x * 100) / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %`
+
+/**
+ * Rentabilité d'un logement loué, avant impôt, sans emprunt.
+ * Brut = loyers annuels hors charges ÷ prix d'achat. Net de charges = (loyers annuels − charges non récupérables − taxe foncière) ÷ coût total (prix + frais de notaire + travaux).
+ */
+export function rentabilite(price: number, notary: number, works: number, monthlyRent: number, charges: number, propertyTax: number) {
+  const yearlyRent = monthlyRent * 12
+  const total = price + notary + works
+  const net = yearlyRent - charges - propertyTax
+  return { yearlyRent, total, net, gross: price > 0 ? (yearlyRent / price) * 100 : 0, netRate: total > 0 ? (net / total) * 100 : 0 }
+}
+
+/** Rendement brut et net de charges d'un logement loué : cinq questions et deux formules, sans promesse. */
+export function SimulateurRentabilite() {
+  const { q, go } = useQuestion(7)
+  const [price, setPrice] = useState('')
+  const [notary, setNotary] = useState('')
+  const [works, setWorks] = useState('')
+  const [rent, setRent] = useState('')
+  const [charges, setCharges] = useState('')
+  const [tax, setTax] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const ok = (v: string) => v.trim() !== '' && toCents(v) >= 0
+  const first = !(toCents(price) >= 100_000) ? 1 : !(toCents(rent) >= 1000 && toCents(rent) <= 2_000_000) ? 4 : !ok(charges) ? 5 : !ok(tax) ? 6 : 7
+  const step = q > first ? first : q
+  const bad = (m: string) => setError(m)
+  const field = (label: string, name: string, value: string, set: (v: string) => void) => <TextField label={label} name={name} inputMode="decimal" value={value} error={error ?? undefined} onChange={(e) => (set(e.target.value), setError(null))} />
+  let body
+  if (step === 1)
+    body = (
+      <QuestionScreen q={1} count={6} title="Quel est le prix d’achat du logement ?" hint="Le prix de vente, sans les frais de notaire." onNext={() => (toCents(price) >= 100_000 ? go(2) : bad('Indiquez un prix d’au moins 1 000 €.'))}>
+        {field('Prix d’achat, en euros', 'price', price, setPrice)}
+      </QuestionScreen>
+    )
+  else if (step === 2)
+    body = (
+      <QuestionScreen q={2} count={6} title="Combien de frais de notaire avez-vous payés ?" hint="Les frais d’acquisition, souvent entre 7 % et 8 % dans l’ancien." onBack={() => go(1)} onNext={() => (notary === '' || ok(notary) ? go(3) : bad('Indiquez un montant, ou passez.'))} skip={() => (setNotary(''), go(3))}>
+        {field('Frais de notaire, en euros', 'notary', notary, setNotary)}
+      </QuestionScreen>
+    )
+  else if (step === 3)
+    body = (
+      <QuestionScreen q={3} count={6} title="Avez-vous fait des travaux à l’achat ?" hint="Le montant total des travaux de remise en état ou d’amélioration." onBack={() => go(2)} onNext={() => (works === '' || ok(works) ? go(4) : bad('Indiquez un montant, ou passez.'))} skip={() => (setWorks(''), go(4))}>
+        {field('Travaux, en euros', 'works', works, setWorks)}
+      </QuestionScreen>
+    )
+  else if (step === 4)
+    body = (
+      <QuestionScreen q={4} count={6} title="Quel est le loyer mensuel, sans les charges ?" onBack={() => go(3)} onNext={() => (toCents(rent) >= 1000 && toCents(rent) <= 2_000_000 ? go(5) : bad('Indiquez un loyer entre 10 € et 20 000 €.'))}>
+        {field('Loyer hors charges, en euros par mois', 'rent', rent, setRent)}
+      </QuestionScreen>
+    )
+  else if (step === 5)
+    body = (
+      <QuestionScreen q={5} count={6} title="Quelles charges restent à votre charge sur l’année ?" hint="Ce que le locataire ne rembourse pas : charges de copropriété non récupérables, assurance propriétaire, frais de gestion, entretien. Indiquez 0 s’il n’y en a pas." onBack={() => go(4)} onNext={() => (ok(charges) ? go(6) : bad('Indiquez le montant, ou 0.'))}>
+        {field('Charges non récupérables par an, en euros', 'charges', charges, setCharges)}
+      </QuestionScreen>
+    )
+  else if (step === 6)
+    body = (
+      <QuestionScreen q={6} count={6} title="Quel est le montant de la taxe foncière ?" hint="Le montant de l’année, sur votre avis de taxe foncière. Indiquez 0 si vous ne la connaissez pas encore." onBack={() => go(5)} onNext={() => (ok(tax) ? go(7) : bad('Indiquez le montant, ou 0.'))}>
+        {field('Taxe foncière par an, en euros', 'tax', tax, setTax)}
+      </QuestionScreen>
+    )
+  else {
+    const r = rentabilite(toCents(price), toCents(notary) || 0, toCents(works) || 0, toCents(rent), toCents(charges), toCents(tax))
+    body = (
+      <section aria-labelledby="sim-result" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <h2 id="sim-result" style={h2}>
+          Rendement brut {pct(r.gross)}, net de charges {pct(r.netRate)}
+        </h2>
+        <div className="fold fold--ear" style={box}>
+          <p style={{ margin: 0 }}>
+            <strong>Brut : {pct(r.gross)}</strong>. Loyers de l’année ({eur(r.yearlyRent)}) ÷ prix d’achat ({eur(toCents(price))}).
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong>Net de charges : {pct(r.netRate)}</strong>. Loyers de l’année moins charges et taxe foncière ({eur(r.net)}) ÷ coût total de l’achat ({eur(r.total)}, avec frais et travaux).
+          </p>
+        </div>
+        <p style={{ margin: 0 }}>Avant impôt, sans emprunt, avec un logement loué toute l’année sans impayé. Un mois vide ou un loyer en retard fait baisser ces chiffres : c’est une estimation, pas un revenu garanti.</p>
+        <button type="button" onClick={() => (setPrice(''), setNotary(''), setWorks(''), setRent(''), setCharges(''), setTax(''), go(1))} style={linkButton}>
+          Faire un autre calcul
+        </button>
+      </section>
+    )
+  }
+  return (
+    <SimplePage title="Rentabilité locative : rendement brut et net">
+      <div style={{ maxWidth: 560 }}>{body}</div>
+      <Sources>Calcul indicatif à partir de vos chiffres : aucune source officielle n’est nécessaire. Les impôts (revenus fonciers, prélèvements sociaux) et les intérêts d’emprunt ne sont pas comptés.</Sources>
+    </SimplePage>
+  )
+}
+
+type Verdict = string | false
+interface Piece {
+  id: string
+  label: string
+  /** Raison de l'autorisation pour le locataire et pour sa caution (personne physique) ; false : pas dans la liste. */
+  tenant: Verdict
+  guarantor: Verdict
+  /** Raison propre à une pièce interdite, à la place de la phrase générale. */
+  forbidden?: string
+}
+
+/** Pièces du dossier de location : liste du décret n° 2015-1437 du 5 novembre 2015 (service-public.gouv.fr, fiche F1169, vérifiée le 9 novembre 2026). Tout ce qui n'y figure pas est interdit (loi du 6 juillet 1989, art. 22-2). */
+export const PIECES: Piece[] = [
+  { id: 'identite', label: 'Carte d’identité, passeport ou permis de conduire', tenant: 'Justificatif d’identité : une pièce en cours de validité.', guarantor: 'Justificatif d’identité : une pièce en cours de validité.' },
+  { id: 'sejour', label: 'Carte de séjour ou de résident', tenant: 'Justificatif d’identité : carte de séjour temporaire, carte de résident ou carte de ressortissant de l’UE ou de l’EEE.', guarantor: false },
+  { id: 'quittances', label: 'Quittances de loyer', tenant: 'Justificatif de domicile : les 3 dernières quittances, un seul justificatif de domicile au choix.', guarantor: 'Justificatif de domicile : seule la dernière quittance de loyer, un seul justificatif au choix.' },
+  { id: 'ancien', label: 'Attestation de l’ancien propriétaire (loyers à jour)', tenant: 'Justificatif de domicile : elle remplace les 3 dernières quittances, si nécessaire.', guarantor: false },
+  { id: 'hebergeant', label: 'Attestation sur l’honneur de l’hébergeant', tenant: 'Justificatif de domicile, pour un locataire hébergé.', guarantor: false },
+  { id: 'election', label: 'Attestation d’élection de domicile', tenant: 'Justificatif de domicile.', guarantor: false },
+  { id: 'taxe', label: 'Dernier avis de taxe foncière', tenant: 'Justificatif de domicile ou de ressources (propriétaire de sa résidence).', guarantor: 'Justificatif de domicile ou de ressources.' },
+  { id: 'facture', label: 'Facture d’eau, de gaz ou d’électricité de moins de 3 mois', tenant: false, guarantor: 'Justificatif de domicile de la caution, un seul au choix.', forbidden: 'Elle ne figure pas dans la liste du locataire : elle n’est autorisée que pour sa caution, comme justificatif de domicile.' },
+  { id: 'assurance', label: 'Attestation d’assurance logement de moins de 3 mois', tenant: false, guarantor: 'Justificatif de domicile de la caution, un seul au choix.', forbidden: 'Elle ne figure pas dans la liste du locataire : elle n’est autorisée que pour sa caution, comme justificatif de domicile.' },
+  { id: 'travail', label: 'Contrat de travail ou attestation de l’employeur', tenant: 'Justificatif de situation professionnelle.', guarantor: 'Justificatif de situation professionnelle.' },
+  { id: 'scolarite', label: 'Carte d’étudiant ou certificat de scolarité', tenant: 'Justificatif de situation professionnelle : pour l’année en cours.', guarantor: false },
+  { id: 'kbis', label: 'Extrait K ou K bis de moins de 3 mois', tenant: 'Justificatif de situation professionnelle d’une entreprise commerciale.', guarantor: 'Justificatif de situation professionnelle d’une entreprise commerciale.' },
+  { id: 'impots', label: 'Avis d’imposition ou de non-imposition', tenant: 'Justificatif de ressources : le dernier ou l’avant-dernier.', guarantor: 'Justificatif de ressources : le dernier.' },
+  { id: 'paie', label: 'Trois derniers bulletins de salaire', tenant: 'Justificatif de ressources.', guarantor: 'Justificatif de ressources.' },
+  { id: 'prestations', label: 'Justificatif de pension, retraite ou prestations sociales', tenant: 'Justificatif de ressources : versements des 3 derniers mois, établis par l’organisme payeur.', guarantor: 'Justificatif de ressources : versements des 3 derniers mois, établis par l’organisme payeur.' },
+  { id: 'aides', label: 'Simulation des aides au logement (Caf ou MSA)', tenant: 'Justificatif de ressources.', guarantor: false },
+  { id: 'bourse', label: 'Avis d’attribution de bourse', tenant: 'Justificatif de ressources d’un étudiant boursier.', guarantor: false },
+  { id: 'visale', label: 'Visa Visale d’Action Logement', tenant: 'Preuve de la garantie Visale : le locataire remet ce visa.', guarantor: 'Si la caution est Action Logement, le visa est le seul justificatif exigible.' },
+  { id: 'releve', label: 'Relevé de compte bancaire', tenant: false, guarantor: false },
+  { id: 'tenue', label: 'Attestation de bonne tenue de compte', tenant: false, guarantor: false },
+  { id: 'vitale', label: 'Carte Vitale', tenant: false, guarantor: false },
+  { id: 'photo', label: 'Photo d’identité', tenant: false, guarantor: false, forbidden: 'Elle ne figure pas dans la liste. Seule la pièce d’identité, avec sa photo, peut être demandée.' },
+  { id: 'cheque', label: 'Chèque de réservation ou somme d’argent', tenant: false, guarantor: false, forbidden: 'Aucune somme d’argent ne peut être réclamée avant la signature du bail, ni pour réserver le logement.' },
+  { id: 'medical', label: 'Dossier médical', tenant: false, guarantor: false },
+  { id: 'casier', label: 'Extrait de casier judiciaire', tenant: false, guarantor: false },
+  { id: 'mariage', label: 'Contrat de mariage ou jugement de divorce', tenant: false, guarantor: false },
+  { id: 'prelevement', label: 'Autorisation de prélèvement automatique', tenant: false, guarantor: false },
+]
+
+/** Pièce autorisée ou interdite dans un dossier de location, pour le locataire ou sa caution. */
+export function SimulateurPiece() {
+  const { q, go } = useQuestion(3)
+  const [who, setWho] = useState<'TENANT' | 'GUARANTOR' | null>(null)
+  const [pieceId, setPieceId] = useState<string | null>(null)
+  const step = !who ? 1 : q === 3 && !pieceId ? 2 : q
+  let body
+  if (step === 1)
+    body = (
+      <QuestionScreen q={1} count={2} title="Qui doit fournir la pièce ?" hint="Les listes ne sont pas les mêmes pour le locataire et pour sa caution." hideNext>
+        <Choices legend="Qui fournit la pièce" columns value={who} options={[{ value: 'TENANT', label: 'Le locataire' }, { value: 'GUARANTOR', label: 'Sa caution', hint: 'une personne physique, un parent par exemple' }]} onPick={(v) => (setWho(v), go(2))} />
+      </QuestionScreen>
+    )
+  else if (step === 2)
+    body = (
+      <QuestionScreen q={2} count={2} title="Quelle pièce voulez-vous demander ?" onBack={() => go(1)} hideNext>
+        <Choices legend="Pièce" columns value={pieceId} options={PIECES.map((p) => ({ value: p.id, label: p.label }))} onPick={(v) => (setPieceId(v), go(3))} />
+      </QuestionScreen>
+    )
+  else {
+    const piece = PIECES.find((p) => p.id === pieceId)!
+    const verdict = who === 'TENANT' ? piece.tenant : piece.guarantor
+    const person = who === 'TENANT' ? 'au locataire' : 'à sa caution'
+    body = (
+      <section aria-labelledby="sim-result" aria-live="polite" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <h2 id="sim-result" style={h2}>
+          {verdict ? 'Autorisée' : 'Interdite'} : {piece.label.charAt(0).toLowerCase() + piece.label.slice(1)}
+        </h2>
+        <div className="fold fold--ear" style={box}>
+          {verdict ? (
+            <p style={{ margin: 0 }}>Vous pouvez la demander {person}. {verdict}</p>
+          ) : (
+            <p style={{ margin: 0 }}>Vous ne pouvez pas la demander {person}. {piece.forbidden ?? 'Elle ne figure pas dans la liste officielle des pièces autorisées.'}</p>
+          )}
+        </div>
+        {verdict ? (
+          <p style={{ margin: 0 }}>Une copie suffit, rédigée ou traduite en français, avec les montants en euros. Vous pouvez demander à voir l’original.</p>
+        ) : (
+          <p style={{ margin: 0 }}>Le propriétaire ne peut exiger que les pièces de la liste. Demander une pièce qui n’y figure pas peut coûter jusqu’à 3 000 € d’amende (15 000 € pour une société).</p>
+        )}
+        <button type="button" onClick={() => (setWho(null), setPieceId(null), go(1))} style={linkButton}>
+          Vérifier une autre pièce
+        </button>
+      </section>
+    )
+  }
+  return (
+    <SimplePage title="Pièce autorisée dans un dossier de location ?">
+      <div style={{ maxWidth: 560 }}>{body}</div>
+      <Sources>
+        Source :{' '}
+        <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F1169" target="_blank" rel="noopener noreferrer">
+          Service-public.fr, justificatifs à donner au propriétaire par le futur locataire
+        </a>{' '}
+        (décret n° 2015-1437 du 5 novembre 2015 et article 22-2 de la loi du 6 juillet 1989, vérifié le 9 novembre 2026).
+      </Sources>
+    </SimplePage>
+  )
+}
