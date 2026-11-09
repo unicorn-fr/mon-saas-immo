@@ -14,6 +14,17 @@ async function audit(page, path) {
   await page.goto(BASE + path)
   await page.waitForLoadState('networkidle')
   await wait(300)
+  // Accueil : les rubriques apparaissent en fondu quand on descend. On parcourt la page pour contrôler leur état final.
+  if (await page.evaluate(() => !!document.querySelector('.hm-js [data-in]'))) {
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.documentElement.scrollHeight; y += window.innerHeight / 2) {
+        window.scrollTo(0, y)
+        await new Promise((r) => setTimeout(r, 60))
+      }
+      window.scrollTo(0, 0)
+    })
+    await wait(1500)
+  }
   await page.addScriptTag({ content: AXE })
   const result = await page.evaluate(() =>
     window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] } }),

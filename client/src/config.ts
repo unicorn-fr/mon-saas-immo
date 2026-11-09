@@ -14,7 +14,7 @@ export const priceText = () => (MONTHLY_PRICE ? `${MONTHLY_PRICE} ${PRICE_UNIT}`
 export const priceDetail = () => (MONTHLY_PRICE ? `${priceText()} (ou ${YEARLY_PRICE} par logement et par an), ${PARKING_PRICE} par mois pour un garage, un box ou une place` : 'Prix à venir')
 
 /** Aucun paiement n'est encore demandé : affiché partout où le prix apparaît (accueil, Mon compte). */
-export const LAUNCH_OFFER = 'Offert pendant le lancement'
+export const LAUNCH_OFFER = 'Premier mois offert'
 
 /** Adresse de contact affichée sur le site (mentions légales, confidentialité, contact). */
 export const CONTACT_EMAIL = 'contact@bailio.fr'

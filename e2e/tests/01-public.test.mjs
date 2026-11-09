@@ -30,7 +30,7 @@ for (const [viewport, label] of [[{ width: 1280, height: 900 }, 'ordinateur'], [
 test('le prix est le même sur l’accueil qu’ailleurs (offert pendant le lancement)', async () => {
   const page = await browser.newPage()
   await page.goto(BASE + '/#tarifs')
-  await page.getByText('Offert pendant le lancement').first().waitFor()
+  await page.getByText('Premier mois offert').first().waitFor()
   await page.close()
 })
 

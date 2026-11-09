@@ -7,7 +7,7 @@ import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceD
 import { CALLBACK_PROMISE } from '../../content/inclus'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '5 novembre 2026'
+const UPDATED = '9 novembre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -261,6 +261,7 @@ export function Confidentialite() {
         <li>Vos baux, loyers reçus, quittances, courriers, états des lieux (photos et signatures comprises), dépenses et factures ;</li>
         <li>Si vous signez avec votre téléphone : la signature dessinée passe par notre serveur le temps d'arriver sur votre ordinateur, en mémoire seulement, puis elle est effacée (10 minutes au plus). Elle n'est gardée que si vous la validez ;</li>
         <li>Pour l'aide à la déclaration des revenus : année par année, le régime choisi, les cases déjà recopiées, les démarches cochées, la date de signature, vos déficits des années précédentes, les subventions et indemnités reçues ; une fois pour toutes, votre numéro SIRET de loueur en meublé, s'il y a lieu. Ils complètent vos formulaires et sont repris l'année suivante ;</li>
+        <li>Si vous importez vos logements et locataires depuis un fichier (CSV ou Excel) : il est lu sur notre serveur, en mémoire, le temps de vous montrer ce qu’il contient, puis oublié. Seules les lignes que vous cochez créent des fiches de logement et de locataire ;</li>
         <li>Si vous déposez un relevé de compte pour retrouver vos loyers : il est lu sur notre serveur, le temps de vous proposer les loyers reconnus, puis oublié. Seuls les loyers que vous validez (montant et date) sont enregistrés ;</li>
         <li>
           Pour un bail signé en ligne, la preuve de chaque signature : nom, email, date et heure, adresse IP, type d'appareil, mention recopiée, signature dessinée et, s'il l'accepte, photo du signataire prise au moment de signer (facultative, réencodée sans données de localisation, datée par notre serveur). Elle figure

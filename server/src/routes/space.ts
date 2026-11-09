@@ -178,17 +178,28 @@ function withOfficialZone(f: PropertyFile): PropertyFile {
   return { ...f, market: { ...f.market, tense } }
 }
 
-router.post('/properties', async (req, res) => {
-  const file = withOfficialZone(propertyFileSchema.parse(req.body))
+/** Fiche d'un logement relue et complétée (zone tendue officielle) ; l'adresse est indispensable. */
+export function prepareProperty(body: unknown): PropertyFile {
+  const file = withOfficialZone(propertyFileSchema.parse(body))
   if (!file.address) throw new HttpError(400, 'Indiquez l’adresse du logement.')
-  // Structure qui détient le logement : celle choisie, sinon la première du compte.
-  const { structureId } = z.object({ structureId: z.string().uuid().optional().nullable() }).parse({ structureId: (req.body as { structureId?: unknown })?.structureId })
-  const structures = await ensureStructures(req.user!)
+  return file
+}
+
+/** Crée le logement dans la structure choisie, sinon la première du compte (« Ajouter un logement » et import par fichier). */
+export async function insertProperty(user: Parameters<typeof ensureStructures>[0], file: PropertyFile, structureId?: string | null): Promise<{ id: string }> {
+  const structures = await ensureStructures(user)
   const structure = structureId ? structures.find((s) => s.id === structureId) : structures[0]
   if (!structure) throw new HttpError(404, 'Structure introuvable.')
-  const p = await prisma.property.create({ data: { userId: req.user!.id, structureId: structure.id, ...propertyColumns(file), data: file } })
-  await rememberSyndic(req.user!.id, file)
-  res.status(201).json({ success: true, data: { id: p.id } })
+  const p = await prisma.property.create({ data: { userId: user.id, structureId: structure.id, ...propertyColumns(file), data: file } })
+  await rememberSyndic(user.id, file)
+  return { id: p.id }
+}
+
+router.post('/properties', async (req, res) => {
+  const file = prepareProperty(req.body)
+  // Structure qui détient le logement : celle choisie, sinon la première du compte.
+  const { structureId } = z.object({ structureId: z.string().uuid().optional().nullable() }).parse({ structureId: (req.body as { structureId?: unknown })?.structureId })
+  res.status(201).json({ success: true, data: await insertProperty(req.user!, file, structureId) })
 })
 
 async function ownProperty(userId: string, id: string) {
@@ -422,13 +433,18 @@ router.get('/tenants', async (req, res) => {
   res.json({ success: true, data: tenants.map((t) => tenantSummary(t, leases.filter((l) => l.tenantIds.includes(t.id)))) })
 })
 
-router.post('/tenants', async (req, res) => {
-  const body = tenantFileSchema.extend({ propertyId: z.uuid().optional().nullable() }).parse(req.body)
+/** Crée la fiche d'un locataire, rattachée à un logement du compte si `propertyId` est donné (« Ajouter un locataire » et import par fichier). */
+export async function createTenant(userId: string, input: unknown): Promise<{ id: string }> {
+  const body = tenantFileSchema.extend({ propertyId: z.uuid().optional().nullable() }).parse(input)
   const { propertyId, ...file } = body
   if (!file.lastName && !file.firstNames && !file.email) throw new HttpError(400, 'Indiquez le nom du locataire, ou son email pour qu’il remplisse lui-même son dossier.')
-  if (propertyId && !(await prisma.property.findFirst({ where: { id: propertyId, userId: req.user!.id } }))) throw new HttpError(404, 'Logement introuvable.')
-  const t = await prisma.tenant.create({ data: { userId: req.user!.id, propertyId: propertyId ?? null, data: file } })
-  res.status(201).json({ success: true, data: { id: t.id } })
+  if (propertyId && !(await prisma.property.findFirst({ where: { id: propertyId, userId } }))) throw new HttpError(404, 'Logement introuvable.')
+  const t = await prisma.tenant.create({ data: { userId, propertyId: propertyId ?? null, data: file } })
+  return { id: t.id }
+}
+
+router.post('/tenants', async (req, res) => {
+  res.status(201).json({ success: true, data: await createTenant(req.user!.id, req.body) })
 })
 
 router.get('/tenants/:id', async (req, res) => {
