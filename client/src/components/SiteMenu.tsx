@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { CALLBACK_PROMISE } from '../content/inclus'
@@ -6,6 +7,7 @@ import { FEATURES, featurePath } from '../content/fonctionnalites'
 import { MODELES, SIMULATEURS, modelePath } from '../content/modeles'
 import { BAUX, PROFILS, solutionPath } from '../content/solutions'
 import { Bell, Book, Camera, Close, DocIcon, EuroIcon, House, Mail, Page, Pencil, People, Signpost, Sofa, Upload } from './Icons'
+import { Logo } from './Logo'
 
 type IconName = 'doc' | 'euro' | 'bell' | 'camera' | 'people' | 'book' | 'signpost' | 'house' | 'sofa' | 'page' | 'pencil' | 'upload' | 'mail'
 
@@ -250,14 +252,24 @@ export function MegaMenu({ linkStyle, linkClass }: { linkStyle?: CSSProperties; 
   )
 }
 
-/** Menu sur téléphone : bouton « Menu », plein écran, une rubrique dépliée à la fois, puis la connexion et l'action principale. */
+/**
+ * Menu sur téléphone : bouton « Menu », panneau qui glisse depuis la droite par-dessus la page (assombrie derrière),
+ * une rubrique dépliée à la fois, la connexion en bas. Rendu à la racine du document pour ne jamais hériter de la mise
+ * en page de l'en-tête. Échap, la croix ou un toucher sur la page ferment.
+ */
 export function MobileMenu({ account, cta }: { account: ReactNode; cta: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [section, setSection] = useState<number | null>(null)
   const { pathname } = useLocation()
   const button = useRef<HTMLButtonElement | null>(null)
   const close = useRef<HTMLButtonElement | null>(null)
+  const panel = useRef<HTMLDivElement | null>(null)
   const base = useId()
+
+  const shut = () => {
+    setOpen(false)
+    button.current?.focus()
+  }
 
   useEffect(() => setOpen(false), [pathname])
   useEffect(() => {
@@ -265,13 +277,76 @@ export function MobileMenu({ account, cta }: { account: ReactNode; cta: ReactNod
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     close.current?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && (setOpen(false), button.current?.focus())
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') return shut()
+      // Le clavier reste dans le panneau tant qu'il est ouvert.
+      if (e.key !== 'Tab' || !panel.current) return
+      const f = [...panel.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')]
+      if (!f.length) return
+      const first = f[0]
+      const last = f[f.length - 1]
+      if (e.shiftKey && document.activeElement === first) (e.preventDefault(), last.focus())
+      else if (!e.shiftKey && document.activeElement === last) (e.preventDefault(), first.focus())
+    }
     document.addEventListener('keydown', onKey)
     return () => {
       document.body.style.overflow = prev
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
+
+  const drawer = open
+    ? createPortal(
+        <div className="drawer-root">
+          <div className="drawer-backdrop" aria-hidden onClick={shut} style={{ background: `${BAI.night}73` }} />
+          <div ref={panel} id={`${base}-menu`} role="dialog" aria-modal="true" aria-label="Menu" className="drawer mobile-menu" style={{ background: BAI.surface, color: BAI.ink }}>
+            <div style={{ height: 'clamp(64px, 8vw, 72px)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '0 16px 0 20px', borderBottom: `1px solid ${BAI.divider}` }}>
+              <Logo size={24} />
+              <button ref={close} type="button" aria-label="Fermer le menu" onClick={shut} style={{ width: 44, height: 44, borderRadius: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: `1.5px solid ${BAI.borderStrong}`, background: BAI.surface, color: BAI.ink, cursor: 'pointer' }}>
+                <Close size={18} />
+              </button>
+            </div>
+            <nav aria-label="Menu du site" style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 16px', overscrollBehavior: 'contain' }}>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {SECTIONS.map((s, i) => (
+                  <li key={s.label} style={{ borderBottom: `1px solid ${BAI.divider}` }}>
+                    {s.to ? (
+                      <Link to={s.to} onClick={() => setOpen(false)} style={{ ...linkReset, display: 'flex', alignItems: 'center', minHeight: 56, fontWeight: 600, fontSize: 17, color: BAI.ink }}>
+                        {s.label}
+                      </Link>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          aria-expanded={section === i}
+                          aria-controls={`${base}-s${i}`}
+                          onClick={() => setSection(section === i ? null : i)}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 56, padding: 0, border: 'none', background: 'none', font: 'inherit', fontWeight: 600, fontSize: 17, color: section === i ? BAI.owner : BAI.ink, cursor: 'pointer', textAlign: 'left' }}
+                        >
+                          {s.label}
+                          <Chevron open={section === i} />
+                        </button>
+                        {section === i ? (
+                          <div id={`${base}-s${i}`} className="panel-in" style={{ paddingBottom: 12 }}>
+                            <Columns section={s} onPick={() => setOpen(false)} />
+                            <Foot section={s} onPick={() => setOpen(false)} />
+                          </div>
+                        ) : null}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 20px calc(14px + env(safe-area-inset-bottom))', borderTop: `1px solid ${BAI.divider}` }} onClick={() => setOpen(false)}>
+              {account}
+              {cta}
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null
 
   return (
     <>
@@ -289,52 +364,7 @@ export function MobileMenu({ account, cta }: { account: ReactNode; cta: ReactNod
         </svg>
         Menu
       </button>
-      {open ? (
-        <div id={`${base}-menu`} role="dialog" aria-modal="true" aria-label="Menu" className="mobile-menu" style={{ background: BAI.surface, color: BAI.ink }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px' }}>
-            <button ref={close} type="button" onClick={() => (setOpen(false), button.current?.focus())} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 16px', borderRadius: 999, border: `1.5px solid ${BAI.borderStrong}`, background: BAI.surface, color: BAI.ink, font: 'inherit', fontWeight: 600, cursor: 'pointer' }}>
-              <Close size={16} />
-              Fermer
-            </button>
-          </div>
-          <nav aria-label="Menu du site" style={{ padding: '0 16px 24px' }}>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {SECTIONS.map((s, i) => (
-                <li key={s.label} style={{ borderBottom: `1px solid ${BAI.divider}` }}>
-                  {s.to ? (
-                    <Link to={s.to} onClick={() => setOpen(false)} style={{ ...linkReset, display: 'flex', alignItems: 'center', minHeight: 56, fontWeight: 600, fontSize: 18, color: BAI.ink }}>
-                      {s.label}
-                    </Link>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        aria-expanded={section === i}
-                        aria-controls={`${base}-s${i}`}
-                        onClick={() => setSection(section === i ? null : i)}
-                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, padding: 0, border: 'none', background: 'none', font: 'inherit', fontWeight: 600, fontSize: 18, color: section === i ? BAI.owner : BAI.ink, cursor: 'pointer' }}
-                      >
-                        {s.label}
-                        <Chevron open={section === i} />
-                      </button>
-                      {section === i ? (
-                        <div id={`${base}-s${i}`} className="panel-in" style={{ paddingBottom: 16 }}>
-                          <Columns section={s} onPick={() => setOpen(false)} />
-                          <Foot section={s} onPick={() => setOpen(false)} />
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 24 }} onClick={() => setOpen(false)}>
-              {account}
-              {cta}
-            </div>
-          </nav>
-        </div>
-      ) : null}
+      {drawer}
     </>
   )
 }

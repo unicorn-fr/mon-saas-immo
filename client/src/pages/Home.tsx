@@ -713,7 +713,7 @@ export default function Home() {
           )}
           <MobileMenu
             account={
-              <Link to={user ? '/espace' : '/connexion'} className="btn btn--line" style={{ justifyContent: 'center' }}>
+              <Link to={user ? '/espace' : '/connexion'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 52, borderRadius: 999, border: `1.5px solid ${BAI.borderStrong}`, color: BAI.ink, fontWeight: 600, textDecoration: 'none' }}>
                 {user ? 'Mon espace' : 'Se connecter'}
               </Link>
             }
