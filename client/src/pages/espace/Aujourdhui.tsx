@@ -4,7 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
 import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
-import { Check, Upload } from '../../components/Icons'
+import { Camera, Check, Euro, Home, Mail, Pencil, Plus, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
@@ -26,7 +26,6 @@ function TodayContent() {
   const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
   // Trois actions à la fois : les plus urgentes d'abord, le reste sur demande (pas de longue liste à faire défiler).
   const [allTasks, setAllTasks] = useState(false)
-  const [allUpcoming, setAllUpcoming] = useState(false)
   useEffect(() => {
     if (data) setTaskCount(data.tasks.length)
   }, [data, setTaskCount])
@@ -37,7 +36,6 @@ function TodayContent() {
   if (!Array.isArray(data.tasks) || !data.counts || !data.stats) return <LoadError message="Le serveur de Bailio est en cours de mise à jour. Réessayez dans quelques minutes." retry={reload} />
   if ((data.counts.signedLeases ?? data.counts.leases) === 0 && data.tasks.length === 0) return <FirstSteps name={data.user.firstName} counts={data.counts} />
 
-  const month = monthName(Number(data.stats.month.slice(5)))
   const first = data.user.firstName
   return (
     <>
@@ -55,16 +53,12 @@ function TodayContent() {
         <Btn variant="outline" to="/espace/situations">
           Que se passe-t-il ?
         </Btn>
-        {data.stats.rentsExpected ? (
-          <div className="hide-md" style={{ display: 'flex', gap: 12 }}>
-            <MiniStat label={`Loyers ${/^[aeiouyhâàéèê]/i.test(month) ? 'd’' : 'de '}${month}`} value={`${data.stats.rentsReceived} reçu${data.stats.rentsReceived > 1 ? 's' : ''} sur ${data.stats.rentsExpected}`} />
-            <MiniStat label="Encaissé ce mois" value={eurosCents(data.stats.cashedCents)} />
-          </div>
-        ) : null}
       </div>
 
-      <div className="split-aside">
-        <section className="grow" style={{ gap: 14 }}>
+      <Tiles data={data} />
+
+      <div className="today-grid">
+        <section className="today-main" style={{ gap: 14 }}>
           <div className="hide-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>À faire cette semaine</h2>
             {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
@@ -92,22 +86,9 @@ function TodayContent() {
           )}
         </section>
 
-        <aside className="aside">
-          {data.upcoming.length ? (
-            <Card dark title="Prochaines échéances" style={{ gap: 16 }}>
-              {(allUpcoming ? data.upcoming : data.upcoming.slice(0, 3)).map((u, i) => (
-                <div key={i} style={{ display: 'flex', gap: 14 }}>
-                  <span style={{ width: 56, flexShrink: 0, color: BAI.accent, fontWeight: 700, fontSize: 14 }}>{u.date}</span>
-                  <span style={{ fontSize: 14, lineHeight: 1.45 }}>{u.label}</span>
-                </div>
-              ))}
-              {data.upcoming.length > 3 ? (
-                <button type="button" onClick={() => setAllUpcoming(!allUpcoming)} className="tap" style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, color: BAI.accent, textAlign: 'left', cursor: 'pointer' }}>
-                  {allUpcoming ? 'Voir moins' : `Voir les ${data.upcoming.length} échéances`}
-                </button>
-              ) : null}
-            </Card>
-          ) : null}
+        <aside className="today-side">
+          <Shortcuts leaseId={data.singleLeaseId} />
+          <Agenda items={data.upcoming} />
           <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
             {data.properties.length ? (
               data.properties.map((p) => (
@@ -126,12 +107,98 @@ function TodayContent() {
   )
 }
 
-function MiniStat({ label, value }: { label: string; value: string }) {
+const fmtMoney = (c: number) => eurosCents(c).replace(',00 €', ' €')
+
+/** Chiffres du mois : une tuile par chiffre, chacune mène à la page qui va bien. */
+function Tiles({ data }: { data: TodayView }) {
+  const s = data.stats
+  const month = monthName(Number(s.month.slice(5)))
+  const lateTasks = data.tasks.filter((t) => t.type === 'LATE_RENT' && t.leaseId)
+  const tiles: Array<{ key: string; label: string; value: string; sub?: string; to: string; tone?: 'error' | 'green' }> = []
+  if (s.rentsExpected) {
+    tiles.push({ key: 'rents', label: `Loyers ${/^[aeiouyhâàéèê]/i.test(month) ? 'd’' : 'de '}${month}`, value: `${fmtMoney(s.receivedCents)} sur ${fmtMoney(s.expectedCents)}`, sub: `${s.rentsReceived} reçu${s.rentsReceived > 1 ? 's' : ''} sur ${s.rentsExpected}`, to: '/espace/argent' })
+    tiles.push(
+      s.lateCount
+        ? { key: 'late', label: 'Loyers en retard', value: fmtMoney(s.lateCents), sub: plural(s.lateCount, 'bail'), tone: 'error', to: lateTasks.length === 1 ? `/espace/baux/${lateTasks[0].leaseId}/parcours/UNPAID` : lateTasks.length ? '/espace/actions' : '/espace/logements' }
+        : { key: 'late', label: 'Loyers en retard', value: 'Aucun', sub: 'Tout est à jour', tone: 'green', to: '/espace/argent' },
+    )
+  }
+  if (s.depositCount) tiles.push({ key: 'deposit', label: 'Dépôts à noter reçus', value: fmtMoney(s.depositCents), sub: plural(s.depositCount, 'bail', 'baux'), to: data.singleLeaseId ? `/espace/baux/${data.singleLeaseId}` : '/espace/logements' })
+  if (s.candidates) tiles.push({ key: 'candidates', label: 'Candidatures en attente', value: String(s.candidates), sub: 'À regarder', to: s.candidatesPropertyId ? `/espace/logements/${s.candidatesPropertyId}/candidats` : '/espace/logements' })
+  if (!tiles.length) return null
   return (
-    <div style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 14, padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <span style={{ fontSize: 13, color: BAI.inkSoft }}>{label}</span>
-      <span style={{ fontSize: 18, fontWeight: 700 }}>{value}</span>
-    </div>
+    <nav aria-label="Chiffres du mois" className="today-tiles">
+      {tiles.map((t) => (
+        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 18, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.label}</span>
+          <span style={{ fontSize: 'clamp(19px, 2.4vw, 24px)', fontWeight: 700, color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
+          {t.sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.sub}</span> : null}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/** Six actions courantes. Quand il faut choisir un bail, on passe par la liste qui convient. */
+function Shortcuts({ leaseId }: { leaseId: string | null }) {
+  const items = [
+    { to: '/espace/argent/releve', label: 'Noter un loyer reçu', icon: <Euro size={22} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}#paiements` : '/espace/actions', label: 'Envoyer une quittance', icon: <Mail size={22} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}/courriers` : '/espace/logements', label: 'Écrire un courrier', icon: <Pencil size={22} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}/etat-des-lieux` : '/espace/logements', label: 'Faire un état des lieux', icon: <Camera size={22} /> },
+    { to: '/espace/argent?ajouter=1', label: 'Ajouter une dépense', icon: <Plus size={22} /> },
+    { to: '/espace/logements/nouveau', label: 'Ajouter un logement', icon: <Home size={22} /> },
+  ]
+  return (
+    <Card title="Raccourcis">
+      <nav aria-label="Raccourcis" className="today-shortcuts">
+        {items.map((i) => (
+          <Link key={i.label} to={i.to} className="today-shortcut" style={{ textDecoration: 'none', color: BAI.owner, background: BAI.surface, border: `1.5px solid ${BAI.borderStrong}`, borderRadius: 16, padding: '14px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, fontSize: 15, fontWeight: 600, lineHeight: 1.25, minWidth: 0 }}>
+            {i.icon}
+            {i.label}
+          </Link>
+        ))}
+      </nav>
+    </Card>
+  )
+}
+
+const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+
+/** Agenda : les prochains rendez-vous datés, groupés par jour (jour en gros, mois abrégé). Trois d'abord. */
+function Agenda({ items }: { items: TodayView['upcoming'] }) {
+  const [all, setAll] = useState(false)
+  if (!items.length) return null
+  const shown = all ? items : items.slice(0, 3)
+  const groups: Array<{ iso: string; labels: string[] }> = []
+  for (const it of shown) {
+    const g = groups[groups.length - 1]
+    if (g && g.iso === it.iso) g.labels.push(it.label)
+    else groups.push({ iso: it.iso, labels: [it.label] })
+  }
+  return (
+    <Card title="Agenda" style={{ gap: 16 }}>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {groups.map((g) => (
+          <li key={g.iso} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+            <span style={{ width: 52, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', background: BAI.sky, color: BAI.owner, borderRadius: 12, padding: '6px 0', lineHeight: 1.1 }}>
+              <span style={{ fontSize: 22, fontWeight: 700 }}>{Number(g.iso.slice(8, 10))}</span>
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{MONTHS_ABBR[Number(g.iso.slice(5, 7)) - 1]}</span>
+            </span>
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, fontSize: 15, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+              {g.labels.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {items.length > 3 ? (
+        <button type="button" onClick={() => setAll(!all)} className="tap" style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, textAlign: 'left', cursor: 'pointer' }}>
+          {all ? 'Voir moins' : `Voir les ${items.length} rendez-vous`}
+        </button>
+      ) : null}
+    </Card>
   )
 }
 

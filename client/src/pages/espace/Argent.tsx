@@ -14,7 +14,7 @@ export default function Argent() {
   const [year, setYear] = useState(new Date().getFullYear())
   const { data, error, loading, reload } = useLoad(() => api<MoneyView>(`/money?year=${year}`), [year])
   const [edit, setEdit] = useState<Expense | null>(null)
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(() => new URLSearchParams(window.location.search).get('ajouter') === '1')
   const toast = useToast()
   const navigate = useNavigate()
 

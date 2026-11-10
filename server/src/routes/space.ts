@@ -16,7 +16,7 @@ import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
 import { rentPatch } from '../services/rent.js'
-import { amountsForPeriod, unpaidPeriods } from '../domain/rentHistory.js'
+import { amountsForPeriod, rentSchedule, unpaidPeriods } from '../domain/rentHistory.js'
 import { formatEuros } from '../domain/lease.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
@@ -421,6 +421,9 @@ function tenantSummary(t: Tenant & { property: Property | null }, leases: (Lease
     property: lease ? { id: lease.property.id, name: propertyName(lease.property) } : t.property ? { id: t.property.id, name: propertyName(t.property) } : null,
     totalCents: lease ? lease.rentCents + lease.chargesCents : null,
     leaseId: lease?.id ?? null,
+    /** Bail en cours (ou en préparation) et état du loyer : le même `rentStatus` que partout. */
+    leaseDates: lease ? { status: lease.status, startDate: iso(lease.startDate), endDate: iso(lease.endDate) } : null,
+    rent: rent ? { key: rent.key, label: rent.label, unpaidCents: rent.unpaidCents } : null,
     situation,
     completion: tenantCompletion(f).percent,
   }
@@ -477,6 +480,8 @@ router.get('/tenants/:id', async (req, res) => {
         : null,
       /** Un locataire peut être lié à plusieurs logements (baux successifs ou simultanés, garage…). */
       homes: tenantHomes(t, leases),
+      /** Loyers du bail mois par mois (Paiements). */
+      schedule: lease && lease.status !== 'DRAFT' ? rentSchedule(lease, lease.payments).map((m) => ({ ...m, receivedAt: m.receivedAt ? iso(m.receivedAt) : null })) : [],
       payments: (lease?.payments ?? []).slice(0, 12).map((x) => ({ period: x.period, amountCents: x.amountCents, receivedAt: iso(x.receivedAt), full: lease ? x.amountCents >= lease.rentCents + lease.chargesCents : true })),
     },
   })

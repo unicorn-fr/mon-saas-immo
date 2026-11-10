@@ -117,6 +117,7 @@
 }
 .hero-link { color: var(--paper) !important; font-weight: 600; text-underline-offset: 6px; padding: 12px 0; }
 .hero-link:hover { text-decoration-thickness: 2px; }
+.hero-video { display: inline-flex; align-items: center; gap: 8px; background: none; border: none; font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; min-height: 44px; }
 
 /* ── Le bail en direct : le calcul à gauche, la photo et la fiche à droite ── */
 .live { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; padding: clamp(96px, 12vw, 176px) var(--pad); align-items: center; }

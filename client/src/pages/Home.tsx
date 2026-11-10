@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import './home.css'
 import { Logo } from '../components/Logo'
 import { MegaMenu, MobileMenu } from '../components/SiteMenu'
+import { VideoButton } from '../components/VideoDialog'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
@@ -746,6 +747,13 @@ export default function Home() {
                 Créer mon bail gratuit
                 <Arrow />
               </Link>
+              <VideoButton className="hero-link hero-video">
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden focusable="false">
+                  <circle cx="12" cy="12" r="11" fill="currentColor" opacity=".25" />
+                  <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
+                </svg>
+                Voir la vidéo · 1 min
+              </VideoButton>
               <Link to="/demo" className="hero-link">
                 Essayer la démo
               </Link>
