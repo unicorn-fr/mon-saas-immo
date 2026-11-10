@@ -123,6 +123,8 @@ export interface TenantSummary {
   property: { id: string; name: string } | null
   totalCents: number | null
   leaseId: string | null
+  leaseDates: { status: LeaseStatus; startDate: string; endDate: string } | null
+  rent: { key: string; label: string; unpaidCents: number } | null
   situation: string
   completion: number
 }
@@ -146,6 +148,7 @@ export interface TenantView extends Omit<TenantSummary, 'completion'> {
     property: { id: string; name: string }
   }
   payments: Payment[]
+  schedule: Array<{ period: string; dueCents: number; paidCents: number; receivedAt: string | null; state: 'PAID' | 'PARTIAL' | 'LATE' | 'UPCOMING' | 'FIRST' }>
 }
 
 export interface Payment {
@@ -250,9 +253,24 @@ export interface Task {
 export interface TodayView {
   user: User
   date: string
-  stats: { rentsExpected: number; rentsReceived: number; cashedCents: number; month: string }
+  stats: {
+    rentsExpected: number
+    rentsReceived: number
+    cashedCents: number
+    month: string
+    expectedCents: number
+    receivedCents: number
+    lateCents: number
+    lateCount: number
+    depositCount: number
+    depositCents: number
+    candidates: number
+    candidatesPropertyId: string | null
+  }
+  /** Le bail en cours, s'il n'y en a qu'un : les raccourcis y mènent directement. */
+  singleLeaseId: string | null
   tasks: Task[]
-  upcoming: Array<{ date: string; label: string }>
+  upcoming: Array<{ date: string; iso: string; label: string }>
   properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'accent' | 'muted' } }>
   counts: { properties: number; tenants: number; leases: number; signedLeases?: number }
 }

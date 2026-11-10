@@ -191,3 +191,16 @@ button:not(:disabled):active { transform: scale(.98); }
   .tunnel-main { grid-template-columns: 300px minmax(0, 1fr); column-gap: clamp(40px, 5vw, 80px); max-width: 1248px; margin: 0 auto; width: 100%; box-sizing: border-box; justify-items: stretch; }
   .tunnel-aside { display: flex !important; }
 }
+
+/* « Aujourd'hui » : tuiles du mois, puis actions à gauche et raccourcis + agenda à droite dès 1024 px. */
+.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.today-grid { display: flex; flex-direction: column; gap: 24px; }
+.today-main { display: flex; flex-direction: column; min-width: 0; }
+.today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.today-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 1024px) {
+  .today-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
+}
+@media (max-width: 400px) {
+  .today-tiles { grid-template-columns: minmax(0, 1fr); }
+}

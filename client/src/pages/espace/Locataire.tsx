@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Cite } from '../../components/Sources'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { TenantDossier } from '../../components/TenantDossier'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
@@ -8,12 +8,14 @@ import { PaymentModal } from '../../components/PaymentModal'
 import { UploadModal } from '../../components/UploadModal'
 import { Avatar, Btn, Callout, Card, Crumbs, Line, LoadError, Loader, Pill, Tabs, TextLink, useLoad, useToast } from '../../components/kit'
 import { display } from '../../components/ui'
-import { Check, Circle } from '../../components/Icons'
+import { Book, Check, Circle, DocIcon, Euro, Home, Mail, Page, Pencil, People, Signpost, Upload } from '../../components/Icons'
+import { RentAutomations } from '../../components/RentAutomations'
+import { TenantLink } from '../../components/TenantLink'
 import { api } from '../../lib/api'
 import { KIND_LABEL, TENANT_DOCUMENTS, fullName, type TenantDocKey } from '../../lib/contract'
-import { openDoc } from '../../lib/docs'
+import { documentPath, openDoc } from '../../lib/docs'
 import { dateFr, dateNum, dateShort, euros, eurosCents, periodLabel } from '../../lib/format'
-import type { TenantView } from '../../lib/space'
+import type { LeaseView, TenantView } from '../../lib/space'
 
 /** Fiche d'un locataire. Maquette « Fiche locataire ». */
 export default function Locataire() {
@@ -33,12 +35,20 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
   const navigate = useNavigate()
   const [payOpen, setPayOpen] = useState(false)
   const [upload, setUpload] = useState(false)
-  // Paiements : le dernier seulement, les autres sur demande.
-  const [allPays, setAllPays] = useState(false)
-  // Téléphone : une partie à la fois (sur ordinateur, les deux colonnes tiennent côte à côte).
-  const [part, setPart] = useState<'location' | 'fiche'>(t.lease ? 'location' : 'fiche')
+  // Une partie à la fois, gardée dans l'adresse (?onglet=).
+  const [params, setParams] = useSearchParams()
+  const { hash } = useLocation()
+  const asked = params.get('onglet')
+  const tab: TenantTab = TENANT_TABS.some((x) => x.value === asked) ? (asked as TenantTab) : 'general'
+  const pickTab = (v: TenantTab) => setParams(v === 'general' ? {} : { onglet: v }, { replace: true })
+  // Un lien d'« Actions » peut viser un bloc de « Général » (#dossier).
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [hash, tab])
   const f = t.file
   const lease = t.lease
+  // Le bail en détail (documents, réglages), seulement s'il y a un bail.
+  const detail = useLoad(() => (t.lease ? api<LeaseView>(`/leases/${t.lease.id}`) : Promise.resolve(null)), [t.lease?.id, t.payments.length])
   const g = f.guarantor
   const since = lease && lease.status !== 'DRAFT' ? `Locataire ${lease.property.name ? `de ${lease.property.name}` : ''} depuis le ${dateFr(lease.startDate)}` : lease ? `Bail en préparation pour ${lease.property.name}` : t.property ? `Rattaché à ${t.property.name}` : 'Sans bail pour l’instant'
 
@@ -78,19 +88,10 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
         </div>
       </div>
 
-      <div className="only-md">
-        <Tabs
-          label="Parties de la fiche du locataire"
-          tabs={[
-            { value: 'location', label: t.homes.length > 1 ? 'Ses locations' : 'Sa location' },
-            { value: 'fiche', label: 'Sa fiche' },
-          ]}
-          value={part}
-          onChange={setPart}
-        />
-      </div>
-      <div className="split-aside" style={{ gap: 28 }}>
-        <div className={`aside-wide${part === 'fiche' ? ' panel-in' : ' hide-md'}`}>
+      <Tabs label="Parties de la fiche du locataire" tabs={TENANT_TABS} value={tab} onChange={pickTab} />
+      {tab === 'general' ? (
+      <div className="split-aside panel-in" style={{ gap: 28 }}>
+        <div className="aside-wide">
           <Card title="Coordonnées" action={<TextLink to={`/espace/locataires/${t.id}/fiche`} style={{ fontSize: 14 }}>Modifier</TextLink>}>
             <Line label="Email" value={f.email || 'À compléter'} />
             <Line label="Téléphone" value={f.phone || 'À compléter'} />
@@ -126,20 +127,9 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               <TextLink to={`/espace/locataires/${t.id}/fiche#guarantee`}>Indiquer la garantie</TextLink>
             )}
           </Card>
-          <TenantDossier tenantId={t.id} email={f.email} />
-          <Card title="Justificatifs" action={<TextLink onClick={() => setUpload(true)} style={{ fontSize: 14 }}>Ajouter</TextLink>}>
-            {docs.map((k) => (
-              <div key={k} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
-                {received.get(k) ? <Check /> : <Circle />}
-                <span style={{ color: received.get(k) ? BAI.ink : BAI.inkSoft }}>{TENANT_DOCUMENTS[k]}</span>
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
-              {insuranceOk ? <Check /> : <Circle />}
-              <span style={{ color: insuranceOk ? BAI.ink : BAI.error }}>{f.insurance?.expiresAt ? `Attestation d’assurance, valable jusqu’au ${dateNum(f.insurance.expiresAt)}` : 'Attestation d’assurance, à demander'}</span>
-            </div>
-            <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Seules les pièces autorisées par le <Cite reference="décret n° 2015-1437" /> peuvent être demandées.</span>
-          </Card>
+          <div id="dossier" style={{ scrollMarginTop: 90 }}>
+            <TenantDossier tenantId={t.id} email={f.email} />
+          </div>
           <div>
             <Btn variant="danger" size="sm" onClick={remove}>
               Supprimer ce locataire
@@ -147,7 +137,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
           </div>
         </div>
 
-        <div className={`grow${part === 'location' ? ' panel-in' : ' hide-md'}`}>
+        <div className="grow">
           {t.homes.length ? (
             <Card title={t.homes.length > 1 ? 'Ses logements' : 'Son logement'}>
               {t.homes.map((h) => (
@@ -194,30 +184,6 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
               </div>
             </Card>
           )}
-          {lease && lease.status !== 'DRAFT' ? (
-            <Card title={t.payments.length > 1 && !allPays ? 'Dernier paiement' : 'Paiements'} action={<TextLink to={`/espace/baux/${lease.id}#paiements`} style={{ fontSize: 14 }}>Tout voir</TextLink>}>
-              {t.payments.length ? (
-                (allPays ? t.payments : t.payments.slice(0, 1)).map((p) => (
-                  <div key={p.period} className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 12 }}>
-                    <span style={{ fontWeight: 600 }}>{periodLabel(p.period, true)}</span>
-                    <span style={{ color: BAI.inkMid }}>
-                      {eurosCents(p.amountCents)} reçus le {dateShort(p.receivedAt)}
-                    </span>
-                    <TextLink onClick={() => openDoc(`/leases/${lease.id}/receipts/${p.period}.pdf`).catch(toast.error)} style={{ fontSize: 14 }}>
-                      {p.full ? 'Quittance' : 'Reçu'}
-                    </TextLink>
-                  </div>
-                ))
-              ) : (
-                <span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun loyer enregistré pour l’instant.</span>
-              )}
-              {t.payments.length > 1 ? (
-                <TextLink onClick={() => setAllPays(!allPays)} style={{ fontSize: 14 }}>
-                  {allPays ? 'Voir moins' : `Voir les ${t.payments.length} paiements`}
-                </TextLink>
-              ) : null}
-            </Card>
-          ) : null}
           {t.completion.percent < 100 ? (
             <Callout tone="tip" title="Fiche à compléter">
               Il manque : {t.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}.{' '}
@@ -228,7 +194,28 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
           ) : null}
         </div>
       </div>
-      {lease ? <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={reload} leaseId={lease.id} dueCents={lease.rentCents + lease.chargesCents} tenantEmail={f.email} /> : null}
+      ) : null}
+      {tab === 'paiements' ? <PaymentsTab t={t} onPay={() => setPayOpen(true)} /> : null}
+      {tab === 'documents' ? (
+        <div className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <Card title="Justificatifs" action={<TextLink onClick={() => setUpload(true)} style={{ fontSize: 14 }}>Ajouter</TextLink>}>
+      {docs.map((k) => (
+        <div key={k} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
+          {received.get(k) ? <Check /> : <Circle />}
+          <span style={{ color: received.get(k) ? BAI.ink : BAI.inkSoft }}>{TENANT_DOCUMENTS[k]}</span>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 15 }}>
+        {insuranceOk ? <Check /> : <Circle />}
+        <span style={{ color: insuranceOk ? BAI.ink : BAI.error }}>{f.insurance?.expiresAt ? `Attestation d’assurance, valable jusqu’au ${dateNum(f.insurance.expiresAt)}` : 'Attestation d’assurance, à demander'}</span>
+      </div>
+      <span style={{ fontSize: 13, color: BAI.inkSoft, lineHeight: 1.45 }}>Seules les pièces autorisées par le <Cite reference="décret n° 2015-1437" /> peuvent être demandées.</span>
+    </Card>
+          <LeaseDocs lease={detail.data} loading={detail.loading} hasLease={Boolean(lease)} />
+        </div>
+      ) : null}
+      {tab === 'actions' ? <ActionsTab t={t} detail={detail.data} reload={() => { reload(); detail.reload() }} /> : null}
+      {lease ? <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={() => { reload(); detail.reload() }} leaseId={lease.id} dueCents={lease.rentCents + lease.chargesCents} tenantEmail={f.email} /> : null}
       <UploadModal open={upload} onClose={() => setUpload(false)} onSaved={reload} tenantId={t.id} />
     </>
   )

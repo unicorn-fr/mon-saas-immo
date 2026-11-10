@@ -6,10 +6,10 @@ import { TenantLink } from '../../components/TenantLink'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { PaymentModal } from '../../components/PaymentModal'
-import { DunningSettings } from '../../components/DunningSettings'
+import { RentAutomations } from '../../components/RentAutomations'
 import { display } from '../../components/ui'
 import { Check, Circle } from '../../components/Icons'
-import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, Toggle, btnStyle, useLoad, useToast, useConfirm } from '../../components/kit'
+import { Btn, Callout, Card, Crumbs, Input, Line, LoadError, Loader, Modal, Pill, Tabs, TextLink, btnStyle, useLoad, useToast, useConfirm } from '../../components/kit'
 import { api } from '../../lib/api'
 import { KIND_LABEL } from '../../lib/contract'
 import { documentPath, downloadDoc, openDoc, printDoc } from '../../lib/docs'
@@ -151,43 +151,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
           {l.status !== 'DRAFT' ? (
             <Card id="paiements" title="Loyers et quittances" action={l.status !== 'ENDED' ? <Btn size="sm" onClick={() => setPayOpen(true)}>Loyer reçu</Btn> : null}>
               <Line label={(l.rent.unpaidPeriods?.length ?? 0) > 1 ? "Loyers" : "Ce mois-ci"} value={l.rent.label} tone={l.rent.key === 'PAID' ? 'green' : l.rent.key === 'LATE' ? 'error' : undefined} />
-              {l.status !== 'ENDED' ? (
-                <>
-                  <Toggle
-                    checked={Boolean(l.facts?.receiptAuto)}
-                    onChange={(v) =>
-                      void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { auto: v } })
-                        .then(() => {
-                          toast.show(v ? 'La quittance partira dès que vous notez le loyer reçu.' : 'Envoi des quittances par email arrêté.')
-                          reload()
-                        })
-                        .catch(toast.error)
-                    }
-                    label="Quittance par email dès que le loyer est noté reçu"
-                    sub={
-                      l.facts?.eReceiptConsent || l.tenants.some((x) => x.email)
-                        ? 'La quittance part tout de suite au locataire.'
-                        : 'Ajoutez l’email du locataire dans sa fiche pour l’activer.'
-                    }
-                  />
-                  {l.facts?.receiptAuto ? (
-                    <Toggle
-                      checked={Boolean(l.facts?.receiptAssume)}
-                      onChange={(v) =>
-                        void api(`/leases/${l.id}/receipt-auto`, { method: 'PUT', body: { assume: v } })
-                          .then(() => {
-                            toast.show(v ? 'Sans nouvelle de votre part, le loyer sera noté reçu 7 jours après l’échéance.' : 'Bailio attendra que vous notiez le loyer reçu.')
-                            reload()
-                          })
-                          .catch(toast.error)
-                      }
-                      label="Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance"
-                      sub="Facultatif. La quittance prouve le paiement : activez-le seulement si votre locataire paie toujours à l’heure. Vous êtes prévenu 3 jours avant et pouvez l’arrêter d’un clic."
-                    />
-                  ) : null}
-                </>
-              ) : null}
-              {l.status !== 'ENDED' && l.facts?.dunning ? <DunningSettings leaseId={l.id} value={l.facts.dunning} tenantName={l.tenantName} onChange={reload} /> : null}
+              {l.status !== 'ENDED' ? <RentAutomations l={l} reload={reload} /> : null}
               {l.facts?.autoReceipt ? (
                 l.facts.autoReceipt.held ? (
                   <Callout tone="warn" title={`Quittance de ${periodLabel(l.facts.autoReceipt.period)} : envoi annulé`}>

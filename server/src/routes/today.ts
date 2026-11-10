@@ -24,6 +24,8 @@ import { lineMissing } from '../domain/damage.js'
 import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCalendar.js'
 import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
+import { agenda, monthTiles } from '../domain/todayBoard.js'
+import { amountsForPeriod } from '../domain/rentHistory.js'
 
 /**
  * « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé, et les prochaines échéances.
@@ -68,13 +70,14 @@ router.get('/today', async (req, res) => {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
   const period = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
 
-  const [leases, tenants, properties, toVerify, inventories, letterDocs] = await Promise.all([
+  const [leases, tenants, properties, toVerify, inventories, letterDocs, newCandidates] = await Promise.all([
     prisma.lease.findMany({ where: { userId: user.id }, include: { property: true, payments: true } }),
     prisma.tenant.findMany({ where: { userId: user.id } }),
     prisma.property.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'asc' } }),
     prisma.expense.findMany({ where: { userId: user.id, status: 'TO_VERIFY' }, include: { property: true }, orderBy: { createdAt: 'desc' } }),
     prisma.inventory.findMany({ where: { userId: user.id } }),
     prisma.document.findMany({ where: { userId: user.id, kind: 'LETTER' }, select: { leaseId: true, meta: true, createdAt: true } }),
+    prisma.candidate.findMany({ where: { userId: user.id, status: 'NEW' }, select: { propertyId: true } }),
   ])
   /** Dernier courrier d'un type pour un bail. */
   const lastLetter = (leaseId: string, type: string) =>
@@ -291,7 +294,7 @@ router.get('/today', async (req, res) => {
     const label = { RENT_REVISION: `Révision du loyer, ${place}`, INSURANCE: `Attestation d’assurance, ${place}`, LEASE_END: `Dernier jour pour donner congé, ${place}`, INVENTORY_ENTRY: `État des lieux d’entrée, ${place}`, CHARGES_REGULARIZATION: 'Régularisation annuelle des charges', RENT_RECEIPT: '' }[r.type]
     upcoming.push({ date: short(r.dueDate), label, sort: r.dueDate.getTime() })
   }
-  for (const i of await upcomingInterventions(user.id)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
+  for (const i of await upcomingInterventions(user.id, 60)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
   // Échéances fiscales, déduites des loyers et des baux (calendrier vérifié par année : domain/fiscalCalendar.ts).
   const y = now.getUTCFullYear()
   const lastYearPaid = leases.some((l) => l.payments.some((p) => p.period.startsWith(String(y - 1))))
@@ -312,10 +315,43 @@ router.get('/today', async (req, res) => {
     const cfe = new Date(Date.UTC(y, 11, 15))
     upcoming.push({ date: short(cfe), label: 'CFE de la location meublée (exonérée si vos recettes ne dépassent pas 5 000 €)', sort: cfe.getTime() })
   }
+  // Dates déjà connues : états des lieux programmés, fin de préavis du locataire, fin du bail.
+  for (const inv of inventories) {
+    const l = leaseById.get(inv.leaseId)
+    if (!l || !inv.date || inv.status === 'SIGNED' || inv.date < today) continue
+    upcoming.push({ date: short(inv.date), label: `État des lieux ${inv.kind === 'EXIT' ? 'de sortie' : 'd’entrée'}, ${propertyName(l.property)}`, sort: inv.date.getTime() })
+  }
+  for (const l of leases) {
+    if (l.status !== 'ACTIVE' && l.status !== 'IMPORTED') continue
+    const noticeEnd = (l.data as { tenantNotice?: { endDate?: string } } | null)?.tenantNotice?.endDate
+    if (noticeEnd && /^\d{4}-\d{2}-\d{2}$/.test(noticeEnd) && noticeEnd >= iso(today)!) {
+      const d = new Date(`${noticeEnd}T00:00:00Z`)
+      upcoming.push({ date: short(d), label: `Fin du préavis du locataire, ${propertyName(l.property)}`, sort: d.getTime() })
+    } else if (l.endDate >= today && l.endDate.getTime() - today.getTime() <= 180 * DAY) {
+      upcoming.push({ date: short(l.endDate), label: `Fin du bail, ${propertyName(l.property)}`, sort: l.endDate.getTime() })
+    }
+  }
   upcoming.sort((a, b) => a.sort - b.sort)
 
   const expected = running.length
   const received = running.filter((l) => l.payments.some((p) => p.period === period && p.amountCents >= l.rentCents + l.chargesCents)).length
+  const tiles = monthTiles(
+    leases.map((l) => {
+      const st = rentStatus(l, l.payments, now)
+      const amounts = amountsForPeriod(l, period)
+      return {
+        status: l.status,
+        running: running.includes(l),
+        dueCents: amounts.rentCents + amounts.chargesCents,
+        paidCents: l.payments.find((p) => p.period === period)?.amountCents ?? 0,
+        statusKey: st.key,
+        unpaidCents: st.unpaidCents,
+        depositCents: l.depositCents,
+        depositReceived: Boolean((l.data as { depositReceivedAt?: string } | null)?.depositReceivedAt),
+      }
+    }),
+  )
+  const events = agenda(upcoming.map((u) => ({ iso: new Date(u.sort).toISOString().slice(0, 10), label: u.label })), iso(today)!)
   const cashed = leases.flatMap((l) => l.payments).filter((p) => p.receivedAt.getUTCFullYear() === now.getUTCFullYear() && p.receivedAt.getUTCMonth() === now.getUTCMonth()).reduce((a, p) => a + p.amountCents, 0)
 
   res.json({
@@ -323,9 +359,11 @@ router.get('/today', async (req, res) => {
     data: {
       user: publicUser(user),
       date: iso(today),
-      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period },
+      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period, ...tiles, candidates: newCandidates.length, candidatesPropertyId: new Set(newCandidates.map((c) => c.propertyId)).size === 1 ? newCandidates[0].propertyId : null },
+      // Un seul bail en cours : les raccourcis (quittance, courrier, état des lieux) y mènent directement.
+      singleLeaseId: running.length === 1 ? running[0].id : null,
       tasks,
-      upcoming: upcoming.slice(0, 6).map(({ date, label }) => ({ date, label })),
+      upcoming: events.map(({ iso: day, label }) => ({ date: short(new Date(`${day}T00:00:00Z`)), iso: day, label })),
       properties: properties.map((p) => {
         const ls = leases.filter((l) => l.propertyId === p.id)
         const current = ls.find((l) => (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now) ?? ls.find((l) => l.status === 'ACTIVE' && l.startDate > now)

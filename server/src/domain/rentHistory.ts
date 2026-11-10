@@ -59,3 +59,31 @@ export function unpaidPeriods(lease: LeaseLike, payments: Array<{ period: string
   }
   return out
 }
+
+export type MonthState = 'PAID' | 'PARTIAL' | 'LATE' | 'UPCOMING' | 'FIRST'
+
+/**
+ * Loyers de l'entrée (12 mois au plus) au mois prochain, du plus récent au plus ancien : montant attendu, reçu et état.
+ * Les retards sont ceux de `unpaidPeriods` ; le premier mois au prorata (échéance avant l'entrée) n'est jamais en retard.
+ */
+export function rentSchedule(
+  lease: LeaseLike & { endDate: Date },
+  payments: Array<{ period: string; amountCents: number; receivedAt?: Date }>,
+  now = new Date(),
+): Array<{ period: string; dueCents: number; paidCents: number; receivedAt: Date | null; state: MonthState }> {
+  const late = new Set(unpaidPeriods(lease, payments, now).map((u) => u.period))
+  const out: Array<{ period: string; dueCents: number; paidCents: number; receivedAt: Date | null; state: MonthState }> = []
+  for (let i = -1; i <= 11; i++) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, lease.paymentDay))
+    const startMonth = Date.UTC(lease.startDate.getUTCFullYear(), lease.startDate.getUTCMonth(), 1)
+    if (d.getTime() < startMonth || d > lease.endDate) continue
+    const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+    const a = amountsForPeriod(lease, period)
+    const dueCents = a.rentCents + a.chargesCents
+    const pay = payments.find((p) => p.period === period)
+    const paidCents = pay?.amountCents ?? 0
+    const state: MonthState = paidCents >= dueCents ? 'PAID' : late.has(period) ? (paidCents > 0 ? 'PARTIAL' : 'LATE') : d > now ? 'UPCOMING' : d < lease.startDate ? 'FIRST' : 'UPCOMING'
+    out.push({ period, dueCents, paidCents, receivedAt: pay?.receivedAt ?? null, state })
+  }
+  return out
+}
