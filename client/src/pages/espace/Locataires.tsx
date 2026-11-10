@@ -23,7 +23,7 @@ function List({ items }: { items: TenantSummary[] }) {
   const grid = { gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr)' }
   return (
     <>
-      <PageHead title="Vos locataires" sub={items.length ? `${plural(items.length, 'locataire')}${toSign ? `, ${toSign} bail${toSign > 1 ? 'x' : ''} en préparation` : ''}` : undefined} actions={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
+      <PageHead title="Vos locataires" sub={items.length ? `${plural(items.length, 'locataire')}${toSign ? `, ${toSign} ${toSign > 1 ? 'baux' : 'bail'} en préparation` : ''}` : undefined} actions={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
       {items.length ? (
         <Card pad={8} style={{ gap: 0, padding: 8 }}>
           <div className="table-row hide-sm" style={{ ...grid, padding: '12px 18px', fontSize: 13, fontWeight: 600, color: BAI.inkSoft }}>
