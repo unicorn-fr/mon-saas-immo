@@ -1,9 +1,10 @@
+import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
-import { Avatar, Btn, Card, Empty, LoadError, Loader, PageHead, Pill, useLoad } from '../../components/kit'
+import { Avatar, Btn, Empty, LoadError, Loader, PageHead, Pill, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
-import { euros, plural } from '../../lib/format'
+import { dateNum, euros, plural } from '../../lib/format'
 import type { TenantSummary } from '../../lib/space'
 
 /** Liste des locataires. Maquette « Locataires ». */
@@ -16,36 +17,51 @@ export default function Locataires() {
   )
 }
 
-const TONE = { 'À jour': 'green', 'Loyer en retard': 'error', 'Paiement partiel': 'accent', 'Bail à signer': 'accent', 'Sans bail': 'muted' } as const
+type Tone = 'green' | 'error' | 'accent' | 'muted'
+
+/** État du loyer d'un locataire : le `rentStatus` du serveur (retards, partiel), jamais un second calcul. */
+function rentState(t: TenantSummary): { label: string; tone: Tone } {
+  if (!t.leaseDates) return { label: 'Sans bail', tone: 'muted' }
+  if (t.leaseDates.status === 'DRAFT') return { label: 'Bail à signer', tone: 'accent' }
+  const owed = t.rent?.unpaidCents ?? 0
+  if (t.rent?.key === 'LATE') return { label: `En retard : ${euros(owed)}`, tone: 'error' }
+  if (t.rent?.key === 'PARTIAL') return { label: owed ? `Paiement partiel : ${euros(owed)}` : 'Paiement partiel', tone: 'accent' }
+  return { label: 'À jour', tone: 'green' }
+}
 
 function List({ items }: { items: TenantSummary[] }) {
   const toSign = items.filter((t) => t.situation === 'Bail à signer').length
-  const grid = { gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.2fr)' }
+  const grid: CSSProperties = { gridTemplateColumns: 'minmax(0, 1.8fr) minmax(0, 1.6fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1.5fr)' }
   return (
     <>
       <PageHead title="Vos locataires" sub={items.length ? `${plural(items.length, 'locataire')}${toSign ? `, ${toSign} ${toSign > 1 ? 'baux' : 'bail'} en préparation` : ''}` : undefined} actions={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
       {items.length ? (
-        <Card pad={8} style={{ gap: 0, padding: 8 }}>
+        <div className="tenant-list" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: BAI.radius, padding: 8, display: 'flex', flexDirection: 'column' }}>
           <div className="table-row hide-sm" style={{ ...grid, padding: '12px 18px', fontSize: 13, fontWeight: 600, color: BAI.inkSoft }}>
             <span>Locataire</span>
             <span>Logement</span>
+            <span>Bail</span>
             <span>Loyer</span>
-            <span>Situation</span>
+            <span>État du loyer</span>
           </div>
           {items.map((t) => (
-            <Link key={t.id} to={`/espace/locataires/${t.id}`} className="table-row" style={{ ...grid, padding: '14px 18px', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
+            <Link key={t.id} to={`/espace/locataires/${t.id}`} className="table-row tenant-row" style={{ ...grid, ...({ '--row-bg': BAI.surface, '--row-line': BAI.divider } as CSSProperties), padding: '14px 18px', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <Avatar text={t.initials} size={38} />
                 <span style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name || 'Sans nom'}</span>
               </span>
-              <span style={{ color: BAI.inkMid }}>{t.property?.name ?? 'Aucun logement'}</span>
-              <span style={{ fontWeight: 600 }}>{t.totalCents !== null ? euros(t.totalCents) : ''}</span>
+              <span style={{ color: BAI.inkMid, overflowWrap: 'anywhere' }}>{t.property?.name ?? 'Aucun logement'}</span>
+              <span style={{ color: BAI.inkMid }}>{t.leaseDates ? `Du ${dateNum(t.leaseDates.startDate)} au ${dateNum(t.leaseDates.endDate)}` : 'Pas de bail'}</span>
+              <span style={{ fontWeight: 600 }}>
+                {t.totalCents !== null ? euros(t.totalCents) : ''}
+                {t.totalCents !== null ? <span style={{ fontWeight: 400, color: BAI.inkSoft, fontSize: 13 }}> / mois</span> : null}
+              </span>
               <span>
-                <Pill tone={TONE[t.situation as keyof typeof TONE] ?? 'muted'}>{t.situation}</Pill>
+                <Pill tone={rentState(t).tone}>{rentState(t).label}</Pill>
               </span>
             </Link>
           ))}
-        </Card>
+        </div>
       ) : (
         <Empty title="Aucun locataire pour l’instant." text="Ajoutez votre locataire : son identité, son garant et ses justificatifs servent ensuite au bail et aux quittances." action={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
       )}

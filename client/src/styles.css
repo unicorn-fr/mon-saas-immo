@@ -121,6 +121,9 @@ button:not(:disabled):active { transform: scale(.98); }
   .stats-bar > .stat { padding: 0 16px 0 0; border-left: none; width: calc(50% - 8px); }
   .table-row { grid-template-columns: 1fr !important; gap: 4px; }
   .hide-sm { display: none !important; }
+  /* Liste des locataires : une carte par locataire. */
+  .tenant-list { background: transparent !important; border: none !important; padding: 0 !important; gap: 12px; }
+  .tenant-row { background: var(--row-bg); border: 1px solid var(--row-line) !important; border-radius: 16px; gap: 6px !important; }
 }
 @media (max-width: 768px) {
   .auth-side { width: auto !important; }
@@ -193,7 +196,7 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* « Aujourd'hui » : tuiles du mois, puis actions à gauche et raccourcis + agenda à droite dès 1024 px. */
-.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
 .today-grid { display: flex; flex-direction: column; gap: 24px; }
 .today-main { display: flex; flex-direction: column; min-width: 0; }
 .today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -201,6 +204,6 @@ button:not(:disabled):active { transform: scale(.98); }
 @media (min-width: 1024px) {
   .today-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
 }
-@media (max-width: 400px) {
+@media (max-width: 339px) {
   .today-tiles { grid-template-columns: minmax(0, 1fr); }
 }

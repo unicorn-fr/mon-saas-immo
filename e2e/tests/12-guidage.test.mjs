@@ -98,3 +98,44 @@ test('dossier du logement : ce qui manque, ajout du titre de propriété', async
   assert.equal(after.missing, before.missing - 1)
   assert.deepEqual(errors, [])
 })
+
+test('« Aujourd’hui » : tuiles du mois, raccourcis, agenda, rien qui déborde à 360 px', async () => {
+  const { token } = await newAccount()
+  const { leaseId } = await completeLease(token)
+  await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  const today = await api('/today', { token })
+  assert.equal(today.stats.lateCount, 1)
+  assert.ok(today.stats.lateCents > 0)
+  assert.equal(today.stats.depositCount, 1)
+  assert.equal(today.singleLeaseId, leaseId)
+  assert.ok(today.upcoming.every((u) => /^\d{4}-\d{2}-\d{2}$/.test(u.iso)))
+
+  const SHOTS = '/tmp/claude-0/-home-user-mon-saas-immo/3c3ccc0d-fac1-51bb-83e9-49cd65a624f9/scratchpad/'
+  const errors = []
+  for (const [w, h, name] of [[1440, 900, 'aujourdhui-1440'], [390, 844, 'aujourdhui-390'], [360, 800, 'aujourdhui-360']]) {
+    const ctx = await signedInContext(browser, token, { width: w, height: h })
+    const page = await ctx.newPage()
+    watch(page, errors)
+    await page.goto(`${BASE}/espace`)
+    const tiles = page.getByRole('navigation', { name: 'Chiffres du mois' })
+    await tiles.waitFor()
+    await tiles.getByText('Loyers en retard').waitFor()
+    await tiles.getByText('Dépôts à noter reçus').waitFor()
+    await page.getByRole('navigation', { name: 'Raccourcis' }).waitFor()
+    await page.getByRole('heading', { name: 'Agenda' }).waitFor()
+    assert.ok((await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)), `débordement horizontal à ${w} px`)
+    if (w === 1440) {
+      // Deux colonnes dès 1024 px : les raccourcis sont à droite des actions.
+      const a = await page.getByRole('heading', { name: 'À faire cette semaine' }).boundingBox()
+      const r = await page.getByRole('navigation', { name: 'Raccourcis' }).boundingBox()
+      assert.ok(r.x > a.x + 300)
+    }
+    await page.screenshot({ path: `${SHOTS}${name}.png`, fullPage: true })
+    if (w === 1440) {
+      await page.getByRole('navigation', { name: 'Raccourcis' }).getByRole('link', { name: 'Noter un loyer reçu' }).click()
+      await page.waitForURL(/\/espace\/argent\/releve/)
+    }
+    await ctx.close()
+  }
+  assert.deepEqual(errors, [])
+})

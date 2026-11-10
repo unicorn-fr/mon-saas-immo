@@ -31,6 +31,6 @@ test('échéancier : retard, partiel, à venir et premier mois au prorata', asyn
   const l = { data: {}, startDate: new Date('2026-08-20T00:00:00Z'), endDate: new Date('2029-08-19T00:00:00Z'), rentCents: 50000, chargesCents: 5000, paymentDay: 5 }
   const now = new Date('2026-11-10T12:00:00Z')
   const out = rentSchedule(l, [{ period: '2026-08', amountCents: 20000 }, { period: '2026-09', amountCents: 55000 }, { period: '2026-10', amountCents: 30000 }], now)
-  assert.deepEqual(out.map((m) => [m.period, m.state]), [['2026-12', 'UPCOMING'], ['2026-11', 'LATE'], ['2026-10', 'PARTIAL'], ['2026-09', 'PAID'], ['2026-08', 'PAID']])
+  assert.deepEqual(out.map((m) => [m.period, m.state]), [['2026-12', 'UPCOMING'], ['2026-11', 'LATE'], ['2026-10', 'PARTIAL'], ['2026-09', 'PAID'], ['2026-08', 'FIRST']])
   assert.equal(rentSchedule(l, [], now).at(-1)?.state, 'FIRST', 'premier mois au prorata non payé : jamais en retard')
 })
