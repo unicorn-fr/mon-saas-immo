@@ -4,7 +4,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { Close } from './Icons'
 
 /** Vidéo de présentation, servie par le site (client/public/video/), sans service tiers ni traceur. */
-export const DEMO_VIDEO = { src: '/video/bailio-presentation.mp4', poster: '/video/bailio-presentation.jpg', duration: '1 min 15', title: 'Bailio en une minute' }
+export const DEMO_VIDEO = { webm: '/video/bailio-presentation.webm', src: '/video/bailio-presentation.mp4', poster: '/video/bailio-presentation.jpg', duration: '1 min 15', title: 'Bailio en une minute' }
 
 /**
  * Bouton qui ouvre la vidéo de présentation par-dessus la page : fond assombri, lecture lancée, Échap, la croix ou un clic
@@ -51,7 +51,10 @@ export function VideoButton({ children, className, style }: { children: ReactNod
                     <Close size={18} />
                   </button>
                 </div>
-                <video src={DEMO_VIDEO.src} poster={DEMO_VIDEO.poster} controls autoPlay playsInline preload="metadata" aria-label="Présentation de Bailio : les écrans de l’application, avec des sous-titres" style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: 18, background: BAI.night, display: 'block' }} />
+                <video poster={DEMO_VIDEO.poster} controls autoPlay playsInline preload="metadata" aria-label="Présentation de Bailio : les écrans de l’application, avec des sous-titres" style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: 18, background: BAI.night, display: 'block' }}>
+                  <source src={DEMO_VIDEO.webm} type="video/webm" />
+                  <source src={DEMO_VIDEO.src} type="video/mp4" />
+                </video>
               </div>
             </div>,
             document.body,
