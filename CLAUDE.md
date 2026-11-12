@@ -1,7 +1,7 @@
 # CLAUDE.md — Bailio
 
 > Bailio repart de zéro (septembre 2026). La maquette de référence est `docs/maquette/bailio-refonte-proprietaire.html` ; l'identité visuelle suit la direction « Maison habitée » (`docs/design/direction-artistique.md`, novembre 2026). Refonte en cours : `PLAN.md`, `PROGRESS.md`.
-> Produit : le bail et le suivi locatif du **propriétaire bailleur particulier**. Pas d'espace locataire.
+> Produit : le bail et le suivi locatif du **propriétaire bailleur**, d'un logement à plusieurs dizaines. Pas de compte locataire : le locataire passe par ses liens personnels (page publique `/espace-locataire`).
 
 ## Stack
 
@@ -17,6 +17,15 @@
 | Auth | Sans mot de passe : lien magique par email uniquement. Session = jeton aléatoire (empreinte en base), en-tête `Authorization: Bearer`, fermée après 30 jours sans activité. Appareils connectés visibles et déconnectables dans « Mon compte ». Export des données et suppression du compte confirmés par un code à 6 chiffres envoyé par email (`ActionCode`) |
 | Import de baux | Sur le serveur uniquement : Tesseract (OCR, `fra`) + poppler + `sharp` (redressement, éclairage), puis règles (`services/import/parse.ts`). Aucune donnée envoyée à un service d'IA |
 | Hébergement | Tout sur le VPS Infomaniak (`deploy/vps`) : Caddy sert le site sur bailio.fr (www.bailio.fr, bailio.eu et www.bailio.eu redirigés), relaie `/api` vers l'API et assure le HTTPS ; API aussi sur `api.bailio.eu` ; PostgreSQL non exposée. Aucun Vercel (constructions automatiques coupées par `client/vercel.json`), aucun service d'envoi tiers. Mise à jour automatique toutes les 5 minutes depuis la branche `production` (`auto-update.sh`), que GitHub Actions avance seulement quand tous les tests passent sur `main` (`.github/workflows/ci.yml`). Dépendances : Dependabot chaque semaine (`.github/dependabot.yml`), `npm audit` en CI. Version en ligne : `https://bailio.fr/health`. Publication sur les réseaux sociaux : n8n facultatif, éteint par défaut (`deploy/vps/reseaux.sh`, `docs/reseaux-sociaux.md`), Caddyfile et compose vérifiés en CI |
+
+## Refonte de novembre 2026 (`PLAN.md`, `PROGRESS.md`)
+
+- Tableau de bord adaptatif (`server/src/domain/viewMode.ts`, testé ; `User.viewMode` ; `PATCH /account` `viewMode` ; `components/ViewPicker.tsx`) : question « Combien de logements louez-vous ? » en haut d'« Aujourd'hui » tant qu'aucune vue n'est choisie (réponse proposée d'après le nombre de logements), puis sélecteur « Vue ». SIMPLE (1 ou 2 : la première action mise en avant « À faire maintenant »), PORTFOLIO (3 à 20), LARGE (plus de 20 : barre « Patrimoine » avec tableau de bord, actions groupées, export, structures, accès), AGENCY (même barre ; mandats et relevés de gérance pas encore faits, dit à l'écran). Mêmes composants, rien de caché : seules la mise en avant et l'ordre changent. Jamais dans un espace partagé.
+- Services tiers interchangeables (`server/src/providers/` : `index.ts` interfaces et catalogue, `simulated.ts`, test `providers.test.ts`) : banque (lecture seule, aucune méthode d'écriture), signature, recommandé, paiement de l'abonnement, diffusion d'annonces. Simulé par défaut ; un fournisseur choisi dans `.env` (`BANK_PROVIDER`…) sans toutes ses variables reste simulé ; adaptateurs réels à écrire après signature du contrat (« à brancher »). État sans secret : `GET /admin/providers`. Variables listées dans `server/.env.example`.
+- Pages publiques : `/avis` (`pages/Publiques.tsx`, vrais avis de `content/avis.ts` seulement, sinon le dire), `/espace-locataire` (ce que le locataire fait sans compte), `/cgv` (`Cgv`, `Legal.tsx`, à faire relire par un juriste avant toute offre payante).
+- Fil d'actualité (`content/actualites.ts`, testé : source officielle obligatoire ; carte « Actualités » d'« Aujourd'hui », page `/espace/actualites`) : seulement des faits déjà vérifiés dans Bailio, échéances à venir d'abord. Nouveau texte : l'ajouter avec sa source, jamais de mémoire.
+- Prestataires (`content/prestataires.ts`, testé ; `/espace/prestataires`, lien sur « Carnet ») : photo, vidéo, home staging, ménage, jardin ; contacts du carnet reconnus par leur métier, demande de devis prête (logement sans le locataire). `PARTENAIRES` vide : À REMPLIR PAR ENZO après accord écrit, jamais de prestataire inventé.
+- Lien du locataire : carte « Vous partez ? » (préavis, date de fin par l'outil gratuit, liste de déménagement ; rien n'est envoyé, le congé se fait par courrier, art. 15).
 
 ## Règles de design (direction « Maison habitée », `docs/design/direction-artistique.md`)
 
