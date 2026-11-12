@@ -63,11 +63,8 @@ export function FonctionnalitesList() {
     <Shell wide>
       <section className="col-md" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 64px)', alignItems: 'center' }}>
         <div style={{ flex: '0 1 440px', minWidth: 0 }}>
-          <p style={{ margin: '0 0 18px' }}>
-            <span style={pill}>Fonctionnalités</span>
-          </p>
           <h1 style={display('clamp(38px, 5.4vw, 60px)', { margin: '0 0 20px' })}>
-            Tout Bailio, du bail à <em>la déclaration</em>
+            Tout Bailio, du bail à la <em>déclaration</em>
           </h1>
           <p style={{ margin: '0 0 28px', fontSize: 19 }}>Bail conforme, signature, quittances, relances, état des lieux et impôts : tout ce qu’il faut pour louer seul, dans une seule application.</p>
           <p style={{ margin: '0 0 24px', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
