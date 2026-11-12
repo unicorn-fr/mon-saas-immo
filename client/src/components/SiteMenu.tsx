@@ -105,6 +105,8 @@ export const SECTIONS: Section[] = [
         items: [
           { to: '/guides', title: 'Guides du propriétaire', text: 'Les règles, vérifiées et sourcées', icon: 'book' },
           { to: '/a-propos', title: 'À propos de Bailio', text: 'Comment Bailio est fait', icon: 'signpost' },
+          { to: '/avis', title: 'Avis des propriétaires', text: 'Vrais avis, mot pour mot', icon: 'book' },
+          { to: '/espace-locataire', title: 'Espace locataire', text: 'Sans compte, depuis son lien', icon: 'signpost' },
         ],
       },
       {
@@ -144,7 +146,7 @@ function Columns({ section, onPick }: { section: Section; onPick: () => void }) 
     <div className="mega-cols">
       {section.columns!.map((c) => (
         <div key={c.title} className={c.wide ? 'mega-col mega-col--wide' : 'mega-col'}>
-          <p style={{ margin: '0 0 8px', padding: '0 10px 10px', borderBottom: `1px solid ${BAI.divider}`, fontSize: 12.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: BAI.owner }}>{c.title}</p>
+          <p style={{ margin: '0 0 8px', padding: '0 10px 10px', borderBottom: `1px solid ${BAI.divider}`, fontSize: 12.5, fontWeight: 700, color: BAI.owner }}>{c.title}</p>
           <ul className={c.wide ? 'mega-list mega-list--2' : 'mega-list'} style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {c.items.map((it) => (
               <ItemLink key={it.to} item={it} onPick={onPick} />

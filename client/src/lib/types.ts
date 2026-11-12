@@ -58,4 +58,8 @@ export interface User {
   notifyUrgent?: boolean
   /** Accès au pilotage de Bailio (adresses autorisées sur le serveur). */
   admin?: boolean
+  /** Vue du tableau de bord (null : pas encore choisie). */
+  viewMode?: ViewMode | null
 }
+
+export type ViewMode = 'SIMPLE' | 'PORTFOLIO' | 'LARGE' | 'AGENCY'

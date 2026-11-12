@@ -1,13 +1,15 @@
 <!doctype html><html lang="fr" class="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css">
 <style>
-  body { background: #f5f7fa; }
-  .win { position: absolute; left: 50%; top: 92px; width: 1440px; height: 900px; margin-left: -720px; border-radius: 22px; overflow: hidden; background: #fff; border: 2px solid #dfe4ec; box-shadow: 0 30px 80px rgba(15, 31, 61, .16); transform-origin: 0 0; }
-  .bar { height: 46px; background: #f0f3f8; border-bottom: 1px solid #dfe4ec; display: flex; align-items: center; gap: 9px; padding: 0 18px; }
-  .dot { width: 13px; height: 13px; border-radius: 7px; background: #d6dce6; }
-  .url { margin-left: 22px; flex: 1; max-width: 520px; height: 28px; border-radius: 14px; background: #fff; border: 1px solid #dfe4ec; font: 600 15px Figtree; color: #5b6577; display: flex; align-items: center; padding: 0 14px; }
+  @font-face { font-family: 'Instrument Sans'; src: url('../../../client/node_modules/@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2') format('woff2'); font-weight: 400 700; }
+  body { font-family: 'Instrument Sans', sans-serif; }
+  body { background: #f4f4f4; }
+  .win { position: absolute; left: 50%; top: 92px; width: 1440px; height: 900px; margin-left: -720px; border-radius: 22px; overflow: hidden; background: #fff; border: 2px solid #e4e4e4; box-shadow: 0 30px 80px rgba(17, 17, 17, .16); transform-origin: 0 0; }
+  .bar { height: 46px; background: #f4f4f4; border-bottom: 1px solid #e4e4e4; display: flex; align-items: center; gap: 9px; padding: 0 18px; }
+  .dot { width: 13px; height: 13px; border-radius: 7px; background: #d0d0d0; }
+  .url { margin-left: 22px; flex: 1; max-width: 520px; height: 28px; border-radius: 14px; background: #fff; border: 1px solid #e4e4e4; font: 600 15px 'Instrument Sans'; color: #5f5f5f; display: flex; align-items: center; padding: 0 14px; }
   .shot { display: block; width: 1440px; height: 854px; object-fit: cover; object-position: top left; }
   .cap { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; }
-  .cap span { display: inline-block; background: #0f1f3d; color: #fff; font: 800 44px Figtree; padding: 16px 34px; border-radius: 999px; }
+  .cap span { display: inline-block; background: #111111; color: #fff; font: 600 44px 'Instrument Sans'; padding: 16px 34px; border-radius: 999px; }
 </style></head><body>
 <div id="stage" style="position:absolute;inset:0;overflow:hidden"></div>
 <script>
@@ -18,19 +20,19 @@ const eo = (x) => 1 - Math.pow(1 - clamp(x), 3)
 const back = (x) => { x = clamp(x); const c1 = 1.7, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2) }
 const lerp = (a, b, x) => a + (b - a) * x
 const IMG = (n) => `../../../client/public/fonctionnalites/${n}.webp`
-const LOGO = (size, roof = '#ff8a3d') => `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><path d="M3 10.2 11 4.2a1.6 1.6 0 0 1 2 0L21 10.2V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3Z" fill="#1f4396"/><path d="M12 3.6 21 10.2h-6.2A2.8 2.8 0 0 1 12 7.4Z" fill="${roof}"/><path d="M12 13.13a1.805 1.805 0 0 1 1.0925 3.2395l.6175 3.23h-3.42l.6175-3.23A1.805 1.805 0 0 1 12 13.13Z" fill="#fff"/></svg>`
+const LOGO = (size, house = '#111111') => `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><path d="M3 11.4a2.6 2.6 0 0 1 .95-2.01l6.4-5.3a2.6 2.6 0 0 1 3.3 0l6.4 5.3A2.6 2.6 0 0 1 21 11.4V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" fill="${house}"/><circle cx="12" cy="13.5" r="3" fill="#1a4be0"/></svg>`
 const SCREEN = 7
 // x, y, w, h : zone utile en % de la capture (1440 × 900)
 const STEPS = [
-  { img: 'today', url: 'bailio.fr/espace', cap: 'Chaque matin, ce qui est à faire, déjà préparé.', spot: { x: 21.9, y: 22.7, w: 49, h: 18 } },
-  { img: 'tunnel', url: 'bailio.fr/commencer', cap: 'Votre bail en quelques questions, sur le contrat type officiel.', spot: { x: 25, y: 28, w: 50, h: 26 } },
-  { img: 'bail', url: 'bailio.fr/espace/baux', cap: 'Vérifié avant la signature, signé en ligne.', spot: { x: 22.5, y: 8, w: 40, h: 14 } },
-  { img: 'quittances', url: 'bailio.fr/espace/baux', cap: 'Le loyer arrive : la quittance part toute seule.', spot: { x: 22.8, y: 44.6, w: 41, h: 4 } },
-  { img: 'relances', url: 'bailio.fr/espace/baux', cap: 'Un retard ? Relances à J+3, J+8 et J+15.', spot: { x: 22.8, y: 64.3, w: 41, h: 4 } },
-  { img: 'edl', url: 'bailio.fr/edl', cap: 'L’état des lieux sur téléphone, pièce par pièce.', spot: { x: 32, y: 15, w: 36, h: 21 } },
-  { img: 'candidats', url: 'bailio.fr/espace/logements', cap: 'Les candidats classés, leurs pièces protégées.', spot: { x: 22.8, y: 20.7, w: 30, h: 13 } },
-  { img: 'impots', url: 'bailio.fr/espace/argent/declaration', cap: 'Votre déclaration : les cases à recopier.', spot: { x: 21, y: 37, w: 75, h: 22 } },
-  { img: 'patrimoine', url: 'bailio.fr/espace/patrimoine', cap: 'Tous vos logements, un seul tableau de bord.', spot: { x: 21.1, y: 22.7, w: 75, h: 16.4 } },
+  { img: 'today', url: 'bailio.fr/espace', cap: 'Chaque matin, ce qui est à faire, déjà préparé.', spot: { x: 21.7, y: 38.7, w: 45.8, h: 22.1 } },
+  { img: 'tunnel', url: 'bailio.fr/commencer', cap: 'Votre bail en quelques questions, sur le contrat type officiel.', spot: { x: 37.9, y: 28.3, w: 50, h: 25.6 } },
+  { img: 'bail', url: 'bailio.fr/espace/baux', cap: 'Vérifié avant la signature, signé en ligne.', spot: { x: 21.7, y: 8.5, w: 40, h: 11 } },
+  { img: 'quittances', url: 'bailio.fr/espace/baux', cap: 'Le loyer arrive : la quittance part toute seule.', spot: { x: 23.4, y: 43.1, w: 42.9, h: 8.6 } },
+  { img: 'relances', url: 'bailio.fr/espace/baux', cap: 'Un retard ? Relances à J+3, J+8 et J+15.', spot: { x: 23.4, y: 65.7, w: 42.9, h: 10.8 } },
+  { img: 'edl', url: 'bailio.fr/edl', cap: 'L’état des lieux sur téléphone, pièce par pièce.', spot: { x: 31.9, y: 20.3, w: 36.1, h: 18.8 } },
+  { img: 'candidats', url: 'bailio.fr/espace/logements', cap: 'Les candidats classés, leurs pièces protégées.', spot: { x: 21.7, y: 13.3, w: 49.9, h: 39.5 } },
+  { img: 'impots', url: 'bailio.fr/espace/argent/declaration', cap: 'Votre déclaration : les cases à recopier.', spot: { x: 21.7, y: 36.7, w: 74.4, h: 35.5 } },
+  { img: 'patrimoine', url: 'bailio.fr/espace/patrimoine', cap: 'Tous vos logements, un seul tableau de bord.', spot: { x: 21.7, y: 22.7, w: 74.4, h: 16.4 } },
 ]
 const INTRO = 4.5, OUTRO = 6
 window.DURATION = INTRO + STEPS.length * SCREEN + OUTRO
@@ -39,17 +41,17 @@ const stage = document.getElementById('stage')
 function intro(t) {
   const a = eo(t / .6), b = eo((t - .5) / .6), c = eo((t - 1.1) / .6)
   return `<div class="abs" style="inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px">
-    <div style="display:flex;align-items:center;gap:22px;opacity:${a};transform:scale(${lerp(.7, 1, back(t / .7))})">${LOGO(130)}<span style="font:800 130px Fraunces;color:#16233f;letter-spacing:-.02em">bailio</span></div>
-    <div style="font:500 76px Fraunces;color:#16233f;opacity:${b};transform:translateY(${(1 - b) * 30}px)">Vos locations, <em style="color:#c2410c">en une minute.</em></div>
-    <div style="font:600 34px Figtree;color:#3b4659;opacity:${c}">Le bail et le suivi locatif du propriétaire</div></div>`
+    <div style="display:flex;align-items:center;gap:22px;opacity:${a};transform:scale(${lerp(.7, 1, back(t / .7))})">${LOGO(130)}<span style="font:500 130px 'Instrument Sans';color:#111111;letter-spacing:-.02em">bailio</span></div>
+    <div style="font:500 76px 'Instrument Sans';color:#111111;opacity:${b};transform:translateY(${(1 - b) * 30}px)">Vos locations, <span style="color:#6b6b6b">en une minute.</span></div>
+    <div style="font:600 34px 'Instrument Sans';color:#5f5f5f;opacity:${c}">La gestion locative des propriétaires, sans agence.</div></div>`
 }
 function outro(t) {
   const k = (d) => eo((t - d) / .5)
-  return `<div class="abs" style="inset:0;background:#1f4396;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;opacity:${eo(t / .4)}">
-    <div style="display:flex;align-items:center;gap:20px;opacity:${k(.1)}">${LOGO(110, '#ff8a3d').replace('fill="#1f4396"', 'fill="#ffffff"').replace('fill="#fff"', 'fill="#1f4396"')}<span style="font:800 110px Fraunces;color:#fff">bailio</span></div>
-    <div style="font:500 64px Fraunces;color:#fff;opacity:${k(.5)}">Premier mois offert.</div>
-    <div style="font:600 36px Figtree;color:#dbe3f1;opacity:${k(.9)}">Ensuite 3,49 € par logement et par mois, tout compris.</div>
-    <div style="margin-top:20px;opacity:${k(1.3)};transform:scale(${lerp(.8, 1, back((t - 1.3) / .5))})"><span style="display:inline-block;background:#ff8a3d;color:#0f1f3d;font:800 48px Figtree;padding:22px 56px;border-radius:999px">bailio.fr</span></div></div>`
+  return `<div class="abs" style="inset:0;background:#111111;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;opacity:${eo(t / .4)}">
+    <div style="display:flex;align-items:center;gap:20px;opacity:${k(.1)}">${LOGO(110, '#f4f4f4')}<span style="font:500 110px 'Instrument Sans';color:#fff">bailio</span></div>
+    <div style="font:500 64px 'Instrument Sans';color:#fff;opacity:${k(.5)}">Premier mois offert.</div>
+    <div style="font:600 36px 'Instrument Sans';color:#f4f4f4;opacity:${k(.9)}">Ensuite 3,49 € par logement et par mois, tout compris.</div>
+    <div style="margin-top:20px;opacity:${k(1.3)};transform:scale(${lerp(.8, 1, back((t - 1.3) / .5))})"><span style="display:inline-block;background:#1a4be0;color:#ffffff;font:600 48px 'Instrument Sans';padding:22px 56px;border-radius:999px">bailio.fr</span></div></div>`
 }
 function screen(s, i, lt) {
   const sp = s.spot
@@ -61,18 +63,18 @@ function screen(s, i, lt) {
   // Curseur : arrive, clique, la zone s'éclaire
   const cur = eio((lt - .9) / 1.1), click = lt - 2.1
   const px = lerp(1500, cx - 40 + sp.w / 100 * 1440 * .25, cur), py = lerp(980, cy, cur)
-  const ring = click > 0 ? `<div class="abs" style="left:${px - 26}px;top:${py - 26}px;width:52px;height:52px;border-radius:26px;border:4px solid #1f4396;opacity:${clamp(1 - click / .5)};transform:scale(${lerp(.4, 1.6, clamp(click / .5))})"></div>` : ''
+  const ring = click > 0 ? `<div class="abs" style="left:${px - 26}px;top:${py - 26}px;width:52px;height:52px;border-radius:26px;border:4px solid #1a4be0;opacity:${clamp(1 - click / .5)};transform:scale(${lerp(.4, 1.6, clamp(click / .5))})"></div>` : ''
   const hl = clamp((lt - 2.25) / .35) * (1 - clamp((lt - (SCREEN - .9)) / .4))
-  const box = `<div class="abs" style="left:${sp.x / 100 * 1440 - 10}px;top:${46 + sp.y / 100 * 854 - 10}px;width:${sp.w / 100 * 1440 + 20}px;height:${sp.h / 100 * 854 + 20}px;border:4px solid #ff8a3d;border-radius:18px;box-shadow:0 0 0 2000px rgba(15,31,61,${.28 * hl});opacity:${hl}"></div>`
+  const box = `<div class="abs" style="left:${sp.x / 100 * 1440 - 10}px;top:${46 + sp.y / 100 * 854 - 10}px;width:${sp.w / 100 * 1440 + 20}px;height:${sp.h / 100 * 854 + 20}px;border:4px solid #1a4be0;border-radius:18px;box-shadow:0 0 0 2000px rgba(17,17,17,${.28 * hl});opacity:${hl}"></div>`
   const capIn = eo((lt - .2) / .5) * (1 - clamp((lt - (SCREEN - .5)) / .4))
   const enter = eo(lt / .5)
   return `<div class="win" style="transform-origin:${cx}px ${cy}px;transform:translateX(${(1 - enter) * 80}px) ${winT};opacity:${enter}">
       <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">${s.url}</span></div>
       <img class="shot" src="${IMG(s.img)}">${box}
-      ${ring}<svg class="abs" style="left:${px}px;top:${py}px;transform:scale(${click > 0 && click < .25 ? .85 : 1})" width="34" height="40" viewBox="0 0 20 24"><path d="M2 2 L2 19 L6.5 15 L9.5 22 L12.5 20.7 L9.6 13.9 L15.5 13.6 Z" fill="#0f1f3d" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      ${ring}<svg class="abs" style="left:${px}px;top:${py}px;transform:scale(${click > 0 && click < .25 ? .85 : 1})" width="34" height="40" viewBox="0 0 20 24"><path d="M2 2 L2 19 L6.5 15 L9.5 22 L12.5 20.7 L9.6 13.9 L15.5 13.6 Z" fill="#111111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
     </div>
-    <div class="abs" style="left:32px;top:24px;z-index:5;font:800 24px Figtree;color:#16233f;background:#fff;border:2px solid #dfe4ec;border-radius:999px;padding:6px 16px">${i + 1} / ${STEPS.length}</div>
-    <div class="abs" style="left:0;bottom:0;height:8px;background:#1f4396;width:${((i + clamp(lt / SCREEN)) / STEPS.length) * 100}%"></div>
+    <div class="abs" style="left:32px;top:24px;z-index:5;font:600 24px 'Instrument Sans';color:#111111;background:#fff;border:2px solid #e4e4e4;border-radius:999px;padding:6px 16px">${i + 1} / ${STEPS.length}</div>
+    <div class="abs" style="left:0;bottom:0;height:8px;background:#1a4be0;width:${((i + clamp(lt / SCREEN)) / STEPS.length) * 100}%"></div>
     <div class="cap" style="opacity:${capIn};transform:translateY(${(1 - capIn) * 20}px)"><span>${s.cap}</span></div>`
 }
 window.render = function (t) {

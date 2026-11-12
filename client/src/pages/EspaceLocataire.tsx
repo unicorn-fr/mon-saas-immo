@@ -65,6 +65,7 @@ export default function EspaceLocataire() {
                 <Insurance code={code} info={data} onDone={reload} />
                 {data.boiler ? <Boiler code={code} info={data} onDone={reload} /> : null}
                 <EReceipt code={code} info={data} onDone={reload} />
+                <Moving landlord={data.landlord} />
               </>
             )}
             <ThirdPartyNotice landlord={data.landlord} purpose="la gestion de votre location (problèmes signalés, assurance, entretien, quittances)" keep="Elles sont gardées avec le bail, pendant la location puis trois ans." />
@@ -472,6 +473,46 @@ function InventoryComplement({ code, info, onDone, open, setOpen }: { code: stri
           ))}
         </ul>
       ) : null}
+    </Card>
+  )
+}
+
+/**
+ * Départ et déménagement : comment donner congé (loi de 1989, art. 15 ; service-public F1168), le préavis calculé par
+ * l'outil gratuit, puis une liste à cocher (gardée sur cet appareil seulement le temps de la page).
+ */
+const MOVE_STEPS = [
+  'Envoyer votre congé par lettre recommandée avec avis de réception (ou remise en main propre contre récépissé)',
+  'Convenir avec votre bailleur de la date de l’état des lieux de sortie',
+  'Résilier ou transférer l’électricité, le gaz et internet à la date de départ',
+  'Garder votre assurance habitation jusqu’à la remise des clés',
+  'Déclarer votre nouvelle adresse en une fois sur service-public.gouv.fr',
+  'Laisser le logement propre, rendre toutes les clés',
+]
+
+function Moving({ landlord }: { landlord: string }) {
+  const [open, setOpen] = useState(false)
+  const [done, setDone] = useState<number[]>([])
+  return (
+    <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Vous partez ?</h2>}>
+      <p style={{ margin: 0, color: BAI.inkMid, lineHeight: 1.5 }}>
+        Préavis de 3 mois en location vide, 1 mois en meublé ou dans certains cas (zone tendue, mutation, perte d’emploi…).{' '}
+        <a href="/simulateurs/preavis-locataire">Calculer ma date de fin</a>.
+      </p>
+      {open ? (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {MOVE_STEPS.map((t, i) => (
+            <li key={t}>
+              <Check checked={done.includes(i)} onChange={(v) => setDone(v ? [...done, i] : done.filter((x) => x !== i))} label={t} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Btn variant="outline" onClick={() => setOpen(!open)}>{open ? 'Masquer la liste' : 'Ma liste de déménagement'}</Btn>
+        <Btn variant="outline" href="https://www.service-public.gouv.fr/particuliers/vosdroits/F1168" newTab>Les règles du congé</Btn>
+      </div>
+      <span style={{ fontSize: 14, color: BAI.inkSoft }}>Le congé n’est valable que par courrier : rien n’est envoyé à {landlord} depuis cette page.</span>
     </Card>
   )
 }

@@ -1,19 +1,19 @@
 /* Mise en page et états (survol, focus) : les couleurs reprennent les tokens BAI (constants/bailio-tokens.ts). */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; font-family: 'Figtree', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; font-size: 16px; background: #f5f7fa; color: #16233f; -webkit-font-smoothing: antialiased; }
-/* Accroche : un seul mot ou une ligne en italique, en orange foncé sur fond clair. */
-h1 em, h2 em { font-style: italic; color: #c2410c; }
-a { color: #1f4396; }
-a:hover { color: #17336f; }
+body { margin: 0; font-family: 'Instrument Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 16px; background: #f4f4f4; color: #111111; -webkit-font-smoothing: antialiased; }
+/* Accroche : la seconde moitié du titre en gris, une phrase à elle seule (pas d’italique). */
+h1 em, h2 em { font-style: normal; color: #6b6b6b; }
+a { color: #1a4be0; }
+a:hover { color: #143bb3; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 /* Focus visible sur tous les fonds : contour bleu entouré de clair (contraste 3:1 minimum, WCAG 2.4.7 et 1.4.11). */
-input:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #1f4396; outline-offset: 2px; box-shadow: 0 0 0 7px #f5f7fa; }
+input:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #1a4be0; outline-offset: 2px; box-shadow: 0 0 0 7px #f4f4f4; }
 main:focus { outline: none; }
-.drop:focus-within { outline: 3px solid #1f4396; outline-offset: 2px; }
+.drop:focus-within { outline: 3px solid #1a4be0; outline-offset: 2px; }
 /* Lien d'évitement : invisible jusqu'à ce qu'on y arrive au clavier. */
-.skip-link { position: fixed; top: 8px; left: 8px; z-index: 1000; background: #1f4396; color: #ffffff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; transform: translateY(-200%); }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 1000; background: #1a4be0; color: #ffffff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; transform: translateY(-200%); }
 .skip-link:focus { transform: none; color: #ffffff; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 img { max-width: 100%; }
@@ -21,17 +21,17 @@ img { max-width: 100%; }
 /* Boutons : survol sur la nuance foncée, appui léger (150 à 200 ms). */
 .btn { transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.btn-primary:hover:not(:disabled) { background: #ff7a24 !important; border-color: #ff7a24 !important; color: #0f1f3d !important; }
-.btn-dark:hover:not(:disabled) { background: #1f4396 !important; border-color: #1f4396 !important; color: #ffffff !important; }
-.btn-outline:hover:not(:disabled), .btn-light:hover:not(:disabled) { border-color: #1f4396 !important; }
-.btn-accent:hover:not(:disabled) { background: #ff7a24 !important; border-color: #ff7a24 !important; }
+.btn-primary:hover:not(:disabled) { background: #143bb3 !important; border-color: #143bb3 !important; color: #ffffff !important; }
+.btn-dark:hover:not(:disabled) { background: #2e2e2e !important; border-color: #2e2e2e !important; color: #ffffff !important; }
+.btn-outline:hover:not(:disabled), .btn-light:hover:not(:disabled) { border-color: #111111 !important; background: #f4f4f4 !important; }
+.btn-accent:hover:not(:disabled) { background: #143bb3 !important; border-color: #143bb3 !important; }
 
 /* Module « page de bail » : bloc à grands coins arrondis dont un coin est replié, comme le coin d'une feuille.
    Le pli se fait par un masque (aucune image), le petit triangle dessine le revers de la page.
    Position et rayon sans priorité (:where) : chaque bloc peut se placer lui-même. */
 :where(.fold) { position: relative; border-radius: 24px; }
 .fold { --fold: 28px; -webkit-mask: linear-gradient(225deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); mask: linear-gradient(225deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); }
-.fold--ear::after { content: ''; position: absolute; top: 0; right: 0; width: var(--fold); height: var(--fold); border-bottom-left-radius: 8px; background: linear-gradient(225deg, transparent 50%, var(--fold-back, rgba(15, 31, 61, 0.18)) 50%); pointer-events: none; }
+.fold--ear::after { content: ''; position: absolute; top: 0; right: 0; width: var(--fold); height: var(--fold); border-bottom-left-radius: 8px; background: linear-gradient(225deg, transparent 50%, var(--fold-back, rgba(17, 17, 17, 0.18)) 50%); pointer-events: none; }
 .fold--lg { --fold: clamp(40px, 7vw, 88px); }
 .fold--left { -webkit-mask: linear-gradient(135deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); mask: linear-gradient(135deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -159,19 +159,19 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* Menu du site (components/SiteMenu.tsx) : panneau au survol sur ordinateur, plein écran sur téléphone. */
-.mega-panel { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); width: min(1040px, calc(100vw - 32px)); box-sizing: border-box; padding: 24px; z-index: 40; box-shadow: 0 18px 40px rgba(15, 31, 61, .12); animation: mega-in .18s ease-out; text-align: left; }
+.mega-panel { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); width: min(1040px, calc(100vw - 32px)); box-sizing: border-box; padding: 24px; z-index: 40; box-shadow: 0 18px 40px rgba(17, 17, 17, .12); animation: mega-in .18s ease-out; text-align: left; }
 @keyframes mega-in { from { opacity: 0; transform: translate(-50%, -6px); } }
 .mega-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
 .mega-col--wide { grid-column: span 2; }
 .mega-list { display: grid; gap: 2px; }
 .mega-list--2 { grid-template-columns: 1fr 1fr; column-gap: 12px; }
 .mega-item { transition: background .15s; }
-.mega-item:hover { background: #f5f7fa; }
-.mega-trigger:hover { color: #1f4396 !important; }
+.mega-item:hover { background: #f4f4f4; }
+.mega-trigger:hover { color: #1a4be0 !important; }
 /* Panneau du menu sur téléphone : glisse depuis la droite, la page reste visible et assombrie derrière. */
 .drawer-root { position: fixed; inset: 0; z-index: 100; }
 .drawer-backdrop { position: absolute; inset: 0; animation: drawer-fade .2s ease-out; }
-.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(88vw, 400px); display: flex; flex-direction: column; border-radius: 24px 0 0 24px; box-shadow: -12px 0 40px rgba(15, 31, 61, .18); animation: drawer-in .25s cubic-bezier(.2, .8, .2, 1); }
+.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(88vw, 400px); display: flex; flex-direction: column; border-radius: 24px 0 0 24px; box-shadow: -12px 0 40px rgba(17, 17, 17, .18); animation: drawer-in .25s cubic-bezier(.2, .8, .2, 1); }
 @keyframes drawer-in { from { transform: translateX(100%); } }
 @keyframes drawer-fade { from { opacity: 0; } }
 .mobile-menu .mega-item { padding: 8px 6px !important; }
@@ -196,7 +196,7 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* « Aujourd'hui » : tuiles du mois, puis actions à gauche et raccourcis + agenda à droite dès 1024 px. */
-.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
 .today-grid { display: flex; flex-direction: column; gap: 24px; }
 .today-main { display: flex; flex-direction: column; min-width: 0; }
 .today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -207,3 +207,7 @@ button:not(:disabled):active { transform: scale(.98); }
 @media (max-width: 339px) {
   .today-tiles { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Menu latéral clair de l'espace : survol discret */
+.side-link:not(.active):hover { background: #f4f4f4 !important; }
+.side-add:hover { background: #2e2e2e !important; }

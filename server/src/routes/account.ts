@@ -10,6 +10,7 @@ import { layout, sendEmail } from '../lib/email.js'
 import { allowPerKey, limitPerVisitor } from '../lib/rateLimit.js'
 import { hashToken } from '../lib/tokens.js'
 import { deviceLabel } from '../domain/device.js'
+import { VIEW_MODES } from '../domain/viewMode.js'
 
 /** Compte : suivi par email, préférences, export et suppression des données (RGPD). */
 const router = Router()
@@ -29,6 +30,7 @@ router.patch('/account', async (req, res) => {
       followUp: z.boolean().optional(),
       notifyWeekly: z.boolean().optional(),
       notifyUrgent: z.boolean().optional(),
+      viewMode: z.enum(VIEW_MODES).optional(),
     })
     .parse(req.body)
   const user = await prisma.user.update({
@@ -38,6 +40,7 @@ router.patch('/account', async (req, res) => {
       lastName: body.lastName,
       notifyWeekly: body.notifyWeekly,
       notifyUrgent: body.notifyUrgent,
+      viewMode: body.viewMode,
       followUpSince: body.followUp === undefined ? undefined : body.followUp ? (req.user!.followUpSince ?? new Date()) : null,
     },
   })

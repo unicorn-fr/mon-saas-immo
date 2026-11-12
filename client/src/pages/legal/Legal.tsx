@@ -462,6 +462,71 @@ export function PrixRemboursement() {
   )
 }
 
+/**
+ * Conditions générales de vente (Code de la consommation, L111-1 et L221-5 : informations avant le contrat).
+ * Reprend /prix-et-remboursement sous la forme d'un contrat. À FAIRE RELIRE par un juriste avant l'ouverture d'une offre payante.
+ */
+export function Cgv() {
+  return (
+    <SimplePage title="Conditions générales de vente">
+      <Updated />
+      <p>
+        Aujourd'hui, Bailio ne vend rien : {LAUNCH_OFFER.toLowerCase()} et aucune carte bancaire n'est demandée. Ces conditions s'appliqueront dès
+        qu'une offre payante sera ouverte ; vous serez prévenu par email avant.
+      </p>
+      <H2>1. Qui vend</H2>
+      <p>
+        Le service Bailio est édité par la personne indiquée dans les <Link to="/mentions-legales">mentions légales</Link>. Contact : <Mail />.
+      </p>
+      <H2>2. Ce qui est vendu</H2>
+      <p>
+        L'offre « Bailio, tout inclus » : l'accès au logiciel en ligne Bailio pour suivre une location (bail, quittances, relances, états des lieux,
+        aide à la déclaration…), décrit sur la page <Link to="/fonctionnalites">Fonctionnalités</Link>. Bailio est un logiciel : il ne gère pas
+        votre location à votre place, n'encaisse pas les loyers et ne remplace pas un conseil juridique ou fiscal.
+      </p>
+      <H2>3. Prix</H2>
+      <p>
+        {priceDetail()}, toutes taxes comprises. Le prix dépend du nombre de logements suivis. Le premier bail reste gratuit.
+      </p>
+      <H2>4. Commande et paiement</H2>
+      <p>
+        Avant le premier paiement, le prix et ce qu'il comprend vous sont rappelés et votre accord exprès vous est demandé. Le paiement se fait par
+        carte ou prélèvement auprès d'un prestataire de paiement ; Bailio ne voit jamais votre numéro de carte. Une facture vous est envoyée par email.
+      </p>
+      <H2>5. Durée et résiliation</H2>
+      <p>
+        Sans engagement : au mois ou à l'année. Vous arrêtez quand vous voulez depuis « Mon compte » (Code de la consommation, L215-1-1) ; l'accès
+        payant prend fin à la fin de la période déjà payée, sans nouveau prélèvement. Vous gardez vos documents et pouvez tout exporter.
+      </p>
+      <H2>6. Droit de rétractation</H2>
+      <p>
+        14 jours après la souscription, sans justification (L221-18), par email à <Mail /> ou depuis « Mon compte ». Remboursement sous 14 jours par
+        le même moyen de paiement (L221-24). Si vous avez demandé à utiliser le service tout de suite, la part des jours déjà utilisés reste due
+        (L221-25).
+      </p>
+      <H2>7. Disponibilité et responsabilité</H2>
+      <p>
+        Bailio fait de son mieux pour que le service soit disponible et que ses règles suivent la loi en vigueur, avec leurs sources citées. Les
+        documents produits restent sous votre responsabilité : relisez-les avant de les signer ou de les envoyer.
+      </p>
+      <H2>8. Données personnelles</H2>
+      <p>
+        Voir la page <Link to="/confidentialite">Confidentialité</Link>.
+      </p>
+      <H2>9. Réclamation, médiation, droit applicable</H2>
+      <p>
+        Écrivez d'abord à <Mail />.{' '}
+        {MEDIATOR ? (
+          <>Si le désaccord persiste, vous pouvez saisir gratuitement le médiateur de la consommation : <MediatorContact />.</>
+        ) : (
+          <>Le médiateur de la consommation que vous pourrez saisir gratuitement sera indiqué ici avant tout paiement.</>
+        )}{' '}
+        Droit français.
+      </p>
+    </SimplePage>
+  )
+}
+
 export function Accessibilite() {
   return (
     <SimplePage title="Accessibilité">

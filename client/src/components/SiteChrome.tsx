@@ -121,6 +121,8 @@ export function SiteFooter() {
     { to: "/fonctionnalites", label: "Fonctionnalités" },
     { to: "/tarifs", label: "Tarifs" },
     { to: "/a-propos", label: "À propos" },
+    { to: "/avis", label: "Avis" },
+    { to: "/espace-locataire", label: "Espace locataire" },
     { to: "/demo", label: "Essayer la démo" },
     { to: "/changer-pour-bailio", label: "Changer pour Bailio" },
     { to: "/mentions-legales", label: "Mentions légales" },
@@ -128,6 +130,7 @@ export function SiteFooter() {
     { to: "/confidentialite", label: "Confidentialité" },
     { to: "/cookies", label: "Cookies" },
     { to: "/prix-et-remboursement", label: "Prix et remboursement" },
+    { to: "/cgv", label: "CGV" },
     { to: "/accessibilite", label: "Accessibilité" },
     { to: "/securite", label: "Sécurité" },
     { to: "/contact", label: "Contact" },
@@ -246,8 +249,6 @@ function PageAside({
     margin: "0 0 12px",
     fontSize: 13,
     fontWeight: 700,
-    letterSpacing: ".06em",
-    textTransform: "uppercase",
     color: BAI.owner,
   } as const;
   return (

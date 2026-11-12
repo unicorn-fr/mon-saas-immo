@@ -134,7 +134,7 @@ type BtnVariant = 'primary' | 'outline' | 'ghost' | 'dark' | 'accent' | 'danger'
 
 const BTN: Record<BtnVariant, CSSProperties> = {
   primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
-  outline: { background: BAI.surface, color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
+  outline: { background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },
   ghost: { background: 'transparent', color: BAI.inkMid, border: '1.5px solid transparent' },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
   accent: { background: BAI.accent, color: BAI.night, border: `1.5px solid ${BAI.accent}` },
@@ -162,7 +162,7 @@ interface BtnProps {
 
 export function btnStyle(variant: BtnVariant = 'primary', size: 'sm' | 'md' | 'lg' = 'md', full = false): CSSProperties {
   // Boutons en pilule (direction « Midi ») : bords entièrement arrondis.
-  const dims = size === 'lg' ? { height: 60, padding: '0 32px', borderRadius: 999, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 16px', borderRadius: 999, fontSize: 14 } : { minHeight: 46, padding: '10px 22px', borderRadius: 999, fontSize: 15 }
+  const dims = size === 'lg' ? { height: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 14px', borderRadius: 8, fontSize: 14 } : { minHeight: 46, padding: '10px 20px', borderRadius: BAI.radiusBtn, fontSize: 15 }
   return {
     ...dims,
     ...BTN[variant],
@@ -277,7 +277,7 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
 export function Computed({ title = 'Calculé par Bailio', rows }: { title?: string; rows: Array<[ReactNode, ReactNode]> }) {
   return (
     <div style={{ background: BAI.night, borderRadius: 14, padding: '14px 18px 6px' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accent, paddingBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: BAI.accent, paddingBottom: 8 }}>{title}</div>
       {rows.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '9px 0', borderTop: `1px solid ${BAI.nightLine}`, fontSize: 14 }}>
           <span style={{ color: BAI.onDarkMuted }}>{k}</span>
@@ -293,7 +293,7 @@ export function Known({ title = 'Bailio sait déjà', items }: { title?: string;
   if (!items.length) return null
   return (
     <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {title ? <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>{title}</span> : null}
+      {title ? <span style={{ fontSize: 13, fontWeight: 700, color: BAI.accentInk }}>{title}</span> : null}
       {items.map((it, i) => (
         <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, lineHeight: 1.45 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BAI.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 2 }}>

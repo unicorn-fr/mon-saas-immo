@@ -29,9 +29,10 @@ import { Tarifs } from './pages/Tarifs'
 import Demo from './pages/Demo'
 import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
 import { APropos, SolutionPage } from './pages/Solutions'
+import { AvisPage, EspaceLocatairePublic } from './pages/Publiques'
 import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPiece, SimulateurPreavis, SimulateurRentabilite } from './pages/Simulateurs'
 import AvisTesteur from './pages/AvisTesteur'
-import { Accessibilite, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
+import { Accessibilite, Cgv, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
 
 
 type EspaceModule = typeof import('./pages/espace/index')
@@ -66,6 +67,8 @@ const ActeCaution = page('ActeCaution')
 const Contrat = page('Contrat')
 const Courriers = page('Courriers')
 const Situations = page('Situations')
+const Actualites = page('Actualites')
+const Prestataires = page('Prestataires')
 const Parcours = page('Parcours')
 const Annonce = page('Annonce')
 const Candidats = page('Candidats')
@@ -238,6 +241,8 @@ function Pages() {
               <Route path="/espace/baux/:id" element={<RequireAuth><Bail /></RequireAuth>} />
               <Route path="/espace/baux/:id/courriers" element={<RequireAuth><Courriers /></RequireAuth>} />
               <Route path="/espace/situations" element={<RequireAuth><Situations /></RequireAuth>} />
+              <Route path="/espace/actualites" element={<RequireAuth><Actualites /></RequireAuth>} />
+              <Route path="/espace/prestataires" element={<RequireAuth><Prestataires /></RequireAuth>} />
               <Route path="/espace/baux/:id/parcours/:kind" element={<RequireAuth><Parcours /></RequireAuth>} />
               <Route path="/espace/baux/:id/etat-des-lieux" element={<RequireAuth><EtatDesLieux /></RequireAuth>} />
               <Route path="/edl/:id" element={<RequireAuth><Edl /></RequireAuth>} />
@@ -294,6 +299,9 @@ function Pages() {
               <Route path="/bail/:slug" element={<SolutionPage kind="bail" />} />
               <Route path="/gestion-locative/:slug" element={<SolutionPage kind="profil" />} />
               <Route path="/a-propos" element={<APropos />} />
+              <Route path="/avis" element={<AvisPage />} />
+              <Route path="/espace-locataire" element={<EspaceLocatairePublic />} />
+              <Route path="/cgv" element={<Cgv />} />
               <Route path="/modeles" element={<ModelesList />} />
               <Route path="/modeles/:slug" element={<ModeleArticle />} />
               <Route path="/simulateurs/revision-loyer" element={<SimulateurRevision />} />

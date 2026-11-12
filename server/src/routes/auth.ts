@@ -17,6 +17,8 @@ const router = Router()
 const limiter = limitPerVisitor(15, 20)
 const LINK_MINUTES = 30
 
+import { isViewMode } from '../domain/viewMode.js'
+
 const emailSchema = z.object({ email: z.email('Email invalide').max(200).transform((e) => e.trim().toLowerCase()) })
 
 export function publicUser(u: User) {
@@ -31,6 +33,8 @@ export function publicUser(u: User) {
     notifyUrgent: u.notifyUrgent,
     // Pilotage réservé aux adresses de ADMIN_EMAILS (lien affiché dans « Mon compte »).
     admin: isAdmin(u.email),
+    // Vue choisie à la première connexion (null : pas encore choisie, Aujourd'hui pose la question).
+    viewMode: isViewMode(u.viewMode) ? u.viewMode : null,
   }
 }
 

@@ -2,36 +2,33 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
 /*
- * Logo (novembre 2026, pistes 2C + 6A) : une maison dont le toit est le coin replié d'une page de bail et dont la porte
- * est un trou de serrure ; puis « bailio » en Fraunces, le point du i remplacé par une serrure orange.
- * Construction sur une grille de 24 : marge 3, rayon d'angle 3, pente du toit 37° (celle du coin replié).
- * En couleurs sur fond clair ; `onDark` (maison blanche, serrure bleu nuit, nom blanc) sur un aplat sombre.
- * Jamais en couleurs sur un aplat de couleur. L'orange n'est porté que par le coin replié et la serrure.
+ * Logo, direction « Feuille et stylo » (novembre 2026, docs/design/direction-artistique.md) : une maison à l'encre aux
+ * angles doux dont la fenêtre ronde est le bleu « stylo », puis « bailio » en Instrument Sans, le point du i remplacé
+ * par la même fenêtre bleue.
+ * Construction sur une grille de 24 : marge 3, rayon d'angle 4, toit à 40°, fenêtre de diamètre 6 centrée à 13,5.
+ * En couleurs sur fond clair ; `onDark` (maison et nom clairs, fenêtre bleue) sur un aplat sombre.
+ * Jamais en couleurs sur un aplat de couleur.
  */
-const HOUSE = 'M3 10.2 11 4.2a1.6 1.6 0 0 1 2 0L21 10.2V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3Z'
-const FOLD = 'M12 3.6 21 10.2h-6.2A2.8 2.8 0 0 1 12 7.4Z'
-const DOOR = 'M12 13.13a1.805 1.805 0 0 1 1.0925 3.2395l.6175 3.23h-3.42l.6175-3.23A1.805 1.805 0 0 1 12 13.13Z'
-const KEYHOLE = 'M12 7.78a4.18 4.18 0 0 1 2.53 7.502l1.43 7.48h-7.92l1.43-7.48A4.18 4.18 0 0 1 12 7.78Z'
+const HOUSE = 'M3 11.4a2.6 2.6 0 0 1 .95-2.01l6.4-5.3a2.6 2.6 0 0 1 3.3 0l6.4 5.3A2.6 2.6 0 0 1 21 11.4V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z'
 
 export function LogoMark({ size = 28, onDark = false }: { size?: number; onDark?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden focusable="false" style={{ flexShrink: 0, display: 'block' }}>
-      <path d={HOUSE} fill={onDark ? BAI.surface : BAI.owner} />
-      <path d={FOLD} fill={BAI.accent} />
-      <path d={DOOR} fill={onDark ? BAI.night : BAI.surface} />
+      <path d={HOUSE} fill={onDark ? BAI.onDark : BAI.night} />
+      <circle cx="12" cy="13.5" r="3" fill={BAI.cta} />
     </svg>
   )
 }
 
-/** « bailio » : i sans point (ı) surmonté d'une petite serrure orange, à la taille du point. */
+/** « bailio » : i sans point (ı) surmonté de la fenêtre allumée. */
 function Wordmark() {
   return (
     <span aria-hidden style={{ whiteSpace: 'nowrap' }}>
       ba
       <span style={{ position: 'relative', display: 'inline-block' }}>
         ı
-        <svg viewBox="0 0 24 24" focusable="false" style={{ position: 'absolute', left: '50%', top: '-0.03em', width: '0.38em', height: '0.38em', transform: 'translateX(-50%)' }}>
-          <path d={KEYHOLE} fill={BAI.accent} />
+        <svg viewBox="0 0 10 10" focusable="false" style={{ position: 'absolute', left: '50%', top: '0.02em', width: '0.24em', height: '0.24em', transform: 'translateX(-50%)' }}>
+          <circle cx="5" cy="5" r="5" fill={BAI.cta} />
         </svg>
       </span>
       lio
@@ -43,19 +40,18 @@ export function Logo({ size = 28, onDark = false, to = '/' }: { size?: number; o
   const style = {
     textDecoration: 'none',
     fontFamily: BAI.fontDisplay,
-    fontVariationSettings: "'SOFT' 100",
     fontWeight: 600,
-    letterSpacing: '-0.025em',
+    letterSpacing: '-0.04em',
     fontSize: size,
-    color: onDark ? BAI.surface : BAI.ink,
+    color: onDark ? BAI.onDark : BAI.night,
     lineHeight: 1,
     display: 'inline-flex',
     alignItems: 'center',
-    gap: Math.round(size * 0.28),
+    gap: Math.round(size * 0.24),
   }
   const content = (
     <>
-      <LogoMark size={Math.round(size * 1.05)} onDark={onDark} />
+      <LogoMark size={Math.round(size * 1.1)} onDark={onDark} />
       <Wordmark />
     </>
   )

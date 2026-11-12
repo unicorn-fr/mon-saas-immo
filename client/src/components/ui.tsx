@@ -2,13 +2,12 @@ import { forwardRef, type CSSProperties, type InputHTMLAttributes, type ReactNod
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
-/** Titre en Fraunces : un mot ou une ligne peut passer en italique avec <em> (une fois par accroche). */
+/** Titre en Instrument Sans : la seconde moitié peut passer en gris avec <em> (une phrase à elle seule, une fois par écran). */
 export const display = (size: number | string, extra: CSSProperties = {}): CSSProperties => ({
   margin: 0,
   fontFamily: BAI.fontDisplay,
   fontWeight: 500,
-  fontVariationSettings: "'SOFT' 60",
-  letterSpacing: '-0.02em',
+  letterSpacing: '-0.032em',
   fontSize: size,
   lineHeight: 1.06,
   color: BAI.ink,
@@ -26,7 +25,7 @@ type Variant = 'primary' | 'dark' | 'outline' | 'light' | 'accent' | 'ghost'
 const variants: Record<Variant, CSSProperties> = {
   primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
-  outline: { background: 'transparent', color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
+  outline: { background: 'transparent', color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },
   light: { background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },
   accent: { background: BAI.accent, color: BAI.night, border: `1.5px solid ${BAI.accent}` },
   ghost: { background: 'transparent', color: BAI.owner, border: '1.5px solid transparent', padding: '0 4px' },
