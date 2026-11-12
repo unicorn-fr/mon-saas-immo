@@ -64,6 +64,8 @@ model User {
   notifyUrgent    Boolean   @default(true) // alertes urgentes (loyer en retard…)
   // Déclaration des revenus : où en est le propriétaire, par année (domain/taxGuide.ts, taxProgressSchema).
   taxProgress     Json      @default("{}")
+  // Vue du tableau de bord choisie à la première connexion (domain/viewMode.ts) : SIMPLE, PORTFOLIO, LARGE, AGENCY.
+  viewMode        String?
   createdAt       DateTime  @default(now())
 
   sessions      Session[]

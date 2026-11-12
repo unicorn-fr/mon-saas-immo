@@ -10,7 +10,10 @@ import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
 import { useAuth } from '../../lib/auth'
-import type { User } from '../../lib/types'
+import type { User, ViewMode } from '../../lib/types'
+import { suggestView, ViewQuestion, ViewSwitch } from '../../components/ViewPicker'
+import { getSpace } from '../../lib/shared'
+import { NewsCard } from './Nouveautes'
 
 /** « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé. Maquette « Aujourd'hui ». */
 export default function Aujourdhui() {
@@ -23,6 +26,8 @@ export default function Aujourdhui() {
 
 function TodayContent() {
   const { setTaskCount } = useSpace()
+  const { user } = useAuth()
+  const space = getSpace()
   const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
   // Trois actions à la fois : les plus urgentes d'abord, le reste sur demande (pas de longue liste à faire défiler).
   const [allTasks, setAllTasks] = useState(false)
@@ -37,9 +42,15 @@ function TodayContent() {
   if ((data.counts.signedLeases ?? data.counts.leases) === 0 && data.tasks.length === 0) return <FirstSteps name={data.user.firstName} counts={data.counts} />
 
   const first = data.user.firstName
+  // Vue selon la taille du patrimoine (components/ViewPicker.tsx) : question à la première connexion, puis sélecteur.
+  const view: ViewMode = user?.viewMode ?? suggestView(data.counts.properties)
+  const simple = view === 'SIMPLE'
+  const large = view === 'LARGE' || view === 'AGENCY'
+  const visibleTasks = allTasks ? data.tasks : data.tasks.slice(0, 3)
   return (
     <>
       <FollowUpBanner />
+      {user && !user.viewMode && !space ? <ViewQuestion properties={data.counts.properties} /> : null}
       <div className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span className="hide-md" style={{ fontSize: 15, color: BAI.inkSoft }}>
@@ -50,10 +61,15 @@ function TodayContent() {
             {data.tasks.length ? `${plural(data.tasks.length, 'action')} cette semaine, déjà préparée${data.tasks.length > 1 ? 's' : ''}.` : 'Rien à faire cette semaine.'}
           </span>
         </div>
-        <Btn variant="outline" to="/espace/situations">
-          Que se passe-t-il ?
-        </Btn>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {user?.viewMode && !space ? <ViewSwitch value={user.viewMode} /> : null}
+          <Btn variant="outline" to="/espace/situations">
+            Que se passe-t-il ?
+          </Btn>
+        </div>
       </div>
+
+      {large ? <PortfolioBar agency={view === 'AGENCY'} /> : null}
 
       <Tiles data={data} />
 
@@ -71,10 +87,15 @@ function TodayContent() {
           ) : null}
           {data.tasks.length ? (
             <>
-              {(allTasks ? data.tasks : data.tasks.slice(0, 3)).map((t, i) => <TaskCard key={t.id} task={t} onChange={reload} first={i === 0} />)}
-              {data.tasks.length > 3 ? (
+              {visibleTasks.map((t, i) => (
+                <div key={t.id} style={simple && i === 0 ? { border: `2px solid ${BAI.cta}`, borderRadius: BAI.radius + 2 } : undefined}>
+                  {simple && i === 0 ? <span style={{ display: 'block', padding: '10px 18px 0', fontSize: 14, fontWeight: 700, color: BAI.accentInk }}>À faire maintenant</span> : null}
+                  <TaskCard task={t} onChange={reload} first={i === 0} />
+                </div>
+              ))}
+              {data.tasks.length > visibleTasks.length || allTasks ? (
                 <Btn variant="outline" onClick={() => setAllTasks(!allTasks)}>
-                  {allTasks ? 'Voir moins' : `Voir ${data.tasks.length - 3 > 1 ? `les ${data.tasks.length - 3} autres actions` : 'l’autre action'}`}
+                  {allTasks ? 'Voir moins' : (() => { const rest = data.tasks.length - visibleTasks.length; return `Voir ${rest > 1 ? `les ${rest} autres actions` : 'l’autre action'}` })()}
                 </Btn>
               ) : null}
             </>
@@ -89,9 +110,10 @@ function TodayContent() {
         <aside className="today-side">
           <Shortcuts leaseId={data.singleLeaseId} />
           <Agenda items={data.upcoming} />
+          <NewsCard />
           <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
             {data.properties.length ? (
-              data.properties.map((p) => (
+              data.properties.slice(0, large ? 5 : undefined).map((p) => (
                 <Link key={p.id} to={`/espace/logements/${p.id}`} className="tap" style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15 }}>
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
                   <span style={{ color: toneColor(p.status.tone), fontWeight: 600, whiteSpace: 'nowrap' }}>{p.status.label}</span>
@@ -110,6 +132,31 @@ function TodayContent() {
 const fmtMoney = (c: number) => eurosCents(c).replace(',00 €', ' €')
 
 /** Chiffres du mois : une tuile par chiffre, chacune mène à la page qui va bien. */
+/** Vue « Patrimoine » ou « Gestion pour d'autres » : le patrimoine, les actions groupées et les exports d'abord. */
+function PortfolioBar({ agency }: { agency: boolean }) {
+  const links: Array<[string, string]> = [
+    ['/espace/patrimoine', 'Tableau de bord du patrimoine'],
+    ['/espace/actions', 'Actions groupées'],
+    ['/espace/argent', 'Export pour le comptable'],
+    ['/espace/structures', 'Structures et sociétés'],
+    ['/espace/compte/acces', agency ? 'Accès par propriétaire' : 'Accès partagés'],
+  ]
+  return (
+    <nav aria-label="Patrimoine" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {links.map(([to, label]) => (
+          <Link key={to} to={to} className="tap" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1.5px solid ${BAI.borderStrong}`, borderRadius: 999, padding: '10px 18px', fontWeight: 600, fontSize: 15 }}>
+            {label}
+          </Link>
+        ))}
+      </div>
+      {agency ? (
+        <span style={{ fontSize: 14, color: BAI.inkSoft }}>Mandats et relevés de gérance : pas encore dans Bailio. En attendant, chaque propriétaire vous donne un accès à son espace.</span>
+      ) : null}
+    </nav>
+  )
+}
+
 function Tiles({ data }: { data: TodayView }) {
   const s = data.stats
   const month = monthName(Number(s.month.slice(5)))
