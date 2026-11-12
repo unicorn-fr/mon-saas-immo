@@ -32,6 +32,9 @@ const PUBLIC_PAGES: [path: string, freq: string, priority: string][] = [
   ['/modeles', 'monthly', '0.7'],
   ...MODELES.map((m): [string, string, string] => [modelePath(m), 'monthly', '0.7']),
   ['/a-propos', 'monthly', '0.5'],
+  ['/avis', 'monthly', '0.5'],
+  ['/espace-locataire', 'monthly', '0.5'],
+  ['/cgv', 'yearly', '0.3'],
   ...SOLUTIONS.map((x): [string, string, string] => [solutionPath(x), 'monthly', '0.8']),
   ...SIMULATEURS.map((x): [string, string, string] => [x.path, 'monthly', '0.7']),
 ]
@@ -68,6 +71,9 @@ ${GUIDES.map((g) => `- [${g.title}](${SITE_URL}${guidePath(g)}): ${g.description
 - [Fonctionnalités](${SITE_URL}/fonctionnalites): ce que fait Bailio, avec des captures de l'application
 ${FEATURES.map((f) => `- [${f.name}](${SITE_URL}${featurePath(f.slug)}): ${f.description}`).join('\n')}
 - [À propos de Bailio](${SITE_URL}/a-propos): pourquoi Bailio existe, comment il est fait, qui l'a créé
+- [Avis des propriétaires](${SITE_URL}/avis): vrais avis seulement, mot pour mot, avec l'accord de leur auteur
+- [Espace locataire](${SITE_URL}/espace-locataire): ce que le locataire fait sans compte depuis le lien de son propriétaire
+- [Conditions générales de vente](${SITE_URL}/cgv)
 ${SOLUTIONS.map((x) => `- [${x.title}](${SITE_URL}${solutionPath(x)}): ${x.description}`).join('\n')}
 - [Modèles de lettres gratuits](${SITE_URL}/modeles): lettres du propriétaire à copier, règles vérifiées
 ${MODELES.map((m) => `- [${m.title}](${SITE_URL}${modelePath(m)}): ${m.description}`).join('\n')}
@@ -102,6 +108,9 @@ const PAGE_META: Record<string, { title: string; description: string }> = {
   ...Object.fromEntries(SIMULATEURS.map((x) => [x.path, { title: x.title, description: x.description }])),
   '/fonctionnalites': { title: 'Fonctionnalités de Bailio', description: 'Bail conforme signé en ligne, quittances automatiques, relances d’impayés, état des lieux sur téléphone, candidatures et déclaration d’impôts : tout Bailio en captures.' },
   ...Object.fromEntries(FEATURES.map((f) => [featurePath(f.slug), { title: f.title.replace(/[[\]]/g, ''), description: f.description }])),
+  '/avis': { title: 'Avis des propriétaires', description: 'Les avis des propriétaires qui utilisent Bailio : de vrais avis, recopiés mot pour mot, avec l’accord de leur auteur.' },
+  '/espace-locataire': { title: 'Espace locataire', description: 'Locataire d’un propriétaire qui utilise Bailio : déposez votre dossier, signez le bail, envoyez votre assurance et signalez une panne, sans créer de compte.' },
+  '/cgv': { title: 'Conditions générales de vente', description: 'Conditions générales de vente de Bailio : prix, paiement, résiliation en ligne, rétractation de 14 jours, médiation.' },
   '/a-propos': { title: 'À propos de Bailio', description: 'Bailio aide les propriétaires bailleurs particuliers à faire un bail conforme et à suivre leur location. Pourquoi, comment, et qui est derrière.' },
   ...Object.fromEntries(SOLUTIONS.map((x) => [solutionPath(x), { title: x.title, description: x.description }])),
   '/guides': { title: 'Guides du propriétaire bailleur', description: 'Guides gratuits pour les propriétaires bailleurs : bail, dépôt de garantie, congé, révision du loyer, DPE, quittances. Règles vérifiées sur les sources officielles.' },

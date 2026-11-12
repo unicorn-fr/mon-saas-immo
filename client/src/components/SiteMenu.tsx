@@ -105,6 +105,8 @@ export const SECTIONS: Section[] = [
         items: [
           { to: '/guides', title: 'Guides du propriétaire', text: 'Les règles, vérifiées et sourcées', icon: 'book' },
           { to: '/a-propos', title: 'À propos de Bailio', text: 'Comment Bailio est fait', icon: 'signpost' },
+          { to: '/avis', title: 'Avis des propriétaires', text: 'Vrais avis, mot pour mot', icon: 'book' },
+          { to: '/espace-locataire', title: 'Espace locataire', text: 'Sans compte, depuis son lien', icon: 'signpost' },
         ],
       },
       {
