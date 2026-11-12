@@ -18,7 +18,7 @@ interface ESignStatus {
  * Signature en ligne du bail : lancement, suivi de chaque signataire, relance.
  * Le propriétaire signe lui aussi par le même parcours (code reçu par email).
  */
-/** `secondary` : une autre action principale est à faire avant (relire le bail) ; le bouton n'est pas orange. */
+/** `secondary` : une autre action principale est à faire avant (relire le bail) ; le bouton n'est pas jaune. */
 export function ESignCard({ leaseId, ready, amendment = false, onChange, secondary = false }: { leaseId: string; ready: boolean; amendment?: boolean; onChange: () => void; secondary?: boolean }) {
   const { data, reload } = useLoad(() => api<ESignStatus | null>(`/leases/${leaseId}/esign`), [leaseId])
   const toast = useToast()

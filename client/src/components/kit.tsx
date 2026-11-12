@@ -277,7 +277,7 @@ export function Callout({ tone = 'info', title, children }: { tone?: keyof typeo
 export function Computed({ title = 'Calculé par Bailio', rows }: { title?: string; rows: Array<[ReactNode, ReactNode]> }) {
   return (
     <div style={{ background: BAI.night, borderRadius: 14, padding: '14px 18px 6px' }}>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accent, paddingBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: BAI.accent, paddingBottom: 8 }}>{title}</div>
       {rows.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '9px 0', borderTop: `1px solid ${BAI.nightLine}`, fontSize: 14 }}>
           <span style={{ color: BAI.onDarkMuted }}>{k}</span>
@@ -293,7 +293,7 @@ export function Known({ title = 'Bailio sait déjà', items }: { title?: string;
   if (!items.length) return null
   return (
     <div style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {title ? <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>{title}</span> : null}
+      {title ? <span style={{ fontSize: 13, fontWeight: 700, color: BAI.accentInk }}>{title}</span> : null}
       {items.map((it, i) => (
         <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 15, lineHeight: 1.45 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BAI.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flexShrink: 0, marginTop: 2 }}>

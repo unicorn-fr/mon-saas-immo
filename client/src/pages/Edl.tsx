@@ -137,7 +137,7 @@ function Flow({ inv }: { inv: InventoryView }) {
         {screen.s === 'start' ? (
           <Page action={<Btn size="lg" full onClick={() => go({ s: 'meters' })}>Commencer</Btn>}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: BAI.accentInk }}>
                 {exit ? 'Sortie' : 'Entrée'}
                 {data.date ? ` · ${dateFr(data.date)}` : ''}
               </span>
@@ -501,7 +501,7 @@ function Complements({ invId, items, onDecided }: { invId: string; items: Comple
     <>
       {pending ? (
         <Box gap={12}>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: BAI.accentInk }}>Demande de votre locataire</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: BAI.accentInk }}>Demande de votre locataire</span>
           <span style={{ fontSize: 15, fontWeight: 700 }}>
             {pending.heating ? 'Compléter le chauffage' : 'Compléter l’état des lieux'}, le {dateFr(pending.at.slice(0, 10))}
           </span>

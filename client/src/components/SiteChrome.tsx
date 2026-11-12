@@ -246,8 +246,6 @@ function PageAside({
     margin: "0 0 12px",
     fontSize: 13,
     fontWeight: 700,
-    letterSpacing: ".06em",
-    textTransform: "uppercase",
     color: BAI.owner,
   } as const;
   return (

@@ -1,89 +1,117 @@
-# Direction artistique « Midi » (octobre 2026)
+# Direction artistique « Maison habitée » (novembre 2026)
+
+Remplace la direction « Midi » (octobre 2026 : bleu, orange, Fraunces et Figtree).
 
 ## Pour qui, pour quoi
 
-Bailio sert le **propriétaire bailleur particulier** qui loue lui-même un, deux ou dix logements, souvent après 45 ans, souvent sans connaissance juridique. Il veut un bail juste, des papiers en ordre et ne rien oublier. Il n'y a pas d'espace locataire.
+Bailio sert le **propriétaire bailleur particulier** qui loue lui-même un, deux ou trente logements, souvent après 45 ans, souvent sans connaissance juridique. Il ne lit pas : il survole. Il veut un bail juste, des papiers en ordre et ne rien oublier.
 
-Ce qu'il doit ressentir : **c'est sérieux, c'est clair, c'est fait pour moi.** Ni la froideur d'un logiciel de gestion, ni le clinquant d'une start-up.
+Ce qu'il doit ressentir : **c'est sérieux, c'est chaleureux, quelqu'un s'occupe de moi.** Ni la froideur d'un logiciel de gestion, ni le clinquant d'une start-up, ni l'esthétique générique des sites générés (fond crème, serif avec un mot en italique, étiquettes en capitales, cartes toutes pareilles).
 
-## L'idée
+## L'idée : la fenêtre allumée
 
-> Sur Bailio, **le coin replié d'une page de bail** devient **le module de toutes les compositions**.
+Une location réussie, c'est une maison où quelqu'un vit bien, et un propriétaire tranquille. Le signe de Bailio est **la fenêtre allumée** : un rond jaune soleil dans une maison vert forêt.
 
-Le bail est la feuille autour de laquelle tout tourne. Chaque bloc important (accroche, fiche calculée, ticket, offre) est une page : grands coins arrondis, un coin replié en haut à droite. C'est la signature visuelle de Bailio, présente dans le logo, sur l'accueil et dans le favicon.
+On le retrouve dans le logo, au point du i, sur le bouton de l'action principale (seul élément jaune de l'écran) et sur ce qui vient d'arriver de bon (un loyer reçu, une quittance partie). Sur l'accueil, l'immeuble s'allume fenêtre par fenêtre quand une tâche se règle.
 
-Le décor vient de Montpellier, ville de Bailio : les photos sont celles de la ville (fournies par l'éditeur).
+On garde de la direction précédente ce qui était propre à Bailio : **le coin replié de la page de bail** (`.fold`) sur les blocs importants, et les vraies photos de Montpellier.
 
-## Ce que nous avons pris d'une grande charte de l'immobilier (et ce que nous n'avons pas pris)
+## Couleurs (`client/src/constants/bailio-tokens.ts`)
 
-Repris comme **principes** :
-- fond blanc dominant, beaucoup d'air, aplats de couleur unie, aucun dégradé ni ombre lourde ;
-- une couleur signature foncée pour l'action, un accent vif rare, plusieurs aplats pour varier les sections ;
-- un système de modules : photo dans un module arrondi, bloc de couleur posé **en bas** par-dessus, jamais en haut ; sur téléphone, le bloc passe sous la photo, collé aux bords ;
-- un duo de polices : une linéale pour tout, un serif pour les accroches courtes, avec un mot ou une ligne en italique ;
-- boutons en pilule, une seule action principale par écran ;
-- pictos filaires, trait fin, bouts arrondis ; coche dans une pastille à la place des puces ;
-- règles de contraste strictes et logo en couleurs seulement sur fond clair.
-
-**Non repris** : aucune de ses couleurs, ni ses polices, ni sa forme (le biais du toit de son logo), ni ses capitales espacées sur les boutons, ni son logo, son nom ou son slogan.
-
-## Couleurs : palette « Confiance et élan » (`client/src/constants/bailio-tokens.ts`)
-
-### Pourquoi ces couleurs (ce que dit la recherche)
-
-- **La couleur pèse dans le premier jugement.** Selon la revue de Singh (*Management Decision*, 2006), on se fait une idée d'un produit en 90 secondes et la couleur compte pour 62 à 90 % de cette impression (chiffre repris d'études antérieures, à prendre comme un ordre de grandeur).
-- **Bleu = compétence.** Labrecque et Milne (*Journal of the Academy of Marketing Science*, 2012, « Exciting red and competent blue ») associent le bleu à la compétence et le rouge à l'excitation. Pour un outil qui rédige un bail et gère de l'argent, la compétence est le premier trait à montrer.
-- **Sobre = confiance.** Une étude sur 1 995 personnes et des sites de banque et d'assurance a trouvé que les couleurs ternes inspirent plus confiance que les couleurs vives. D'où un bleu profond et peu saturé pour la marque, et un fond gris bleuté très clair plutôt que du blanc éclatant partout.
-- **Le bouton doit se détacher, pas être « de la bonne couleur ».** Le célèbre test du bouton rouge (+21 %) s'explique surtout par l'effet d'isolement (Von Restorff) : le bouton était la seule chose rouge d'une page verte. Ce qui fait cliquer, c'est le contraste avec le reste de la page. Sur un site bleu, l'action principale est donc **orange** (couleur complémentaire du bleu, associée à l'enthousiasme et à la chaleur), et c'est la **seule** chose orange de l'écran.
-- **Vert = c'est fait.** Code universel du « validé », gardé pour les étapes terminées.
-- **Rouge = erreur, et rien d'autre.**
-
-Limites : la plupart des affirmations « telle couleur fait vendre » des blogs ne s'appuient sur aucune étude. Seuls le contraste du bouton et la sobriété pour la confiance reposent sur des données sérieuses. À terme, mesurer les clics sur « Créer mon bail » avec la mesure d'audience maison.
-
-Sources : [Singh, 2006](https://www.emeraldinsight.com/doi/abs/10.1108/00251740610673332) ; [Labrecque et Milne, 2012](https://colab.ws/articles/10.1007/s11747-010-0245-y) ; [couleur et confiance en banque et assurance](https://www.asiainsurancereview.com/Magazine/ReadMagazineArticle?aid=39963) ; [effet d'isolement et couleur du bouton](https://atticusli.com/blog/posts/cta-button-ab-tests-why-button-color-tests-are-worthless/) ; [contraste plutôt que teinte](https://www.clickguard.com/blog/call-to-action-colors-for-landing-pages/).
-
-### La palette
+Les noms des clés n'ont pas changé (`owner` = marque, `cta` = action principale, `night` = aplat sombre) : toute l'application a changé d'un coup.
 
 | Rôle | Token | Valeur | Usage |
 |---|---|---|---|
-| Fond de page | `bg` | `#f5f7fa` gris bleuté | espace propriétaire, tunnel |
-| Surface | `surface` | `#ffffff` | cartes, accueil, pages publiques |
-| Encre | `ink` | `#16233f` | texte, titres |
-| Marque | `owner` | `#1f4396` bleu confiance | liens, sélection, pastilles, progression, grands blocs |
-| Action | `cta` | `#ff8a3d` orange, texte `ctaInk` `#0f1f3d` | **le** bouton principal, un par écran |
-| Nuit | `night` | `#0f1f3d` | menu latéral, blocs sombres, pied de page |
-| Accent | `accent` / `accentInk` / `accentSoft` | `#ff8a3d` / `#c2410c` / `#ffb27a` | mot en italique : orange sur fond sombre, orange foncé sur fond clair, orange clair sur bloc bleu |
-| Validé | `green` | `#1f7a4a` | |
-| Aplats | `sky` `#dbe7fb`, `peach` `#fde4cf` | | sections et cartes, texte `ink` ou `owner` |
+| Fond « brume » | `bg` | `#eef3ef` | espace propriétaire, tunnel |
+| Papier | `surface` | `#ffffff` | cartes, accueil, pages publiques |
+| Encre | `ink` | `#13241f` | texte, titres |
+| Forêt | `night` | `#163c34` | menu latéral, blocs sombres, pied de page, logo, texte des boutons soleil |
+| Sauge (marque) | `owner` | `#2f6a58` | liens, sélection, pastilles, progression |
+| Soleil (action) | `cta` / `accent` | `#ffc444`, texte `ctaInk` `#163c34` | **le** bouton principal, un par écran ; mot souligné au feutre ; accent sur fond forêt |
+| Ambre | `accentInk` | `#8a5a00` | accent en texte sur fond clair |
+| Validé | `green` | `#1e7a4f` | |
+| Aplats | `sky` « mousse » `#dcebdf`, `peach` `#ffe3d3` | | sections et cartes, texte `ink` |
+| Corail | `coral` / `coralInk` | `#e8664a` / `#b63e25` | illustrations et personnes seulement ; `coralInk` en texte |
 | Erreur | `error` | `#c11f2b` | uniquement les erreurs |
 
-Contrastes mesurés (WCAG 2.1) : encre sur fond 14,5:1 ; blanc sur bleu 9,1:1 ; bleu nuit sur orange 7:1 ; bleu sur fond 8,5:1 ; orange foncé sur blanc 5,2:1 ; orange sur nuit 7:1 ; orange clair sur bleu 5,2:1 ; vert sur blanc 5,3:1 ; `inkSoft` sur blanc 5,9:1 ; bord des champs 3,5:1.
+Pourquoi :
+- **Vert profond = calme et durable.** C'est la couleur des volets et des jardins, et elle est rare chez les logiciels de gestion, qui sont presque tous bleus. Un vert sombre et peu saturé garde le sérieux qu'apportait le bleu ; les couleurs ternes inspirent plus confiance que les vives (étude sur des sites de banque et d'assurance citée dans la version précédente).
+- **Jaune soleil = chaleur, et un bouton qui se détache.** Ce qui fait cliquer, c'est le contraste du bouton avec le reste de la page (effet d'isolement), pas sa teinte. Sur une page verte et blanche, le seul jaune attire l'œil, et le texte forêt dessus reste très lisible (7,6:1).
+- **Pêche et corail = l'humain.** Ils réchauffent les illustrations et les personnes, sans jamais servir pour une action.
 
-Interdits : texte blanc sur orange (2,4:1, illisible) ; deux boutons orange sur le même écran ; logo en couleurs sur un aplat de couleur.
+Contrastes mesurés (WCAG 2.1) :
 
-## Typographies (servies par le site, aucune requête à Google)
+| Couple | Contraste |
+|---|---|
+| Encre sur blanc | 16,2:1 |
+| Encre sur brume | 14,4:1 |
+| `inkSoft` sur blanc | 7,1:1 |
+| `inkSoft` sur brume | 6,3:1 |
+| Sauge sur blanc | 6,3:1 |
+| Sauge sur brume | 5,6:1 |
+| Blanc sur sauge | 6,3:1 |
+| Forêt sur soleil | 7,6:1 |
+| Soleil sur forêt | 7,6:1 |
+| Ambre sur blanc | 5,9:1 |
+| Ambre sur `accentLight` | 5,3:1 |
+| `onDark` sur forêt | 9,7:1 |
+| `onDarkMuted` sur forêt | 7,2:1 |
+| Vert validé sur blanc | 5,3:1 |
+| Corail foncé sur blanc | 5,7:1 |
+| Sauge sur mousse | 5,1:1 |
+| Encre sur soleil (mot souligné) | 10,2:1 |
+| Bord des champs | 3,5:1 |
 
-- **Figtree** 400 à 700 : texte, boutons, champs, intertitres. Lisible, ronde, chaleureuse. 16 px minimum pour le texte courant.
-- **Fraunces** (axe « SOFT » pour des empattements arrondis) 500 : titres, accroches courtes, chiffres clés (`display()`, `components/ui.tsx`). Jamais pour le texte courant. Un mot ou une ligne d'une accroche peut passer en italique avec `<em>` (orange foncé sur fond clair, orange sur fond sombre, orange clair sur bloc bleu), une fois par écran au plus.
+Interdits :
+- texte blanc sur jaune ;
+- jaune en texte sur fond clair (utiliser `accentInk`) ;
+- deux boutons jaunes sur le même écran ;
+- logo en couleurs sur un aplat de couleur ;
+- dégradés et ombres lourdes.
+
+## Typographies (servies par le site, `@fontsource-variable`, aucune requête à Google)
+
+- **Bricolage Grotesque** (variable, 650 à 800) : titres, chiffres clés, nom de la marque (`display()`, `components/ui.tsx`). Une grotesque avec du caractère : ses courbes ont un peu de main, sans fantaisie. Approche serrée (-0,03 em) pour les grands titres.
+- **Atkinson Hyperlegible Next** (variable) : tout le reste. Conçue par le Braille Institute pour que chaque lettre se distingue (I, l, 1 ; O, 0), elle aide les lecteurs pressés et les yeux fatigués. 16 px minimum.
+- **Mot-clé** : plus d'italique. `<em>` dans un titre souligne le mot d'un trait de feutre soleil (`styles.css`), une fois par écran au plus ; sur fond forêt, le mot passe en soleil.
+
+## Écrire pour des gens qui survolent
+
+- Dans les zones clés (titres, boutons, débuts de section), moins de 15 mots par phrase.
+- Un verbe d'action, un chiffre concret.
+- Pas d'étiquette en capitales au-dessus des titres.
+- Pas de numérotation 01, 02 sauf pour une vraie suite d'étapes.
+- Pas de « A · B » ni de flèche décorative.
 
 ## Formes
 
 - Cartes : rayon 24 px (`BAI.radius`) ; champs : 60 px de haut, rayon 14 px ; boutons et étiquettes : pilule.
-- Module « page de bail » : classes `.fold` (coin replié de 28 px), `.fold--lg` (grand coin), `.fold--ear` (revers du pli), `.fold--left` (coin gauche) dans `client/src/styles.css`. Un à trois modules par écran.
+- Module « page de bail » : `.fold`, `.fold--lg`, `.fold--ear`, `.fold--left` dans `client/src/styles.css`. Un à trois modules par écran.
+- Toutes les cartes ne se ressemblent pas : alterner aplats, photos, mini-écrans réels et listes.
+
+## Mouvement
+
+Peu d'animations, mais orchestrées, et toutes coupées si l'appareil demande moins d'animations :
+- fenêtres qui s'allument (accueil) ;
+- nombres qui défilent (`CountUp`) ;
+- écrans réels joués avec un curseur (`ProductTour`) ;
+- apparition `panel-in` d'un panneau.
+
+Jamais d'animation sur le titre principal (il doit s'afficher tout de suite) ni de fondu identique sur chaque section.
 
 ## Logo
 
-`components/Logo.tsx` (novembre 2026) : une maison dont le toit est le coin replié d'une page de bail (revers orange) et dont la porte est un trou de serrure, puis « bailio » en Fraunces demi-gras, le point du i remplacé par une petite serrure orange. Construction sur une grille de 24 unités : marge 3, un seul rayon d'angle (3), une seule pente de toit (37°, celle du coin replié). L'orange n'est porté que par le coin replié et la serrure, toujours sur un aplat (3,9:1 sur le bleu Bailio, 7:1 sur le bleu nuit), jamais seul sur blanc. Version horizontale partout ; empilée (maison au-dessus du nom) pour les réseaux et les fins de vidéo. En couleurs sur fond clair, en blanc (`onDark`, serrure bleu nuit) sur un aplat sombre. Favicon `client/public/favicon.svg`, icône de téléphone `client/public/apple-touch-icon.png` (maison blanche sur bleu nuit). Lisible dès 16 px (maison et coin orange), serrure lisible dès 32 px. Marge libre autour : la hauteur d'une capitale.
+`components/Logo.tsx` (novembre 2026) :
+- **Dessin :** une maison vert forêt aux angles doux (rayon 4 sur une grille de 24, toit à 40°) avec une fenêtre ronde allumée, jaune soleil (diamètre 6, centrée à 13,5). Puis « bailio » en Bricolage Grotesque gras, minuscules, le point du i remplacé par la même fenêtre allumée.
+- **Couleurs :** en couleurs sur fond clair ; `onDark` (maison et nom brume, fenêtre soleil) sur un aplat forêt.
+- **Fichiers :** favicon `client/public/favicon.svg`, `favicon.ico`, `favicon-96.png`, icône de téléphone `apple-touch-icon.png` (maison sur fond brume).
+- **Taille :** lisible dès 16 px.
+- **Marge libre :** la hauteur d'une capitale.
 
 ## Photos
 
-Photos réelles de Montpellier (`client/public/accueil/`, `credits.json`). Aucun visuel créé par IA. À trouver pour aller plus loin (libres de droits, sans pose de banque d'images) :
-- un propriétaire qui remet les clés à un locataire, sur le pas d'une porte du centre ancien ;
-- des persiennes vertes ou bleues sur une façade de pierre, en plan serré ;
-- une table de cuisine avec un bail papier, des clés et un téléphone ;
-- un petit immeuble de village du Midi, ciel bleu (pour varier au-delà de Montpellier) ;
-- un garage ou un box fermé, rue calme (pour l'onglet « Garage »).
+Photos réelles de Montpellier (`client/public/accueil/`, `credits.json`). Aucun visuel créé par IA. Les écrans montrés sont de vraies captures d'un compte d'exemple (`client/public/fonctionnalites/`), à refaire quand l'application change.
 
 ## Hors de cette refonte
 
-Les PDF (bail, quittances, courriers) gardent leur mise en page : ce sont des documents juridiques, leur présentation suit le contrat type.
+Les PDF (bail, quittances, courriers) gardent leur mise en page : ce sont des documents juridiques, leur présentation suit le contrat type. Les emails prennent les nouvelles couleurs (`server/src/lib/email.ts`).

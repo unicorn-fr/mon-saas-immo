@@ -149,7 +149,7 @@ function MobileHeader() {
 
 /**
  * Barre du bas (téléphone) : barre claire, cinq onglets de même construction (icône puis libellé). L'onglet actif
- * prend une pastille de couleur douce derrière son icône ; « Ajouter », l'action principale, est la seule en orange.
+ * prend une pastille de couleur douce derrière son icône ; « Ajouter », l'action principale, est la seule en jaune.
  */
 const TABS: Array<{ to: string; label: string; end?: boolean; icon: TabName }> = [
   { to: '/espace', label: 'Aujourd’hui', end: true, icon: 'today' },
