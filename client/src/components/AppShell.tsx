@@ -92,36 +92,38 @@ function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; o
   const { user } = useAuth()
   const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || ''
   return (
-    <nav aria-label="Navigation principale" className="sidebar" style={{ width: 248, flexShrink: 0, background: BAI.night, display: 'flex', flexDirection: 'column', gap: 32, padding: '32px 20px', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box' }}>
-      <div style={{ padding: '0 10px' }}>
-        <Logo size={30} onDark to="/espace" />
+    <nav aria-label="Navigation principale" className="sidebar" style={{ width: 256, flexShrink: 0, background: BAI.surface, borderRight: `1px solid ${BAI.border}`, display: 'flex', flexDirection: 'column', gap: 24, padding: '24px 16px', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box' }}>
+      <div style={{ padding: '0 8px' }}>
+        <Logo size={28} to="/espace" />
       </div>
-      <button type="button" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 48, borderRadius: 999, background: BAI.surface, color: BAI.night, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
+      <button type="button" className="side-add" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, borderRadius: BAI.radiusBtn, background: BAI.night, color: BAI.surface, border: 'none', fontFamily: 'inherit', fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>
         <Plus />
         Ajouter
       </button>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {NAV.map((n) => (
           <NavLink
             key={n.to}
             to={n.to}
             end={n.end}
-            style={({ isActive }) => ({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 999, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.nightActive : 'transparent', color: isActive ? BAI.surface : BAI.onDarkNav })}
+            className="side-link"
+            style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, textDecoration: 'none', fontSize: 15, fontWeight: isActive ? 600 : 500, background: isActive ? BAI.ownerLight : 'transparent', color: isActive ? BAI.owner : BAI.inkMid })}
           >
-            <span>{n.label}</span>
-            {n.end && taskCount ? <span style={{ background: BAI.accent, color: BAI.night, fontSize: 13, fontWeight: 700, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
+            <n.icon size={19} />
+            <span style={{ flex: 1 }}>{n.label}</span>
+            {n.end && taskCount ? <span style={{ background: BAI.owner, color: BAI.surface, fontSize: 12.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999 }}>{taskCount}</span> : null}
           </NavLink>
         ))}
       </div>
       <div style={{ flexGrow: 1 }} />
-      <button type="button" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', borderRadius: 999, background: 'transparent', border: `1px solid ${BAI.nightLine}`, color: BAI.onDarkNav, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
+      <button type="button" className="side-link" onClick={onFeedback} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderRadius: 10, background: 'transparent', border: `1px solid ${BAI.border}`, color: BAI.inkMid, fontFamily: 'inherit', fontSize: 15, fontWeight: 500, cursor: 'pointer', textAlign: 'left' }}>
         Votre avis
       </button>
-      <Link to="/espace/compte" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 10px 0', borderTop: `1px solid ${BAI.nightSoft}`, textDecoration: 'none' }}>
-        <span style={{ width: 40, height: 40, borderRadius: 20, background: BAI.nightSoft, color: BAI.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
+      <Link to="/espace/compte" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 8px 0', borderTop: `1px solid ${BAI.border}`, textDecoration: 'none' }}>
+        <span style={{ width: 38, height: 38, borderRadius: 19, background: BAI.ownerLight, color: BAI.owner, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 14, flexShrink: 0 }}>{initialsOf(name)}</span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ color: BAI.surface, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
-          <span style={{ color: BAI.onDarkMuted, fontSize: 13 }}>Mon compte</span>
+          <span style={{ color: BAI.ink, fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+          <span style={{ color: BAI.inkSoft, fontSize: 13 }}>Mon compte</span>
         </span>
       </Link>
     </nav>

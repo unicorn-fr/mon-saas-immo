@@ -196,7 +196,7 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* « Aujourd'hui » : tuiles du mois, puis actions à gauche et raccourcis + agenda à droite dès 1024 px. */
-.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
 .today-grid { display: flex; flex-direction: column; gap: 24px; }
 .today-main { display: flex; flex-direction: column; min-width: 0; }
 .today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
@@ -207,3 +207,7 @@ button:not(:disabled):active { transform: scale(.98); }
 @media (max-width: 339px) {
   .today-tiles { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Menu latéral clair de l'espace : survol discret */
+.side-link:not(.active):hover { background: #f4f4f4 !important; }
+.side-add:hover { background: #2e2e2e !important; }

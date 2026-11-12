@@ -13,6 +13,8 @@ Plan : `PLAN.md`. Rien n'est envoyé sur GitHub ni mis en ligne sans l'accord d'
 | L6 Fonctionnalités en plus | Fait | Fil d'actualité, prestataires, aide au départ du locataire ; emprunt déjà relié à la rentabilité |
 | Captures et vidéo | Fait | `marketing/captures/fonctionnalites.mjs` refait les captures ; vidéo rendue à nouveau |
 | Revue finale | Fait | Étiquette au-dessus du titre de `/fonctionnalites` retirée |
+| Direction « Feuille et stylo » | Fait | « Maison habitée » refusée par Enzo ; palette `white-link-blue` et Instrument Sans de la skill taste, choisies par Enzo ; vrai produit en haut de l'accueil |
+| Habillage de l'espace | Fait | Menu latéral clair à icônes, tuiles à pastilles ; captures et vidéo refaites |
 
 ## Vérifications
 

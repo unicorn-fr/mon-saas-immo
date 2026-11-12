@@ -4,7 +4,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
 import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
-import { Camera, Check, Euro, Home, Mail, Pencil, Plus, Upload } from '../../components/Icons'
+import { Camera, Check, Euro, Home, Mail, Pencil, People, Plus, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
 import { api } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
@@ -176,10 +176,15 @@ function Tiles({ data }: { data: TodayView }) {
   return (
     <nav aria-label="Chiffres du mois" className="today-tiles">
       {tiles.map((t) => (
-        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 18, padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-          <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.label}</span>
-          <span style={{ fontSize: 'clamp(19px, 2.4vw, 24px)', fontWeight: 700, color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
-          {t.sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.sub}</span> : null}
+        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
+          <span aria-hidden style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.tone === 'error' ? BAI.errorLight : t.tone === 'green' ? BAI.greenLight : BAI.ownerLight, color: t.tone === 'error' ? BAI.error : t.tone === 'green' ? BAI.green : BAI.owner }}>
+            {t.key === 'candidates' ? <People size={20} /> : t.key === 'deposit' ? <Home size={20} /> : <Euro size={20} />}
+          </span>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.label}</span>
+            <span style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 600, letterSpacing: '-0.02em', color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
+            {t.sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.sub}</span> : null}
+          </span>
         </Link>
       ))}
     </nav>

@@ -138,12 +138,12 @@ function Check() {
 
 /** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
 const TOUR: TourStep[] = [
-  { id: 'decrire', tab: 'Décrire', img: 'tunnel', path: 'bailio.fr/commencer', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5', spot: { x: 37.9, y: 28.3, w: 50, h: 26.1, label: 'Une question à la fois : Bailio remplit le reste' } },
-  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 21.1, y: 8.5, w: 40, h: 11, label: 'Le contrat type officiel, signé en ligne' } },
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 21.1, y: 36.8, w: 46.4, h: 22.2, label: 'Un loyer en retard : la relance est déjà rédigée' } },
-  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 22.8, y: 66.2, w: 43.5, h: 11, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
-  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 21.1, y: 13.3, w: 50.4, h: 39.7, label: 'Classés sur les ressources, la garantie et les pièces' } },
-  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 21.1, y: 42.8, w: 75, h: 16.9, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
+  { id: 'decrire', tab: 'Décrire', img: 'tunnel', path: 'bailio.fr/commencer', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5', spot: { x: 37.9, y: 28.3, w: 50, h: 25.6, label: 'Une question à la fois : Bailio remplit le reste' } },
+  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 21.7, y: 8.5, w: 40, h: 11, label: 'Le contrat type officiel, signé en ligne' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 21.7, y: 38.7, w: 45.8, h: 22.1, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 23.4, y: 65.7, w: 42.9, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
+  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 21.7, y: 13.3, w: 49.9, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' } },
+  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 21.7, y: 42.6, w: 74.4, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
 ]
 
 /** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */

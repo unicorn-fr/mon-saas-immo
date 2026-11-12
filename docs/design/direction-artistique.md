@@ -18,7 +18,7 @@ niveau visé est celui de figma.com et x.ai (skill taste) : on dit ce que c'est,
 | Fond de l'espace | `bg` | `#f4f4f4` |
 | Encre | `ink` | `#111111` |
 | Texte secondaire | `inkSoft` | `#5f5f5f` |
-| Aplat sombre | `night` | `#111111` (menu latéral, bande inversée, pied de page) |
+| Aplat sombre | `night` | `#111111` (bande inversée, pied de page, bouton « Ajouter ») |
 | Bleu stylo | `owner`, `cta`, `accentInk` | `#1a4be0`, texte blanc dessus ; survol `#143bb3` |
 | Bleu sur fond sombre | `accent` | `#8fb0ff` |
 | Payé | `green` | `#1a7f45` |
@@ -68,6 +68,12 @@ Sur un logiciel, la skill demande de montrer le produit lui-même, jamais une il
 - un fil de ce que Bailio vient de faire, une ligne de plus toutes les 2,8 s, dit « Exemple ».
 
 Le titre nomme la catégorie et l'acheteur, puis un fait concret (le prix) sur le premier écran.
+
+## L'espace du propriétaire
+
+- **Menu latéral clair** (`components/AppShell.tsx`) : fond blanc, trait gris à droite, une icône par entrée. L'entrée en cours est sur fond bleu très pâle avec un texte bleu. Le bouton « Ajouter » est noir.
+- **Tuiles du mois** : une pastille à icône par chiffre, bleue, verte si tout est à jour, rouge pour un retard.
+- **Aplat sombre** : réservé au pied de page public et aux bandes inversées. Il ne sert plus au menu.
 
 ## Mouvement
 
