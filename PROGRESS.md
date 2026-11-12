@@ -20,7 +20,7 @@ Plan : `PLAN.md`. Rien n'est envoyé sur GitHub ni mis en ligne sans l'accord d'
 
 - Tests unitaires : serveur 240, site 32, tous verts. Types : OK.
 - Parcours dans le navigateur relancés : 01, 08, 12, 16 (accessibilité), 35 (garage), 45, 46, 47, 51, 52. Tous verts après correction.
-- Pas relancée : la suite complète des 53 parcours (à faire avant tout envoi).
+- Suite complète des parcours relancée le 12 novembre : 101 tests, 100 verts après correction du vert « payé », 1 ignoré par le test lui-même.
 
 ## Décisions en attente (Enzo)
 

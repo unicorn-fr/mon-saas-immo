@@ -54,7 +54,7 @@ export const BAI = {
   accentLight: '#eef2fe',
   accentSoft: '#c9d7fc',
   // Vert « payé »
-  green: '#1a7f45',
+  green: '#17753f',
   greenLight: '#e7f5ec',
   greenOnDark: '#8fd6a9',
   greenDarkBg: '#173a26',

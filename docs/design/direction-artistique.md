@@ -21,7 +21,7 @@ niveau visé est celui de figma.com et x.ai (skill taste) : on dit ce que c'est,
 | Aplat sombre | `night` | `#111111` (bande inversée, pied de page, bouton « Ajouter ») |
 | Bleu stylo | `owner`, `cta`, `accentInk` | `#1a4be0`, texte blanc dessus ; survol `#143bb3` |
 | Bleu sur fond sombre | `accent` | `#8fb0ff` |
-| Payé | `green` | `#1a7f45` |
+| Payé | `green` | `#17753f` |
 | Erreur | `error` | `#c11f2b` |
 | Bords | `border`, `borderStrong` | `#e4e4e4`, `#8a8a8a` (champs, 3,45:1) |
 
@@ -35,7 +35,8 @@ Contrastes mesurés (WCAG 2.1) :
 | `inkSoft` sur fond | 5,8:1 |
 | Gris des titres `#6b6b6b` sur blanc | 5,3:1 |
 | Bleu clair sur encre | 8,8:1 |
-| Vert sur blanc | 5,0:1 |
+| Vert sur blanc | 5,7:1 |
+| Vert sur vert pâle | 5,1:1 |
 | Bord des champs | 3,45:1 |
 
 Règles :
