@@ -9,18 +9,18 @@ import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { VideoButton } from '../components/VideoDialog'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
-import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
-import { AppWindow } from '../components/AppWindow'
-import { ALL_FEATURES, AUTOMATIONS, CHOOSE, COMPARE, EXPERTISE, GUARANTEES, MANUAL, REASONS, START, TRUST } from '../content/accueil'
+import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
+import { LivingBuilding } from '../components/LivingBuilding'
+import { ALL_FEATURES, AUTOMATIONS, COMPARE, TRUST } from '../content/accueil'
 import { AVIS } from '../content/avis'
 import { SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 /**
- * Accueil, direction « Midi » (docs/design/direction-artistique.md) : système de modules « page de bail »
- * (grands coins arrondis, un coin replié), photos de Montpellier dans des modules arrondis et blocs de
- * couleur unie posés en bas, par-dessus. « Tout le dossier » montre des aperçus de l'application (HTML,
- * pas d'image). Photos fournies par l'éditeur (public/accueil/credits.json).
+ * Accueil, direction « Maison habitée » (docs/design/direction-artistique.md), fait pour être survolé : l'immeuble
+ * vivant (les fenêtres s'allument quand une tâche se règle), le temps rendu (démarches par an), la visite des vrais
+ * écrans, les automatismes, la loi appliquée à votre bail, le prix calculé selon vos logements, puis les questions.
+ * Photos de Montpellier fournies par l'éditeur (public/accueil/credits.json).
  */
 
 type Kind = 'VIDE' | 'MEUBLE' | 'GARAGE'
@@ -57,12 +57,6 @@ function termsFor(kind: Kind, rent: number): Array<[string, string]> {
   ]
 }
 
-const ROWS = [
-  { title: 'L’annonce', mock: 'ad', items: ['Texte prêt à coller', 'Leboncoin, SeLoger, PAP', 'Mentions obligatoires incluses', 'Un lien pour les candidatures'] },
-  { title: 'Le bail signé', mock: 'lease', items: ['Contrat type d’octobre 2026', 'Vide, meublé ou garage', 'Signature en ligne, sans compte', 'Locataire et garant'] },
-  { title: 'Chaque mois', mock: 'month', items: ['Quittance (le reçu du loyer) envoyée seule', 'Loyer révisé chaque année selon l’indice officiel (IRL)', 'Rappel d’assurance', 'Relance si le loyer manque'] },
-] as const
-
 const FAQ: Array<[string, string]> = [
   ['Le bail est-il valable ?', 'Oui, une fois complet et signé. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026, et Bailio vous dit ce qu’il manque avant la signature.'],
   ['J’ai déjà un locataire.', 'Prenez votre bail signé en photo : Bailio le lit, vous vérifiez, et le suivi démarre.'],
@@ -92,91 +86,6 @@ const LEGAL = [
   { to: '/securite', label: 'Sécurité' },
 ]
 
-/** Aperçus de l'application, dessinés en HTML : ce que le propriétaire verra vraiment. */
-function MockAd() {
-  return (
-    <div className="mock" data-ui role="img" aria-label="Aperçu d’une annonce prête à publier sur Leboncoin, SeLoger et PAP">
-      <div className="mock-bar">
-        <span>Annonce</span>
-        <span className="mock-ok">Prête</span>
-      </div>
-      <p className="mock-title">T2 lumineux, quartier Écusson</p>
-      <p className="mock-price">
-        780 € <small>charges comprises, par mois</small>
-      </p>
-      <div className="mock-facts">
-        <span>42 m²</span>
-        <span>DPE C</span>
-        <span>Dépôt 700 €</span>
-      </div>
-      <div className="mock-sites">
-        <span>Leboncoin</span>
-        <span>SeLoger</span>
-        <span>PAP</span>
-      </div>
-      <p className="mock-link">bailio.fr/candidature/t2-ecusson</p>
-    </div>
-  )
-}
-
-function MockLease() {
-  return (
-    <div className="mock mock--paper" data-ui role="img" aria-label="Aperçu d’un bail signé en ligne par le bailleur, le locataire et le garant">
-      <p className="mock-doc">Contrat de location</p>
-      <p className="mock-sub">Logement vide · contrat type, octobre 2026</p>
-      <div className="mock-lines" aria-hidden>
-        <i />
-        <i />
-        <i />
-        <i />
-      </div>
-      <div className="mock-signs">
-        {[
-          ['Bailleur', '2 oct.'],
-          ['Locataire', '2 oct.'],
-          ['Garant', '3 oct.'],
-        ].map(([who, when]) => (
-          <div key={who}>
-            <span className="mock-check" aria-hidden>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 6.5 5 9.2 10 3" />
-              </svg>
-            </span>
-            <strong>{who}</strong>
-            <span>signé le {when}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MockMonth() {
-  const rows: Array<[string, string, string]> = [
-    ['1 nov.', 'Quittance d’octobre', 'Envoyée à Léa'],
-    ['15 nov.', 'Loyer révisé (IRL)', '780 € → 791 €'],
-    ['20 nov.', 'Attestation d’assurance', 'Demandée'],
-    ['6 déc.', 'Loyer de décembre', 'Relance prête'],
-  ]
-  return (
-    <div className="mock" data-ui role="img" aria-label="Aperçu du suivi mensuel : quittance envoyée, loyer révisé, assurance demandée, relance prête">
-      <div className="mock-bar">
-        <span>Aujourd’hui</span>
-        <span>T2 Écusson</span>
-      </div>
-      <ul className="mock-feed">
-        {rows.map(([d, what, state]) => (
-          <li key={what}>
-            <span className="mock-date">{d}</span>
-            <span className="mock-what">{what}</span>
-            <span className="mock-state">{state}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
 /** Les couleurs de la page viennent des tokens BAI (une seule source), passées au CSS en variables. */
 const VARS = {
   '--bg': BAI.surface,
@@ -188,6 +97,7 @@ const VARS = {
   '--owner-light': BAI.ownerLight,
   '--night': BAI.night,
   '--on-dark': BAI.onDark,
+  '--accent-light': BAI.accentLight,
   '--accent': BAI.accent,
   '--accent-ink': BAI.accentInk,
   '--sky': BAI.sky,
@@ -221,8 +131,6 @@ function Check() {
     </span>
   )
 }
-
-const FIELDS = ['peach', 'sky', 'night'] as const
 
 /** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
 const TOUR: TourStep[] = [
@@ -306,6 +214,47 @@ function Yearly() {
   )
 }
 
+/** Prix selon le nombre de logements, comparé à une agence (7 % d'un loyer de 750 €, hypothèse affichée). */
+const AGENCY_RATE = 0.07
+const SAMPLE_RENT = 750
+const eur = (cents: number) => (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 }) + ' €'
+
+function PriceCalc() {
+  const [n, setN] = useState(3)
+  const agency = Math.round(n * SAMPLE_RENT * AGENCY_RATE * 12 * 100)
+  const year = n * YEARLY_PRICE_CENTS
+  return (
+    <section className="calc" data-section aria-labelledby="calc-title">
+      <div className="calc-head">
+        <h2 id="calc-title" data-in>
+          Votre prix, <em>en un geste.</em>
+        </h2>
+        <label htmlFor="calc-n" className="live-label">
+          Logements loués : <strong className="calc-n">{n}</strong>
+        </label>
+        <input id="calc-n" type="range" min={1} max={30} value={n} onChange={(e) => setN(Number(e.target.value))} aria-valuetext={`${n} logement${n > 1 ? 's' : ''}`} />
+      </div>
+      <dl className="calc-out" aria-live="polite">
+        <div className="calc-me">
+          <dt>Bailio, à l’année</dt>
+          <dd>{eur(year)}</dd>
+          <dd className="calc-sub">soit {eur(Math.round(year / 12))} par mois</dd>
+        </div>
+        <div>
+          <dt>Bailio, au mois</dt>
+          <dd>{eur(n * MONTHLY_PRICE_CENTS * 12)}</dd>
+          <dd className="calc-sub">par an</dd>
+        </div>
+        <div>
+          <dt>Une agence</dt>
+          <dd>{eur(agency)}</dd>
+          <dd className="calc-sub">par an, à 7 % d’un loyer de {SAMPLE_RENT} €</dd>
+        </div>
+      </dl>
+    </section>
+  )
+}
+
 const monthFr = (d: string) => new Date(`${d}-01T00:00:00Z`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 /** Outils gratuits, sans compte : la porte d'entrée de ceux qui arrivent par Google. */
@@ -332,81 +281,19 @@ function FreeTools() {
   )
 }
 
-/** Croix des conseils repliés (devient un « moins » à l'ouverture, comme les questions). */
-function Plus() {
-  return (
-    <svg className="faq-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden focusable="false">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  )
-}
-
 const stagger = (i: number) => ({ ['--i' as string]: i }) as CSSProperties
-
-/** « Tout ce que vous faisiez à la main » : liste de points cliquables, la capture de l'écran à côté (onglets, flèches). */
-function Manual() {
-  const [i, setI] = useState(0)
-  const tabs = useRef<Array<HTMLButtonElement | null>>([])
-  const s = MANUAL[i]
-  const go = (n: number) => {
-    const k = (n + MANUAL.length) % MANUAL.length
-    setI(k)
-    tabs.current[k]?.focus()
-  }
-  return (
-    <section className="manual" data-section aria-labelledby="manual-title">
-      <h2 id="manual-title" data-in>
-        Tout ce que vous faisiez à la main, <em>Bailio le fait.</em>
-      </h2>
-      <div className="manual-tabs" role="tablist" aria-label="Ce que Bailio fait pour vous" data-in style={stagger(1)}>
-        {MANUAL.map((m, j) => (
-          <button
-            key={m.img}
-            ref={(el) => void (tabs.current[j] = el)}
-            type="button"
-            role="tab"
-            id={`manual-tab-${j}`}
-            aria-selected={i === j}
-            aria-controls="manual-panel"
-            tabIndex={i === j ? 0 : -1}
-            onClick={() => setI(j)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight' || e.key === 'ArrowDown') (e.preventDefault(), go(j + 1))
-              else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') (e.preventDefault(), go(j - 1))
-              else if (e.key === 'Home') (e.preventDefault(), go(0))
-              else if (e.key === 'End') (e.preventDefault(), go(MANUAL.length - 1))
-            }}
-          >
-            <span className="manual-n" aria-hidden>
-              {j + 1}
-            </span>
-            {m.title}
-          </button>
-        ))}
-      </div>
-      <div id="manual-panel" className="manual-panel fold fold--ear" role="tabpanel" aria-labelledby={`manual-tab-${i}`} data-in style={stagger(2)}>
-        <div className="panel-in" key={s.img}>
-          <p className="manual-text">{s.text}</p>
-          <AppWindow img={s.img} alt={s.alt} />
-        </div>
-      </div>
-    </section>
-  )
-}
 
 /** Six automatismes : ce qui tourne sans vous. */
 function Automations() {
   return (
     <section className="autos" data-section aria-labelledby="autos-title">
       <h2 id="autos-title" data-in>
-        Six <em>automatismes.</em>
+        Six tâches qui <em>se font seules.</em>
       </h2>
       <div className="autos-grid">
         {AUTOMATIONS.map((a, j) => (
           <article key={a.title} className="auto" data-in style={stagger(j % 3)}>
-            <span className="auto-n" aria-hidden>
-              {String(j + 1).padStart(2, '0')}
-            </span>
+            <span className="auto-n" aria-hidden />
             <h3>{a.title}</h3>
             <p>{a.text}</p>
             <Link to={a.to} className="auto-more">
@@ -439,77 +326,6 @@ function AllFeatures() {
           <li key={f}>
             <Check />
             {f}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/** Six raisons de choisir Bailio. */
-function Reasons() {
-  return (
-    <section className="why" data-section aria-labelledby="why-title">
-      <h2 id="why-title" data-in>
-        Six raisons de <em>choisir Bailio.</em>
-      </h2>
-      <div className="why-grid">
-        {REASONS.map((r, j) => (
-          <article key={r.title} className="why-card" data-in style={stagger(j % 3)}>
-            <Check />
-            <h3>{r.title}</h3>
-            <p>{r.text}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
-/** Derrière chaque règle, une source officielle : bloc sombre, texte clair. */
-function Expertise() {
-  const [head, tail] = EXPERTISE.title.split(', ')
-  return (
-    <section className="expert fold fold--lg fold--ear" data-section aria-labelledby="expert-title">
-      <div className="expert-intro">
-        <h2 id="expert-title" data-in>
-          {head}, <em>{tail}</em>
-        </h2>
-        <div className="expert-links" data-in style={stagger(1)}>
-          <Link to="/guides" className="btn btn--paper">
-            Lire les guides
-            <Arrow />
-          </Link>
-          <Link to="/modeles" className="btn btn--paper">
-            Modèles de lettres
-            <Arrow />
-          </Link>
-        </div>
-      </div>
-      <ul className="expert-list" data-in style={stagger(2)}>
-        {EXPERTISE.points.map((p) => (
-          <li key={p}>
-            <Check />
-            {p}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/** Vos garanties : une ligne, juste sous les offres. */
-function Guarantees() {
-  return (
-    <section className="guar" data-section aria-labelledby="guar-title">
-      <h2 id="guar-title" data-in>
-        Vos <em>garanties.</em>
-      </h2>
-      <ul data-in style={stagger(1)}>
-        {GUARANTEES.map((g) => (
-          <li key={g}>
-            <Check />
-            {g}
           </li>
         ))}
       </ul>
@@ -555,56 +371,6 @@ function Compare() {
       <p className="cmp-hint" data-in style={stagger(1)}>
         Faites glisser le tableau pour voir toutes les colonnes.
       </p>
-    </section>
-  )
-}
-
-/** Opérationnel en quelques minutes : trois étapes, et l'import par fichier. */
-function Start() {
-  return (
-    <section className="start" data-section aria-labelledby="start-title">
-      <h2 id="start-title" data-in>
-        Opérationnel <em>en quelques minutes.</em>
-      </h2>
-      <ol className="start-list">
-        {START.map((s, j) => (
-          <li key={s.title} data-in style={stagger(j + 1)}>
-            <span className="start-n" aria-hidden>
-              {j + 1}
-            </span>
-            <h3>{s.title}</h3>
-            <p>{s.text}</p>
-          </li>
-        ))}
-      </ol>
-      <div data-in style={stagger(4)}>
-        <Link to="/espace/logements/importer" className="btn btn--paper">
-          Ajouter mes logements depuis un fichier
-          <Arrow />
-        </Link>
-      </div>
-    </section>
-  )
-}
-
-/** Comment choisir son logiciel : six critères, conseils repliés sur leur titre. */
-function Choose() {
-  return (
-    <section className="faq choose" data-section aria-labelledby="choose-title">
-      <h2 id="choose-title" data-in>
-        Comment choisir son logiciel de gestion locative <em>en 2026 ?</em>
-      </h2>
-      <div className="faq-list" data-in style={stagger(1)}>
-        {CHOOSE.map((c) => (
-          <details key={c.title}>
-            <summary>
-              <span>{c.title}</span>
-              <Plus />
-            </summary>
-            <p>{c.text}</p>
-          </details>
-        ))}
-      </div>
     </section>
   )
 }
@@ -727,46 +493,43 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="hero" data-section>
-          <div className="hero-photo">
-            {/* Photo élargie à gauche (son propre ciel en miroir, caché par le bloc) : l’Arbre Blanc entier, à droite du bloc. */}
-            <img src="/accueil/arbre-blanc-large.webp" alt="L’Arbre Blanc, immeuble aux balcons en porte-à-faux, au-dessus des pins, à Montpellier" width={3000} height={1000} fetchPriority="high" />
-            <small className="hero-credit">© Ludwig Deguffroy/Getty Images</small>
-          </div>
-          <div className="hero-block fold fold--lg fold--ear">
-            <h1 data-in style={{ ['--i' as string]: 0 }}>
-              Le bail juste,
+        <section className="hero2" data-section aria-labelledby="hero-title">
+          <div className="hero2-text">
+            <h1 id="hero-title">
+              Vos locations tournent.
               <br />
-              <em>du premier coup.</em>
+              <em>Vous respirez.</em>
             </h1>
-            <p className="hero-lead" data-in style={{ ['--i' as string]: 1 }}>
-              Pour les propriétaires qui louent eux-mêmes. Annonce, bail, signature, quittances : Bailio prépare chaque papier de votre location, selon la loi.
-            </p>
-            <div className="hero-actions" data-in style={{ ['--i' as string]: 2 }}>
+            <p className="hero-lead">Bail, quittances, relances, impôts : Bailio prépare tout, selon la loi.</p>
+            <div className="hero-actions">
               <Link to="/commencer" className="btn">
                 Créer mon bail gratuit
                 <Arrow />
               </Link>
               <VideoButton className="hero-link hero-video">
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden focusable="false">
-                  <circle cx="12" cy="12" r="11" fill="currentColor" opacity=".25" />
+                  <circle cx="12" cy="12" r="11" fill="currentColor" opacity=".18" />
                   <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
                 </svg>
-                Voir la vidéo · 1 min
+                Voir la vidéo, 1 min
               </VideoButton>
-              <Link to="/demo" className="hero-link">
-                Essayer la démo
-              </Link>
-              <Link to="/importer" className="hero-link">
-                J’ai déjà un bail
-              </Link>
             </div>
+            <p className="hero2-more">
+              <Link to="/demo">Essayer la démo sans compte</Link>
+              <Link to="/importer">J’ai déjà un bail</Link>
+            </p>
+            <ul className="hero2-proof">
+              <li>Contrat type officiel</li>
+              <li>Règles de la loi de 1989 vérifiées</li>
+              <li>Serveur en Suisse</li>
+            </ul>
           </div>
+          <LivingBuilding />
         </section>
 
-        <Tour />
+        <Yearly />
 
-        <Manual />
+        <Tour />
 
         <Automations />
 
@@ -839,77 +602,6 @@ export default function Home() {
 
         <AllFeatures />
 
-        <Reasons />
-
-        <Expertise />
-
-        <section className="dossier" data-section aria-labelledby="dossier-title">
-          <h2 id="dossier-title" data-in>
-            Tout le dossier, <em>au même endroit.</em>
-          </h2>
-          <div className="dossier-grid">
-            {ROWS.map((r, i) => (
-              <article key={r.title} className={`drow drow--${FIELDS[i]}${i === 2 ? ' fold fold--ear' : ''}`} data-in style={{ ['--i' as string]: i + 1 }}>
-                <h3>{r.title}</h3>
-                <div className="mock-wrap">{r.mock === 'ad' ? <MockAd /> : r.mock === 'lease' ? <MockLease /> : <MockMonth />}</div>
-                <ul>
-                  {r.items.map((it) => (
-                    <li key={it}>
-                      <Check />
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <div className="ribbon" data-section role="region" aria-label="Montpellier en images" tabIndex={0}>
-          {[
-            ['arc', 'L’arc de triomphe de Montpellier, une statue au premier plan'],
-            ['ruelle', 'Ruelle pavée bordée de façades en pierre et de balcons en fer forgé'],
-            ['rue-coloree', 'Rue étroite aux façades colorées et aux balcons fleuris'],
-          ].map(([f, alt], i) => (
-            <img key={f} data-in style={{ ['--i' as string]: i }} src={`/accueil/${f}.webp`} alt={alt} width={960} height={1200} loading="lazy" decoding="async" />
-          ))}
-        </div>
-
-        <section className="itin" data-section aria-labelledby="itin-title">
-          <div className="itin-intro">
-            <h2 id="itin-title" data-in>
-              Louer, <em>montre en main.</em>
-            </h2>
-            <p data-in style={{ ['--i' as string]: 1 }}>
-              Ce que vous faites, et le temps que ça vous prend.
-            </p>
-          </div>
-          <div className="slip fold fold--ear" data-in style={{ ['--i' as string]: 2 }}>
-            {[
-              ['Avant l’entrée', [['Décrire le logement', '5 min'], ['Publier l’annonce', '2 min'], ['Choisir un candidat', 'à votre rythme']]],
-              ['Le jour de l’entrée', [['Signer le bail en ligne', '3 min'], ['État des lieux en photos', '30 min']]],
-              ['Chaque mois', [['Quittance envoyée', 'automatique'], ['Rappels avant échéance', 'automatique']]],
-            ].map(([when, rows]) => (
-              <div key={when as string}>
-                <h3>{when as string}</h3>
-                {(rows as string[][]).map(([what, time]) => (
-                  <div key={what} className="slip-row">
-                    <span>{what}</span>
-                    <span className="dots" aria-hidden />
-                    <span>{time}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
-            <div className="slip-total">
-              <span>Un logement loué, un dossier complet</span>
-              <span>40 min</span>
-            </div>
-          </div>
-        </section>
-
-        <Yearly />
-
         <Reviews />
 
         <section id="tarifs" className="plans" aria-label="Tarif">
@@ -951,15 +643,11 @@ export default function Home() {
           </div>
         </section>
 
-        <Guarantees />
+        <PriceCalc />
 
         <Compare />
 
-        <Start />
-
         <FreeTools />
-
-        <Choose />
 
         <section className="faq" data-section aria-labelledby="faq-title">
           <h2 id="faq-title" data-in>

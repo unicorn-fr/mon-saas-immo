@@ -6,6 +6,9 @@ export const MONTHLY_PRICE: string | null = '3,49 €'
 export const PRICE_UNIT = 'par logement et par mois'
 export const YEARLY_PRICE = '34,90 €'
 export const PARKING_PRICE = '1,49 €'
+/** Mêmes prix en centimes, pour les calculs (À VALIDER PAR ENZO : options de prix dans PLAN.md, partie 8). */
+export const MONTHLY_PRICE_CENTS = 349
+export const YEARLY_PRICE_CENTS = 3490
 
 export const priceLabel = () => MONTHLY_PRICE ?? 'Prix à venir'
 /** « 3,49 € par logement et par mois » */
