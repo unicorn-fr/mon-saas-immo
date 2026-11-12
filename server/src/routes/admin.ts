@@ -5,6 +5,7 @@ import { computeAudience } from '../domain/visits.js'
 import { HttpError } from '../lib/http.js'
 import { isAdmin } from '../services/admin.js'
 import { requireUser } from '../services/session.js'
+import { PROVIDER_CATALOG, providerStatus, type ProviderKind } from '../providers/index.js'
 
 /**
  * Pilotage : indicateurs de Bailio, réservés aux adresses de ADMIN_EMAILS. Pour tout autre compte, l'adresse
@@ -39,3 +40,9 @@ router.get('/admin/metrics', async (_req, res) => {
 })
 
 export default router
+
+// Services tiers : simulé, à brancher ou branché, et le nom des variables manquantes (jamais leur valeur).
+router.get('/admin/providers', (_req, res) => {
+  const kinds = Object.keys(PROVIDER_CATALOG) as ProviderKind[]
+  res.json({ success: true, data: kinds.map((k) => ({ ...providerStatus(k), options: Object.entries(PROVIDER_CATALOG[k].options).map(([key, o]) => ({ key, label: o.label, env: o.env, site: o.site })) })) })
+})
