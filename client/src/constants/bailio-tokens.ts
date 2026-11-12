@@ -1,71 +1,77 @@
 /**
- * Design system Bailio, direction « Midi » (octobre 2026) : docs/design/direction-artistique.md.
- * Palette « Confiance et élan », choisie d'après la recherche sur la couleur (sources dans la direction
- * artistique) : bleu sobre pour la confiance et la compétence, un seul orange vif réservé à l'action
- * principale pour qu'elle se détache (effet d'isolement), vert pour ce qui est fait. Aplats, pas de dégradé.
+ * Design system Bailio, direction « Maison habitée » (novembre 2026) : docs/design/direction-artistique.md.
+ * Une couleur dominante, le vert forêt des volets et des jardins (sérieux, calme, durable), un fond « brume » vert très
+ * pâle, et un seul accent chaud : le jaune « soleil » d'une fenêtre allumée, réservé à l'action principale et à ce qui
+ * vient d'arriver de bon (un loyer reçu). La pêche et le corail ne servent qu'aux illustrations et aux personnes.
+ * Les noms des clés restent ceux de la direction précédente (owner = couleur de la marque, cta = action principale,
+ * night = aplat sombre) pour que toute l'application change d'un coup : seules les valeurs ont changé.
  * Toute couleur passe par BAI : aucune valeur hexadécimale en dur dans les composants.
- * Contrastes vérifiés (WCAG 2.1 AA) : voir le tableau de la direction artistique.
+ * Contrastes vérifiés (WCAG 2.1 AA) : tableau dans la direction artistique.
  */
 export const BAI = {
   // Fonds
-  bg: '#f5f7fa', // fond de page (gris bleuté très clair)
-  surface: '#ffffff',
-  night: '#0f1f3d', // bleu nuit : blocs sombres, menu latéral, texte des boutons orange
-  nightLine: '#2a3a5c', // séparateurs sur fond sombre
-  nightActive: '#1c2f55', // entrée active du menu latéral
-  nightSoft: '#24375e', // pastille et séparateur du menu latéral
+  bg: '#eef3ef', // « brume » : fond de l'application (vert très pâle, ni gris froid ni crème)
+  surface: '#ffffff', // « papier »
+  night: '#163c34', // « forêt » : aplats sombres, menu latéral, texte des boutons soleil
+  nightLine: '#2b5248', // séparateurs sur fond forêt
+  nightActive: '#1f4a40', // entrée active du menu latéral
+  nightSoft: '#2a5046', // pastille et séparateur du menu latéral
   // Texte
-  ink: '#16233f',
-  inkMid: '#3b4659',
-  inkSoft: '#5b6577',
-  onDark: '#dbe3f1',
-  onDarkMuted: '#b7c3d9',
-  onDarkNav: '#c9d3e6', // liens du menu latéral
+  ink: '#13241f', // « encre » (16:1 sur papier)
+  inkMid: '#33453f',
+  inkSoft: '#4a5c55', // 7:1 sur papier, 6,3:1 sur brume
+  onDark: '#dce9e2',
+  onDarkMuted: '#b7ccc2',
+  onDarkNav: '#cbddd4', // liens du menu latéral
   // Bordures
-  border: '#dfe4ec',
-  borderStrong: '#7c8597', // bord des champs et boutons à choix : contraste 3:1 minimum (WCAG 1.4.11)
-  divider: '#e5e9f0',
-  dividerSoft: '#edf0f5',
-  rule: '#d6dce6',
-  skeleton: '#eaeef4',
-  dashed: '#b8c0cd', // cadre pointillé, étape non remplie
-  timeline: '#edf1f6',
-  inkTint: '#e6ebf3', // étiquette neutre
-  photoWarm: '#e9e2d8', // fond d'une vignette sans photo
-  photoCool: '#d6e0ee',
-  photoSand: '#ece7df',
-  // Bleu confiance : couleur de la marque (liens, sélection, pastilles, progression)
-  owner: '#1f4396',
-  ownerHover: '#17336f',
-  ownerLight: '#eaf0fb',
-  ownerTint: '#e3ecfb',
-  ownerBorder: '#bfd0ef',
-  // Orange : le bouton de l'action principale, un seul par écran. Texte bleu nuit dessus (blanc illisible).
-  cta: '#ff8a3d',
-  ctaHover: '#ff7a24',
-  ctaInk: '#0f1f3d',
-  // Accent orange. `accent` seulement sur fond sombre ; sur fond clair `accentInk` ; sur un bloc bleu `accentSoft`.
-  accent: '#ff8a3d',
-  accentInk: '#c2410c',
-  accentDark: '#9a3412',
-  accentLight: '#ffedd5',
-  accentSoft: '#ffb27a',
-  // Vert (validé, enregistré)
-  green: '#1f7a4a',
-  greenLight: '#e3f3e8',
+  border: '#d9e3dd',
+  borderStrong: '#7b8c85', // bord des champs et boutons à choix : 3,5:1 sur papier (WCAG 1.4.11)
+  divider: '#e1e9e4',
+  dividerSoft: '#eaf0ec',
+  rule: '#d3ded8',
+  skeleton: '#e4ece7',
+  dashed: '#afc0b8', // cadre pointillé, étape non remplie
+  timeline: '#e8efea',
+  inkTint: '#e3ece6', // étiquette neutre
+  photoWarm: '#ece3d6', // fond d'une vignette sans photo
+  photoCool: '#d5e5dc',
+  photoSand: '#efe8dc',
+  // Vert « sauge » : couleur de la marque (liens, sélection, pastilles, progression). 6,3:1 sur papier.
+  owner: '#2f6a58',
+  ownerHover: '#23564a',
+  ownerLight: '#e3efe8',
+  ownerTint: '#dcebe2',
+  ownerBorder: '#b4cfc2',
+  // « Soleil » : le bouton de l'action principale, un seul par écran. Texte forêt dessus (7,6:1) ; jamais de blanc.
+  cta: '#ffc444',
+  ctaHover: '#ffb61f',
+  ctaInk: '#163c34',
+  // Accent soleil. `accent` sur fond forêt seulement ; sur fond clair, texte `accentInk` (ambre, 5,9:1).
+  accent: '#ffc444',
+  accentInk: '#8a5a00',
+  accentDark: '#6e4700',
+  accentLight: '#fff1cc',
+  accentSoft: '#ffd878',
+  // Vert « validé » (enregistré, payé)
+  green: '#1e7a4f',
+  greenLight: '#e2f3e8',
   greenOnDark: '#8fd6a9',
   greenDarkBg: '#1d4a33',
-  // Aplats de section (texte `ink` ou `owner` dessus)
-  sky: '#dbe7fb',
-  peach: '#fde4cf',
+  // Aplats de section (texte `ink` ou `night` dessus) : « mousse » et « pêche »
+  sky: '#dcebdf',
+  peach: '#ffe3d3',
+  // Corail : visages et détails des illustrations seulement ; en texte, `coralInk` (5,7:1)
+  coral: '#e8664a',
+  coralInk: '#b63e25',
   // Erreur : le rouge ne sert qu'aux erreurs
   error: '#c11f2b',
   errorLight: '#fdecec',
   errorTint: '#fbe0e1', // étiquette et encadré d'alerte
-  overlay: 'rgba(15, 31, 61, 0.5)', // fond derrière une fenêtre
-  // Typographies : Fraunces (titres, accroches courtes), Figtree (tout le reste)
-  fontDisplay: "'Fraunces Variable', Georgia, serif",
-  fontBody: "'Figtree', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif",
+  overlay: 'rgba(22, 60, 52, 0.5)', // fond derrière une fenêtre
+  // Typographies : Bricolage Grotesque (titres, chiffres, mots-clés), Atkinson Hyperlegible Next (tout le reste,
+  // pensée pour la lisibilité : lettres faciles à distinguer, utile à des lecteurs pressés).
+  fontDisplay: "'Bricolage Grotesque Variable', 'Atkinson Hyperlegible Next Variable', sans-serif",
+  fontBody: "'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', sans-serif",
   // Formes : rayon des cartes, du coin replié (module « page de bail »), des champs
   radius: 24,
   radiusField: 14,

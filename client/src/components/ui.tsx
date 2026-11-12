@@ -2,13 +2,12 @@ import { forwardRef, type CSSProperties, type InputHTMLAttributes, type ReactNod
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
-/** Titre en Fraunces : un mot ou une ligne peut passer en italique avec <em> (une fois par accroche). */
+/** Titre en Bricolage Grotesque : un mot-clé peut être souligné au feutre soleil avec <em> (une fois par écran). */
 export const display = (size: number | string, extra: CSSProperties = {}): CSSProperties => ({
   margin: 0,
   fontFamily: BAI.fontDisplay,
-  fontWeight: 500,
-  fontVariationSettings: "'SOFT' 60",
-  letterSpacing: '-0.02em',
+  fontWeight: 650,
+  letterSpacing: '-0.03em',
   fontSize: size,
   lineHeight: 1.06,
   color: BAI.ink,
