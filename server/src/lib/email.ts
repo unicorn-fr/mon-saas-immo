@@ -90,18 +90,18 @@ const FOOTER = ['Bailio, le bail et le suivi locatif du propriétaire · https:/
 
 /** Gabarit sobre : un titre, quelques paragraphes, un bouton (et son adresse en clair). */
 export function layout(opts: { title: string; paragraphs: string[]; cta?: { label: string; url: string } }): { html: string; text: string } {
-  const p = opts.paragraphs.map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#33453f">${escape(x)}</p>`).join('')
+  const p = opts.paragraphs.map((x) => `<p style="margin:0 0 16px;font-size:16px;line-height:1.55;color:#3a3a3a">${escape(x)}</p>`).join('')
   const cta = opts.cta
-    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#ffc444;color:#163c34;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:999px">${escape(opts.cta.label)}</a></p>
-<p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#4a5c55">Le bouton ne s’ouvre pas ? Copiez cette adresse dans votre navigateur :<br><span style="word-break:break-all;color:#2f6a58">${escape(opts.cta.url)}</span></p>`
+    ? `<p style="margin:24px 0"><a href="${escape(opts.cta.url)}" style="display:inline-block;background:#1a4be0;color:#ffffff;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:10px">${escape(opts.cta.label)}</a></p>
+<p style="margin:0 0 16px;font-size:13px;line-height:1.5;color:#5f5f5f">Le bouton ne s’ouvre pas ? Copiez cette adresse dans votre navigateur :<br><span style="word-break:break-all;color:#1a4be0">${escape(opts.cta.url)}</span></p>`
     : ''
-  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#eef3ef;font-family:Helvetica,Arial,sans-serif;color:#13241f">
+  const html = `<!doctype html><html lang="fr"><body style="margin:0;background:#f4f4f4;font-family:Helvetica,Arial,sans-serif;color:#111111">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">${escape(opts.paragraphs[0] ?? opts.title)}</div>
 <div style="max-width:560px;margin:0 auto;padding:40px 24px">
-<p style="margin:0 0 32px;font-family:Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-0.5px;font-size:28px;color:#163c34">Bailio</p>
+<p style="margin:0 0 32px;font-family:Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-0.5px;font-size:28px;color:#111111">Bailio</p>
 <h1 style="margin:0 0 20px;font-family:Helvetica,Arial,sans-serif;font-weight:700;letter-spacing:-0.5px;font-size:28px;line-height:1.15">${escape(opts.title)}</h1>
 ${p}${cta}
-<p style="margin:40px 0 0;font-size:13px;line-height:1.5;color:#4a5c55">${FOOTER.map(escape).join('<br>')}</p>
+<p style="margin:40px 0 0;font-size:13px;line-height:1.5;color:#5f5f5f">${FOOTER.map(escape).join('<br>')}</p>
 </div></body></html>`
   const text = [opts.title, '', ...opts.paragraphs, ...(opts.cta ? ['', `${opts.cta.label} : ${opts.cta.url}`] : []), '', '--', ...FOOTER].join('\n')
   return { html, text }

@@ -10,15 +10,15 @@ import { VideoButton } from '../components/VideoDialog'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
-import { LivingBuilding } from '../components/LivingBuilding'
+import { HeroProduct } from '../components/HeroProduct'
 import { ALL_FEATURES, AUTOMATIONS, COMPARE, TRUST } from '../content/accueil'
 import { AVIS } from '../content/avis'
 import { SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 /**
- * Accueil, direction « Maison habitée » (docs/design/direction-artistique.md), fait pour être survolé : l'immeuble
- * vivant (les fenêtres s'allument quand une tâche se règle), le temps rendu (démarches par an), la visite des vrais
+ * Accueil, direction « Feuille et stylo » (docs/design/direction-artistique.md), fait pour être survolé : la vraie
+ * interface et le fil de ce que Bailio vient de faire (HeroProduct), le temps rendu (démarches par an), la visite des vrais
  * écrans, les automatismes, la loi appliquée à votre bail, le prix calculé selon vos logements, puis les questions.
  * Photos de Montpellier fournies par l'éditeur (public/accueil/credits.json).
  */
@@ -101,6 +101,7 @@ const VARS = {
   '--night': BAI.night,
   '--on-dark': BAI.onDark,
   '--accent-light': BAI.accentLight,
+  '--green': BAI.green,
   '--accent': BAI.accent,
   '--accent-ink': BAI.accentInk,
   '--sky': BAI.sky,
@@ -499,11 +500,9 @@ export default function Home() {
         <section className="hero2" data-section aria-labelledby="hero-title">
           <div className="hero2-text">
             <h1 id="hero-title">
-              Vos locations tournent.
-              <br />
-              <em>Vous respirez.</em>
+              La gestion locative des propriétaires, <em>sans agence.</em>
             </h1>
-            <p className="hero-lead">Bail, quittances, relances, impôts : Bailio prépare tout, selon la loi.</p>
+            <p className="hero-lead">Quittances envoyées seules, impayés relancés, déclaration réduite aux cases à recopier.</p>
             <div className="hero-actions">
               <Link to="/commencer" className="btn">
                 Créer mon bail gratuit
@@ -523,11 +522,11 @@ export default function Home() {
             </p>
             <ul className="hero2-proof">
               <li>Contrat type officiel</li>
-              <li>Règles de la loi de 1989 vérifiées</li>
-              <li>Serveur en Suisse</li>
+              <li>Loi de 1989 vérifiée</li>
+              <li>{priceText()}</li>
             </ul>
           </div>
-          <LivingBuilding />
+          <HeroProduct />
         </section>
 
         <Yearly />

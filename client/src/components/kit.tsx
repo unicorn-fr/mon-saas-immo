@@ -134,7 +134,7 @@ type BtnVariant = 'primary' | 'outline' | 'ghost' | 'dark' | 'accent' | 'danger'
 
 const BTN: Record<BtnVariant, CSSProperties> = {
   primary: { background: BAI.cta, color: BAI.ctaInk, border: `1.5px solid ${BAI.cta}` },
-  outline: { background: BAI.surface, color: BAI.owner, border: `1.5px solid ${BAI.ownerBorder}` },
+  outline: { background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}` },
   ghost: { background: 'transparent', color: BAI.inkMid, border: '1.5px solid transparent' },
   dark: { background: BAI.night, color: BAI.surface, border: `1.5px solid ${BAI.night}` },
   accent: { background: BAI.accent, color: BAI.night, border: `1.5px solid ${BAI.accent}` },
@@ -162,7 +162,7 @@ interface BtnProps {
 
 export function btnStyle(variant: BtnVariant = 'primary', size: 'sm' | 'md' | 'lg' = 'md', full = false): CSSProperties {
   // Boutons en pilule (direction « Midi ») : bords entièrement arrondis.
-  const dims = size === 'lg' ? { height: 60, padding: '0 32px', borderRadius: 999, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 16px', borderRadius: 999, fontSize: 14 } : { minHeight: 46, padding: '10px 22px', borderRadius: 999, fontSize: 15 }
+  const dims = size === 'lg' ? { height: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, fontSize: 17 } : size === 'sm' ? { height: 38, padding: '0 14px', borderRadius: 8, fontSize: 14 } : { minHeight: 46, padding: '10px 20px', borderRadius: BAI.radiusBtn, fontSize: 15 }
   return {
     ...dims,
     ...BTN[variant],

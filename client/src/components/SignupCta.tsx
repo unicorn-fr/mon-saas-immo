@@ -4,7 +4,7 @@ import { PARKING_PRICE, priceText } from '../config'
 
 /**
  * Encart sous les outils et modèles gratuits : ce que Bailio fait de plus, le prix, et l'inscription. Bouton bleu :
- * le jaune reste réservé au bouton « Créer mon bail » de l'en-tête (une seule action principale jaune par écran).
+ * le bleu plein reste réservé au bouton « Créer mon bail » de l'en-tête (une seule action principale en bleu plein par écran).
  */
 export function SignupCta({ text }: { text?: string }) {
   return (

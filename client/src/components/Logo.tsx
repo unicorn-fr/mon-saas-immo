@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
 /*
- * Logo, direction « Maison habitée » (novembre 2026, docs/design/direction-artistique.md) : une maison vert forêt aux
- * angles doux dont la fenêtre est allumée (un rond soleil), puis « bailio » en Bricolage Grotesque, le point du i
- * remplacé par la même fenêtre allumée. Idée : quelqu'un vit là, et le propriétaire le sait.
+ * Logo, direction « Feuille et stylo » (novembre 2026, docs/design/direction-artistique.md) : une maison à l'encre aux
+ * angles doux dont la fenêtre ronde est le bleu « stylo », puis « bailio » en Instrument Sans, le point du i remplacé
+ * par la même fenêtre bleue.
  * Construction sur une grille de 24 : marge 3, rayon d'angle 4, toit à 40°, fenêtre de diamètre 6 centrée à 13,5.
- * En couleurs sur fond clair ; `onDark` (maison brume, fenêtre soleil, nom brume) sur un aplat forêt.
+ * En couleurs sur fond clair ; `onDark` (maison et nom clairs, fenêtre bleue) sur un aplat sombre.
  * Jamais en couleurs sur un aplat de couleur.
  */
 const HOUSE = 'M3 11.4a2.6 2.6 0 0 1 .95-2.01l6.4-5.3a2.6 2.6 0 0 1 3.3 0l6.4 5.3A2.6 2.6 0 0 1 21 11.4V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z'
@@ -40,8 +40,8 @@ export function Logo({ size = 28, onDark = false, to = '/' }: { size?: number; o
   const style = {
     textDecoration: 'none',
     fontFamily: BAI.fontDisplay,
-    fontWeight: 700,
-    letterSpacing: '-0.035em',
+    fontWeight: 600,
+    letterSpacing: '-0.04em',
     fontSize: size,
     color: onDark ? BAI.onDark : BAI.night,
     lineHeight: 1,
