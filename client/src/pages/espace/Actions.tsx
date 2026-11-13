@@ -109,7 +109,7 @@ export default function Actions() {
     <AppShell>
       <Crumbs items={[{ label: 'Aujourd’hui', to: '/espace' }, { label: 'Actions groupées' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Actions groupées</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Actions groupées</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Ce qui se fait en une fois pour tous vos logements. Vous relisez la liste, puis un seul bouton.</span>
       </div>
       {!available.length ? <Callout tone="ok">Rien à faire en groupe aujourd’hui.</Callout> : null}

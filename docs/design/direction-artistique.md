@@ -64,16 +64,14 @@ Le coin replié (`.fold`) reste disponible pour un bloc important, sans en abuse
 
 ## Le haut de l'accueil
 
-Sur un logiciel, la skill demande de montrer le produit lui-même, jamais une illustration. On y trouve donc :
-- la vraie capture d'« Aujourd'hui » dans une fenêtre de navigateur (`components/HeroProduct.tsx`) ;
-- un fil de ce que Bailio vient de faire, une ligne de plus toutes les 2,8 s, dit « Exemple ».
-
-Le titre nomme la catégorie et l'acheteur, puis un fait concret (le prix) sur le premier écran.
+Centré, pour être compris en trois secondes : une pastille (« Premier mois offert »), le titre, une ligne, deux boutons (le bleu et la vidéo en contour), une ligne de faits (prix, démo, import). Dessous, le vrai produit en grand dans une fenêtre de navigateur (`components/HeroProduct.tsx`), avec le fil de ce que Bailio vient de faire, dit « Exemple ».
 
 ## L'espace du propriétaire
 
 - **Menu latéral clair** (`components/AppShell.tsx`) : fond blanc, trait gris à droite, une icône par entrée. L'entrée en cours est sur fond bleu très pâle avec un texte bleu. Le bouton « Ajouter » est noir.
-- **Tuiles du mois** : une pastille à icône par chiffre, bleue, verte si tout est à jour, rouge pour un retard.
+- **Tuiles du mois** : le chiffre à gauche, une pastille à icône à droite, bleue, verte si tout est à jour, rouge pour un retard.
+- **Actions** : cartes compactes (étiquette, titre, une ligne d'explication qui se déplie au survol, un bouton). Titres de page en 26 à 34 px, jamais plus.
+- **Raccourcis** : puces sur une ligne, icône puis libellé, deux par rangée.
 - **Aplat sombre** : réservé au pied de page public et aux bandes inversées. Il ne sert plus au menu.
 
 ## Mouvement
@@ -84,9 +82,11 @@ Le titre nomme la catégorie et l'acheteur, puis un fait concret (le prix) sur l
 
 ## Logo
 
-`components/Logo.tsx` : une maison à l'encre aux angles doux, dont la fenêtre ronde est le bleu stylo, puis « bailio » en Instrument Sans 600 (-0,04 em). Le point du i est la même fenêtre bleue.
-- **Sur fond sombre :** maison et nom clairs, fenêtre bleue.
-- **Fichiers :** `favicon.svg`, `favicon.ico`, `favicon-96.png` et `apple-touch-icon.png` (maison sur blanc).
+`components/Logo.tsx` : une tuile bleue aux angles arrondis qui porte un « b » blanc. Le haut de sa hampe est taillé en biais, comme la pente d'un toit : l'initiale de Bailio et une maison en un seul signe. Puis « bailio » en Instrument Sans 600 (-0,045 em), sans ornement.
+- **Construction** (grille de 32) : tuile de rayon 8,5 ; hampe de 4,4 de large taillée à 45° ; panse en cercle de rayon 4,8, trait de 4,2.
+- **Sur fond sombre :** la tuile reste bleue, seul le nom passe en clair.
+- **Taille :** lisible dès 16 px.
+- **Fichiers :** `favicon.svg`, `favicon.ico`, `favicon-96.png` et `apple-touch-icon.png` (tuile pleine page).
 
 ## Captures et vidéo
 

@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
           ) : null}
-          <main className="shell-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 28, width: '100%', maxWidth: 1240, margin: '0 auto' }}>
+          <main className="shell-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, width: '100%', maxWidth: 1240, margin: '0 auto' }}>
             {children}
           </main>
         </div>

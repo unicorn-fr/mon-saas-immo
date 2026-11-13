@@ -2,37 +2,20 @@ import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
 /*
- * Logo, direction « Feuille et stylo » (novembre 2026, docs/design/direction-artistique.md) : une maison à l'encre aux
- * angles doux dont la fenêtre ronde est le bleu « stylo », puis « bailio » en Instrument Sans, le point du i remplacé
- * par la même fenêtre bleue.
- * Construction sur une grille de 24 : marge 3, rayon d'angle 4, toit à 40°, fenêtre de diamètre 6 centrée à 13,5.
- * En couleurs sur fond clair ; `onDark` (maison et nom clairs, fenêtre bleue) sur un aplat sombre.
- * Jamais en couleurs sur un aplat de couleur.
+ * Logo (novembre 2026, docs/design/direction-artistique.md) : une tuile bleue aux angles arrondis qui porte un « b »
+ * blanc. Le haut de sa hampe est taillé en biais, comme la pente d'un toit : l'initiale de Bailio et une maison en un
+ * seul signe. Puis « bailio » en Instrument Sans 600, serré, sans ornement.
+ * Construction sur une grille de 32 : tuile de rayon 8,5 ; hampe de 4,4 de large, de 9,2 à 13,6, taillée à 45° ;
+ * panse : cercle de rayon 4,8 centré en (18,3 ; 19), trait de 4,2. La tuile reste bleue sur fond clair comme sur
+ * fond sombre ; seul le nom passe en clair avec `onDark`. Lisible dès 16 px (favicon).
  */
-const HOUSE = 'M3 11.4a2.6 2.6 0 0 1 .95-2.01l6.4-5.3a2.6 2.6 0 0 1 3.3 0l6.4 5.3A2.6 2.6 0 0 1 21 11.4V17a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z'
-
-export function LogoMark({ size = 28, onDark = false }: { size?: number; onDark?: boolean }) {
+export function LogoMark({ size = 28 }: { size?: number; onDark?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden focusable="false" style={{ flexShrink: 0, display: 'block' }}>
-      <path d={HOUSE} fill={onDark ? BAI.onDark : BAI.night} />
-      <circle cx="12" cy="13.5" r="3" fill={BAI.cta} />
+    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden focusable="false" style={{ flexShrink: 0, display: 'block' }}>
+      <rect width="32" height="32" rx="8.5" fill={BAI.owner} />
+      <path d="M9.2 25.2V9.9L13.6 5.6v19.6z" fill={BAI.surface} />
+      <circle cx="18.3" cy="19" r="4.8" fill="none" stroke={BAI.surface} strokeWidth="4.2" />
     </svg>
-  )
-}
-
-/** « bailio » : i sans point (ı) surmonté de la fenêtre allumée. */
-function Wordmark() {
-  return (
-    <span aria-hidden style={{ whiteSpace: 'nowrap' }}>
-      ba
-      <span style={{ position: 'relative', display: 'inline-block' }}>
-        ı
-        <svg viewBox="0 0 10 10" focusable="false" style={{ position: 'absolute', left: '50%', top: '0.02em', width: '0.24em', height: '0.24em', transform: 'translateX(-50%)' }}>
-          <circle cx="5" cy="5" r="5" fill={BAI.cta} />
-        </svg>
-      </span>
-      lio
-    </span>
   )
 }
 
@@ -41,18 +24,18 @@ export function Logo({ size = 28, onDark = false, to = '/' }: { size?: number; o
     textDecoration: 'none',
     fontFamily: BAI.fontDisplay,
     fontWeight: 600,
-    letterSpacing: '-0.04em',
+    letterSpacing: '-0.045em',
     fontSize: size,
-    color: onDark ? BAI.onDark : BAI.night,
+    color: onDark ? BAI.onDark : BAI.ink,
     lineHeight: 1,
     display: 'inline-flex',
     alignItems: 'center',
-    gap: Math.round(size * 0.24),
+    gap: Math.round(size * 0.3),
   }
   const content = (
     <>
-      <LogoMark size={Math.round(size * 1.1)} onDark={onDark} />
-      <Wordmark />
+      <LogoMark size={Math.round(size * 1.12)} />
+      <span aria-hidden>bailio</span>
     </>
   )
   return to ? (

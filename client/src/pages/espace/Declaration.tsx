@@ -111,11 +111,11 @@ export default function Declaration() {
     <AppShell>
       <Crumbs items={[{ label: 'Argent', to: '/espace/argent' }, { label: 'Déclaration de revenus' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>
           Déclarer vos revenus locatifs, <em>sans prise de tête.</em>
         </h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>
-          Bailio a déjà fait les calculs avec vos loyers et vos dépenses. Suivez les étapes : vérifier, recopier quelques cases sur impots.gouv.fr, signer. L’administration n’accepte pas l’envoi d’un fichier par un particulier : la déclaration se remplit en ligne, et Bailio la réduit au strict minimum.
+          Bailio a fait les calculs. Il vous reste quelques cases à recopier sur impots.gouv.fr.
         </span>
       </div>
       <Chips legend="Année des revenus" value={year} onChange={setYear} options={[thisYear - 2, thisYear - 1, thisYear].map((y) => ({ value: y, label: String(y) }))} />

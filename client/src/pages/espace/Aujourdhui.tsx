@@ -56,7 +56,7 @@ function TodayContent() {
           <span className="hide-md" style={{ fontSize: 15, color: BAI.inkSoft }}>
             {dayTitle()}
           </span>
-          <h1 style={display('clamp(38px, 5vw, 52px)')}>Bonjour{first ? ` ${first}` : ''}.</h1>
+          <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bonjour{first ? ` ${first}` : ''}.</h1>
           <span className="only-md" style={{ fontSize: 15, color: BAI.inkMid }}>
             {data.tasks.length ? `${plural(data.tasks.length, 'action')} cette semaine, déjà préparée${data.tasks.length > 1 ? 's' : ''}.` : 'Rien à faire cette semaine.'}
           </span>
@@ -176,14 +176,14 @@ function Tiles({ data }: { data: TodayView }) {
   return (
     <nav aria-label="Chiffres du mois" className="today-tiles">
       {tiles.map((t) => (
-        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
-          <span aria-hidden style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.tone === 'error' ? BAI.errorLight : t.tone === 'green' ? BAI.greenLight : BAI.ownerLight, color: t.tone === 'error' ? BAI.error : t.tone === 'green' ? BAI.green : BAI.owner }}>
-            {t.key === 'candidates' ? <People size={20} /> : t.key === 'deposit' ? <Home size={20} /> : <Euro size={20} />}
-          </span>
+        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, minWidth: 0 }}>
           <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.label}</span>
-            <span style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 600, letterSpacing: '-0.02em', color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
+            <span style={{ fontSize: 'clamp(18px, 2vw, 21px)', fontWeight: 600, letterSpacing: '-0.02em', color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
             {t.sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.sub}</span> : null}
+          </span>
+          <span aria-hidden style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.tone === 'error' ? BAI.errorLight : t.tone === 'green' ? BAI.greenLight : BAI.ownerLight, color: t.tone === 'error' ? BAI.error : t.tone === 'green' ? BAI.green : BAI.owner }}>
+            {t.key === 'candidates' ? <People size={18} /> : t.key === 'deposit' ? <Home size={18} /> : <Euro size={18} />}
           </span>
         </Link>
       ))}
@@ -194,19 +194,21 @@ function Tiles({ data }: { data: TodayView }) {
 /** Six actions courantes. Quand il faut choisir un bail, on passe par la liste qui convient. */
 function Shortcuts({ leaseId }: { leaseId: string | null }) {
   const items = [
-    { to: '/espace/argent/releve', label: 'Noter un loyer reçu', icon: <Euro size={22} /> },
-    { to: leaseId ? `/espace/baux/${leaseId}#paiements` : '/espace/actions', label: 'Envoyer une quittance', icon: <Mail size={22} /> },
-    { to: leaseId ? `/espace/baux/${leaseId}/courriers` : '/espace/logements', label: 'Écrire un courrier', icon: <Pencil size={22} /> },
-    { to: leaseId ? `/espace/baux/${leaseId}/etat-des-lieux` : '/espace/logements', label: 'Faire un état des lieux', icon: <Camera size={22} /> },
-    { to: '/espace/argent?ajouter=1', label: 'Ajouter une dépense', icon: <Plus size={22} /> },
-    { to: '/espace/logements/nouveau', label: 'Ajouter un logement', icon: <Home size={22} /> },
+    { to: '/espace/argent/releve', label: 'Noter un loyer reçu', icon: <Euro size={17} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}#paiements` : '/espace/actions', label: 'Envoyer une quittance', icon: <Mail size={17} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}/courriers` : '/espace/logements', label: 'Écrire un courrier', icon: <Pencil size={17} /> },
+    { to: leaseId ? `/espace/baux/${leaseId}/etat-des-lieux` : '/espace/logements', label: 'Faire un état des lieux', icon: <Camera size={17} /> },
+    { to: '/espace/argent?ajouter=1', label: 'Ajouter une dépense', icon: <Plus size={17} /> },
+    { to: '/espace/logements/nouveau', label: 'Ajouter un logement', icon: <Home size={17} /> },
   ]
   return (
     <Card title="Raccourcis">
       <nav aria-label="Raccourcis" className="today-shortcuts">
         {items.map((i) => (
-          <Link key={i.label} to={i.to} className="today-shortcut" style={{ textDecoration: 'none', color: BAI.owner, background: BAI.surface, border: `1.5px solid ${BAI.borderStrong}`, borderRadius: 16, padding: '14px 14px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, fontSize: 15, fontWeight: 600, lineHeight: 1.25, minWidth: 0 }}>
-            {i.icon}
+          <Link key={i.label} to={i.to} className="today-shortcut" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, lineHeight: 1.25, minWidth: 0, minHeight: 44 }}>
+            <span aria-hidden style={{ width: 30, height: 30, borderRadius: 9, background: BAI.ownerLight, color: BAI.owner, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {i.icon}
+            </span>
             {i.label}
           </Link>
         ))}
@@ -415,24 +417,25 @@ function TaskCard({ task: t, onChange, first }: { task: Task; onChange: () => vo
     )
   }
 
+  // Carte compacte : étiquette et logement, titre, une ligne d'explication (dépliée au survol ou au clavier), actions.
   return (
-    <article style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 18, padding: 'clamp(18px, 3vw, 22px) clamp(18px, 3vw, 24px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <article className="task" style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <Pill tone={t.tone}>{t.tag}</Pill>
         <span className="hide-md" style={{ fontSize: 13, color: BAI.inkSoft }}>
           {t.place}
         </span>
       </div>
-      <div style={{ fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 600, lineHeight: 1.35 }}>{t.title}</div>
-      {t.text ? <div style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>{t.text}</div> : null}
+      <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.35 }}>{t.title}</div>
+      {t.text ? <div className="task-text" style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.45 }}>{t.text}</div> : null}
       {actions.length ? (
         // Une seule action en bouton ; les autres choix, plus discrets, à côté.
-        <div style={{ display: 'flex', gap: '10px 20px', paddingTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Btn variant={first ? 'primary' : 'outline'} onClick={actions[0].onClick}>
+        <div style={{ display: 'flex', gap: '8px 18px', paddingTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Btn size="sm" variant={first ? 'primary' : 'outline'} onClick={actions[0].onClick}>
             {actions[0].label}
           </Btn>
           {actions.slice(1).map((a) => (
-            <TextLink key={a.label} onClick={() => void a.onClick()} style={{ fontSize: 15 }}>
+            <TextLink key={a.label} onClick={() => void a.onClick()} style={{ fontSize: 14 }}>
               {a.label}
             </TextLink>
           ))}
@@ -494,7 +497,7 @@ function FirstSteps({ name, counts }: { name: string | null; counts: TodayView['
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 'clamp(8px, 3vw, 40px)' }}>
-        <h1 style={display('clamp(42px, 6vw, 60px)')}>Bienvenue{name ? `, ${name}` : ''}.</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bienvenue{name ? `, ${name}` : ''}.</h1>
         <p style={{ margin: 0, fontSize: 19, color: BAI.inkMid }}>Pour commencer, c’est simple comme 1, 2, 3.</p>
       </div>
       <SetupSteps counts={counts} />

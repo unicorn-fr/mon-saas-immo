@@ -48,7 +48,7 @@ export default function Bilan() {
     <AppShell>
       <Crumbs items={[{ label: 'Argent', to: '/espace/argent' }, { label: 'Bilan' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Bilan de vos logements</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bilan de vos logements</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid }}>Ce que chaque logement vous a rapporté, et ce qu’il devrait rapporter l’an prochain.</span>
       </div>
       <Chips legend="Année" value={year} onChange={setYear} options={[thisYear - 2, thisYear - 1, thisYear].map((y) => ({ value: y, label: String(y) }))} />

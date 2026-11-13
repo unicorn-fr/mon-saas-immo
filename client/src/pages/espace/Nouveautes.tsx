@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { Btn, Card, Empty, LoadError, Loader, PageHead, Select, TextLink, useLoad } from '../../components/kit'
@@ -33,7 +34,12 @@ export function NewsCard() {
   return (
     <Card title="Actualités" action={<TextLink to="/espace/actualites" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
       {newsFor(null, today()).slice(0, 3).map((n) => (
-        <NewsRow key={n.title} n={n} />
+        <Link key={n.title} to="/espace/actualites" className="tap" style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', flexDirection: 'column', gap: 2, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>
+          <span style={{ fontSize: 13, color: BAI.inkSoft }}>
+            {KIND_LABEL[n.kind]} · {dateFr(n.date)}
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>{n.title}</span>
+        </Link>
       ))}
     </Card>
   )

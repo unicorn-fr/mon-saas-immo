@@ -83,7 +83,7 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* Espace propriétaire : menu latéral sur ordinateur, barre du bas sur téléphone. */
-.shell-main { padding: 48px 56px 64px; box-sizing: border-box; }
+.shell-main { padding: 32px 40px 56px; box-sizing: border-box; }
 .mobile-only { display: none !important; }
 .sidebar { display: flex; }
 .split-aside { display: flex; gap: 32px; align-items: flex-start; }
@@ -196,11 +196,16 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* « Aujourd'hui » : tuiles du mois, puis actions à gauche et raccourcis + agenda à droite dès 1024 px. */
-.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.today-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .today-grid { display: flex; flex-direction: column; gap: 24px; }
 .today-main { display: flex; flex-direction: column; min-width: 0; }
 .today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-.today-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.today-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.today-shortcut:hover { border-color: #8a8a8a !important; background: #f4f4f4 !important; }
+/* Carte d'action : une ligne d'explication, dépliée au survol, au clavier ou au toucher */
+.task-text { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.task:hover .task-text, .task:focus-within .task-text { -webkit-line-clamp: unset; }
+@media (hover: none) { .task-text { -webkit-line-clamp: 2; } }
 @media (min-width: 1024px) {
   .today-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
 }

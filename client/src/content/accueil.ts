@@ -18,12 +18,12 @@ export const MANUAL: Array<{ title: string; text: string; img: string; alt: stri
 
 /** Six automatismes : ce qui tourne sans vous, une fois réglé. */
 export const AUTOMATIONS: Array<{ title: string; text: string; to: string }> = [
-  { title: 'Loyers rapprochés depuis votre relevé', text: 'Le montant, la date et le nom du locataire sont comparés aux loyers attendus. Ce qui est incertain vous est montré, jamais coché seul.', to: '/fonctionnalites/quittance-de-loyer' },
-  { title: 'Quittances envoyées dès le loyer reçu', text: 'Faites, rangées avec le bail et envoyées par email si votre locataire l’a accepté.', to: '/fonctionnalites/quittance-de-loyer' },
-  { title: 'Relances d’impayés au bon moment', text: 'Relance amiable, second rappel puis mise en demeure, aux jours que vous choisissez. Tout s’arrête au paiement.', to: '/fonctionnalites/loyers-impayes' },
-  { title: 'Bail conforme, signé en ligne', text: 'Le contrat type officiel, vérifié avant la signature : durée, dépôt, DPE, loyer en zone tendue. Signature incluse.', to: '/fonctionnalites/contrat-de-location' },
-  { title: 'État des lieux sur téléphone', text: 'Pièce par pièce, photos datées, signature sur place, et la sortie comparée à l’entrée.', to: '/fonctionnalites/etat-des-lieux' },
-  { title: 'Rappels et déclaration', text: 'Révision du loyer, attestation d’assurance, échéances fiscales : rappelées à temps, préparées d’avance.', to: '/fonctionnalites/declaration-impots' },
+  { title: 'Loyers rapprochés depuis votre relevé', text: 'Déposez votre relevé : Bailio reconnaît les loyers.', to: '/fonctionnalites/quittance-de-loyer' },
+  { title: 'Quittances envoyées dès le loyer reçu', text: 'Faites, rangées et envoyées par email.', to: '/fonctionnalites/quittance-de-loyer' },
+  { title: 'Relances d’impayés au bon moment', text: 'Trois lettres, à vos dates. Tout s’arrête au paiement.', to: '/fonctionnalites/loyers-impayes' },
+  { title: 'Bail conforme, signé en ligne', text: 'Le contrat type officiel, vérifié avant la signature.', to: '/fonctionnalites/contrat-de-location' },
+  { title: 'État des lieux sur téléphone', text: 'Pièce par pièce, photos datées, signé sur place.', to: '/fonctionnalites/etat-des-lieux' },
+  { title: 'Rappels et déclaration', text: 'Révision, assurance, impôts : rappelés à temps.', to: '/fonctionnalites/declaration-impots' },
 ]
 
 /** Toutes les fonctionnalités, toutes comprises dans le prix. */

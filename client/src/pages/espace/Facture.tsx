@@ -44,7 +44,7 @@ export function FactureAjout() {
     <div style={{ minHeight: '100vh', background: BAI.bg, color: BAI.ink }}>
       <FlowHeader left={<button type="button" onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, cursor: 'pointer', padding: '12px 0' }}>Retour</button>} center={<span style={{ fontSize: 16, fontWeight: 700 }}>Ajouter une facture</span>} right={<Link to="/espace/argent" style={{ textDecoration: 'none', fontSize: 15, color: BAI.inkMid, padding: '12px 0' }}>Fermer</Link>} />
       <main style={{ maxWidth: 660, margin: '0 auto', padding: 'clamp(28px, 5vw, 56px) 16px 64px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <h1 style={display('clamp(38px, 5vw, 52px)')}>Une photo suffit.</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Une photo suffit.</h1>
         <p style={{ margin: 0, fontSize: 17, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio lit fournisseur, montant, date et adresse du chantier. Vous vérifiez, puis elle est rangée dans le bon logement.</p>
         <label style={{ border: `1.5px dashed ${BAI.dashed}`, background: BAI.surface, borderRadius: 20, padding: 'clamp(24px, 4vw, 40px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center', cursor: 'pointer' }}>
           <Camera size={40} />
@@ -146,7 +146,7 @@ function Verify({ e }: { e: ExpenseDetails }) {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Pill tone="green">Lu par Bailio</Pill>
-            <h1 style={display('clamp(36px, 4.5vw, 46px)')}>Vérifiez cette facture</h1>
+            <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Vérifiez cette facture</h1>
             <p style={{ margin: 0, fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>{reading ? 'Bailio a rempli ce qu’il a lu. Corrigez si besoin, puis validez.' : 'Complétez, puis validez.'}</p>
           </div>
           <div className="grid-2" style={{ gap: 16 }}>

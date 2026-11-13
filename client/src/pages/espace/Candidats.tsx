@@ -110,7 +110,7 @@ export default function Candidats() {
         <>
           <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Le logement', to: `/espace/logements/${id}` }, { label: 'Candidats' }]} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h1 style={display('clamp(34px, 5vw, 48px)')}>Candidats</h1>
+            <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Candidats</h1>
             <span style={{ fontSize: 16, color: BAI.inkMid }}>{data.offer.title}</span>
           </div>
           <div className="split-aside" style={{ gap: 24 }}>
