@@ -33,7 +33,7 @@ export function Changer() {
         ))}
       </ol>
       <p style={{ margin: '28px 0 0' }}>
-        <Link to="/importer" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: 999, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' }}>
+        <Link to="/importer" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, boxShadow: BAI.ctaShadow, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' }}>
           Importer mon bail
         </Link>
       </p>

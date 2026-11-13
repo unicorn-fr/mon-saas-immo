@@ -143,7 +143,7 @@ const TOUR: TourStep[] = [
   { id: 'logements', tab: 'Logements', img: 'logements', alt: 'Liste des logements : loués, libres, loyer en retard, avec le loyer de chacun', spot: { x: 20.6, y: 18, w: 76.7, h: 12, label: 'Vos logements, leur état d’un coup d’œil' } },
   { id: 'bail', tab: 'Bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances', spot: { x: 20.6, y: 6.5, w: 40, h: 9, label: 'Le contrat type officiel, signé en ligne' } },
   { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Bail avec la quittance par email activée dès que le loyer est noté reçu', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'Le loyer arrive, la quittance part' } },
-  { id: 'banque', tab: 'Banque', img: 'releve', alt: 'Dépôt du relevé bancaire : CSV ou OFX, les loyers sont reconnus', spot: { x: 20.6, y: 38.6, w: 76.7, h: 21.6, label: 'Votre relevé, les loyers reconnus seuls' } },
+  { id: 'banque', tab: 'Banque', img: 'releve', alt: 'Dépôt du relevé bancaire : CSV ou OFX, les loyers sont reconnus', spot: { x: 20.6, y: 41.1, w: 76.7, h: 21.3, label: 'Votre relevé, les loyers reconnus seuls' } },
   { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Relance automatique d’un loyer impayé activée sur le bail', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'J+3, J+8, J+15, à vos dates' } },
   { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 20.6, y: 13.3, w: 52.1, h: 39.5, label: 'Classés sur des critères permis, jamais à votre place' } },
   { id: 'impots', tab: 'Impôts', img: 'impots', alt: 'Déclaration des revenus locatifs : régime, cases à recopier, date limite', spot: { x: 20.6, y: 26, w: 76.7, h: 36, label: 'Les cases à recopier, déjà calculées' } },
@@ -172,6 +172,7 @@ function Tour() {
   return (
     <section className="tour" data-section aria-labelledby="tour-title">
       <div className="tour-intro">
+        <p className="eyebrow" aria-hidden>Le produit</p>
         <h2 id="tour-title" data-in>
           Bailio <em>en action.</em>
         </h2>
@@ -193,6 +194,7 @@ function Yearly() {
   return (
     <section className="ba" data-section aria-labelledby="ba-title">
       <div className="ba-head">
+        <p className="eyebrow" aria-hidden>Votre année</p>
         <h2 id="ba-title" data-in>
           Votre année de propriétaire, <em>avant et après.</em>
         </h2>
@@ -271,6 +273,7 @@ function PriceCalc() {
   return (
     <section className="calc" data-section aria-labelledby="calc-title">
       <div className="calc-head">
+        <p className="eyebrow" aria-hidden>Tarif</p>
         <h2 id="calc-title" data-in>
           Votre prix, <em>en un geste.</em>
         </h2>
@@ -322,6 +325,7 @@ const monthFr = (d: string) => new Date(`${d}-01T00:00:00Z`).toLocaleDateString(
 function FreeTools() {
   return (
     <section className="tools" data-section aria-labelledby="tools-title">
+      <p className="eyebrow" aria-hidden>Gratuit</p>
       <h2 id="tools-title" data-in>
         Outils gratuits, <em>sans compte.</em>
       </h2>
@@ -418,6 +422,7 @@ function AutoMini({ i }: { i: number }) {
 function Automations() {
   return (
     <section className="autos" data-section aria-labelledby="autos-title">
+      <p className="eyebrow" aria-hidden>Automatismes</p>
       <h2 id="autos-title" data-in>
         Six tâches qui <em>se font seules.</em>
       </h2>
@@ -447,6 +452,7 @@ function AllFeatures() {
   return (
     <section className="feats" data-section aria-labelledby="feats-title">
       <div className="feats-head">
+        <p className="eyebrow" aria-hidden>Fonctionnalités</p>
         <h2 id="feats-title" data-in>
           Toutes les fonctionnalités. <em>Toutes incluses.</em>
         </h2>
@@ -485,6 +491,7 @@ function Compare() {
   const cell = (v: string) => (v === 'PRICE' ? priceText() : v)
   return (
     <section className="cmp" data-section aria-labelledby="cmp-title">
+      <p className="eyebrow" aria-hidden>Comparatif</p>
       <h2 id="cmp-title" data-in>
         Tableur, agence ou <em>Bailio</em> : que choisir ?
       </h2>
@@ -814,6 +821,7 @@ export default function Home() {
         <FreeTools />
 
         <section className="faq" data-section aria-labelledby="faq-title">
+          <p className="eyebrow" aria-hidden>Vos questions</p>
           <h2 id="faq-title" data-in>
             Questions
           </h2>

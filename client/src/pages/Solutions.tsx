@@ -10,7 +10,7 @@ import { useDescription } from './Guides'
 
 const card = { background: BAI.bg, borderRadius: 24, padding: 'clamp(18px, 3vw, 24px)' } as const
 const h2 = { margin: '36px 0 12px', fontSize: 22, fontWeight: 700, color: BAI.ink, lineHeight: 1.3 } as const
-const blueButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: 999, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' } as const
+const blueButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, boxShadow: BAI.ctaShadow, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' } as const
 const pill = { display: 'inline-flex', minHeight: 44, alignItems: 'center', padding: '0 18px', borderRadius: 999, border: `1px solid ${BAI.borderStrong}`, color: BAI.ink, textDecoration: 'none' } as const
 
 function Faq({ items }: { items: Array<[string, string]> }) {

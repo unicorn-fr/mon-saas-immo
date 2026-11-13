@@ -666,3 +666,16 @@
 .bar-link { font-weight: 600; }
 .hero3 .hero-lead { max-width: 52ch; }
 .hero3-facts { align-items: baseline; }
+
+/* Têtes de section : petite étiquette bleue précédée d'un trait, titre centré */
+.hm .eyebrow { margin: 0 0 14px; display: inline-flex; align-items: center; gap: 10px; font-size: 0.875rem; font-weight: 600; color: var(--owner); letter-spacing: 0; }
+.hm .eyebrow::before { content: ''; width: 18px; height: 1.5px; background: currentColor; border-radius: 2px; }
+.ba-head { flex-direction: column; align-items: center; text-align: center; }
+.ba-head h2 { max-width: 22ch; }
+.autos { align-items: center; text-align: center; }
+.autos .autos-grid { text-align: left; width: 100%; max-width: 1180px; }
+.ba-grid { background: #ffffff; border: 1px solid #e2e8f4; border-radius: 28px; padding: clamp(12px, 2vw, 20px); box-shadow: 0 40px 80px -48px rgba(37, 99, 235, 0.45); }
+.ba-col--before { border: 0; }
+.ba-col--after { border: 0; box-shadow: none; background: var(--owner-light); }
+.faq > .eyebrow, .tools > .eyebrow, .cmp > .eyebrow { grid-column: 1 / -1; justify-self: start; }
+.feats-head .eyebrow { flex-basis: 100%; margin-bottom: -12px; }

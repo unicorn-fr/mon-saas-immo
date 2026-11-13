@@ -394,6 +394,7 @@ export function SimplePage({
   const body = useRef<HTMLDivElement | null>(null);
   return (
     <div
+      className="pub"
       style={{
         minHeight: "100vh",
         display: "flex",

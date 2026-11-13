@@ -187,7 +187,7 @@ export const FEATURES: Feature[] = [
     lead: 'Plus besoin de noter chaque virement à la main. Vous déposez le relevé du compte qui reçoit vos loyers, Bailio propose les loyers qu’il reconnaît, vous validez.',
     img: 'releve',
     alt: 'Page « Vos loyers reçus, en un clic » de Bailio : comment télécharger le relevé de sa banque puis le déposer, au format CSV ou OFX.',
-    spot: { x: 20.6, y: 38.6, w: 76.7, h: 21.6, label: 'CSV ou OFX, lu sur le serveur et jamais enregistré' },
+    spot: { x: 20.6, y: 41.1, w: 76.7, h: 21.3, label: 'CSV ou OFX, lu sur le serveur et jamais enregistré' },
     steps: [
       { title: 'Vous téléchargez le relevé', text: 'Depuis l’espace en ligne de votre banque, au format CSV ou OFX, sur le dernier mois ou plus. Bailio vous indique où le trouver.' },
       { title: 'Les loyers sont rapprochés', text: 'Un virement est associé à un loyer attendu quand le montant est juste à 1 € près, qu’il tombe de 20 jours avant à 45 jours après l’échéance, et que le libellé porte le nom du locataire ou de son garant.', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail dans Bailio : loyer du mois payé et envoi automatique des quittances.' },
