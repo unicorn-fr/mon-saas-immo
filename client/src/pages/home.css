@@ -679,3 +679,31 @@
 .ba-col--after { border: 0; box-shadow: none; background: var(--owner-light); }
 .faq > .eyebrow, .tools > .eyebrow, .cmp > .eyebrow { grid-column: 1 / -1; justify-self: start; }
 .feats-head .eyebrow { flex-basis: 100%; margin-bottom: -12px; }
+
+/* Animations (direction « Bleu clair ») : toutes en position ou en échelle, jamais en transparence sur un texte. */
+.hero3 .hero-product { perspective: 1600px; }
+.hero3 .hero-product > .app-window, .hero3 .hero-product > :not(.hero-float):not(.hero-feed) { transform: rotateX(calc(var(--tilt, 0) * 16deg)) scale(calc(1 - var(--tilt, 0) * 0.04)); transform-origin: 50% 0; transition: transform .12s linear; will-change: transform; }
+.hero-streak { position: absolute; z-index: -1; left: -20%; top: 62%; width: 70%; height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.35), rgba(255, 255, 255, 0.9), transparent); transform: rotate(-8deg) translateX(-60%); animation: streak 7s ease-in-out infinite; pointer-events: none; }
+.hero-streak--2 { top: 30%; left: 40%; width: 60%; animation-delay: -3.5s; transform: rotate(-8deg) translateX(-60%); }
+@keyframes streak { 0% { transform: rotate(-8deg) translateX(-60%); } 60%, 100% { transform: rotate(-8deg) translateX(120%); } }
+.hm-js .ba-cells span { transform: scale(0); }
+.hm-js .is-in .ba-cells span { animation: cell-pop .35s cubic-bezier(.3, 1.6, .5, 1) forwards; animation-delay: calc(300ms + var(--k, 0) * 9ms); }
+@keyframes cell-pop { to { transform: scale(1); } }
+.hm .eyebrow::before { transform-origin: right center; }
+.hm-js .is-in .eyebrow::before { animation: draw .7s ease-out both; }
+@keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.auto, .mini, .feats-list li, .stats li, .ba-col, .calc-out > div, .tool-card { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.auto:hover { transform: translateY(-6px); box-shadow: 0 2px 4px rgba(13, 27, 62, 0.06), 0 32px 60px -30px rgba(37, 99, 235, 0.45); border-color: #b3cbfa; }
+.feats-list li:hover { transform: translateY(-2px); border-color: #b3cbfa; }
+.stats li:hover { transform: translateY(-4px); }
+.hero3 h1 em { background: none; }
+.stats ul { position: relative; overflow: hidden; }
+.stats ul::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; left: -30%; background: linear-gradient(90deg, transparent, rgba(143, 180, 255, 0.10), transparent); animation: sheen 6s ease-in-out infinite; pointer-events: none; }
+@keyframes sheen { 0% { left: -30%; } 50%, 100% { left: 110%; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-streak, .stats ul::after { display: none; }
+  .hm-js .ba-cells span { transform: none; animation: none !important; }
+  .hm-js .is-in .eyebrow::before { animation: none; }
+  .auto:hover, .feats-list li:hover, .stats li:hover { transform: none; }
+  .hero3 .hero-product > * { transform: none !important; }
+}

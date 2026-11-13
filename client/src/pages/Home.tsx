@@ -219,7 +219,7 @@ function Yearly() {
           </p>
           <div className="ba-cells" aria-hidden>
             {Array.from({ length: Math.min(before, 160) }, (_, i) => (
-              <span key={i} />
+              <span key={i} style={{ ['--k' as string]: i }} />
             ))}
           </div>
           <ul className="ba-list">
@@ -240,7 +240,7 @@ function Yearly() {
           </p>
           <div className="ba-cells" aria-hidden>
             {Array.from({ length: after }, (_, i) => (
-              <span key={i} />
+              <span key={i} style={{ ['--k' as string]: i * 6 }} />
             ))}
           </div>
           <ul className="ba-list">
@@ -543,7 +543,7 @@ function Stats() {
         {items.map((it) => (
           <li key={it.label}>
             <strong>
-              {it.value}
+              {/^\d+$/.test(it.value) ? <CountUp value={Number(it.value)} ms={1400} /> : it.value}
               {it.unit ? <small>{it.unit}</small> : null}
             </strong>
             <span>{it.label}</span>
@@ -673,6 +673,8 @@ export default function Home() {
 
       <main>
         <section className="hero3" data-section aria-labelledby="hero-title">
+          <span className="hero-streak" aria-hidden />
+          <span className="hero-streak hero-streak--2" aria-hidden />
           <p className="hero3-badge">{LAUNCH_OFFER} · sans carte bancaire</p>
           <h1 id="hero-title">
             La gestion locative des propriétaires, <em>sans agence.</em>

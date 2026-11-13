@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppWindow } from './AppWindow'
 
 /**
@@ -26,8 +26,28 @@ export function HeroProduct() {
     return () => window.clearInterval(id)
   }, [])
   const recent = EVENTS.slice(Math.max(0, step - 3), step).reverse()
+  // Fenêtre légèrement inclinée qui se redresse en descendant (rien si l'appareil demande moins d'animations).
+  const box = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = box.current
+    if (!el || reduced()) return
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const r = el.getBoundingClientRect()
+      const p = Math.min(1, Math.max(0, (window.innerHeight - r.top) / (window.innerHeight * 0.9)))
+      el.style.setProperty('--tilt', String(1 - p))
+    }
+    const onScroll = () => void (raf ||= requestAnimationFrame(update))
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
   return (
-    <div className="hero-product">
+    <div className="hero-product" ref={box}>
       <div className="hero-float hero-float--a hero-float--paid" aria-hidden>
         <i>€</i>
         <span>
