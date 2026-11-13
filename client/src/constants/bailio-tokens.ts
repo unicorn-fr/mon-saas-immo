@@ -50,6 +50,8 @@ export const BAI = {
   cta: '#2563eb',
   ctaHover: '#1d4ed8',
   ctaInk: '#ffffff',
+  ctaShadow: '0 8px 20px -8px rgba(37, 99, 235, 0.65)', // ombre bleutée sous le bouton principal
+  cardShadow: '0 1px 2px rgba(13, 27, 62, 0.05), 0 24px 48px -28px rgba(13, 27, 62, 0.28)', // cartes blanches
   // Accent : bleu clair sur fond sombre (8,8:1 sur l'encre) ; sur fond clair, `accentInk`
   accent: '#8fb4ff',
   accentInk: '#2563eb',

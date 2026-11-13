@@ -29,11 +29,8 @@ img { max-width: 100%; }
 /* Module « page de bail » : bloc à grands coins arrondis dont un coin est replié, comme le coin d'une feuille.
    Le pli se fait par un masque (aucune image), le petit triangle dessine le revers de la page.
    Position et rayon sans priorité (:where) : chaque bloc peut se placer lui-même. */
-:where(.fold) { position: relative; border-radius: 24px; }
-.fold { --fold: 28px; -webkit-mask: linear-gradient(225deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); mask: linear-gradient(225deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); }
-.fold--ear::after { content: ''; position: absolute; top: 0; right: 0; width: var(--fold); height: var(--fold); border-bottom-left-radius: 8px; background: linear-gradient(225deg, transparent 50%, var(--fold-back, rgba(17, 17, 17, 0.18)) 50%); pointer-events: none; }
+:where(.fold) { position: relative; border-radius: 24px; } /* Coin replié retiré (direction « Bleu clair ») : la classe ne garde que l'arrondi. */
 .fold--lg { --fold: clamp(40px, 7vw, 88px); }
-.fold--left { -webkit-mask: linear-gradient(135deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); mask: linear-gradient(135deg, transparent calc(var(--fold) * 0.7071), #000 calc(var(--fold) * 0.7071 + 0.5px)); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .container { width: 100%; max-width: 1248px; margin: 0 auto; padding-left: clamp(20px, 6.6vw, 96px); padding-right: clamp(20px, 6.6vw, 96px); }
@@ -219,3 +216,13 @@ button:not(:disabled):active { transform: scale(.98); }
 /* Menu latéral clair de l'espace : survol discret */
 .side-link:not(.active):hover { background: #1f55d9 !important; }
 .side-add:hover { background: #eaf1fe !important; }
+
+/* Pages publiques (direction « Bleu clair ») : haut de page bleuté à halos et trame de points, comme l'accueil. */
+.pub { position: relative; isolation: isolate; }
+.pub::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: min(720px, 90vh); z-index: -1; pointer-events: none; background:
+  radial-gradient(40% 50% at 18% 20%, rgba(37, 99, 235, 0.14), transparent 70%),
+  radial-gradient(36% 46% at 85% 30%, rgba(96, 165, 250, 0.18), transparent 70%),
+  linear-gradient(180deg, #f1f5fd 0%, #f6f8fe 55%, #ffffff 100%); }
+.pub::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: min(720px, 90vh); z-index: -1; pointer-events: none; background-image: radial-gradient(rgba(13, 27, 62, 0.09) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); }
+.pub .page-body h2 { color: #0d1b3e; font-weight: 700; letter-spacing: -0.02em; }
+.pub a[style*="box-shadow"]:hover { filter: brightness(1.05); transform: translateY(-1px); }

@@ -579,6 +579,7 @@ export default function Demo() {
   });
   return (
     <div
+      className="pub"
       style={{
         minHeight: "100vh",
         display: "flex",

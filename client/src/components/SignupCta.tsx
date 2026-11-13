@@ -14,7 +14,7 @@ export function SignupCta({ text }: { text?: string }) {
       <span style={{ fontSize: 15 }}>
         Premier mois offert, sans carte bancaire. Ensuite {priceText()}, {PARKING_PRICE} pour un garage, tout compris.
       </span>
-      <Link to="/commencer" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', minHeight: 52, padding: '0 26px', borderRadius: 999, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' }}>
+      <Link to="/commencer" style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', minHeight: 52, padding: '0 26px', borderRadius: BAI.radiusBtn, boxShadow: BAI.ctaShadow, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' }}>
         Créer mon bail gratuit
       </Link>
     </aside>

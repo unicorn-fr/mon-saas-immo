@@ -57,8 +57,10 @@ nuit des chiffres (`Stats`, `Home.tsx`). En-tête translucide.
 
 ## Mouvement
 
-Le fil du haut de page, les cartes flottantes, la visite des écrans, les nombres qui défilent, les mini-écrans des
-automatismes. Animations de position, jamais de transparence sur un texte (contraste). Si l'appareil demande moins
+Le fil du haut de page, les cartes flottantes, la fenêtre du produit inclinée qui se redresse en descendant, deux
+traits de lumière qui traversent le haut de page, les chiffres de la bande bleu nuit qui défilent (avec un reflet), les
+cases de l'avant / après qui apparaissent une à une, le trait des étiquettes qui se dessine, les cartes qui se soulèvent
+au survol, la visite des écrans, les mini-écrans des automatismes. Animations de position, jamais de transparence sur un texte (contraste). Si l'appareil demande moins
 d'animations, tout s'arrête et reste visible.
 
 ## Logo
