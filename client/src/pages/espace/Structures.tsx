@@ -117,7 +117,7 @@ export function StructureFiche() {
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Vos structures', to: '/espace/structures' }, { label: data.name }]} />
-      <h1 style={display('clamp(34px, 5vw, 48px)')}>{data.name}</h1>
+      <h1 style={display('clamp(26px, 3.2vw, 34px)')}>{data.name}</h1>
 
       <Section {...fold} k="kind" title="Qui détient les logements" summary={KIND_OPTIONS.find((o) => o.value === (f.kind ?? 'PERSON'))?.label + (f.kind === 'SCI' && f.sciFamily ? ', familiale' : '')}>
         <Chips legend="Le logement est détenu" value={f.kind ?? 'PERSON'} onChange={(v) => set({ kind: v })} options={KIND_OPTIONS} />

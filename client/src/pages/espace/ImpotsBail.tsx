@@ -77,7 +77,7 @@ export default function ImpotsBail() {
     <AppShell>
       <Crumbs items={[{ label: data?.place ?? 'Bail', to: `/espace/baux/${id}` }, { label: 'Impôts' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(32px, 5vw, 44px)')}>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>
           Déclarer ce bail <em>aux impôts.</em>
         </h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>

@@ -40,7 +40,7 @@ export default function Situations() {
   return (
     <AppShell>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(38px, 5vw, 52px)')}>Que se passe-t-il ?</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Que se passe-t-il ?</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid }}>Choisissez la situation : Bailio vous donne les étapes dans l’ordre, avec les dates limites et les documents déjà remplis.</span>
       </div>
       {loading && !data ? (
@@ -142,7 +142,7 @@ export function Parcours() {
         <>
           <Crumbs items={[{ label: 'Que se passe-t-il ?', to: '/espace/situations' }, { label: data.lease.tenantName || 'Bail', to: `/espace/baux/${id}` }, { label: data.title }]} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <h1 style={display('clamp(34px, 5vw, 48px)')}>{data.title}</h1>
+            <h1 style={display('clamp(26px, 3.2vw, 34px)')}>{data.title}</h1>
             <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>{data.intro}</span>
           </div>
           {data.alert ? <Callout tone="warn">{data.alert}</Callout> : null}

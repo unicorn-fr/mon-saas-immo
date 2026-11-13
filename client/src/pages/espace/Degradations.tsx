@@ -61,7 +61,7 @@ export default function Degradations() {
     <>
       <Crumbs items={[{ label: 'Bail', to: `/espace/baux/${id}` }, { label: 'Dégradations' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Dégradations</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Dégradations</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Ce qui est plus abîmé qu’à l’entrée : usure normale ou dégradation, vous décidez élément par élément.</span>
       </div>
     </>

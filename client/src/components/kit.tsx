@@ -52,7 +52,7 @@ export function PageHead({ title, sub, actions, over }: { title: ReactNode; sub?
     <div className="col-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 20 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
         {over ? <span style={{ fontSize: 15, color: BAI.inkSoft }}>{over}</span> : null}
-        <h1 style={display('clamp(38px, 5vw, 52px)', { overflowWrap: 'anywhere' })}>{title}</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)', { overflowWrap: 'anywhere' })}>{title}</h1>
         {sub ? <span style={{ fontSize: 16, color: BAI.inkMid }}>{sub}</span> : null}
       </div>
       {actions ? (

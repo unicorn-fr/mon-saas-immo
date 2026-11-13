@@ -43,7 +43,7 @@ export default function Aides() {
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: data.propertyName, to: `/espace/logements/${id}` }, { label: 'Aides' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Aides et dispositifs</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Aides et dispositifs</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>D’après la fiche du logement et celle de votre locataire. Bailio vous oriente ; l’organisme décide.</span>
       </div>
       {data.aids.map((a) => {

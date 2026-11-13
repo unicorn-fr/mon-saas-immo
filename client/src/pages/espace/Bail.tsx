@@ -321,7 +321,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: l.property.name, to: `/espace/logements/${l.property.id}` }, { label: 'Bail' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <h1 style={display('clamp(38px, 5vw, 52px)')}>Bail de {l.tenantName || 'votre locataire'}</h1>
+          <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bail de {l.tenantName || 'votre locataire'}</h1>
           <Pill tone={status.tone}>{status.label}</Pill>
         </div>
         <span style={{ fontSize: 16, color: BAI.inkMid }}>

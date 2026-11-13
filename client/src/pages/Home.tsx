@@ -139,11 +139,11 @@ function Check() {
 /** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
 const TOUR: TourStep[] = [
   { id: 'decrire', tab: 'Décrire', img: 'tunnel', path: 'bailio.fr/commencer', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5', spot: { x: 37.9, y: 28.3, w: 50, h: 25.6, label: 'Une question à la fois : Bailio remplit le reste' } },
-  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 21.7, y: 8.5, w: 40, h: 11, label: 'Le contrat type officiel, signé en ligne' } },
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 21.7, y: 38.7, w: 45.8, h: 22.1, label: 'Un loyer en retard : la relance est déjà rédigée' } },
-  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 23.4, y: 65.7, w: 42.9, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
-  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 21.7, y: 13.3, w: 49.9, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' } },
-  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 21.7, y: 42.6, w: 74.4, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
+  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 20.6, y: 6.5, w: 40, h: 9, label: 'Le contrat type officiel, signé en ligne' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
+  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 20.6, y: 13.3, w: 52.1, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' } },
+  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
 ]
 
 /** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */
@@ -163,7 +163,7 @@ function Tour() {
           Bailio <em>en action.</em>
         </h2>
         <p data-in style={{ ['--i' as string]: 1 }}>
-          Captures de l’application sur ordinateur, compte d’exemple. Survolez pour mettre en pause.
+          Captures réelles d’un compte d’exemple.
         </p>
       </div>
       <div className="tour-panel" data-in style={{ ['--i' as string]: 2 }}>
@@ -497,35 +497,27 @@ export default function Home() {
       </header>
 
       <main>
-        <section className="hero2" data-section aria-labelledby="hero-title">
-          <div className="hero2-text">
-            <h1 id="hero-title">
-              La gestion locative des propriétaires, <em>sans agence.</em>
-            </h1>
-            <p className="hero-lead">Quittances envoyées seules, impayés relancés, déclaration réduite aux cases à recopier.</p>
-            <div className="hero-actions">
-              <Link to="/commencer" className="btn">
-                Créer mon bail gratuit
-                <Arrow />
-              </Link>
-              <VideoButton className="hero-link hero-video">
-                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden focusable="false">
-                  <circle cx="12" cy="12" r="11" fill="currentColor" opacity=".18" />
-                  <path d="M10 8.5v7l6-3.5z" fill="currentColor" />
-                </svg>
-                Voir la vidéo, 1 min
-              </VideoButton>
-            </div>
-            <p className="hero2-more">
-              <Link to="/demo">Essayer la démo sans compte</Link>
-              <Link to="/importer">J’ai déjà un bail</Link>
-            </p>
-            <ul className="hero2-proof">
-              <li>Contrat type officiel</li>
-              <li>Loi de 1989 vérifiée</li>
-              <li>{priceText()}</li>
-            </ul>
+        <section className="hero3" data-section aria-labelledby="hero-title">
+          <p className="hero3-badge">{LAUNCH_OFFER} · sans carte bancaire</p>
+          <h1 id="hero-title">
+            La gestion locative des propriétaires, <em>sans agence.</em>
+          </h1>
+          <p className="hero-lead">Bail, quittances, relances, impôts : tout est prêt, selon la loi.</p>
+          <div className="hero-actions">
+            <Link to="/commencer" className="btn">
+              Créer mon bail gratuit
+              <Arrow />
+            </Link>
+            <VideoButton className="btn btn--line hero-video">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden focusable="false">
+                <path d="M9 7v10l8-5z" fill="currentColor" />
+              </svg>
+              Voir la vidéo, 1 min
+            </VideoButton>
           </div>
+          <p className="hero3-facts">
+            {priceText()}, sans engagement. <Link to="/demo">Essayer la démo</Link> <Link to="/importer">J’ai déjà un bail</Link>
+          </p>
           <HeroProduct />
         </section>
 
@@ -541,7 +533,7 @@ export default function Home() {
               Ce que la loi impose <em>à votre bail.</em>
             </h2>
             <p className="live-lead" data-in style={{ ['--i' as string]: 1 }}>
-              Dites-nous ce que vous louez et à quel prix : vous voyez tout de suite la durée du bail, le dépôt de garantie maximum et les préavis. Bailio les reprend ensuite dans votre bail.
+              Choisissez le logement et le loyer : durée, dépôt et préavis s’affichent.
             </p>
             <div className="live-step" data-in style={{ ['--i' as string]: 2 }}>
               <span className="live-label" id="live-kind">
@@ -679,7 +671,7 @@ export default function Home() {
               Votre premier bail <em>est offert.</em>
             </h2>
             <p data-in style={{ ['--i' as string]: 1 }}>
-              Cinq minutes de questions pour le préparer. Bailio vous dit ensuite ce qu’il manque (diagnostics, équipements) avant de le faire signer.
+              Cinq minutes de questions. Bailio vous dit ce qu’il manque avant la signature.
             </p>
             <span data-in style={{ ['--i' as string]: 2 }}>
               <Link to="/commencer" className="btn">

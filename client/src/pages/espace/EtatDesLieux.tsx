@@ -71,7 +71,7 @@ function Launch({ l }: { l: LeaseView }) {
     return (
       <>
         <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: l.property.name, to: `/espace/logements/${l.property.id}` }, { label: 'État des lieux' }]} />
-        <h1 style={display('clamp(38px, 5vw, 52px)')}>État des lieux</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>État des lieux</h1>
         <Callout tone="tip" title="Le bail n’est pas encore signé">
           L’état des lieux d’entrée se fait le jour de la remise des clés, une fois le bail signé.
         </Callout>
@@ -85,7 +85,7 @@ function Launch({ l }: { l: LeaseView }) {
   return (
     <>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: l.property.name, to: `/espace/logements/${l.property.id}` }, { label: 'État des lieux' }]} />
-      <h1 style={display('clamp(38px, 5vw, 52px)')}>État des lieux</h1>
+      <h1 style={display('clamp(26px, 3.2vw, 34px)')}>État des lieux</h1>
       <div className="split-aside" style={{ gap: 24 }}>
         <div className="grow">
           <Card title="Lequel ?">

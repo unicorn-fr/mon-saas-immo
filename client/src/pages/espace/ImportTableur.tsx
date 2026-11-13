@@ -78,7 +78,7 @@ export default function ImportTableur() {
   return (
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Importer depuis un fichier' }]} />
-      <h1 style={display('clamp(34px, 5vw, 48px)')}>
+      <h1 style={display('clamp(26px, 3.2vw, 34px)')}>
         Tous vos logements, <em>d’un coup</em>
       </h1>
 

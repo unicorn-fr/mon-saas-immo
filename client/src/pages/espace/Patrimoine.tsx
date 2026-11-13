@@ -49,7 +49,7 @@ export default function Patrimoine() {
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Tableau de bord' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Tableau de bord</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Tableau de bord</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>
           {t.properties} logement{t.properties > 1 ? 's' : ''}, dont {t.rented} loué{t.rented > 1 ? 's' : ''}. Chaque mois, avant impôt.
         </span>

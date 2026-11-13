@@ -85,7 +85,7 @@ export default function Releve() {
     <AppShell>
       <Crumbs items={[{ label: 'Argent', to: '/espace/argent' }, { label: 'Relevé bancaire' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Vos loyers reçus, en un clic</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Vos loyers reçus, en un clic</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>
           Déposez le relevé du compte où vous recevez vos loyers : Bailio reconnaît les virements de vos locataires, enregistre les loyers et prépare les quittances.
         </span>

@@ -67,7 +67,7 @@ export const FEATURES: Feature[] = [
     lead: 'Notez le loyer reçu, ou déposez le relevé de votre banque : Bailio reconnaît les virements de vos locataires et envoie chaque quittance tout de suite.',
     img: 'quittances',
     alt: 'Partie « Loyers et quittances » d’un bail dans Bailio : loyer du mois payé, envoi automatique des quittances et loyers des mois passés.',
-    spot: { x: 23.4, y: 43.1, w: 42.9, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' },
+    spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' },
     steps: [
       { title: 'Un clic sur « Loyer reçu »', text: 'La quittance est faite, rangée avec le bail et envoyée par email si votre locataire l’a accepté. Un paiement partiel donne un reçu, jamais une quittance.' },
       { title: 'Votre relevé bancaire, rapproché', text: 'Téléchargez le fichier CSV ou OFX de votre banque et déposez-le : les loyers attendus sont retrouvés, vous cochez, c’est enregistré. Le fichier n’est pas conservé.', img: 'releve', alt: 'Page « Vos loyers reçus, en un clic » de Bailio : comment télécharger puis déposer le relevé bancaire.' },
@@ -92,7 +92,7 @@ export const FEATURES: Feature[] = [
     lead: 'Activez les relances une fois. Si le loyer n’est pas noté reçu, votre locataire reçoit une relance amiable, puis un second rappel, puis une mise en demeure. Vous recevez une copie de chaque envoi.',
     img: 'relances',
     alt: 'Bail avec un loyer en retard de 3 jours dans Bailio et l’interrupteur « Relancer automatiquement un loyer impayé » activé.',
-    spot: { x: 23.4, y: 65.7, w: 42.9, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' },
+    spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' },
     steps: [
       { title: 'Vous choisissez les jours', text: 'Par défaut 3, 8 et 15 jours après l’échéance, réglables. Chaque lettre reprend toute la somme due et les mois concernés.' },
       { title: 'Tout s’arrête dès le paiement', text: 'Le loyer est noté reçu, à la main ou depuis le relevé : plus aucune relance ne part. Une étape n’est jamais envoyée deux fois.' },
@@ -141,7 +141,7 @@ export const FEATURES: Feature[] = [
     lead: 'Bailio écrit les mentions obligatoires de l’annonce et vous donne un lien de candidature. Les candidats déposent leur dossier, vous comparez en un coup d’œil.',
     img: 'candidats',
     alt: 'Liste des candidats dans Bailio : dossier solide ou à compléter, avec les raisons.',
-    spot: { x: 21.7, y: 13.3, w: 49.9, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' },
+    spot: { x: 20.6, y: 13.3, w: 52.1, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' },
     steps: [
       { title: 'L’annonce, conforme', text: 'Loyer charges comprises, dépôt, surface, classes énergie et dépenses estimées : ajoutés tout seuls. Le texte se copie sur le site de votre choix.', img: 'annonce', alt: 'Page « Votre annonce » de Bailio : loyer, charges et conditions, avec l’aperçu de l’annonce.' },
       { title: 'Seulement les pièces autorisées', text: 'Vous choisissez dans la liste officielle. Chaque justificatif reçoit un filigrane « uniquement pour louer ce logement », contre la revente des dossiers.' },
@@ -187,7 +187,7 @@ export const FEATURES: Feature[] = [
     lead: 'Plus besoin de noter chaque virement à la main. Vous déposez le relevé du compte qui reçoit vos loyers, Bailio propose les loyers qu’il reconnaît, vous validez.',
     img: 'releve',
     alt: 'Page « Vos loyers reçus, en un clic » de Bailio : comment télécharger le relevé de sa banque puis le déposer, au format CSV ou OFX.',
-    spot: { x: 21.7, y: 47.4, w: 74.4, h: 21.6, label: 'CSV ou OFX, lu sur le serveur et jamais enregistré' },
+    spot: { x: 20.6, y: 38.6, w: 76.7, h: 21.6, label: 'CSV ou OFX, lu sur le serveur et jamais enregistré' },
     steps: [
       { title: 'Vous téléchargez le relevé', text: 'Depuis l’espace en ligne de votre banque, au format CSV ou OFX, sur le dernier mois ou plus. Bailio vous indique où le trouver.' },
       { title: 'Les loyers sont rapprochés', text: 'Un virement est associé à un loyer attendu quand le montant est juste à 1 € près, qu’il tombe de 20 jours avant à 45 jours après l’échéance, et que le libellé porte le nom du locataire ou de son garant.', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail dans Bailio : loyer du mois payé et envoi automatique des quittances.' },
@@ -213,7 +213,7 @@ export const FEATURES: Feature[] = [
     lead: 'Chaque mois, Bailio additionne les loyers de tous vos logements, retire les crédits et les dépenses, et vous montre ce qu’il vous reste avant impôt. Ce qui demande votre attention vient en premier.',
     img: 'patrimoine',
     alt: 'Tableau de bord de Bailio : loyers et charges attendus chaque mois, ce qu’il reste, les logements à surveiller et la liste des trois logements.',
-    spot: { x: 21.7, y: 22.7, w: 74.4, h: 16.4, label: 'Loyers attendus et ce qu’il vous reste, chaque mois avant impôt' },
+    spot: { x: 20.6, y: 19, w: 76.7, h: 16, label: 'Loyers attendus et ce qu’il vous reste, chaque mois avant impôt' },
     steps: [
       { title: 'Un tableau de bord pour tout le patrimoine', text: 'Loyers et charges attendus, crédits et assurances, dépenses moyennes des 12 derniers mois, reste avant impôt, et rendement brut quand le prix d’achat est connu.' },
       { title: '« À surveiller », du plus urgent au moins urgent', text: 'Loyer en retard, logement interdit à la location, logement libre, diagnostic à refaire, interdiction liée au DPE dans les 4 ans, bail qui arrive à échéance.', img: 'logements', alt: 'Page « Vos logements » de Bailio : trois logements loués, un loyer en retard, et le lien vers le tableau de bord.' },
@@ -236,10 +236,10 @@ export const FEATURES: Feature[] = [
 
 /** Vitrine de /fonctionnalites : quatre écrans, une zone mise en avant chacun. */
 export const SHOWCASE: Array<{ id: string; tab: string; img: string; alt: string; spot: Spot }> = [
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail, l’état des lieux à faire et les prochaines échéances.', spot: { x: 21.7, y: 38.7, w: 45.8, h: 22.1, label: 'Un loyer en retard : la relance est déjà rédigée' } },
-  { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail : loyer du mois payé, envoi automatique des quittances et loyers des mois passés.', spot: { x: 23.4, y: 43.1, w: 42.9, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' } },
-  { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Bail avec un loyer en retard de 3 jours et les relances automatiques activées.', spot: { x: 23.4, y: 65.7, w: 42.9, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
-  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord de Bailio : loyers attendus chaque mois, ce qu’il reste, logements à surveiller.', spot: { x: 21.7, y: 42.6, w: 74.4, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail, l’état des lieux à faire et les prochaines échéances.', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail : loyer du mois payé, envoi automatique des quittances et loyers des mois passés.', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' } },
+  { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Bail avec un loyer en retard de 3 jours et les relances automatiques activées.', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
+  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord de Bailio : loyers attendus chaque mois, ce qu’il reste, logements à surveiller.', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
 ]
 
 /** Sections numérotées de /fonctionnalites : une capture, ce que Bailio fait, les pages détaillées. */

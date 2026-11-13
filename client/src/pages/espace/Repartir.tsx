@@ -70,7 +70,7 @@ export default function Repartir() {
     <AppShell>
       <Crumbs items={[{ label: 'Argent', to: '/espace/argent' }, { label: 'Répartir une dépense' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Répartir une dépense de l’immeuble</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Répartir une dépense de l’immeuble</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Électricité des parties communes, ménage, entretien, ordures ménagères : chaque logement reçoit sa part.</span>
       </div>
       <Card pad={28}>

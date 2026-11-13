@@ -66,7 +66,7 @@ export default function Emprunt() {
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: p.name, to: `/espace/logements/${id}` }, { label: 'Emprunt' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Emprunt et trésorerie</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Emprunt et trésorerie</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Ce que le logement vous rapporte ou vous coûte chaque mois, et ce que vous déclarez chaque année.</span>
       </div>
 

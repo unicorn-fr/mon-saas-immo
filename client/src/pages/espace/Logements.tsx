@@ -62,7 +62,7 @@ function List({ items }: { items: PropertySummary[] }) {
               Vos structures
             </Btn>
             <Btn variant="outline" to="/espace/logements/importer">
-              Importer depuis un fichier (Qalimo, tableur…)
+              Importer depuis un fichier
             </Btn>
             <Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>
           </>
@@ -149,7 +149,7 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
           </div>
         )}
         {available ? (
-          <span style={{ marginTop: 'auto', alignSelf: 'flex-start', background: BAI.owner, color: BAI.surface, padding: '12px 18px', borderRadius: 10, fontWeight: 600, fontSize: 14 }}>{p.lease?.status === 'DRAFT' ? 'Reprendre le bail' : 'Voir le logement'}</span>
+          <span style={{ marginTop: 'auto', alignSelf: 'flex-start', background: BAI.surface, color: BAI.ink, border: `1.5px solid ${BAI.borderStrong}`, padding: '9px 14px', borderRadius: 10, fontWeight: 600, fontSize: 14 }}>{p.lease?.status === 'DRAFT' ? 'Reprendre le bail' : 'Voir le logement'}</span>
         ) : null}
       </div>
     </Link>

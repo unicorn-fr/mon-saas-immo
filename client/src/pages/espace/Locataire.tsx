@@ -73,7 +73,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
           <Avatar text={t.initials} size={64} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-            <h1 style={display('clamp(36px, 5vw, 48px)', { overflowWrap: 'anywhere' })}>{t.name || 'Locataire'}</h1>
+            <h1 style={display('clamp(26px, 3.2vw, 34px)', { overflowWrap: 'anywhere' })}>{t.name || 'Locataire'}</h1>
             <span style={{ fontSize: 16, color: BAI.inkMid }}>{since}</span>
           </div>
         </div>

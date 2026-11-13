@@ -29,7 +29,7 @@ export default function Partage() {
         ) : (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <h1 style={display('clamp(32px, 5vw, 44px)')}>Intervention</h1>
+              <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Intervention</h1>
               <span style={{ fontSize: 16, color: BAI.inkMid }}>
                 Pour {data.ownerName}
                 {data.ownerPhone ? `, ${data.ownerPhone}` : ''}.

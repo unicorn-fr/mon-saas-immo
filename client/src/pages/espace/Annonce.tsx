@@ -86,7 +86,7 @@ export default function Annonce() {
     <AppShell>
       <Crumbs items={[{ label: 'Logements', to: '/espace/logements' }, { label: 'Le logement', to: `/espace/logements/${id}` }, { label: 'Annonce' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <h1 style={display('clamp(34px, 5vw, 48px)')}>Votre annonce</h1>
+        <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Votre annonce</h1>
         <span style={{ fontSize: 16, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio reprend la fiche du logement et ajoute les mentions obligatoires. Copiez le texte sur le site d’annonces de votre choix.</span>
       </div>
       {view.warnings.map((w) => (
