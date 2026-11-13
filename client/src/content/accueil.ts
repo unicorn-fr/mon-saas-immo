@@ -27,29 +27,39 @@ export const AUTOMATIONS: Array<{ title: string; text: string; to: string }> = [
 ]
 
 /** Toutes les fonctionnalités, toutes comprises dans le prix. */
-export const ALL_FEATURES: string[] = [
-  'Rapprochement du relevé bancaire',
-  'Quittances automatiques',
-  'Avis d’échéance',
-  'Relances d’impayés',
-  'Révision du loyer (IRL)',
-  'Régularisation des charges',
-  'Bail vide, meublé ou garage',
-  'Signature électronique',
-  'Annonce aux mentions obligatoires',
-  'Candidatures sans compte',
-  'Pièces filigranées contre la revente',
-  'État des lieux sur téléphone',
-  'Sortie comparée à l’entrée',
-  'Lien du locataire (assurance, signalements)',
-  'Rappels d’assurance',
-  'Courriers prêts à envoyer',
-  'SCI, indivision et structures',
-  'Tableau de bord et rendement',
-  'Aide à la déclaration et formulaires remplis',
-  'Export pour le comptable',
-  'Accès pour un associé ou un comptable',
-  'Import par fichier ou bail en photo',
+/** Toutes les fonctionnalités, rangées par moment de la location (filtres de l'accueil). */
+export type FeatureGroup = 'ENCAISSER' | 'LOUER' | 'PROTEGER' | 'PILOTER'
+export const FEATURE_GROUPS: Array<{ id: FeatureGroup; label: string }> = [
+  { id: 'ENCAISSER', label: 'Encaisser' },
+  { id: 'LOUER', label: 'Louer' },
+  { id: 'PROTEGER', label: 'Protéger' },
+  { id: 'PILOTER', label: 'Piloter' },
+]
+export const ALL_FEATURES: Array<{ name: string; group: FeatureGroup }> = [
+  { name: 'Rapprochement du relevé bancaire', group: 'ENCAISSER' },
+  { name: 'Quittances automatiques', group: 'ENCAISSER' },
+  { name: 'Avis d’échéance', group: 'ENCAISSER' },
+  { name: 'Relances d’impayés', group: 'ENCAISSER' },
+  { name: 'Révision du loyer (IRL)', group: 'ENCAISSER' },
+  { name: 'Régularisation des charges', group: 'ENCAISSER' },
+  { name: 'Bail vide, meublé ou garage', group: 'LOUER' },
+  { name: 'Signature électronique', group: 'LOUER' },
+  { name: 'Annonce aux mentions obligatoires', group: 'LOUER' },
+  { name: 'Candidatures sans compte', group: 'LOUER' },
+  { name: 'Candidats classés, avec les raisons', group: 'LOUER' },
+  { name: 'État des lieux sur téléphone', group: 'LOUER' },
+  { name: 'Sortie comparée à l’entrée', group: 'LOUER' },
+  { name: 'Pièces filigranées contre la revente', group: 'PROTEGER' },
+  { name: 'Lien du locataire (assurance, pannes)', group: 'PROTEGER' },
+  { name: 'Rappels d’assurance', group: 'PROTEGER' },
+  { name: 'Courriers prêts à envoyer', group: 'PROTEGER' },
+  { name: 'Règles de la loi vérifiées avant signature', group: 'PROTEGER' },
+  { name: 'SCI, indivision et structures', group: 'PILOTER' },
+  { name: 'Tableau de bord et rendement', group: 'PILOTER' },
+  { name: 'Aide à la déclaration, formulaires remplis', group: 'PILOTER' },
+  { name: 'Export pour le comptable', group: 'PILOTER' },
+  { name: 'Accès pour un associé ou un comptable', group: 'PILOTER' },
+  { name: 'Import par fichier ou bail en photo', group: 'PILOTER' },
 ]
 
 /** Six raisons de choisir Bailio. */

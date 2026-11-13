@@ -236,7 +236,7 @@ export const FEATURES: Feature[] = [
 
 /** Vitrine de /fonctionnalites : quatre écrans, une zone mise en avant chacun. */
 export const SHOWCASE: Array<{ id: string; tab: string; img: string; alt: string; spot: Spot }> = [
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail, l’état des lieux à faire et les prochaines échéances.', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail, l’état des lieux à faire et les prochaines échéances.', spot: { x: 20.6, y: 40.8, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
   { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail : loyer du mois payé, envoi automatique des quittances et loyers des mois passés.', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' } },
   { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Bail avec un loyer en retard de 3 jours et les relances automatiques activées.', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
   { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord de Bailio : loyers attendus chaque mois, ce qu’il reste, logements à surveiller.', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
