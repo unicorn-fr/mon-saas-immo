@@ -2,12 +2,12 @@ import { forwardRef, type CSSProperties, type InputHTMLAttributes, type ReactNod
 import { Link } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 
-/** Titre en Instrument Sans : la seconde moitié peut passer en gris avec <em> (une phrase à elle seule, une fois par écran). */
+/** Titre en Inter gras, bleu nuit : la seconde moitié peut passer en bleu avec <em> (une phrase à elle seule, une fois par écran). */
 export const display = (size: number | string, extra: CSSProperties = {}): CSSProperties => ({
   margin: 0,
   fontFamily: BAI.fontDisplay,
-  fontWeight: 500,
-  letterSpacing: '-0.032em',
+  fontWeight: 700,
+  letterSpacing: '-0.03em',
   fontSize: size,
   lineHeight: 1.06,
   color: BAI.ink,

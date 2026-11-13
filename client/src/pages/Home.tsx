@@ -13,7 +13,7 @@ import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY
 import { HeroProduct } from '../components/HeroProduct'
 import { ALL_FEATURES, AUTOMATIONS, COMPARE, FEATURE_GROUPS, GUARANTEES, TRUST, type FeatureGroup } from '../content/accueil'
 import { AVIS } from '../content/avis'
-import { SIMULATEURS } from '../content/modeles'
+import { MODELES, SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
 
 /**
@@ -102,6 +102,7 @@ const VARS = {
   '--on-dark': BAI.onDark,
   '--accent-light': BAI.accentLight,
   '--green': BAI.green,
+  '--green-light': BAI.greenLight,
   '--accent': BAI.accent,
   '--accent-ink': BAI.accentInk,
   '--sky': BAI.sky,
@@ -521,6 +522,31 @@ function Compare() {
   )
 }
 
+/** Bande bleu nuit des chiffres : seulement des faits vérifiables (prix, contenus gratuits), aucun avis ni nombre d'utilisateurs. */
+function Stats() {
+  const items: Array<{ value: string; unit?: string; label: string }> = [
+    { value: (MONTHLY_PRICE ?? '').replace(' €', ''), unit: '€', label: 'par logement et par mois' },
+    { value: '0', label: 'option payante' },
+    { value: String(MODELES.length), label: 'modèles de lettres gratuits' },
+    { value: String(SIMULATEURS.length), label: 'outils gratuits, sans compte' },
+  ]
+  return (
+    <section className="stats" aria-label="Bailio en chiffres">
+      <ul>
+        {items.map((it) => (
+          <li key={it.label}>
+            <strong>
+              {it.value}
+              {it.unit ? <small>{it.unit}</small> : null}
+            </strong>
+            <span>{it.label}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 /** Bandeau de confiance, avant le pied de page. */
 function Trust() {
   return (
@@ -662,6 +688,8 @@ export default function Home() {
           </p>
           <HeroProduct />
         </section>
+
+        <Stats />
 
         <Yearly />
 

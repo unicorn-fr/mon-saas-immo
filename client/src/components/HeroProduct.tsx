@@ -28,6 +28,20 @@ export function HeroProduct() {
   const recent = EVENTS.slice(Math.max(0, step - 3), step).reverse()
   return (
     <div className="hero-product">
+      <div className="hero-float hero-float--a hero-float--paid" aria-hidden>
+        <i>€</i>
+        <span>
+          <b>780 € reçus</b>
+          <span>Quittance envoyée · exemple</span>
+        </span>
+      </div>
+      <div className="hero-float hero-float--b" aria-hidden>
+        <i>✓</i>
+        <span>
+          <b>Bail vérifié</b>
+          <span>Durée, dépôt, préavis · exemple</span>
+        </span>
+      </div>
       <AppWindow img="today" eager alt="Écran « Aujourd’hui » de Bailio : loyers du mois, un loyer en retard avec la relance prête, les raccourcis et l’agenda" />
       <div className="hero-feed">
         <p className="hero-feed-tag">Exemple · en ce moment</p>
