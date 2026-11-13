@@ -138,7 +138,7 @@ function Check() {
 
 /** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
 const TOUR: TourStep[] = [
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : loyers du mois, un loyer en retard avec la relance prête, les raccourcis et l’agenda', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Chaque matin, ce qui compte est en haut' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : loyers du mois, un loyer en retard avec la relance prête, les raccourcis et l’agenda', spot: { x: 20.6, y: 40.8, w: 48.1, h: 17.5, label: 'Chaque matin, ce qui compte est en haut' } },
   { id: 'logements', tab: 'Logements', img: 'logements', alt: 'Liste des logements : loués, libres, loyer en retard, avec le loyer de chacun', spot: { x: 20.6, y: 18, w: 76.7, h: 12, label: 'Vos logements, leur état d’un coup d’œil' } },
   { id: 'bail', tab: 'Bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances', spot: { x: 20.6, y: 6.5, w: 40, h: 9, label: 'Le contrat type officiel, signé en ligne' } },
   { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Bail avec la quittance par email activée dès que le loyer est noté reçu', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'Le loyer arrive, la quittance part' } },

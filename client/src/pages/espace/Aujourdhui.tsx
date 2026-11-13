@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Card, LoadError, Loader, Pill, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
+import { Btn, Card, LoadError, Loader, Pill, Tabs, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
 import { Camera, Check, Euro, Home, Mail, Pencil, People, Plus, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
-import { api } from '../../lib/api'
+import { api, downloadPdf, pdfUrl } from '../../lib/api'
 import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
 import { useAuth } from '../../lib/auth'
@@ -31,6 +31,10 @@ function TodayContent() {
   const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
   // Trois actions à la fois : les plus urgentes d'abord, le reste sur demande (pas de longue liste à faire défiler).
   const [allTasks, setAllTasks] = useState(false)
+  const [tag, setTag] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  const tab = (['general', 'rentabilite', 'export'] as const).find((t) => t === params.get('onglet')) ?? 'general'
+  const setTab = (t: string) => setParams(t === 'general' ? {} : { onglet: t }, { replace: true })
   useEffect(() => {
     if (data) setTaskCount(data.tasks.length)
   }, [data, setTaskCount])
@@ -46,7 +50,9 @@ function TodayContent() {
   const view: ViewMode = user?.viewMode ?? suggestView(data.counts.properties)
   const simple = view === 'SIMPLE'
   const large = view === 'LARGE' || view === 'AGENCY'
-  const visibleTasks = allTasks ? data.tasks : data.tasks.slice(0, 3)
+  const tags = [...new Set(data.tasks.map((t) => t.tag))]
+  const filtered = tag ? data.tasks.filter((t) => t.tag === tag) : data.tasks
+  const visibleTasks = allTasks ? filtered : filtered.slice(0, 3)
   return (
     <>
       <FollowUpBanner />
@@ -71,6 +77,9 @@ function TodayContent() {
 
       {large ? <PortfolioBar agency={view === 'AGENCY'} /> : null}
 
+      <Tabs label="Tableau de bord" value={tab} onChange={setTab} tabs={[{ value: 'general', label: 'Général' }, { value: 'rentabilite', label: 'Rentabilité' }, { value: 'export', label: 'Export' }]} />
+
+      {tab === 'rentabilite' ? <Profitability /> : tab === 'export' ? <Exports /> : (<>
       <Tiles data={data} />
 
       <div className="today-grid">
@@ -79,6 +88,19 @@ function TodayContent() {
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>À faire cette semaine</h2>
             {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
           </div>
+          {tags.length > 1 ? (
+            <div role="group" aria-label="Filtrer les actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[null, ...tags].map((g) => {
+                const n = g ? data.tasks.filter((t) => t.tag === g).length : data.tasks.length
+                const on = tag === g
+                return (
+                  <button key={g ?? 'tout'} type="button" aria-pressed={on} onClick={() => { setTag(g); setAllTasks(false) }} style={{ minHeight: 36, padding: '0 12px', borderRadius: 999, border: `1px solid ${on ? BAI.ink : BAI.border}`, background: on ? BAI.ink : BAI.surface, color: on ? BAI.surface : BAI.ink, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                    {g ?? 'Tout'} <span style={{ fontWeight: 500, opacity: 0.8 }}>{n}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
           {/* Plusieurs envois du même genre (relances, assurances, révisions) : ils se font en une fois. */}
           {(['LATE_RENT', 'INSURANCE', 'REVISION'] as const).some((k) => data.tasks.filter((t) => t.type === k).length >= 2) ? (
             <Link to="/espace/actions" style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>
@@ -93,9 +115,9 @@ function TodayContent() {
                   <TaskCard task={t} onChange={reload} first={i === 0} />
                 </div>
               ))}
-              {data.tasks.length > visibleTasks.length || allTasks ? (
+              {filtered.length > visibleTasks.length || allTasks ? (
                 <Btn variant="outline" onClick={() => setAllTasks(!allTasks)}>
-                  {allTasks ? 'Voir moins' : (() => { const rest = data.tasks.length - visibleTasks.length; return `Voir ${rest > 1 ? `les ${rest} autres actions` : 'l’autre action'}` })()}
+                  {allTasks ? 'Voir moins' : (() => { const rest = filtered.length - visibleTasks.length; return `Voir ${rest > 1 ? `les ${rest} autres actions` : 'l’autre action'}` })()}
                 </Btn>
               ) : null}
             </>
@@ -125,11 +147,83 @@ function TodayContent() {
           </Card>
         </aside>
       </div>
+      </>)}
     </>
   )
 }
 
 const fmtMoney = (c: number) => eurosCents(c).replace(',00 €', ' €')
+
+/** Onglet « Rentabilité » : l'essentiel du mois et chaque logement en une ligne (même calcul que /espace/patrimoine). */
+interface PortfolioLite {
+  totals: { properties: number; rented: number; monthlyRentCents: number; monthlyLoanCents: number; monthlyExpensesCents: number; monthlyNetCents: number; grossYield: number | null }
+  rows: Array<{ id: string; name: string; rented: boolean; rentCents: number; chargesCents: number; netCents: number }>
+}
+
+function Profitability() {
+  const { data, error, reload } = useLoad(() => api<PortfolioLite>('/portfolio'))
+  if (error) return <LoadError message={error} retry={reload} />
+  if (!data) return <Loader />
+  const t = data.totals
+  const tiles: Array<[string, string, string?]> = [
+    ['Loyers et charges attendus', fmtMoney(t.monthlyRentCents), 'par mois'],
+    ['Crédits et dépenses', fmtMoney(t.monthlyLoanCents + t.monthlyExpensesCents), 'par mois, en moyenne'],
+    [t.monthlyNetCents >= 0 ? 'Il vous reste' : 'De votre poche', fmtMoney(Math.abs(t.monthlyNetCents)), 'par mois, avant impôt'],
+    ['Rendement brut', t.grossYield !== null ? `${t.grossYield.toLocaleString('fr-FR')} %` : '—', t.grossYield !== null ? 'par an, logements loués' : 'prix d’achat à renseigner'],
+  ]
+  return (
+    <>
+      <div className="today-tiles">
+        {tiles.map(([label, value, sub]) => (
+          <div key={label} style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{label}</span>
+            <span style={{ fontSize: 'clamp(18px, 2vw, 21px)', fontWeight: 600, letterSpacing: '-0.02em' }}>{value}</span>
+            {sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{sub}</span> : null}
+          </div>
+        ))}
+      </div>
+      <Card title="Par logement" action={<TextLink to="/espace/patrimoine" style={{ fontSize: 14 }}>Tableau de bord complet</TextLink>}>
+        {data.rows.map((r) => (
+          <Link key={r.id} to={`/espace/logements/${r.id}`} className="tap" style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 10 }}>
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+            <span style={{ whiteSpace: 'nowrap', fontWeight: 600, color: !r.rented ? BAI.inkSoft : r.netCents >= 0 ? BAI.ink : BAI.error }}>{r.rented ? `${fmtMoney(r.netCents)} / mois` : 'Libre'}</span>
+          </Link>
+        ))}
+      </Card>
+    </>
+  )
+}
+
+/** Onglet « Export » : ce qu'on télécharge ou prépare pour le comptable et les impôts. */
+function Exports() {
+  const toast = useToast()
+  const year = new Date().getFullYear()
+  const csv = async (y: number) => {
+    try {
+      downloadPdf(await pdfUrl(`/money/export?year=${y}`), `bailio-${y}.csv`)
+    } catch (e) {
+      toast.error(e)
+    }
+  }
+  const items: Array<{ title: string; text: string; action: ReactNode }> = [
+    { title: `Export pour le comptable ${year}`, text: 'Loyers, charges et dépenses, une ligne par opération (CSV).', action: <Btn size="sm" variant="outline" onClick={() => void csv(year)}>Télécharger</Btn> },
+    { title: `Export ${year - 1}`, text: 'L’année dernière, au même format.', action: <Btn size="sm" variant="outline" onClick={() => void csv(year - 1)}>Télécharger</Btn> },
+    { title: 'Bilan par logement', text: 'Loyers, dépenses, résultat et rendement.', action: <Btn size="sm" variant="outline" to="/espace/argent/bilan">Ouvrir</Btn> },
+    { title: 'Déclaration des revenus', text: 'Cases à recopier et formulaires remplis.', action: <Btn size="sm" variant="outline" to="/espace/argent/declaration">Ouvrir</Btn> },
+    { title: 'Quittances et courriers', text: 'Rangés avec chaque bail, à télécharger un par un.', action: <Btn size="sm" variant="outline" to="/espace/documents">Ouvrir</Btn> },
+  ]
+  return (
+    <div className="grid-2" style={{ display: 'grid', gap: 12 }}>
+      {items.map((i) => (
+        <div key={i.title} style={{ background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+          <strong style={{ fontSize: 16 }}>{i.title}</strong>
+          <span style={{ fontSize: 14, color: BAI.inkMid }}>{i.text}</span>
+          <span style={{ paddingTop: 4 }}>{i.action}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 /** Chiffres du mois : une tuile par chiffre, chacune mène à la page qui va bien. */
 /** Vue « Patrimoine » ou « Gestion pour d'autres » : le patrimoine, les actions groupées et les exports d'abord. */
