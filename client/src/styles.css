@@ -1,19 +1,19 @@
 /* Mise en page et états (survol, focus) : les couleurs reprennent les tokens BAI (constants/bailio-tokens.ts). */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; font-family: 'Instrument Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 16px; background: #f4f4f4; color: #111111; -webkit-font-smoothing: antialiased; }
+body { margin: 0; font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 16px; background: #f4f7fd; color: #0d1b3e; -webkit-font-smoothing: antialiased; }
 /* Accroche : la seconde moitié du titre en gris, une phrase à elle seule (pas d’italique). */
-h1 em, h2 em { font-style: normal; color: #6b6b6b; }
-a { color: #1a4be0; }
-a:hover { color: #143bb3; }
+h1 em, h2 em { font-style: normal; color: #2563eb; }
+a { color: #2563eb; }
+a:hover { color: #1d4ed8; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
 /* Focus visible sur tous les fonds : contour bleu entouré de clair (contraste 3:1 minimum, WCAG 2.4.7 et 1.4.11). */
-input:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #1a4be0; outline-offset: 2px; box-shadow: 0 0 0 7px #f4f4f4; }
+input:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; box-shadow: 0 0 0 7px #f4f7fd; }
 main:focus { outline: none; }
-.drop:focus-within { outline: 3px solid #1a4be0; outline-offset: 2px; }
+.drop:focus-within { outline: 3px solid #2563eb; outline-offset: 2px; }
 /* Lien d'évitement : invisible jusqu'à ce qu'on y arrive au clavier. */
-.skip-link { position: fixed; top: 8px; left: 8px; z-index: 1000; background: #1a4be0; color: #ffffff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; transform: translateY(-200%); }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 1000; background: #2563eb; color: #ffffff; padding: 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; transform: translateY(-200%); }
 .skip-link:focus { transform: none; color: #ffffff; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
 img { max-width: 100%; }
@@ -21,10 +21,10 @@ img { max-width: 100%; }
 /* Boutons : survol sur la nuance foncée, appui léger (150 à 200 ms). */
 .btn { transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease; }
 .btn:active:not(:disabled) { transform: translateY(1px); }
-.btn-primary:hover:not(:disabled) { background: #143bb3 !important; border-color: #143bb3 !important; color: #ffffff !important; }
-.btn-dark:hover:not(:disabled) { background: #2e2e2e !important; border-color: #2e2e2e !important; color: #ffffff !important; }
-.btn-outline:hover:not(:disabled), .btn-light:hover:not(:disabled) { border-color: #111111 !important; background: #f4f4f4 !important; }
-.btn-accent:hover:not(:disabled) { background: #143bb3 !important; border-color: #143bb3 !important; }
+.btn-primary:hover:not(:disabled) { background: #1d4ed8 !important; border-color: #1d4ed8 !important; color: #ffffff !important; }
+.btn-dark:hover:not(:disabled) { background: #22305e !important; border-color: #22305e !important; color: #ffffff !important; }
+.btn-outline:hover:not(:disabled), .btn-light:hover:not(:disabled) { border-color: #0d1b3e !important; background: #f4f7fd !important; }
+.btn-accent:hover:not(:disabled) { background: #1d4ed8 !important; border-color: #1d4ed8 !important; }
 
 /* Module « page de bail » : bloc à grands coins arrondis dont un coin est replié, comme le coin d'une feuille.
    Le pli se fait par un masque (aucune image), le petit triangle dessine le revers de la page.
@@ -166,8 +166,8 @@ button:not(:disabled):active { transform: scale(.98); }
 .mega-list { display: grid; gap: 2px; }
 .mega-list--2 { grid-template-columns: 1fr 1fr; column-gap: 12px; }
 .mega-item { transition: background .15s; }
-.mega-item:hover { background: #f4f4f4; }
-.mega-trigger:hover { color: #1a4be0 !important; }
+.mega-item:hover { background: #f4f7fd; }
+.mega-trigger:hover { color: #2563eb !important; }
 /* Panneau du menu sur téléphone : glisse depuis la droite, la page reste visible et assombrie derrière. */
 .drawer-root { position: fixed; inset: 0; z-index: 100; }
 .drawer-backdrop { position: absolute; inset: 0; animation: drawer-fade .2s ease-out; }
@@ -201,7 +201,7 @@ button:not(:disabled):active { transform: scale(.98); }
 .today-main { display: flex; flex-direction: column; min-width: 0; }
 .today-side { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .today-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.today-shortcut:hover { border-color: #8a8a8a !important; background: #f4f4f4 !important; }
+.today-shortcut:hover { border-color: #8590ab !important; background: #f4f7fd !important; }
 /* Carte d'action : une ligne d'explication, dépliée au survol, au clavier ou au toucher */
 .task-text { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .task:hover .task-text, .task:focus-within .task-text { -webkit-line-clamp: unset; }
@@ -214,5 +214,5 @@ button:not(:disabled):active { transform: scale(.98); }
 }
 
 /* Menu latéral clair de l'espace : survol discret */
-.side-link:not(.active):hover { background: #f4f4f4 !important; }
-.side-add:hover { background: #2e2e2e !important; }
+.side-link:not(.active):hover { background: #1f55d9 !important; }
+.side-add:hover { background: #eaf1fe !important; }

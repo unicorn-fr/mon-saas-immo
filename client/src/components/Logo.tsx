@@ -4,29 +4,31 @@ import { BAI } from '../constants/bailio-tokens'
 /*
  * Logo (novembre 2026, docs/design/direction-artistique.md) : une tuile bleue aux angles arrondis qui porte un « b »
  * blanc. Le haut de sa hampe est taillé en biais, comme la pente d'un toit : l'initiale de Bailio et une maison en un
- * seul signe. Puis « bailio » en Instrument Sans 600, serré, sans ornement.
+ * seul signe. Puis « bailio » en Inter 700, serré, sans ornement.
  * Construction sur une grille de 32 : tuile de rayon 8,5 ; hampe de 4,4 de large, de 9,2 à 13,6, taillée à 45° ;
  * panse : cercle de rayon 4,8 centré en (18,3 ; 19), trait de 4,2. La tuile reste bleue sur fond clair comme sur
- * fond sombre ; seul le nom passe en clair avec `onDark`. Lisible dès 16 px (favicon).
+ * fond sombre ; seul le nom passe en clair avec `onDark`. Sur le menu bleu de l'espace (`onBlue`), tuile blanche et « b » bleu. Lisible dès 16 px (favicon).
  */
-export function LogoMark({ size = 28 }: { size?: number; onDark?: boolean }) {
+export function LogoMark({ size = 28, onBlue = false }: { size?: number; onDark?: boolean; onBlue?: boolean }) {
+  const tile = onBlue ? BAI.surface : BAI.owner
+  const ink = onBlue ? BAI.owner : BAI.surface
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden focusable="false" style={{ flexShrink: 0, display: 'block' }}>
-      <rect width="32" height="32" rx="8.5" fill={BAI.owner} />
-      <path d="M9.2 25.2V9.9L13.6 5.6v19.6z" fill={BAI.surface} />
-      <circle cx="18.3" cy="19" r="4.8" fill="none" stroke={BAI.surface} strokeWidth="4.2" />
+      <rect width="32" height="32" rx="8.5" fill={tile} />
+      <path d="M9.2 25.2V9.9L13.6 5.6v19.6z" fill={ink} />
+      <circle cx="18.3" cy="19" r="4.8" fill="none" stroke={ink} strokeWidth="4.2" />
     </svg>
   )
 }
 
-export function Logo({ size = 28, onDark = false, to = '/' }: { size?: number; onDark?: boolean; to?: string | null }) {
+export function Logo({ size = 28, onDark = false, onBlue = false, to = '/' }: { size?: number; onDark?: boolean; onBlue?: boolean; to?: string | null }) {
   const style = {
     textDecoration: 'none',
     fontFamily: BAI.fontDisplay,
-    fontWeight: 600,
+    fontWeight: 700,
     letterSpacing: '-0.045em',
     fontSize: size,
-    color: onDark ? BAI.onDark : BAI.ink,
+    color: onDark || onBlue ? BAI.surface : BAI.ink,
     lineHeight: 1,
     display: 'inline-flex',
     alignItems: 'center',
@@ -34,7 +36,7 @@ export function Logo({ size = 28, onDark = false, to = '/' }: { size?: number; o
   }
   const content = (
     <>
-      <LogoMark size={Math.round(size * 1.12)} />
+      <LogoMark size={Math.round(size * 1.12)} onBlue={onBlue} />
       <span aria-hidden>bailio</span>
     </>
   )

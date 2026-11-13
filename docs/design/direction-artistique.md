@@ -1,98 +1,73 @@
-# Direction artistique « Feuille et stylo » (novembre 2026)
+# Direction artistique « Bleu clair » (13 novembre 2026)
 
-Remplace « Maison habitée » (vert et jaune, refusée par Enzo le 12 novembre 2026) et « Midi » (bleu, orange, Fraunces).
-Choisie par Enzo parmi trois palettes de la skill taste (design-taste-frontend, Leonxlnx/taste-skill, licence MIT, lue
-en entier) faites pour le logiciel et la finance, sur fond clair.
+Remplace « Feuille et stylo » (Instrument Sans, encre noire, titres gris), jugée trop éloignée des logiciels du marché par
+Enzo le 13 novembre 2026 : « je veux que tu fasses comme Qalimo ». On reprend l'allure générale des logiciels de gestion
+locative (fond bleuté, bleu franc, titres gras bleu nuit, menu bleu dans l'espace, bande de chiffres bleu nuit) sans
+recopier ni texte, ni image, ni logo, ni code de Qalimo. Aucun chiffre ni avis inventé : la bande de chiffres ne montre
+que des faits de Bailio (prix, nombre de modèles et d'outils gratuits, tirés du code).
 
-## L'idée
-
-Bailio ressemble à un bail bien tenu : une feuille blanche, une encre noire, et un seul bleu « stylo bille » pour ce qui
-se signe, se clique ou se suit. Rien d'autre ne porte de couleur, sauf le vert « payé » et le rouge des erreurs. Le
-niveau visé est celui de figma.com et x.ai (skill taste) : on dit ce que c'est, on montre le vrai produit.
-
-## Couleurs (`client/src/constants/bailio-tokens.ts`, palette `white-link-blue` de la skill)
+## Couleurs (`client/src/constants/bailio-tokens.ts`)
 
 | Rôle | Token | Valeur |
 |---|---|---|
-| Feuille | `surface` | `#ffffff` (accueil, pages publiques, cartes) |
-| Fond de l'espace | `bg` | `#f4f4f4` |
-| Encre | `ink` | `#111111` |
-| Texte secondaire | `inkSoft` | `#5f5f5f` |
-| Aplat sombre | `night` | `#111111` (bande inversée, pied de page, bouton « Ajouter ») |
-| Bleu stylo | `owner`, `cta`, `accentInk` | `#1a4be0`, texte blanc dessus ; survol `#143bb3` |
-| Bleu sur fond sombre | `accent` | `#8fb0ff` |
+| Feuille | `surface` | `#ffffff` |
+| Fond de l'espace et des sections | `bg` | `#f4f7fd` (bleuté) |
+| Encre | `ink` | `#0d1b3e` (bleu nuit) |
+| Texte secondaire | `inkSoft` | `#56637f` |
+| Aplat sombre | `night` | `#0b1638` (bande des chiffres, pied de page) |
+| Bleu | `owner`, `cta`, `accentInk` | `#2563eb`, texte blanc dessus ; survol `#1d4ed8` |
+| Menu de l'espace | `side`, `sideActive` | `#2563eb`, entrée en cours `#1a46c9`, texte blanc |
+| Bleu sur fond sombre | `accent` | `#8fb4ff` |
 | Payé | `green` | `#17753f` |
 | Erreur | `error` | `#c11f2b` |
-| Bords | `border`, `borderStrong` | `#e4e4e4`, `#8a8a8a` (champs, 3,45:1) |
+| Bords | `border`, `borderStrong` | `#e2e8f4`, `#8590ab` (champs, 3:1 au moins) |
 
-Contrastes mesurés (WCAG 2.1) :
-
-| Couple | Contraste |
-|---|---|
-| Encre sur blanc | 18,9:1 |
-| Blanc sur bleu | 6,7:1 |
-| Bleu sur fond `#f4f4f4` | 6,1:1 |
-| `inkSoft` sur fond | 5,8:1 |
-| Gris des titres `#6b6b6b` sur blanc | 5,3:1 |
-| Bleu clair sur encre | 8,8:1 |
-| Vert sur blanc | 5,7:1 |
-| Vert sur vert pâle | 5,1:1 |
-| Bord des champs | 3,45:1 |
+Contrastes (WCAG 2.1 AA, contrôlés par axe-core, test 16) : blanc sur bleu 5,2:1 ; blanc sur l'entrée en cours du menu
+7,3:1 ; bleu sur `ownerLight` et `ownerTint` 4,6:1 au moins ; encre sur blanc 16:1 ; `inkSoft` sur le fond 5,6:1.
 
 Règles :
-- **Un seul bouton plein bleu par écran,** l'action principale. Les autres boutons sont en contour, encre sur blanc avec un bord gris, ou noirs (`dark`) pour une action forte secondaire.
-- **Pas de violet,** pas de dégradé, pas d'ombre lourde (une ombre douce seulement sous la fenêtre du produit et les cartes flottantes).
+- **Un seul bouton plein bleu par écran,** l'action principale, avec une ombre bleutée. Les autres en contour blanc, bord fin.
+- **Dégradés permis seulement** pour les halos du haut de l'accueil et la bande bleu nuit ; jamais sur un texte ni un bouton.
+- Pas de violet ; le rouge ne sert qu'aux erreurs et aux retards.
 
 ## Typographie
 
-**Instrument Sans** (variable, servie par le site avec `@fontsource-variable/instrument-sans`, licence OFL), pour les titres et le texte. La skill la range dans les polices du logiciel de productivité (« précise, amicale, calme »).
-- **Titres :** graisse 500 et approche serrée, -0,032 em en général, -0,036 em en très grand.
-- **Texte :** 400 ; 500 ou 600 pour les boutons, les étiquettes et le gras.
-- **Jamais 700 ni 800** en titre.
-
-**Accroche :** la seconde moitié d'un titre passe en gris (`<em>`, couleur `#6b6b6b`, sans italique) et doit faire une phrase à elle seule. C'est la manière de la skill : « La gestion locative des propriétaires, *sans agence.* »
+**Inter** (variable, `@fontsource-variable/inter`, licence OFL, servie par le site).
+- **Titres :** 700 (`display()`), 800 pour le titre de l'accueil et les grands chiffres ; approche serrée (-0,03 à -0,04 em).
+- **Texte :** 400 ; 500 ou 600 pour les liens du menu, boutons et étiquettes.
+- **Accroche :** la seconde moitié d'un titre passe en bleu (`<em>`, sans italique) et fait une phrase à elle seule.
 
 ## Formes
 
-Rayons « soft » de la skill :
-- cartes 20 px (`BAI.radius`) ;
-- champs 12 px (`radiusField`), 60 px de haut ;
-- boutons 10 px (`radiusBtn`), 8 px en petit ;
-- étiquettes en pilule.
-
-Le coin replié (`.fold`) reste disponible pour un bloc important, sans en abuser.
+Cartes 18 px (`BAI.radius`), blanches à bord fin `#e2e8f4` et ombre douce ; champs 12 px, 60 px de haut ; boutons 10 px.
 
 ## Le haut de l'accueil
 
-Centré, pour être compris en trois secondes : une pastille (« Premier mois offert »), le titre, une ligne, deux boutons (le bleu et la vidéo en contour), une ligne de faits (prix, démo, import). Dessous, le vrai produit en grand dans une fenêtre de navigateur (`components/HeroProduct.tsx`), avec le fil de ce que Bailio vient de faire, dit « Exemple ».
+Fond bleuté avec halos doux et trame de points qui s'efface vers le bas ; pastille blanche à point bleu ; titre gras bleu
+nuit, fin en bleu ; une ligne ; bouton bleu et « Voir la vidéo » blanc à icône bleue ; ligne de faits. Dessous, le vrai
+produit dans une fenêtre de navigateur, deux cartes flottantes (« exemple ») qui ondulent doucement, puis la bande bleu
+nuit des chiffres (`Stats`, `Home.tsx`). En-tête translucide.
 
 ## L'espace du propriétaire
 
-- **Menu latéral clair** (`components/AppShell.tsx`) : fond blanc, trait gris à droite, une icône par entrée. L'entrée en cours est sur fond bleu très pâle avec un texte bleu. Le bouton « Ajouter » est noir.
-- **Tuiles du mois** : le chiffre à gauche, une pastille à icône à droite, bleue, verte si tout est à jour, rouge pour un retard.
-- **Actions** : cartes compactes (étiquette, titre, une ligne d'explication qui se déplie au survol, un bouton). Titres de page en 26 à 34 px, jamais plus.
-- **Raccourcis** : puces sur une ligne, icône puis libellé, deux par rangée.
-- **Aplat sombre** : réservé au pied de page public et aux bandes inversées. Il ne sert plus au menu.
+- **Menu latéral bleu** (`components/AppShell.tsx`) : fond `side`, texte blanc, une icône par entrée, entrée en cours plus
+  foncée et en gras, bouton « Ajouter » blanc à texte bleu, logo en tuile blanche (`Logo onBlue`).
+- **Fond bleuté**, cartes blanches ; tuiles du mois avec pastille à icône à droite ; actions en cartes compactes ;
+  raccourcis en puces ; titres de page de 26 à 34 px.
 
 ## Mouvement
 
-- **Animé :** le fil du haut de page, la visite des écrans (`ProductTour`), les nombres qui défilent et, au survol, des boutons qui changent de teinte.
-- **Jamais :** de fondu sur chaque section ni d'inclinaison.
-- **Si l'appareil demande moins d'animations,** tout s'arrête et reste visible.
+Le fil du haut de page, les cartes flottantes, la visite des écrans, les nombres qui défilent, les mini-écrans des
+automatismes. Animations de position, jamais de transparence sur un texte (contraste). Si l'appareil demande moins
+d'animations, tout s'arrête et reste visible.
 
 ## Logo
 
-`components/Logo.tsx` : une tuile bleue aux angles arrondis qui porte un « b » blanc. Le haut de sa hampe est taillé en biais, comme la pente d'un toit : l'initiale de Bailio et une maison en un seul signe. Puis « bailio » en Instrument Sans 600 (-0,045 em), sans ornement.
-- **Construction** (grille de 32) : tuile de rayon 8,5 ; hampe de 4,4 de large taillée à 45° ; panse en cercle de rayon 4,8, trait de 4,2.
-- **Sur fond sombre :** la tuile reste bleue, seul le nom passe en clair.
-- **Taille :** lisible dès 16 px.
-- **Fichiers :** `favicon.svg`, `favicon.ico`, `favicon-96.png` et `apple-touch-icon.png` (tuile pleine page).
+`components/Logo.tsx` : tuile bleue arrondie portant un « b » blanc dont la hampe est taillée en pente de toit, puis
+« bailio » en Inter 700 (-0,045 em). Sur fond sombre la tuile reste bleue ; sur le menu bleu (`onBlue`), tuile blanche
+et « b » bleu. Favicon et icône de téléphone inchangés.
 
 ## Captures et vidéo
 
-- **Captures :** vraies captures d'un compte d'exemple aux données fictives, refaites par `marketing/captures/fonctionnalites.mjs` (il affiche aussi les zones mises en avant à reporter dans les contenus).
-- **Vidéo :** `marketing/videos/demo/demo.html`, rendue par `render.cjs`.
-
-## Hors de cette refonte
-
+Captures d'un compte d'exemple refaites par `marketing/captures/fonctionnalites.mjs` ; vidéo `marketing/videos/demo/`.
 Les PDF (bail, quittances, courriers) gardent leur mise en page : ce sont des documents juridiques.

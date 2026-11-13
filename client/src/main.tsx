@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import { recoverOnce, reportError } from './lib/recover'
 // Polices servies par le site lui-même : aucune requête vers Google (adresse IP des visiteurs).
-// Instrument Sans (titres et texte), servie par le site.
-import '@fontsource-variable/instrument-sans/wght.css'
+// Inter (titres et texte), servie par le site.
+import '@fontsource-variable/inter/wght.css'
 import './styles.css'
 
 // Un ancien service worker (version précédente du site) peut encore servir de vieux fichiers
