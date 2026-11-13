@@ -11,7 +11,7 @@ import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
 import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
 import { HeroProduct } from '../components/HeroProduct'
-import { ALL_FEATURES, AUTOMATIONS, COMPARE, TRUST } from '../content/accueil'
+import { ALL_FEATURES, AUTOMATIONS, COMPARE, FEATURE_GROUPS, GUARANTEES, TRUST, type FeatureGroup } from '../content/accueil'
 import { AVIS } from '../content/avis'
 import { SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
@@ -138,19 +138,31 @@ function Check() {
 
 /** Visite animée du produit : vraies captures de l'application sur ordinateur (compte d'exemple), qui défilent seules. */
 const TOUR: TourStep[] = [
-  { id: 'decrire', tab: 'Décrire', img: 'tunnel', path: 'bailio.fr/commencer', alt: 'Écran « Votre logement est… » avec deux choix, Vide ou Meublé, étape 1 sur 5', spot: { x: 37.9, y: 28.3, w: 50, h: 25.6, label: 'Une question à la fois : Bailio remplit le reste' } },
-  { id: 'bail', tab: 'Le bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances, et les actions du bail', spot: { x: 20.6, y: 6.5, w: 40, h: 9, label: 'Le contrat type officiel, signé en ligne' } },
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : un loyer en retard avec la relance déjà rédigée, une fin de bail, l’état des lieux à faire et les prochaines échéances', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
-  { id: 'mois', tab: 'Chaque mois', img: 'relances', alt: 'Bail avec un loyer en retard : quittance par email et relance automatique d’un loyer impayé activées', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
-  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 20.6, y: 13.3, w: 52.1, h: 39.5, label: 'Classés sur les ressources, la garantie et les pièces' } },
-  { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Bonjour Claire » : loyers du mois, un loyer en retard avec la relance prête, les raccourcis et l’agenda', spot: { x: 20.6, y: 29.3, w: 48.1, h: 17.5, label: 'Chaque matin, ce qui compte est en haut' } },
+  { id: 'logements', tab: 'Logements', img: 'logements', alt: 'Liste des logements : loués, libres, loyer en retard, avec le loyer de chacun', spot: { x: 20.6, y: 18, w: 76.7, h: 12, label: 'Vos logements, leur état d’un coup d’œil' } },
+  { id: 'bail', tab: 'Bail', img: 'bail', alt: 'Page d’un bail signé : locataire, adresse, dates, loyers reçus avec leurs quittances', spot: { x: 20.6, y: 6.5, w: 40, h: 9, label: 'Le contrat type officiel, signé en ligne' } },
+  { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Bail avec la quittance par email activée dès que le loyer est noté reçu', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'Le loyer arrive, la quittance part' } },
+  { id: 'banque', tab: 'Banque', img: 'releve', alt: 'Dépôt du relevé bancaire : CSV ou OFX, les loyers sont reconnus', spot: { x: 20.6, y: 38.6, w: 76.7, h: 21.6, label: 'Votre relevé, les loyers reconnus seuls' } },
+  { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Relance automatique d’un loyer impayé activée sur le bail', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'J+3, J+8, J+15, à vos dates' } },
+  { id: 'candidats', tab: 'Candidats', img: 'candidats', alt: 'Liste des candidats : dossier solide ou à compléter, avec les raisons', spot: { x: 20.6, y: 13.3, w: 52.1, h: 39.5, label: 'Classés sur des critères permis, jamais à votre place' } },
+  { id: 'impots', tab: 'Impôts', img: 'impots', alt: 'Déclaration des revenus locatifs : régime, cases à recopier, date limite', spot: { x: 20.6, y: 26, w: 76.7, h: 36, label: 'Les cases à recopier, déjà calculées' } },
+  { id: 'patrimoine', tab: 'Patrimoine', img: 'patrimoine', alt: 'Tableau de bord : loyers attendus chaque mois, ce qu’il reste, logements à surveiller', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Ce qui demande votre attention, en tête' } },
 ]
 
-/** Démarches d'un logement loué sur une année, que Bailio prépare ; la déclaration des revenus compte une fois. */
-const YEARLY = [
-  { what: 'Quittances de loyer', each: 12 },
-  { what: 'Révision du loyer (IRL)', each: 1 },
-  { what: 'Attestation d’assurance du locataire', each: 1 },
+/**
+ * Avant / après (une année, d'après le nombre de logements) : chaque démarche est une case. Sans Bailio, tout se fait à
+ * la main ; avec Bailio, il ne reste que les décisions à valider (révision, régularisation, déclaration). Les relances ne
+ * sont pas comptées : elles dépendent des retards.
+ */
+const BY_HAND = [
+  { what: 'Quittances', each: 12 },
+  { what: 'Avis d’échéance', each: 12 },
+  { what: 'Révision du loyer', each: 1 },
+  { what: 'Attestation d’assurance', each: 1 },
+  { what: 'Régularisation des charges', each: 1 },
+] as const
+const TO_VALIDATE = [
+  { what: 'Révision du loyer', each: 1 },
   { what: 'Régularisation des charges', each: 1 },
 ] as const
 const COUNTS = [1, 2, 3, 5] as const
@@ -174,16 +186,14 @@ function Tour() {
 }
 
 function Yearly() {
-  const [n, setN] = useState<number>(1)
-  const total = YEARLY.reduce((a, r) => a + r.each * n, 0) + 1
+  const [n, setN] = useState<number>(3)
+  const before = BY_HAND.reduce((a, r) => a + r.each * n, 0) + 1
+  const after = TO_VALIDATE.reduce((a, r) => a + r.each * n, 0) + 1
   return (
-    <section className="year" data-section aria-labelledby="year-title">
-      <div className="year-intro">
-        <h2 id="year-title" data-in>
-          <span className="year-count" aria-live="polite">
-            <CountUp value={total} /> démarches
-          </span>{' '}
-          par an, <em>préparées pour vous.</em>
+    <section className="ba" data-section aria-labelledby="ba-title">
+      <div className="ba-head">
+        <h2 id="ba-title" data-in>
+          Votre année de propriétaire, <em>avant et après.</em>
         </h2>
         <div className="year-pick" data-in style={{ ['--i' as string]: 1 }}>
           <span id="year-n" className="live-label">
@@ -198,22 +208,51 @@ function Yearly() {
           </div>
         </div>
       </div>
-      <dl className="year-list" data-in style={{ ['--i' as string]: 2 }}>
-        {YEARLY.map((r) => (
-          <div key={r.what}>
-            <dt>{r.what}</dt>
-            <dd>{r.each * n}</dd>
+      <div className="ba-grid" aria-live="polite">
+        <div className="ba-col ba-col--before" data-in>
+          <p className="ba-label">À la main</p>
+          <p className="ba-num">
+            <CountUp value={before} /> démarches
+          </p>
+          <div className="ba-cells" aria-hidden>
+            {Array.from({ length: Math.min(before, 160) }, (_, i) => (
+              <span key={i} />
+            ))}
           </div>
-        ))}
-        <div>
-          <dt>Déclaration des revenus, cases à recopier</dt>
-          <dd>1</dd>
+          <ul className="ba-list">
+            {BY_HAND.map((r) => (
+              <li key={r.what}>
+                {r.what} <strong>{r.each * n}</strong>
+              </li>
+            ))}
+            <li>
+              Déclaration des revenus <strong>1</strong>
+            </li>
+          </ul>
         </div>
-        <div className="year-plus">
-          <dt>Relances si un loyer manque</dt>
-          <dd>à vos dates</dd>
+        <div className="ba-col ba-col--after" data-in style={{ ['--i' as string]: 1 }}>
+          <p className="ba-label">Avec Bailio</p>
+          <p className="ba-num">
+            <CountUp value={after} /> décisions
+          </p>
+          <div className="ba-cells" aria-hidden>
+            {Array.from({ length: after }, (_, i) => (
+              <span key={i} />
+            ))}
+          </div>
+          <ul className="ba-list">
+            {TO_VALIDATE.map((r) => (
+              <li key={r.what}>
+                {r.what}, à valider <strong>{r.each * n}</strong>
+              </li>
+            ))}
+            <li>
+              Déclaration, cases à recopier <strong>1</strong>
+            </li>
+            <li className="ba-free">Quittances, avis, assurance : envoyés seuls</li>
+          </ul>
         </div>
-      </dl>
+      </div>
     </section>
   )
 }
@@ -225,14 +264,23 @@ const eur = (cents: number) => (cents / 100).toLocaleString('fr-FR', { minimumFr
 
 function PriceCalc() {
   const [n, setN] = useState(3)
+  const [yearly, setYearly] = useState(true)
   const agency = Math.round(n * SAMPLE_RENT * AGENCY_RATE * 12 * 100)
-  const year = n * YEARLY_PRICE_CENTS
+  const bailio = yearly ? n * YEARLY_PRICE_CENTS : n * MONTHLY_PRICE_CENTS * 12
   return (
     <section className="calc" data-section aria-labelledby="calc-title">
       <div className="calc-head">
         <h2 id="calc-title" data-in>
           Votre prix, <em>en un geste.</em>
         </h2>
+        <div className="calc-switch" role="group" aria-label="Paiement">
+          <button type="button" aria-pressed={!yearly} onClick={() => setYearly(false)}>
+            Au mois
+          </button>
+          <button type="button" aria-pressed={yearly} onClick={() => setYearly(true)}>
+            À l’année <span>2 mois offerts</span>
+          </button>
+        </div>
         <label htmlFor="calc-n" className="live-label">
           Logements loués : <strong className="calc-n">{n}</strong>
         </label>
@@ -240,21 +288,29 @@ function PriceCalc() {
       </div>
       <dl className="calc-out" aria-live="polite">
         <div className="calc-me">
-          <dt>Bailio, à l’année</dt>
-          <dd>{eur(year)}</dd>
-          <dd className="calc-sub">soit {eur(Math.round(year / 12))} par mois</dd>
-        </div>
-        <div>
-          <dt>Bailio, au mois</dt>
-          <dd>{eur(n * MONTHLY_PRICE_CENTS * 12)}</dd>
-          <dd className="calc-sub">par an</dd>
+          <dt>Bailio, {yearly ? 'à l’année' : 'au mois'}</dt>
+          <dd>{eur(yearly ? bailio : n * MONTHLY_PRICE_CENTS)}</dd>
+          <dd className="calc-sub">{yearly ? `soit ${eur(Math.round(bailio / 12))} par mois` : `soit ${eur(bailio)} par an`}</dd>
         </div>
         <div>
           <dt>Une agence</dt>
           <dd>{eur(agency)}</dd>
           <dd className="calc-sub">par an, à 7 % d’un loyer de {SAMPLE_RENT} €</dd>
         </div>
+        <div>
+          <dt>Vous gardez</dt>
+          <dd>{eur(Math.max(0, agency - bailio))}</dd>
+          <dd className="calc-sub">par an, par rapport à l’agence</dd>
+        </div>
       </dl>
+      <ul className="calc-guar">
+        {GUARANTEES.map((g) => (
+          <li key={g}>
+            <Check />
+            {g}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -287,6 +343,76 @@ function FreeTools() {
 
 const stagger = (i: number) => ({ ['--i' as string]: i }) as CSSProperties
 
+/**
+ * Mini-écrans des six automatismes : chacun montre en une image ce que fait l'automatisme, avec des données
+ * visiblement fictives. Animation douce en boucle (CSS), arrêtée si l'appareil demande moins d'animations.
+ */
+function AutoMini({ i }: { i: number }) {
+  if (i === 0)
+    return (
+      <div className="mini" aria-hidden>
+        <div className="mini-row mini-in"><span>VIR M. EXEMPLE</span><b>+780 €</b><i className="mini-ok">Loyer</i></div>
+        <div className="mini-row mini-in" style={{ animationDelay: '.5s' }}><span>PRLV ASSURANCE</span><b>−46 €</b><i>Dépense</i></div>
+        <div className="mini-row mini-in" style={{ animationDelay: '1s' }}><span>VIR MME FICTIVE</span><b>+520 €</b><i className="mini-ok">Loyer</i></div>
+      </div>
+    )
+  if (i === 1)
+    return (
+      <div className="mini mini-paper" aria-hidden>
+        <p className="mini-title">Quittance · novembre</p>
+        <p className="mini-line" />
+        <p className="mini-line mini-line--short" />
+        <span className="mini-stamp">Payé</span>
+      </div>
+    )
+  if (i === 2)
+    return (
+      <div className="mini" aria-hidden>
+        <div className="mini-steps">
+          {['J+3', 'J+8', 'J+15'].map((d, k) => (
+            <span key={d} className="mini-step" style={{ animationDelay: `${k * 0.6}s` }}>
+              <b>{d}</b>
+              <small>{k === 0 ? 'Relance' : k === 1 ? 'Rappel' : 'Mise en demeure'}</small>
+            </span>
+          ))}
+        </div>
+        <p className="mini-note">Arrêt dès le paiement</p>
+      </div>
+    )
+  if (i === 3)
+    return (
+      <div className="mini mini-paper" aria-hidden>
+        <p className="mini-title">Bail · location vide</p>
+        <p className="mini-check mini-in">Durée 3 ans</p>
+        <p className="mini-check mini-in" style={{ animationDelay: '.4s' }}>Dépôt 1 mois</p>
+        <p className="mini-check mini-in" style={{ animationDelay: '.8s' }}>DPE valable</p>
+        <p className="mini-sign mini-in" style={{ animationDelay: '1.2s' }}>Signé en ligne</p>
+      </div>
+    )
+  if (i === 4)
+    return (
+      <div className="mini" aria-hidden>
+        {['Séjour', 'Cuisine', 'Chambre'].map((r, k) => (
+          <div key={r} className="mini-row mini-in" style={{ animationDelay: `${k * 0.5}s` }}>
+            <span>{r}</span>
+            <i className="mini-ok">Bon état</i>
+            <em className="mini-photo" />
+          </div>
+        ))}
+      </div>
+    )
+  return (
+    <div className="mini" aria-hidden>
+      {[['5 déc.', 'Révision du loyer'], ['15 déc.', 'CFE du meublé'], ['Mai', 'Déclaration']].map(([d, t], k) => (
+        <div key={t} className="mini-row mini-in" style={{ animationDelay: `${k * 0.5}s` }}>
+          <b className="mini-date">{d}</b>
+          <span>{t}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Six automatismes : ce qui tourne sans vous. */
 function Automations() {
   return (
@@ -297,7 +423,7 @@ function Automations() {
       <div className="autos-grid">
         {AUTOMATIONS.map((a, j) => (
           <article key={a.title} className="auto" data-in style={stagger(j % 3)}>
-            <span className="auto-n" aria-hidden />
+            <AutoMini i={j} />
             <h3>{a.title}</h3>
             <p>{a.text}</p>
             <Link to={a.to} className="auto-more">
@@ -312,8 +438,11 @@ function Automations() {
   )
 }
 
-/** Toutes les fonctionnalités, toutes comprises dans le prix. */
+/** Toutes les fonctionnalités, toutes comprises dans le prix, filtrables par moment de la location. */
 function AllFeatures() {
+  const [group, setGroup] = useState<FeatureGroup | 'ALL'>('ALL')
+  const list = ALL_FEATURES.filter((f) => group === 'ALL' || f.group === group)
+  const count = (g: FeatureGroup) => ALL_FEATURES.filter((f) => f.group === g).length
   return (
     <section className="feats" data-section aria-labelledby="feats-title">
       <div className="feats-head">
@@ -325,11 +454,24 @@ function AllFeatures() {
           <Arrow />
         </Link>
       </div>
-      <ul className="feats-list" data-in style={stagger(1)}>
-        {ALL_FEATURES.map((f) => (
-          <li key={f}>
+      <div className="feats-bar">
+        <div className="feats-filters" role="group" aria-label="Filtrer les fonctionnalités">
+          <button type="button" aria-pressed={group === 'ALL'} onClick={() => setGroup('ALL')}>
+            Tout <span>{ALL_FEATURES.length}</span>
+          </button>
+          {FEATURE_GROUPS.map((g) => (
+            <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => setGroup(g.id)}>
+              {g.label} <span>{count(g.id)}</span>
+            </button>
+          ))}
+        </div>
+        <span className="feats-zero">0 option payante</span>
+      </div>
+      <ul className="feats-list" aria-live="polite">
+        {list.map((f) => (
+          <li key={f.name} className="panel-in">
             <Check />
-            {f}
+            {f.name}
           </li>
         ))}
       </ul>
