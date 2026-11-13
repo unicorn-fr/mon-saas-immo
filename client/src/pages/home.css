@@ -586,8 +586,8 @@
 .mini-step small { color: var(--muted); font-size: 0.75rem; }
 .mini-note { margin: 0; color: var(--muted); font-size: 0.75rem; }
 .mini-in { animation: mini-in 3.6s ease-out infinite both; }
-@keyframes mini-in { 0% { opacity: 0; transform: translateY(6px); } 12%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
-@keyframes mini-stamp { 0%, 20% { opacity: 0; transform: rotate(-8deg) scale(1.4); } 32%, 88% { opacity: 1; transform: rotate(-8deg) scale(1); } 100% { opacity: 0; } }
+@keyframes mini-in { 0% { transform: translateY(6px); } 12%, 100% { transform: none; } }
+@keyframes mini-stamp { 0%, 20% { transform: rotate(-8deg) scale(1.25); } 32%, 100% { transform: rotate(-8deg) scale(1); } }
 @keyframes mini-step { 0% { background: var(--stone); } 20%, 60% { background: var(--owner-light); } 100% { background: var(--stone); } }
 @media (prefers-reduced-motion: reduce) { .mini-in, .mini-stamp, .mini-step { animation: none; opacity: 1; transform: rotate(-8deg); } .mini-in, .mini-step { transform: none; } }
 .auto { gap: 12px; }
