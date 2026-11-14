@@ -85,15 +85,14 @@ test('tunnel : une question à la fois, erreurs, curseur, surface, email mal tap
   assert.deepEqual(errors, [])
 })
 
-test('garage : de l’accueil à « Ajouter un logement » avec le garage déjà choisi', async () => {
+test('garage : de la page du bail de garage à « Ajouter un logement » avec le garage déjà choisi', async () => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
   const page = await ctx.newPage()
   const errors = []
   watch(page, errors)
   page.setDefaultTimeout(15000)
-  await page.goto(BASE + '/')
-  await page.getByRole('button', { name: 'Un garage ou une place', exact: true }).click()
-  await page.getByRole('link', { name: 'Créer ce bail' }).click()
+  await page.goto(BASE + '/bail/garage-parking')
+  await page.getByRole('link', { name: 'Créer mon contrat de garage' }).first().click()
   await page.getByRole('heading', { name: 'Créez votre espace.' }).waitFor()
   const email = `garage+${Date.now()}@example.fr`
   await page.getByLabel('Email').fill(email)
