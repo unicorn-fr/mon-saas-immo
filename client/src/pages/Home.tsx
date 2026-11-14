@@ -1,4 +1,3 @@
-import { ADD_PARKING_PATH } from '../lib/contract'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { ProductTour, type TourStep } from '../components/ProductTour'
 import { CountUp } from '../components/CountUp'
@@ -9,9 +8,9 @@ import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { VideoButton } from '../components/VideoDialog'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
-import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, PRICE_UNIT, YEARLY_PRICE, priceLabel, priceText } from '../config'
+import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, priceText } from '../config'
 import { HeroProduct } from '../components/HeroProduct'
-import { ALL_FEATURES, AUTOMATIONS, COMPARE, FEATURE_GROUPS, GUARANTEES, TRUST, type FeatureGroup } from '../content/accueil'
+import { AUTOMATIONS, COMPARE, GUARANTEES, TRUST } from '../content/accueil'
 import { AVIS } from '../content/avis'
 import { MODELES, SIMULATEURS } from '../content/modeles'
 import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
@@ -22,40 +21,6 @@ import { CALLBACK_PROMISE, INCLUS } from '../content/inclus'
  * écrans, les automatismes, la loi appliquée à votre bail, le prix calculé selon vos logements, puis les questions.
  * Photos de Montpellier fournies par l'éditeur (public/accueil/credits.json).
  */
-
-type Kind = 'VIDE' | 'MEUBLE' | 'GARAGE'
-
-const KINDS: Array<{ id: Kind; label: string; title: string }> = [
-  { id: 'VIDE', label: 'Un logement vide', title: 'Logement vide' },
-  { id: 'MEUBLE', label: 'Un logement meublé', title: 'Logement meublé' },
-  { id: 'GARAGE', label: 'Un garage ou une place', title: 'Garage ou place' },
-]
-
-const euros = (n: number) => `${n.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €`
-
-/** Ce que la loi fixe pour chaque type de location (loi du 6 juillet 1989 ; Code civil pour un garage). */
-function termsFor(kind: Kind, rent: number): Array<[string, string]> {
-  if (kind === 'MEUBLE')
-    return [
-      ['Durée', 'Un an, renouvelé'],
-      ['Dépôt de garantie', `${euros(rent * 2)} au plus`],
-      ['Votre préavis', 'Trois mois avant la fin'],
-      ['Préavis du locataire', 'Un mois'],
-    ]
-  if (kind === 'GARAGE')
-    return [
-      ['Durée', 'Libre, un an par défaut'],
-      ['Dépôt de garantie', `Libre, ${euros(rent)} proposé`],
-      ['Votre préavis', 'Celui du contrat, un mois'],
-      ['Préavis du locataire', 'Le même, un mois'],
-    ]
-  return [
-    ['Durée', 'Trois ans, renouvelé'],
-    ['Dépôt de garantie', `${euros(rent)} au plus`],
-    ['Votre préavis', 'Six mois avant la fin'],
-    ['Préavis du locataire', 'Trois mois, un en zone tendue'],
-  ]
-}
 
 const FAQ: Array<[string, string]> = [
   ['Le bail est-il valable ?', 'Oui, une fois complet et signé. Il suit, rubrique par rubrique, le contrat type officiel dans sa version du 1er octobre 2026, et Bailio vous dit ce qu’il manque avant la signature.'],
@@ -265,49 +230,117 @@ const AGENCY_RATE = 0.07
 const SAMPLE_RENT = 750
 const eur = (cents: number) => (cents / 100).toLocaleString('fr-FR', { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 }) + ' €'
 
+/** Montant qui glisse jusqu'à sa nouvelle valeur (affichage) ; le vrai montant est lu par les lecteurs d'écran. */
+function Money({ cents }: { cents: number }) {
+  const [shown, setShown] = useState(cents)
+  const from = useRef(cents)
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return void (setShown(cents), (from.current = cents))
+    const a = from.current
+    const start = performance.now()
+    let raf = 0
+    const step = (t: number) => {
+      const p = Math.min(1, (t - start) / 600)
+      const v = Math.round(a + (cents - a) * (1 - Math.pow(1 - p, 3)))
+      setShown(v)
+      if (p < 1) raf = requestAnimationFrame(step)
+      else from.current = cents
+    }
+    raf = requestAnimationFrame(step)
+    return () => (cancelAnimationFrame(raf), void (from.current = cents))
+  }, [cents])
+  return (
+    <>
+      <span aria-hidden>{eur(shown)}</span>
+      <span className="sr-only">{eur(cents)}</span>
+    </>
+  )
+}
+
 function PriceCalc() {
   const [n, setN] = useState(3)
   const [yearly, setYearly] = useState(true)
   const agency = Math.round(n * SAMPLE_RENT * AGENCY_RATE * 12 * 100)
   const bailio = yearly ? n * YEARLY_PRICE_CENTS : n * MONTHLY_PRICE_CENTS * 12
+  const keep = Math.max(0, agency - bailio)
+  const share = agency ? Math.max(0.02, bailio / agency) : 0
+  const set = (k: number) => setN(Math.min(30, Math.max(1, k)))
   return (
-    <section className="calc" data-section aria-labelledby="calc-title">
-      <div className="calc-head">
+    <section id="tarifs" className="calc2" data-section aria-labelledby="calc-title">
+      <div className="calc2-head">
         <p className="eyebrow" aria-hidden>Tarif</p>
         <h2 id="calc-title" data-in>
           Votre prix, <em>en un geste.</em>
         </h2>
-        <div className="calc-switch" role="group" aria-label="Paiement">
-          <button type="button" aria-pressed={!yearly} onClick={() => setYearly(false)}>
-            Au mois
-          </button>
-          <button type="button" aria-pressed={yearly} onClick={() => setYearly(true)}>
-            À l’année <span>2 mois offerts</span>
-          </button>
-        </div>
-        <label htmlFor="calc-n" className="live-label">
-          Logements loués : <strong className="calc-n">{n}</strong>
-        </label>
-        <input id="calc-n" type="range" min={1} max={30} value={n} onChange={(e) => setN(Number(e.target.value))} aria-valuetext={`${n} logement${n > 1 ? 's' : ''}`} />
+        <p className="calc2-lead" data-in style={{ ['--i' as string]: 1 }}>
+          {LAUNCH_OFFER}, sans carte bancaire. Tout est compris.
+        </p>
       </div>
-      <dl className="calc-out" aria-live="polite">
-        <div className="calc-me">
-          <dt>Bailio, {yearly ? 'à l’année' : 'au mois'}</dt>
-          <dd>{eur(yearly ? bailio : n * MONTHLY_PRICE_CENTS)}</dd>
-          <dd className="calc-sub">{yearly ? `soit ${eur(Math.round(bailio / 12))} par mois` : `soit ${eur(bailio)} par an`}</dd>
+      <div className="calc2-card" data-in style={{ ['--i' as string]: 2 }}>
+        <div className="calc2-controls">
+          <div className="calc-switch" role="group" aria-label="Paiement">
+            <button type="button" aria-pressed={!yearly} onClick={() => setYearly(false)}>
+              Au mois
+            </button>
+            <button type="button" aria-pressed={yearly} onClick={() => setYearly(true)}>
+              À l’année <span>2 mois offerts</span>
+            </button>
+          </div>
+          <div className="calc2-count">
+            <label htmlFor="calc-n">Logements loués</label>
+            <div className="calc2-stepper">
+              <button type="button" onClick={() => set(n - 1)} aria-label="Un logement de moins" disabled={n <= 1}>
+                −
+              </button>
+              <output htmlFor="calc-n" aria-live="polite">{n}</output>
+              <button type="button" onClick={() => set(n + 1)} aria-label="Un logement de plus" disabled={n >= 30}>
+                +
+              </button>
+            </div>
+          </div>
+          <input id="calc-n" className="calc2-range" type="range" min={1} max={30} value={n} onChange={(e) => set(Number(e.target.value))} aria-valuetext={`${n} logement${n > 1 ? 's' : ''}`} style={{ ['--p' as string]: `${((n - 1) / 29) * 100}%` }} />
+          <ul className="calc2-incl">
+            {INCLUS.slice(0, 6).map((x) => (
+              <li key={x}>
+                <Check />
+                {x}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div>
-          <dt>Une agence</dt>
-          <dd>{eur(agency)}</dd>
-          <dd className="calc-sub">par an, à 7 % d’un loyer de {SAMPLE_RENT} €</dd>
+        <div className="calc2-result">
+          <p className="calc2-label">Bailio, {yearly ? 'à l’année' : 'au mois'}</p>
+          <p className="calc2-price">
+            <Money cents={yearly ? bailio : n * MONTHLY_PRICE_CENTS} />
+          </p>
+          <p className="calc2-sub">{yearly ? `soit ${eur(Math.round(bailio / 12))} par mois` : `soit ${eur(bailio)} par an`}, garage seul {PARKING_PRICE} par mois</p>
+          <div className="calc2-bars" aria-hidden>
+            <div className="calc2-bar">
+              <span>Une agence</span>
+              <i style={{ transform: 'scaleX(1)' }} />
+              <b>{eur(agency)}</b>
+            </div>
+            <div className="calc2-bar calc2-bar--me">
+              <span>Bailio</span>
+              <i style={{ transform: `scaleX(${share})` }} />
+              <b>{eur(bailio)}</b>
+            </div>
+          </div>
+          <p className="calc2-keep">
+            Vous gardez{' '}
+            <strong>
+              <Money cents={keep} />
+            </strong>{' '}
+            par an
+          </p>
+          <p className="calc2-fine">Agence : 7 % d’un loyer de {SAMPLE_RENT} €, par an.</p>
+          <Link to="/commencer" className="btn btn--paper calc2-cta">
+            Commencer gratuitement
+            <Arrow />
+          </Link>
         </div>
-        <div>
-          <dt>Vous gardez</dt>
-          <dd>{eur(Math.max(0, agency - bailio))}</dd>
-          <dd className="calc-sub">par an, par rapport à l’agence</dd>
-        </div>
-      </dl>
-      <ul className="calc-guar">
+      </div>
+      <ul className="calc-guar calc2-guar">
         {GUARANTEES.map((g) => (
           <li key={g}>
             <Check />
@@ -444,47 +477,6 @@ function Automations() {
   )
 }
 
-/** Toutes les fonctionnalités, toutes comprises dans le prix, filtrables par moment de la location. */
-function AllFeatures() {
-  const [group, setGroup] = useState<FeatureGroup | 'ALL'>('ALL')
-  const list = ALL_FEATURES.filter((f) => group === 'ALL' || f.group === group)
-  const count = (g: FeatureGroup) => ALL_FEATURES.filter((f) => f.group === g).length
-  return (
-    <section className="feats" data-section aria-labelledby="feats-title">
-      <div className="feats-head">
-        <p className="eyebrow" aria-hidden>Fonctionnalités</p>
-        <h2 id="feats-title" data-in>
-          Toutes les fonctionnalités. <em>Toutes incluses.</em>
-        </h2>
-        <Link to="/fonctionnalites" className="btn btn--paper" data-in style={stagger(1)}>
-          Voir les fonctionnalités
-          <Arrow />
-        </Link>
-      </div>
-      <div className="feats-bar">
-        <div className="feats-filters" role="group" aria-label="Filtrer les fonctionnalités">
-          <button type="button" aria-pressed={group === 'ALL'} onClick={() => setGroup('ALL')}>
-            Tout <span>{ALL_FEATURES.length}</span>
-          </button>
-          {FEATURE_GROUPS.map((g) => (
-            <button key={g.id} type="button" aria-pressed={group === g.id} onClick={() => setGroup(g.id)}>
-              {g.label} <span>{count(g.id)}</span>
-            </button>
-          ))}
-        </div>
-        <span className="feats-zero">0 option payante</span>
-      </div>
-      <ul className="feats-list" aria-live="polite">
-        {list.map((f) => (
-          <li key={f.name} className="panel-in">
-            <Check />
-            {f.name}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
 
 /** Tableur, agence ou Bailio : vrai tableau, colonne Bailio mise en avant, défilement horizontal sur téléphone. */
 function Compare() {
@@ -604,9 +596,6 @@ function Reviews() {
 export default function Home() {
   const { user } = useAuth()
   const root = useRef<HTMLDivElement>(null)
-  const [kind, setKind] = useState<Kind>('VIDE')
-  const [rent, setRent] = useState(780)
-  const current = KINDS.find((k) => k.id === kind)!
   const [bar, setBar] = useState({ scrolled: false, cta: false })
 
   // En-tête collant : un trait dès qu'on descend, et le bouton « Créer mon bail » (aussi sur téléphone) une fois celui du
@@ -706,115 +695,7 @@ export default function Home() {
 
         <Automations />
 
-        <section className="live" data-section aria-labelledby="live-title">
-          <div className="live-form">
-            <h2 id="live-title" data-in style={{ ['--i' as string]: 0 }}>
-              Ce que la loi impose <em>à votre bail.</em>
-            </h2>
-            <p className="live-lead" data-in style={{ ['--i' as string]: 1 }}>
-              Choisissez le logement et le loyer : durée, dépôt et préavis s’affichent.
-            </p>
-            <div className="live-step" data-in style={{ ['--i' as string]: 2 }}>
-              <span className="live-label" id="live-kind">
-                Vous louez
-              </span>
-              <div className="tabs-live" role="group" aria-labelledby="live-kind">
-                {KINDS.map((k) => (
-                  <button key={k.id} type="button" aria-pressed={kind === k.id} onClick={() => setKind(k.id)}>
-                    {k.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="rent" data-in style={{ ['--i' as string]: 2 }}>
-              <label htmlFor="live-rent" className="live-label">
-                Votre loyer, sans les charges
-              </label>
-              <span className="rent-field">
-                <input
-                  id="live-rent"
-                  inputMode="numeric"
-                  value={rent ? String(rent) : ''}
-                  onChange={(e) => setRent(Math.min(99999, Number(e.target.value.replace(/\D/g, '')) || 0))}
-                  aria-describedby="live-terms"
-                />
-                <span aria-hidden>€ par mois</span>
-              </span>
-            </div>
-            <div className="live-actions" data-in style={{ ['--i' as string]: 3 }}>
-              <Link to={kind === 'GARAGE' ? '/inscription' : '/commencer'} state={kind === 'GARAGE' ? { from: ADD_PARKING_PATH } : undefined} className="btn">
-                Créer ce bail
-                <Arrow />
-              </Link>
-              <Link to="/importer" className="btn btn--line">
-                J’ai déjà un bail signé
-              </Link>
-            </div>
-          </div>
-          <div className="live-visual">
-            <div className="live-photo">
-              <img src="/accueil/comedie.webp" alt="La fontaine des Trois Grâces devant l’opéra Comédie, à Montpellier" width={960} height={1200} loading="lazy" decoding="async" />
-            </div>
-            <div className="terms-block fold fold--ear" data-in style={{ ['--i' as string]: 2 }}>
-              <p className="terms-title">{current.title} : ce que dit la loi</p>
-              <dl className="terms" id="live-terms" aria-live="polite">
-                {termsFor(kind, rent).map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="terms-note">
-                Dépôt de garantie : somme versée à l’entrée, rendue à la sortie. Préavis : délai pour prévenir avant la fin du bail.
-                {kind === 'VIDE' ? ' Zone tendue : grande ville où les logements manquent.' : ''}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <AllFeatures />
-
         <Reviews />
-
-        <section id="tarifs" className="plans" aria-label="Tarif">
-          <div className="plan plan--free" data-section>
-            <h2>Premier bail</h2>
-            <p className="plan-for">Pour louer un logement, une fois.</p>
-            <div className="plan-foot">
-              <span className="plan-price">0 €</span>
-              <Link to="/commencer" className="btn">
-                Créer mon bail
-                <Arrow />
-              </Link>
-            </div>
-          </div>
-          <div className="plan plan--full fold fold--lg fold--ear" data-section>
-            <h2>Tout inclus</h2>
-            <p className="plan-for">Pour suivre la location, mois après mois.</p>
-            <p className="plan-note">
-              {LAUNCH_OFFER}. Ensuite {YEARLY_PRICE} par an et par logement ({PARKING_PRICE} par mois pour un garage), sans engagement ni option payante ; un email vous prévient avant tout paiement.
-            </p>
-            <ul className="plan-list">
-              {INCLUS.map((x) => (
-                <li key={x}>
-                  <Check />
-                  {x}
-                </li>
-              ))}
-            </ul>
-            <div className="plan-foot">
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-                <span className="plan-price">{priceLabel()}</span>
-                {MONTHLY_PRICE ? <span>{PRICE_UNIT}</span> : null}
-              </span>
-              <Link to="/commencer" className="btn btn--paper">
-                Essayer
-                <Arrow />
-              </Link>
-            </div>
-          </div>
-        </section>
 
         <PriceCalc />
 

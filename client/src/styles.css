@@ -226,3 +226,16 @@ button:not(:disabled):active { transform: scale(.98); }
 .pub::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: min(720px, 90vh); z-index: -1; pointer-events: none; background-image: radial-gradient(rgba(13, 27, 62, 0.09) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); }
 .pub .page-body h2 { color: #0d1b3e; font-weight: 700; letter-spacing: -0.02em; }
 .pub a[style*="box-shadow"]:hover { filter: brightness(1.05); transform: translateY(-1px); }
+
+/* Visite des écrans : barre d'onglets blanche à icônes, au-dessus de la fenêtre (ProductTour) */
+.ptour-tabs { order: -1; display: flex; gap: 4px; padding: 6px; margin: 0 auto 6px; max-width: 100%; overflow-x: auto; scrollbar-width: none; background: #ffffff; border: 1px solid #e2e8f4; border-radius: 18px; box-shadow: 0 1px 2px rgba(13, 27, 62, 0.05), 0 16px 32px -24px rgba(13, 27, 62, 0.3); }
+.ptour-tabs::-webkit-scrollbar { display: none; }
+.ptour-tab { position: relative; overflow: hidden; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 76px; padding: 10px 10px 12px; border: 0; border-radius: 12px; background: transparent; color: #56637f; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s, color .2s; }
+.ptour-tab:hover { background: #f4f7fd; color: #0d1b3e; }
+.ptour-tab[aria-selected='true'] { background: #eaf1fe; color: #0d1b3e; }
+.ptour-ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: #ffffff; border: 1px solid #e2e8f4; color: #56637f; font-size: 13px; font-weight: 700; transition: background .2s, color .2s, border-color .2s, transform .2s; }
+.ptour-tab:hover .ptour-ico { transform: translateY(-2px); }
+.ptour-tab[aria-selected='true'] .ptour-ico { background: #2563eb; border-color: #2563eb; color: #ffffff; box-shadow: 0 6px 14px -6px rgba(37, 99, 235, 0.7); }
+.ptour-lab { white-space: nowrap; }
+.ptour-bar { position: absolute; left: 14px; right: 14px; bottom: 4px; height: 3px; border-radius: 2px; background: #2563eb; transform-origin: left; }
+@media (prefers-reduced-motion: reduce) { .ptour-tab:hover .ptour-ico { transform: none; } }

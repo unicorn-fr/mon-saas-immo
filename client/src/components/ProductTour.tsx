@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { BAI } from '../constants/bailio-tokens'
 import { AppWindow, type Spot } from './AppWindow'
+import { Book, Download, Euro, Home, Mail, Page, People, Signpost, Sun } from './Icons'
+
+/** Icône de chaque onglet, d'après l'identifiant de l'étape (numéro sinon). */
+const TAB_ICONS: Record<string, ComponentType<{ size?: number }>> = { jour: Sun, logements: Home, bail: Page, loyers: Euro, banque: Download, relances: Mail, candidats: People, impots: Book, patrimoine: Signpost, bord: Signpost }
 
 export interface TourStep {
   id: string
@@ -117,55 +121,42 @@ export function ProductTour({ steps, label = 'Écrans de l’application' }: { s
           ) : null}
         </div>
       </div>
-      <div role="tablist" aria-label={label} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-        {steps.map((t, j) => (
-          <button
-            key={t.id}
-            ref={(el) => void (tabs.current[j] = el)}
-            type="button"
-            role="tab"
-            id={`visite-${t.id}`}
-            aria-selected={i === j}
-            aria-controls="visite-ecran"
-            tabIndex={i === j ? 0 : -1}
-            onClick={() => go(j)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') (e.preventDefault(), go(j + 1, true))
-              if (e.key === 'ArrowLeft') (e.preventDefault(), go(j - 1, true))
-            }}
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              minHeight: 44,
-              padding: '0 16px 0 6px',
-              borderRadius: 999,
-              border: `1.5px solid ${i === j ? BAI.owner : BAI.borderStrong}`,
-              background: i === j ? BAI.owner : BAI.surface,
-              color: i === j ? BAI.surface : BAI.ink,
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            <span aria-hidden style={{ width: 30, height: 30, borderRadius: 15, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: i === j ? BAI.surface : BAI.sky, color: BAI.owner, fontSize: 14 }}>
-              {j + 1}
-            </span>
-            {t.tab}
-            {i === j && !still ? (
-              <span
-                aria-hidden
-                key={`${t.id}-bar`}
-                className="tour-bar"
-                onAnimationEnd={() => go(i + 1)}
-                style={{ position: 'absolute', left: 0, bottom: 0, height: 3, width: '100%', background: BAI.sky, transformOrigin: 'left', animationDuration: `${STEP_MS}ms`, animationPlayState: auto ? 'running' : 'paused' }}
-              />
-            ) : null}
-          </button>
-        ))}
+      <div role="tablist" aria-label={label} className="ptour-tabs">
+        {steps.map((t, j) => {
+          const Icon = TAB_ICONS[t.id]
+          return (
+            <button
+              key={t.id}
+              ref={(el) => void (tabs.current[j] = el)}
+              type="button"
+              role="tab"
+              id={`visite-${t.id}`}
+              aria-selected={i === j}
+              aria-controls="visite-ecran"
+              tabIndex={i === j ? 0 : -1}
+              className="ptour-tab"
+              onClick={() => go(j)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight') (e.preventDefault(), go(j + 1, true))
+                if (e.key === 'ArrowLeft') (e.preventDefault(), go(j - 1, true))
+              }}
+            >
+              <span aria-hidden className="ptour-ico">
+                {Icon ? <Icon size={18} /> : j + 1}
+              </span>
+              <span className="ptour-lab">{t.tab}</span>
+              {i === j && !still ? (
+                <span
+                  aria-hidden
+                  key={`${t.id}-bar`}
+                  className="tour-bar ptour-bar"
+                  onAnimationEnd={() => go(i + 1)}
+                  style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: auto ? 'running' : 'paused' }}
+                />
+              ) : null}
+            </button>
+          )
+        })}
       </div>
     </div>
   )
