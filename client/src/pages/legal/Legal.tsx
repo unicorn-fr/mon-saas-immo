@@ -7,7 +7,7 @@ import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceD
 import { CALLBACK_PROMISE } from '../../content/inclus'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '9 novembre 2026'
+const UPDATED = '14 novembre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -272,6 +272,8 @@ export function Confidentialite() {
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date, les problèmes qu'il signale dans le logement (type, lieu, description, photos) et ses demandes pour compléter l'état des lieux d'entrée (description, photos, réponse du propriétaire). Ces éléments sont rangés avec le bail ou le logement et ne sont visibles que du propriétaire et des personnes à qui il en donne l'accès ; un problème signalé est conservé avec l'historique des interventions du logement ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
         <li>Si vous donnez votre avis depuis l'espace (« Votre avis ») : votre réponse, votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour améliorer Bailio et vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
+        <li>Si vous connectez une IA (Claude, ChatGPT…) depuis « Mon compte », « Connexion aux IA » : l'IA que vous choisissez lit, à votre demande, vos biens, locataires, baux, loyers et échéances, en lecture seule (elle ne peut rien modifier ni envoyer). Ces données partent alors chez l'éditeur de cette IA, selon ses propres conditions : c'est vous qui décidez de ce transfert, et vous en êtes responsable vis-à-vis de vos locataires. Les liens privés, signatures et coordonnées bancaires ne sont jamais transmis. Seule l'empreinte de la clé est gardée, avec son nom et sa date de dernière utilisation ; vous la retirez quand vous voulez.</li>
+        <li>Si vous nous écrivez depuis la bulle de message de l'espace : votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
         <li>Si vous répondez au questionnaire des testeurs (« Votre avis sur Bailio ») : vos réponses et, si vous les donnez, votre nom ou compte Instagram et un email ou téléphone. Elles nous parviennent par email pour améliorer Bailio ; rien n'est enregistré par Bailio.</li>
         <li>Si vous demandez à être rappelé depuis la page « Contact » : votre besoin (choisi dans une liste) et votre numéro de téléphone ou votre email. Ils nous parviennent par email pour vous répondre ; rien n'est enregistré par Bailio.</li>
       </ul>
@@ -396,6 +398,7 @@ export function Cookies() {
           ['bailio.draft', 'Retrouver le bail commencé sans compte, si vous fermez la page', '30 jours, ou jusqu’à la création de votre espace'],
           ['bailio.boot, bailio.recover', 'Recharger une seule fois la page si elle s’est mal chargée', 'Le temps de l’onglet ouvert'],
           ['bailio.space', 'Retenir l’espace partagé que vous avez ouvert (invitation d’un propriétaire)', 'Jusqu’au retour à votre espace ou à la déconnexion'],
+          ['bailio.profile', 'Retenir le profil bailleur choisi en haut du menu de votre espace', 'Jusqu’au choix de « Tous les profils » ou à la déconnexion'],
           ['Service de mise à jour du site', 'Vider l’ancienne version du site après une mise à jour', 'Aucune donnée personnelle'],
         ]}
       />
@@ -573,6 +576,7 @@ export function Securite() {
         <li>Pas de mot de passe à voler : vous recevez un lien de connexion par email, valable 30 minutes et utilisable une seule fois ;</li>
         <li>Chaque connexion est un appareil, visible dans « Mon compte » : vous pouvez en déconnecter un à tout moment. Un appareil inutilisé pendant 30 jours est déconnecté tout seul ;</li>
         <li>L'export de vos données et la suppression du compte demandent en plus un code à 6 chiffres envoyé par email ;</li>
+        <li>Une IA connectée depuis « Mon compte » ne peut que lire, et seulement vos biens, locataires, baux, loyers, impôts et candidatures : jamais un envoi, une modification, un fichier ni votre compte. Sa clé (seule son empreinte est gardée) se retire à tout moment ;</li>
         <li>Toutes les pages passent par une connexion chiffrée (HTTPS), imposée par le navigateur.</li>
       </ul>
       <H2>Ce que nous ne faisons pas</H2>

@@ -264,6 +264,37 @@ router.get('/properties/:id/candidates', requireUser, async (req, res) => {
   })
 })
 
+// Tous les candidats du propriétaire, tous logements confondus (page « Candidats »), les plus récents d'abord.
+router.get('/candidates', requireUser, async (req, res) => {
+  const agent = Boolean(readProfile(req.user!).agent?.enabled)
+  const props = await prisma.property.findMany({ where: { userId: req.user!.id }, include: { leases: true } })
+  const rows = await prisma.candidate.findMany({ where: { propertyId: { in: props.map((p) => p.id) } }, orderBy: { createdAt: 'desc' } })
+  const offers = new Map(props.map((p) => [p.id, { p, offer: publicOffer(p, agent) }]))
+  res.json({
+    success: true,
+    data: {
+      properties: props.map((p) => ({ id: p.id, name: propertyName(p), open: Boolean(p.applyCode) })),
+      candidates: rows.map((r) => {
+        const d = r.data as unknown as Stored
+        const { p, offer } = offers.get(r.propertyId)!
+        const review = reviewCandidate(d as CandidateData & { documents?: CandidateDoc[] }, { rentWithChargesCents: offer.rentWithChargesCents, requestedDocs: offer.requestedDocs.map((x) => x.key), availableFrom: adSettings(p, p.leases).availableFrom ?? null })
+        return {
+          id: r.id,
+          propertyId: r.propertyId,
+          propertyName: propertyName(p),
+          name: `${d.firstNames} ${d.lastName}`,
+          receivedAt: r.createdAt.toISOString(),
+          monthlyIncomeCents: d.monthlyIncomeCents,
+          guarantee: GUARANTEE_LABEL[d.guarantee],
+          review: { level: review.level, label: review.label, points: review.points },
+          status: r.status,
+          visitConfirmed: Boolean(d.visitConfirmedAt),
+        }
+      }),
+    },
+  })
+})
+
 // Ouvrir le lien de candidature (ou le renouveler), ou le fermer.
 router.post('/properties/:id/apply-link', requireUser, async (req, res) => {
   const p = await ownProperty(req.user!.id, String(req.params.id))

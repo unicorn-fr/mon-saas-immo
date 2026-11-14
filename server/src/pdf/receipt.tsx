@@ -3,7 +3,7 @@ import type { LandlordProfile, PartyName } from '../domain/contract.js'
 import { formatDateFr, monthYearFr } from '../domain/lease.js'
 import { eurosInWords } from '../domain/words.js'
 import { landlordAddress, landlordName, personName } from './labels.js'
-import { BLANK, INK, MUTED, RULE, ScriptName, s, embedded } from './theme.js'
+import { BLANK, INK, LandlordLogo, MUTED, RULE, ScriptName, s, embedded } from './theme.js'
 
 /**
  * Quittance de loyer, reçu de paiement partiel et avis d'échéance (article 21 de la loi du 6 juillet 1989).
@@ -63,6 +63,7 @@ export function ReceiptDocument(r: ReceiptInput) {
       <Page size="A4" style={s.page}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View>
+            <LandlordLogo src={r.landlord.logo} />
             <Text style={{ fontWeight: 700 }}>{landlord}</Text>
             <Text style={{ lineHeight: 1.5, fontSize: 9.5 }}>{landlordAddress(r.landlord)}</Text>
           </View>

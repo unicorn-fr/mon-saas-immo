@@ -12,6 +12,7 @@ export interface StructureFile {
   taxRegime?: N<'IR' | 'IS'>
   associates?: N<Array<{ name?: N<string>; sharePct?: N<number> }>>
   payment?: N<{ holder?: N<string>; iban?: N<string> }>
+  logo?: N<string>
 }
 
 export interface StructureView {

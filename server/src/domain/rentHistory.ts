@@ -32,6 +32,36 @@ export function amountsAt(history: RentStep[], date: string): { rentCents: numbe
   return { rentCents: current.rentCents, chargesCents: current.chargesCents }
 }
 
+/**
+ * Périodicité du paiement : chaque mois (habitation, garage), par trimestre ou par an (bail commercial, terms.paymentFrequency).
+ * Les montants du bail restent mensuels ; une échéance réunit `termMonths` mois, à compter du mois d'entrée
+ * (trimestre : mois d'entrée, puis tous les 3 mois). Les paiements sont enregistrés sur le premier mois de l'échéance.
+ */
+export const PAYMENT_FREQUENCIES = { MONTHLY: 1, QUARTERLY: 3, YEARLY: 12 } as const
+export type PaymentFrequency = keyof typeof PAYMENT_FREQUENCIES
+
+export function termMonthsOf(lease: Pick<LeaseLike, 'data'>): number {
+  const f = (lease.data as { terms?: { paymentFrequency?: string } } | null)?.terms?.paymentFrequency
+  return f && f in PAYMENT_FREQUENCIES ? PAYMENT_FREQUENCIES[f as PaymentFrequency] : 1
+}
+
+const monthIndex = (period: string) => Number(period.slice(0, 4)) * 12 + Number(period.slice(5, 7)) - 1
+
+/** Ce mois (AAAA-MM) ouvre-t-il une échéance ? Toujours vrai pour un paiement mensuel. */
+export function isTermStart(lease: Pick<LeaseLike, 'data' | 'startDate'>, period: string): boolean {
+  const n = termMonthsOf(lease)
+  if (n === 1) return true
+  const diff = monthIndex(period) - monthIndex(lease.startDate.toISOString().slice(0, 7))
+  return diff >= 0 && diff % n === 0
+}
+
+/** Montant dû pour l'échéance qui s'ouvre ce mois : loyer et charges du mois × nombre de mois de l'échéance. */
+export function termAmounts(lease: LeaseLike, period: string): { rentCents: number; chargesCents: number } {
+  const n = termMonthsOf(lease)
+  const a = amountsForPeriod(lease, period)
+  return { rentCents: a.rentCents * n, chargesCents: a.chargesCents * n }
+}
+
 /** Montants dus pour un mois (AAAA-MM), à sa date d'échéance. */
 export function amountsForPeriod(lease: LeaseLike, period: string): { rentCents: number; chargesCents: number } {
   return amountsAt(historyOf(lease), `${period}-${String(Math.min(28, Math.max(1, lease.paymentDay))).padStart(2, '0')}`)
@@ -52,8 +82,9 @@ export function unpaidPeriods(lease: LeaseLike, payments: Array<{ period: string
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, lease.paymentDay))
     if (d < lease.startDate || d > now) continue
     const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+    if (!isTermStart(lease, period)) continue
     const paid = payments.find((p) => p.period === period)?.amountCents ?? 0
-    const a = amountsForPeriod(lease, period)
+    const a = termAmounts(lease, period)
     const due = a.rentCents + a.chargesCents
     if (paid < due) out.push({ period, missing: due - paid })
   }
@@ -78,7 +109,8 @@ export function rentSchedule(
     const startMonth = Date.UTC(lease.startDate.getUTCFullYear(), lease.startDate.getUTCMonth(), 1)
     if (d.getTime() < startMonth || d > lease.endDate) continue
     const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-    const a = amountsForPeriod(lease, period)
+    if (!isTermStart(lease, period)) continue
+    const a = termAmounts(lease, period)
     const dueCents = a.rentCents + a.chargesCents
     const pay = payments.find((p) => p.period === period)
     const paidCents = pay?.amountCents ?? 0

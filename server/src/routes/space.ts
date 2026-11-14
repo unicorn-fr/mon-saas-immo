@@ -9,6 +9,7 @@ import { requireUser } from '../services/session.js'
 import { PARKING_TYPES, landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
 import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantCompletion } from '../domain/completion.js'
 import { diagnosticsFor, energyRentalWarning, isFurnished, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
+import { structureName } from '../domain/structure.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readStructure, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { aidsFor } from '../domain/aids.js'
 import { iso, mergeFile } from './helpers.js'
@@ -168,7 +169,36 @@ router.get('/properties', async (req, res) => {
   const userId = req.user!.id
   const props = await prisma.property.findMany({ where: { userId }, include: { leases: { include: { payments: true } } }, orderBy: { createdAt: 'asc' } })
   const names = await tenantNames(userId, props.flatMap((p) => p.leases.flatMap((l) => l.tenantIds)))
-  res.json({ success: true, data: props.map((p) => propertySummary(p, names)) })
+  // Nom du bailleur (structure) en tête de chaque carte de « Biens ».
+  const structures = await prisma.structure.findMany({ where: { userId } })
+  const owner = new Map(structures.map((st) => [st.id, structureName(readStructure(st))]))
+  res.json({ success: true, data: props.map((p) => ({ ...propertySummary(p, names), structureName: p.structureId ? (owner.get(p.structureId) ?? null) : null, parentId: p.parentId, archivedAt: p.archivedAt?.toISOString() ?? null })) })
+})
+
+// Archiver un bien (vendu, plus loué) ou le remettre dans la liste : rien n'est effacé.
+router.post('/properties/:id/archive', async (req, res) => {
+  const { archived } = z.object({ archived: z.boolean() }).parse(req.body)
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  await prisma.property.update({ where: { id: p.id }, data: { archivedAt: archived ? new Date() : null } })
+  res.json({ success: true, data: { archived } })
+})
+
+// Lot d'un immeuble de rapport ou chambre d'une colocation : rattacher le bien à son bien parent (ou le détacher).
+router.put('/properties/:id/parent', async (req, res) => {
+  const { parentId } = z.object({ parentId: z.uuid().nullable() }).parse(req.body)
+  const userId = req.user!.id
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId }, include: { units: { select: { id: true } } } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  if (parentId) {
+    if (parentId === p.id) throw new HttpError(400, 'Un bien ne peut pas être son propre parent.')
+    if (p.units.length) throw new HttpError(400, 'Ce bien contient déjà des lots : il ne peut pas devenir un lot à son tour.')
+    const parent = await prisma.property.findFirst({ where: { id: parentId, userId } })
+    if (!parent) throw new HttpError(404, 'Bien parent introuvable.')
+    if (parent.parentId) throw new HttpError(400, 'Le bien choisi est lui-même un lot : choisissez l’immeuble ou le logement principal.')
+  }
+  await prisma.property.update({ where: { id: p.id }, data: { parentId } })
+  res.json({ success: true, data: { parentId } })
 })
 
 /** Zone tendue non renseignée : reprise de la liste officielle des communes (le propriétaire peut corriger). */
@@ -433,7 +463,25 @@ router.get('/tenants', async (req, res) => {
   const userId = req.user!.id
   const tenants = await prisma.tenant.findMany({ where: { userId }, include: { property: true }, orderBy: { createdAt: 'asc' } })
   const leases = await prisma.lease.findMany({ where: { userId }, include: { payments: true, property: true } })
-  res.json({ success: true, data: tenants.map((t) => tenantSummary(t, leases.filter((l) => l.tenantIds.includes(t.id)))) })
+  res.json({ success: true, data: tenants.map((t) => ({ ...tenantSummary(t, leases.filter((l) => l.tenantIds.includes(t.id))), archivedAt: t.archivedAt?.toISOString() ?? null })) })
+})
+
+router.post('/tenants/:id/archive', async (req, res) => {
+  const { archived } = z.object({ archived: z.boolean() }).parse(req.body)
+  const t = await prisma.tenant.findFirst({ where: { id: String(req.params.id), userId: req.user!.id } })
+  if (!t) throw new HttpError(404, 'Locataire introuvable.')
+  await prisma.tenant.update({ where: { id: t.id }, data: { archivedAt: archived ? new Date() : null } })
+  res.json({ success: true, data: { archived } })
+})
+
+// Emails envoyés à ce locataire au nom du propriétaire : objet, destinataire, date (le contenu reste avec le bail).
+router.get('/tenants/:id/emails', async (req, res) => {
+  const userId = req.user!.id
+  const t = await prisma.tenant.findFirst({ where: { id: String(req.params.id), userId } })
+  if (!t) throw new HttpError(404, 'Locataire introuvable.')
+  const leaseIds = (await prisma.lease.findMany({ where: { userId, tenantIds: { has: t.id } }, select: { id: true } })).map((l) => l.id)
+  const rows = await prisma.emailLog.findMany({ where: { userId, OR: [{ tenantId: t.id }, { leaseId: { in: leaseIds } }] }, orderBy: { sentAt: 'desc' }, take: 200 })
+  res.json({ success: true, data: rows.map((r) => ({ id: r.id, to: r.to, subject: r.subject, kind: r.kind, sentAt: r.sentAt.toISOString() })) })
 })
 
 /** Crée la fiche d'un locataire, rattachée à un logement du compte si `propertyId` est donné (« Ajouter un locataire » et import par fichier). */
@@ -461,6 +509,7 @@ router.get('/tenants/:id', async (req, res) => {
     data: {
       ...tenantSummary(t, leases),
       propertyId: t.propertyId,
+      archivedAt: t.archivedAt?.toISOString() ?? null,
       file: f,
       completion: tenantCompletion(f, lease?.status === 'ENDED'),
       guarantorCompletion: f.guarantor ? guarantorCompletion(f.guarantor) : null,

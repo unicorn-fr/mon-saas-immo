@@ -3,11 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Card, LoadError, Loader, Pill, Tabs, TextLink, toneColor, useLoad, useToast, useConfirm } from '../../components/kit'
-import { Camera, Check, Euro, Home, Mail, Pencil, People, Plus, Upload } from '../../components/Icons'
+import { Btn, Card, Input, LoadError, Loader, Modal, Pill, Select, Tabs, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
+import { Camera, Check, Euro, Home, Mail, Pencil, People, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
-import { dayTitle, eurosCents, monthName, plural } from '../../lib/format'
+import { dayTitle, eurosCents, plural } from '../../lib/format'
 import type { Task, TodayView } from '../../lib/space'
 import { useAuth } from '../../lib/auth'
 import type { User, ViewMode } from '../../lib/types'
@@ -29,9 +29,6 @@ function TodayContent() {
   const { user } = useAuth()
   const space = getSpace()
   const { data, error, loading, reload } = useLoad(() => api<TodayView>('/today'))
-  // Trois actions à la fois : les plus urgentes d'abord, le reste sur demande (pas de longue liste à faire défiler).
-  const [allTasks, setAllTasks] = useState(false)
-  const [tag, setTag] = useState<string | null>(null)
   const [params, setParams] = useSearchParams()
   const tab = (['general', 'rentabilite', 'export'] as const).find((t) => t === params.get('onglet')) ?? 'general'
   const setTab = (t: string) => setParams(t === 'general' ? {} : { onglet: t }, { replace: true })
@@ -50,9 +47,6 @@ function TodayContent() {
   const view: ViewMode = user?.viewMode ?? suggestView(data.counts.properties)
   const simple = view === 'SIMPLE'
   const large = view === 'LARGE' || view === 'AGENCY'
-  const tags = [...new Set(data.tasks.map((t) => t.tag))]
-  const filtered = tag ? data.tasks.filter((t) => t.tag === tag) : data.tasks
-  const visibleTasks = allTasks ? filtered : filtered.slice(0, 3)
   return (
     <>
       <FollowUpBanner />
@@ -62,7 +56,7 @@ function TodayContent() {
           <span className="hide-md" style={{ fontSize: 15, color: BAI.inkSoft }}>
             {dayTitle()}
           </span>
-          <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bonjour{first ? ` ${first}` : ''}.</h1>
+          <h1 style={display('clamp(26px, 3.2vw, 34px)')}>Bienvenue{first ? ` ${first}` : ''} !</h1>
           <span className="only-md" style={{ fontSize: 15, color: BAI.inkMid }}>
             {data.tasks.length ? `${plural(data.tasks.length, 'action')} cette semaine, déjà préparée${data.tasks.length > 1 ? 's' : ''}.` : 'Rien à faire cette semaine.'}
           </span>
@@ -82,71 +76,13 @@ function TodayContent() {
       {tab === 'rentabilite' ? <Profitability /> : tab === 'export' ? <Exports /> : (<>
       <Tiles data={data} />
 
-      <div className="today-grid">
-        <section className="today-main" style={{ gap: 14 }}>
-          <div className="hide-md" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>À faire cette semaine</h2>
-            {data.tasks.length ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>Tout est préparé, il vous reste à valider</span> : null}
-          </div>
-          {tags.length > 1 ? (
-            <div role="group" aria-label="Filtrer les actions" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {[null, ...tags].map((g) => {
-                const n = g ? data.tasks.filter((t) => t.tag === g).length : data.tasks.length
-                const on = tag === g
-                return (
-                  <button key={g ?? 'tout'} type="button" aria-pressed={on} onClick={() => { setTag(g); setAllTasks(false) }} style={{ minHeight: 36, padding: '0 12px', borderRadius: 999, border: `1px solid ${on ? BAI.ink : BAI.border}`, background: on ? BAI.ink : BAI.surface, color: on ? BAI.surface : BAI.ink, fontFamily: 'inherit', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                    {g ?? 'Tout'} <span style={{ fontWeight: 500, opacity: 0.8 }}>{n}</span>
-                  </button>
-                )
-              })}
-            </div>
-          ) : null}
-          {/* Plusieurs envois du même genre (relances, assurances, révisions) : ils se font en une fois. */}
-          {(['LATE_RENT', 'INSURANCE', 'REVISION'] as const).some((k) => data.tasks.filter((t) => t.type === k).length >= 2) ? (
-            <Link to="/espace/actions" style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>
-              Plusieurs envois du même genre : les faire en une fois
-            </Link>
-          ) : null}
-          {data.tasks.length ? (
-            <>
-              {visibleTasks.map((t, i) => (
-                <div key={t.id} style={simple && i === 0 ? { border: `2px solid ${BAI.cta}`, borderRadius: BAI.radius + 2 } : undefined}>
-                  {simple && i === 0 ? <span style={{ display: 'block', padding: '10px 18px 0', fontSize: 14, fontWeight: 700, color: BAI.accentInk }}>À faire maintenant</span> : null}
-                  <TaskCard task={t} onChange={reload} first={i === 0} />
-                </div>
-              ))}
-              {filtered.length > visibleTasks.length || allTasks ? (
-                <Btn variant="outline" onClick={() => setAllTasks(!allTasks)}>
-                  {allTasks ? 'Voir moins' : (() => { const rest = filtered.length - visibleTasks.length; return `Voir ${rest > 1 ? `les ${rest} autres actions` : 'l’autre action'}` })()}
-                </Btn>
-              ) : null}
-            </>
-          ) : (
-            <Card>
-              <span style={{ fontSize: 17, fontWeight: 600 }}>Rien à faire cette semaine.</span>
-              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Bailio surveille les loyers, les dates du bail et les attestations. Vous serez prévenu dès qu’il y a quelque chose à valider.</span>
-            </Card>
-          )}
-        </section>
+      <PriorityActions tasks={data.tasks} onChange={reload} simple={simple} />
 
-        <aside className="today-side">
-          <Shortcuts leaseId={data.singleLeaseId} />
-          <Agenda items={data.upcoming} />
-          <NewsCard />
-          <Card title="Vos logements" action={<TextLink to="/espace/logements" style={{ fontSize: 14 }}>Tout voir</TextLink>}>
-            {data.properties.length ? (
-              data.properties.slice(0, large ? 5 : undefined).map((p) => (
-                <Link key={p.id} to={`/espace/logements/${p.id}`} className="tap" style={{ textDecoration: 'none', color: BAI.ink, display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 15 }}>
-                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                  <span style={{ color: toneColor(p.status.tone), fontWeight: 600, whiteSpace: 'nowrap' }}>{p.status.label}</span>
-                </Link>
-              ))
-            ) : (
-              <TextLink to="/espace/logements/nouveau">Ajouter un logement</TextLink>
-            )}
-          </Card>
-        </aside>
+      <div className="dash-grid">
+        <Shortcuts leaseId={data.singleLeaseId} />
+        <Agenda items={data.upcoming} properties={data.properties} onChange={reload} />
       </div>
+      <NewsCard />
       </>)}
     </>
   )
@@ -253,31 +189,29 @@ function PortfolioBar({ agency }: { agency: boolean }) {
 
 function Tiles({ data }: { data: TodayView }) {
   const s = data.stats
-  const month = monthName(Number(s.month.slice(5)))
   const lateTasks = data.tasks.filter((t) => t.type === 'LATE_RENT' && t.leaseId)
-  const tiles: Array<{ key: string; label: string; value: string; sub?: string; to: string; tone?: 'error' | 'green' }> = []
-  if (s.rentsExpected) {
-    tiles.push({ key: 'rents', label: `Loyers ${/^[aeiouyhâàéèê]/i.test(month) ? 'd’' : 'de '}${month}`, value: `${fmtMoney(s.receivedCents)} sur ${fmtMoney(s.expectedCents)}`, sub: `${s.rentsReceived} reçu${s.rentsReceived > 1 ? 's' : ''} sur ${s.rentsExpected}`, to: '/espace/argent' })
-    tiles.push(
-      s.lateCount
-        ? { key: 'late', label: 'Loyers en retard', value: fmtMoney(s.lateCents), sub: plural(s.lateCount, 'bail'), tone: 'error', to: lateTasks.length === 1 ? `/espace/baux/${lateTasks[0].leaseId}/parcours/UNPAID` : lateTasks.length ? '/espace/actions' : '/espace/logements' }
-        : { key: 'late', label: 'Loyers en retard', value: 'Aucun', sub: 'Tout est à jour', tone: 'green', to: '/espace/argent' },
-    )
-  }
-  if (s.depositCount) tiles.push({ key: 'deposit', label: 'Dépôts à noter reçus', value: fmtMoney(s.depositCents), sub: plural(s.depositCount, 'bail', 'baux'), to: data.singleLeaseId ? `/espace/baux/${data.singleLeaseId}` : '/espace/logements' })
-  if (s.candidates) tiles.push({ key: 'candidates', label: 'Candidatures en attente', value: String(s.candidates), sub: 'À regarder', to: s.candidatesPropertyId ? `/espace/logements/${s.candidatesPropertyId}/candidats` : '/espace/logements' })
-  if (!tiles.length) return null
+  const lateTo = lateTasks.length === 1 ? `/espace/baux/${lateTasks[0].leaseId}/parcours/UNPAID` : lateTasks.length ? '/espace/actions' : '/espace/locataires'
+  const tiles: Array<{ key: string; label: string; value: ReactNode; sub?: string; to: string; tone?: 'error' | 'green' | 'warn'; icon: ReactNode }> = [
+    { key: 'rented', label: 'Logements loués', value: <>{s.rented ?? 0}<small style={{ fontSize: '0.6em', fontWeight: 600, color: BAI.inkSoft }}>/{s.properties ?? data.counts.properties}</small></>, to: '/espace/logements', icon: <Home size={18} /> },
+    { key: 'candidates', label: 'Candidatures', value: String(s.candidates), sub: s.candidates ? 'À regarder' : undefined, to: '/espace/candidats', icon: <People size={18} /> },
+    { key: 'rents', label: 'Loyers perçus ce mois-ci', value: <>{fmtMoney(s.receivedCents)}<small style={{ fontSize: '0.6em', fontWeight: 600, color: BAI.inkSoft }}> / {fmtMoney(s.expectedCents)}</small></>, sub: 'perçus / appelés', to: '/espace/banques', tone: 'green', icon: <Euro size={18} /> },
+    { key: 'late', label: 'Retards de paiement', value: String(s.lateCount), to: lateTo, tone: s.lateCount ? 'warn' : 'green', icon: <Clock /> },
+    { key: 'deposit', label: 'Dépôts de garantie non reçus', value: String(s.depositCount), sub: s.depositCount ? fmtMoney(s.depositCents) : undefined, to: data.singleLeaseId ? `/espace/baux/${data.singleLeaseId}` : '/espace/locataires', icon: <Shield /> },
+    { key: 'unpaid', label: 'Impayés', value: s.lateCents ? fmtMoney(s.lateCents) : '0 €', to: lateTo, tone: s.lateCents ? 'error' : 'green', icon: <Alert /> },
+  ]
+  const bg = (t?: string) => (t === 'error' ? BAI.errorLight : t === 'green' ? BAI.greenLight : t === 'warn' ? BAI.photoSand : BAI.ownerLight)
+  const fg = (t?: string) => (t === 'error' ? BAI.error : t === 'green' ? BAI.green : t === 'warn' ? BAI.coralInk : BAI.owner)
   return (
-    <nav aria-label="Chiffres du mois" className="today-tiles">
+    <nav aria-label="Chiffres du mois" className="dash-tiles">
       {tiles.map((t) => (
-        <Link key={t.key} to={t.to} className="tap today-tile" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 16, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, minWidth: 0 }}>
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-            <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.label}</span>
-            <span style={{ fontSize: 'clamp(18px, 2vw, 21px)', fontWeight: 600, letterSpacing: '-0.02em', color: t.tone ? toneColor(t.tone) : BAI.ink, overflowWrap: 'anywhere' }}>{t.value}</span>
-            {t.sub ? <span style={{ fontSize: 13, color: BAI.inkMid }}>{t.sub}</span> : null}
+        <Link key={t.key} to={t.to} className="tap dash-tile">
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: BAI.ink }}>{t.label}</span>
+            <span style={{ fontSize: 'clamp(24px, 2.4vw, 30px)', fontWeight: 800, letterSpacing: '-0.03em', color: t.tone === 'error' && s.lateCents ? BAI.error : BAI.ink, overflowWrap: 'anywhere', lineHeight: 1 }}>{t.value}</span>
+            {t.sub ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>{t.sub}</span> : null}
           </span>
-          <span aria-hidden style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.tone === 'error' ? BAI.errorLight : t.tone === 'green' ? BAI.greenLight : BAI.ownerLight, color: t.tone === 'error' ? BAI.error : t.tone === 'green' ? BAI.green : BAI.owner }}>
-            {t.key === 'candidates' ? <People size={18} /> : t.key === 'deposit' ? <Home size={18} /> : <Euro size={18} />}
+          <span aria-hidden style={{ width: 38, height: 38, borderRadius: 19, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: bg(t.tone), color: fg(t.tone) }}>
+            {t.icon}
           </span>
         </Link>
       ))}
@@ -285,68 +219,251 @@ function Tiles({ data }: { data: TodayView }) {
   )
 }
 
-/** Six actions courantes. Quand il faut choisir un bail, on passe par la liste qui convient. */
+const Clock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 2" />
+  </svg>
+)
+const Shield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" aria-hidden>
+    <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z" />
+  </svg>
+)
+const Alert = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v5.5M12 16.5h.01" />
+  </svg>
+)
+
+/** Grandes catégories des actions (le détail reste sur l'étiquette de chaque carte). */
+const CATEGORY: Record<string, string> = {
+  LATE_RENT: 'Paiements', PARTIAL_RENT: 'Paiements', AUTO_RECEIPT: 'Paiements', REVISION: 'Paiements', CHARGES: 'Paiements', SETTLEMENT: 'Paiements',
+  INSURANCE: 'Documents', BOILER: 'Documents', NOTICE_UPDATE: 'Documents', INVOICE: 'Documents',
+  ISSUE: 'Logement', INVENTORY: 'Logement', INVENTORY_COMPLEMENT: 'Logement', DEPARTURE: 'Logement', LEASE_END: 'Logement',
+  STEP: 'Mise en location',
+  TAX_DECLARE: 'Impôts',
+}
+const categoryOf = (t: Task) => CATEGORY[t.type] ?? (t.tag.startsWith('Dépôt') ? 'Paiements' : 'Autres')
+
+/** « Mes actions prioritaires » : une ligne par catégorie avec son nombre, dépliée au clic (la première ouverte). */
+function PriorityActions({ tasks, onChange, simple }: { tasks: Task[]; onChange: () => void; simple: boolean }) {
+  const tags = [...new Set(tasks.map(categoryOf))]
+  // Ouvertes au départ : les catégories des trois actions les plus urgentes.
+  const [open, setOpen] = useState<Set<string>>(() => new Set(tasks.slice(0, 3).map(categoryOf)))
+  const toggle = (g: string) => setOpen((o) => { const n = new Set(o); if (n.has(g)) n.delete(g); else n.add(g); return n })
+  return (
+    <section className="dash-card" aria-labelledby="actions-titre">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <h2 id="actions-titre" style={{ margin: 0, fontSize: 17, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+          Mes actions prioritaires
+          <span className="dash-count">{tasks.length}</span>
+        </h2>
+        {(['LATE_RENT', 'INSURANCE', 'REVISION'] as const).some((k) => tasks.filter((t) => t.type === k).length >= 2) ? (
+          <Link to="/espace/actions" style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
+            Tout envoyer en une fois
+          </Link>
+        ) : null}
+      </div>
+      {tasks.length ? (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {tags.map((g) => {
+            const list = tasks.filter((t) => categoryOf(t) === g)
+            const on = open.has(g)
+            return (
+              <li key={g} style={{ borderTop: `1px solid ${BAI.divider}` }}>
+                <button type="button" aria-expanded={on} onClick={() => toggle(g)} className="dash-acc">
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {g}
+                    <span className="dash-count">{list.length}</span>
+                  </span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden style={{ transform: on ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {on ? (
+                  <div className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingBottom: 14 }}>
+                    {list.map((t, i) => (
+                      <div key={t.id} style={simple && i === 0 && g === tags[0] ? { border: `2px solid ${BAI.cta}`, borderRadius: BAI.radius + 2 } : undefined}>
+                        <TaskCard task={t} onChange={onChange} first={i === 0} />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+      ) : (
+        <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Rien à faire pour l’instant. Bailio surveille les loyers, les dates du bail et les attestations.</p>
+      )}
+    </section>
+  )
+}
+
+/** « Mes raccourcis » : une action par ligne, icône à gauche, flèche à droite. */
 function Shortcuts({ leaseId }: { leaseId: string | null }) {
   const items = [
-    { to: '/espace/argent/releve', label: 'Noter un loyer reçu', icon: <Euro size={17} /> },
+    { to: '/espace/logements/nouveau', label: 'Ajouter un bien', icon: <Home size={17} /> },
+    { to: '/espace/locataires/nouveau', label: 'Ajouter un locataire', icon: <People size={17} /> },
+    { to: '/espace/baux/nouveau', label: 'Créer un bail', icon: <Pencil size={17} /> },
+    { to: '/espace/banques', label: 'Noter un loyer reçu', icon: <Euro size={17} /> },
     { to: leaseId ? `/espace/baux/${leaseId}#paiements` : '/espace/actions', label: 'Envoyer une quittance', icon: <Mail size={17} /> },
-    { to: leaseId ? `/espace/baux/${leaseId}/courriers` : '/espace/logements', label: 'Écrire un courrier', icon: <Pencil size={17} /> },
     { to: leaseId ? `/espace/baux/${leaseId}/etat-des-lieux` : '/espace/logements', label: 'Faire un état des lieux', icon: <Camera size={17} /> },
-    { to: '/espace/argent?ajouter=1', label: 'Ajouter une dépense', icon: <Plus size={17} /> },
-    { to: '/espace/logements/nouveau', label: 'Ajouter un logement', icon: <Home size={17} /> },
   ]
   return (
-    <Card title="Raccourcis">
-      <nav aria-label="Raccourcis" className="today-shortcuts">
+    <section className="dash-card" aria-labelledby="raccourcis-titre">
+      <h2 id="raccourcis-titre" style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+        Mes raccourcis
+      </h2>
+      <nav aria-label="Raccourcis" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((i) => (
-          <Link key={i.label} to={i.to} className="today-shortcut" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.border}`, borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600, lineHeight: 1.25, minWidth: 0, minHeight: 44 }}>
-            <span aria-hidden style={{ width: 30, height: 30, borderRadius: 9, background: BAI.ownerLight, color: BAI.owner, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Link key={i.label} to={i.to} className="dash-row">
+            <span aria-hidden className="dash-ico">
               {i.icon}
             </span>
-            {i.label}
+            <span style={{ flex: 1 }}>{i.label}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M9 6l6 6-6 6" />
+            </svg>
           </Link>
         ))}
       </nav>
-    </Card>
+    </section>
   )
 }
 
 const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
 
 /** Agenda : les prochains rendez-vous datés, groupés par jour (jour en gros, mois abrégé). Trois d'abord. */
-function Agenda({ items }: { items: TodayView['upcoming'] }) {
+type Upcoming = TodayView['upcoming'][number]
+
+/** « Mon agenda » : échéances déduites et rendez-vous saisis (artisan, état des lieux…), groupés par jour. */
+function Agenda({ items, properties, onChange }: { items: TodayView['upcoming']; properties: TodayView['properties']; onChange: () => void }) {
   const [all, setAll] = useState(false)
-  if (!items.length) return null
-  const shown = all ? items : items.slice(0, 3)
-  const groups: Array<{ iso: string; labels: string[] }> = []
+  const [edit, setEdit] = useState<Upcoming | 'new' | null>(null)
+  const toast = useToast()
+  const confirm = useConfirm()
+  const shown = all ? items : items.slice(0, 4)
+  const groups: Array<{ iso: string; items: Upcoming[] }> = []
   for (const it of shown) {
     const g = groups[groups.length - 1]
-    if (g && g.iso === it.iso) g.labels.push(it.label)
-    else groups.push({ iso: it.iso, labels: [it.label] })
+    if (g && g.iso === it.iso) g.items.push(it)
+    else groups.push({ iso: it.iso, items: [it] })
+  }
+  const remove = async (it: Upcoming) => {
+    if (!(await confirm({ title: 'Supprimer ce rendez-vous ?', text: it.label, confirm: 'Supprimer' }))) return
+    try {
+      await api(`/interventions/${it.interventionId}`, { method: 'DELETE' })
+      toast.show('Rendez-vous supprimé. Il reste 30 jours dans la corbeille.')
+      onChange()
+    } catch (e) {
+      toast.error(e)
+    }
   }
   return (
-    <Card title="Agenda" style={{ gap: 16 }}>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {groups.map((g) => (
-          <li key={g.iso} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <span style={{ width: 52, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', background: BAI.sky, color: BAI.owner, borderRadius: 12, padding: '6px 0', lineHeight: 1.1 }}>
-              <span style={{ fontSize: 22, fontWeight: 700 }}>{Number(g.iso.slice(8, 10))}</span>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{MONTHS_ABBR[Number(g.iso.slice(5, 7)) - 1]}</span>
-            </span>
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, fontSize: 15, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
-              {g.labels.map((l) => (
-                <span key={l}>{l}</span>
-              ))}
-            </span>
-          </li>
-        ))}
-      </ul>
-      {items.length > 3 ? (
-        <button type="button" onClick={() => setAll(!all)} className="tap" style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, textAlign: 'left', cursor: 'pointer' }}>
+    <section className="dash-card" aria-labelledby="agenda-titre">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <h2 id="agenda-titre" style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+          Mon agenda
+        </h2>
+        {properties.length ? (
+          <button type="button" className="dash-link" onClick={() => setEdit('new')}>
+            + Ajouter un rendez-vous
+          </button>
+        ) : null}
+      </div>
+      {items.length ? (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {groups.map((g) => (
+            <li key={g.iso} className="agenda-day">
+              <span className="agenda-date">
+                <span style={{ fontSize: 20, fontWeight: 800 }}>{Number(g.iso.slice(8, 10))}</span>
+                <span style={{ fontSize: 12, fontWeight: 600 }}>{MONTHS_ABBR[Number(g.iso.slice(5, 7)) - 1]}</span>
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, flex: 1 }}>
+                {g.items.map((it) => (
+                  <span key={`${it.label}-${it.interventionId ?? ''}`} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, fontSize: 15, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                      <span style={{ fontWeight: it.interventionId ? 600 : 400 }}>{it.label}</span>
+                      {it.start ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>{it.start}{it.end ? ` – ${it.end}` : ''}</span> : null}
+                    </span>
+                    {it.interventionId ? (
+                      <span style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button type="button" className="icon-btn" aria-label={`Modifier : ${it.label}`} onClick={() => setEdit(it)}>
+                          <Pencil size={16} />
+                        </button>
+                        <button type="button" className="icon-btn icon-btn--danger" aria-label={`Supprimer : ${it.label}`} onClick={() => remove(it)}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
+                            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+                          </svg>
+                        </button>
+                      </span>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid }}>Aucun rendez-vous à venir.</p>
+      )}
+      {items.length > 4 ? (
+        <button type="button" onClick={() => setAll(!all)} className="dash-link" style={{ alignSelf: 'flex-start' }}>
           {all ? 'Voir moins' : `Voir les ${items.length} rendez-vous`}
         </button>
       ) : null}
-    </Card>
+      {edit ? <AppointmentModal item={edit === 'new' ? null : edit} properties={properties} onClose={() => setEdit(null)} onDone={() => { setEdit(null); onChange() }} /> : null}
+    </section>
+  )
+}
+
+/** Rendez-vous de l'agenda : enregistré comme intervention prévue du bien (artisan, visite, état des lieux…). */
+function AppointmentModal({ item, properties, onClose, onDone }: { item: Upcoming | null; properties: TodayView['properties']; onClose: () => void; onDone: () => void }) {
+  const toast = useToast()
+  const [propertyId, setPropertyId] = useState<string | null>(item?.propertyId ?? (properties.length === 1 ? properties[0].id : null))
+  const [title, setTitle] = useState(item?.title ?? '')
+  const [date, setDate] = useState(item?.iso ?? new Date().toISOString().slice(0, 10))
+  const [start, setStart] = useState(item?.start ?? '')
+  const [end, setEnd] = useState(item?.end ?? '')
+  const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const save = async () => {
+    if (!propertyId) return setErr('Choisissez le bien.')
+    if (!title.trim()) return setErr('Indiquez l’objet du rendez-vous.')
+    setBusy(true)
+    setErr(null)
+    const body = { title: title.trim(), status: 'PLANNED', date, start: start || null, end: end || null }
+    try {
+      if (item?.interventionId) await api(`/interventions/${item.interventionId}`, { method: 'PUT', body })
+      else await api(`/properties/${propertyId}/interventions`, { method: 'POST', body })
+      toast.show(item ? 'Rendez-vous modifié.' : 'Rendez-vous ajouté à l’agenda.')
+      onDone()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Le rendez-vous n’a pas été enregistré.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Modal open onClose={onClose} title={item ? 'Modifier le rendez-vous' : 'Ajouter un rendez-vous'} actions={<Btn onClick={save} disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</Btn>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {item ? null : <Select label="Bien" value={propertyId} onChange={setPropertyId} options={properties.map((p) => ({ value: p.id, label: p.name }))} placeholder="Choisir un bien" />}
+        <Input label="Objet" value={title} onChange={setTitle} placeholder="Plombier, serrurier, état des lieux de sortie…" maxLength={160} />
+        <Input label="Date" type="date" value={date} onChange={setDate} />
+        <div className="grid-2" style={{ gap: 12 }}>
+          <Input label="Début (facultatif)" type="time" value={start} onChange={setStart} />
+          <Input label="Fin (facultatif)" type="time" value={end} onChange={setEnd} />
+        </div>
+        {err ? (
+          <p role="alert" style={{ margin: 0, color: BAI.error, fontSize: 14 }}>
+            {err}
+          </p>
+        ) : null}
+      </div>
+    </Modal>
   )
 }
 

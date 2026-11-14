@@ -34,3 +34,19 @@ test('échéancier : retard, partiel, à venir et premier mois au prorata', asyn
   assert.deepEqual(out.map((m) => [m.period, m.state]), [['2026-12', 'UPCOMING'], ['2026-11', 'LATE'], ['2026-10', 'PARTIAL'], ['2026-09', 'PAID'], ['2026-08', 'FIRST']])
   assert.equal(rentSchedule(l, [], now).at(-1)?.state, 'FIRST', 'premier mois au prorata non payé : jamais en retard')
 })
+
+test('bail commercial payé par trimestre : une échéance tous les 3 mois, montant de 3 mois', async () => {
+  const { unpaidPeriods, rentSchedule, isTermStart, termMonthsOf } = await import('./rentHistory.js')
+  const quarterly = { data: { terms: { paymentFrequency: 'QUARTERLY' } }, startDate: new Date('2026-01-01T00:00:00Z'), endDate: new Date('2034-12-31T00:00:00Z'), rentCents: 100000, chargesCents: 10000, paymentDay: 1 }
+  assert.equal(termMonthsOf(quarterly), 3)
+  assert.equal(termMonthsOf({ data: {} }), 1, 'mensuel par défaut')
+  assert.deepEqual(['2026-01', '2026-02', '2026-04', '2026-07', '2026-10'].map((p) => isTermStart(quarterly, p)), [true, false, true, true, true])
+  const now = new Date('2026-05-15T12:00:00Z')
+  // Janvier payé (3 mois), avril non payé : une seule échéance en retard, de 3 mois.
+  assert.deepEqual(unpaidPeriods(quarterly, [{ period: '2026-01', amountCents: 330000 }], now), [{ period: '2026-04', missing: 330000 }])
+  const sched = rentSchedule(quarterly, [{ period: '2026-01', amountCents: 330000 }], now)
+  assert.deepEqual(sched.map((s) => [s.period, s.dueCents, s.state]), [['2026-04', 330000, 'LATE'], ['2026-01', 330000, 'PAID']])
+  // Annuel
+  const yearly = { ...quarterly, data: { terms: { paymentFrequency: 'YEARLY' } } }
+  assert.deepEqual(unpaidPeriods(yearly, [], now), [{ period: '2026-01', missing: 1320000 }])
+})

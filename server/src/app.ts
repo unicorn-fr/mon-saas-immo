@@ -33,6 +33,7 @@ import contactRequestRoutes from './routes/contact.js'
 import testerFeedbackRoutes from './routes/testerFeedback.js'
 import signatureRelayRoutes from './routes/signatureRelay.js'
 import visitRoutes from './routes/visits.js'
+import mcpRoutes from './routes/mcp.js'
 
 export function createApp() {
   const app = express()
@@ -43,7 +44,7 @@ export function createApp() {
     cors({
       origin: (origin, cb) => cb(null, !origin || allowedOrigins.has(origin) || (env.NODE_ENV !== 'production' && origin.startsWith('http://localhost'))),
       exposedHeaders: ['Content-Disposition'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token', 'X-Bailio-Space'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token', 'X-Bailio-Space', 'X-Bailio-Profile'],
     }),
   )
   // Signatures dessinées (images) et états des lieux : quelques centaines de Ko.
@@ -84,6 +85,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)
   app.use('/api', esignRoutes)
+  app.use('/api', mcpRoutes)
   app.use('/api', accountRoutes)
   app.use('/api', todayRoutes)
   app.use('/api', accessRoutes)

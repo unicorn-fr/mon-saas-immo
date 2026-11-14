@@ -14,13 +14,15 @@ import { useFiche } from '../../lib/fiche'
 import type { ProfileView } from '../../lib/space'
 import type { User } from '../../lib/types'
 import { FeedbackModal } from '../../components/Feedback'
+import { AiConnect } from '../../components/AiConnect'
 
 /** Mon compte. Maquette « Mon compte ». */
-type CompteTab = 'profil' | 'reglages' | 'securite'
+type CompteTab = 'profil' | 'reglages' | 'securite' | 'ia'
 const COMPTE_TABS: Array<{ value: CompteTab; label: string }> = [
   { value: 'profil', label: 'Votre profil' },
   { value: 'reglages', label: 'Réglages' },
   { value: 'securite', label: 'Sécurité et données' },
+  { value: 'ia', label: 'Connexion aux IA' },
 ]
 
 export default function Compte() {
@@ -123,6 +125,8 @@ export default function Compte() {
               </Card>
             ) : null}
               </div>
+            ) : tab === 'ia' ? (
+              <AiConnect />
             ) : (
               <div className="grid-2" style={{ gap: 20, alignItems: 'start' }}>
             <Card title="Accès partagés" action={<TextLink to="/espace/compte/acces" style={{ fontSize: 14 }}>Gérer</TextLink>}>

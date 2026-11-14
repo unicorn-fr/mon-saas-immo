@@ -186,7 +186,7 @@ export async function liveContract(user: User, lease: LeaseWithProperty): Promis
   const liveGuarantors = files.filter((f) => f.guarantee === 'CAUTION' && f.guarantor).map((f) => f.guarantor!)
   return {
     ...c,
-    landlord: { ...c.landlord, ...filled({ address: profile.address, postalCode: profile.postalCode, city: profile.city, email: profile.email, phone: profile.phone, payment: profile.payment, signature: profile.signature, agent: profile.agent }) },
+    landlord: { ...c.landlord, ...filled({ address: profile.address, postalCode: profile.postalCode, city: profile.city, email: profile.email, phone: profile.phone, payment: profile.payment, signature: profile.signature, logo: profile.logo, agent: profile.agent }) },
     tenants: c.tenants.map((t, i) => (files[i] ? { ...t, ...filled({ email: files[i].email, phone: files[i].phone, newAddress: files[i].newAddress }) } : t)),
     guarantors: c.guarantors.map((g, i) => (liveGuarantors[i] ? { ...g, ...filled({ email: liveGuarantors[i].email, address: liveGuarantors[i].address }) } : g)),
   }

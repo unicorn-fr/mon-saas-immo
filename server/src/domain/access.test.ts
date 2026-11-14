@@ -47,6 +47,10 @@ test('accès : chaque table filtrée sur les logements partagés', () => {
   assert.deepEqual(scopeQuery('Lease', 'findFirst', {}, s), { kind: 'FILTER', where: { propertyId: { in: ['p1'] } } })
   assert.deepEqual(scopeQuery('Payment', 'count', {}, s), { kind: 'FILTER', where: { leaseId: { in: ['l1'] } } })
   // IRL publié par l'INSEE : lisible partout, jamais modifiable depuis un espace partagé.
+  // Historique des emails : seulement ceux des baux et locataires partagés ; création limitée de même.
+  assert.deepEqual(scopeQuery('EmailLog', 'findMany', {}, s), { kind: 'FILTER', where: { OR: [{ leaseId: { in: ['l1'] } }, { tenantId: { in: ['t1'] } }] } })
+  assert.deepEqual(scopeQuery('EmailLog', 'create', { data: { leaseId: 'l1' } }, s), { kind: 'CHECK', ok: true })
+  assert.deepEqual(scopeQuery('EmailLog', 'create', { data: { leaseId: 'autre' } }, s), { kind: 'CHECK', ok: false })
   assert.deepEqual(scopeQuery('IrlPoint', 'findMany', {}, s), { kind: 'ALLOW' })
   assert.equal(scopeQuery('IrlPoint', 'upsert', { create: {} }, s).kind === 'UPSERT' ? (scopeQuery('IrlPoint', 'upsert', { create: {} }, s) as { ok: boolean }).ok : false, false)
   assert.deepEqual(scopeQuery('Tenant', 'findMany', {}, s), { kind: 'FILTER', where: { OR: [{ propertyId: { in: ['p1'] } }, { id: { in: ['t1'] } }] } })

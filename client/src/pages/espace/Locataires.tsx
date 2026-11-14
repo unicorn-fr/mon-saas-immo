@@ -1,8 +1,8 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
-import { Avatar, Btn, Empty, LoadError, Loader, PageHead, Pill, useLoad } from '../../components/kit'
+import { Avatar, Btn, Empty, Input, LoadError, Loader, PageHead, Pill, Tabs, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
 import { dateNum, euros, plural } from '../../lib/format'
 import type { TenantSummary } from '../../lib/space'
@@ -24,23 +24,35 @@ function rentState(t: TenantSummary): { label: string; tone: Tone } {
   if (!t.leaseDates) return { label: 'Sans bail', tone: 'muted' }
   if (t.leaseDates.status === 'DRAFT') return { label: 'Bail à signer', tone: 'accent' }
   const owed = t.rent?.unpaidCents ?? 0
-  if (t.rent?.key === 'LATE') return { label: `En retard : ${euros(owed)}`, tone: 'error' }
+  // Plus d'un mois de loyer dû : impayé ; sinon un retard.
+  if (t.rent?.key === 'LATE') return owed > (t.totalCents ?? Infinity) ? { label: `Impayé : ${euros(owed)}`, tone: 'error' } : { label: `En retard : ${euros(owed)}`, tone: 'error' }
   if (t.rent?.key === 'PARTIAL') return { label: owed ? `Paiement partiel : ${euros(owed)}` : 'Paiement partiel', tone: 'accent' }
   return { label: 'À jour', tone: 'green' }
 }
 
-function List({ items }: { items: TenantSummary[] }) {
+function List({ items: everyone }: { items: TenantSummary[] }) {
+  const [q, setQ] = useState('')
+  const [tab, setTab] = useState('actifs')
+  const archivedCount = everyone.filter((t) => t.archivedAt).length
+  const all = everyone.filter((t) => (tab === 'archives' ? t.archivedAt : !t.archivedAt))
+  const items = q ? all.filter((t) => `${t.name} ${t.property?.name ?? ''}`.toLowerCase().includes(q.toLowerCase())) : all
   const toSign = items.filter((t) => t.situation === 'Bail à signer').length
   const grid: CSSProperties = { gridTemplateColumns: 'minmax(0, 1.8fr) minmax(0, 1.6fr) minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 1.5fr)' }
   return (
     <>
-      <PageHead title="Vos locataires" sub={items.length ? `${plural(items.length, 'locataire')}${toSign ? `, ${toSign} ${toSign > 1 ? 'baux' : 'bail'} en préparation` : ''}` : undefined} actions={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
+      <PageHead over="Tableau de bord › Locataires" title="Locataires" sub={all.length ? `${plural(all.length, 'locataire')}${toSign ? `, ${toSign} ${toSign > 1 ? 'baux' : 'bail'} en préparation` : ''}` : undefined} actions={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
+      {archivedCount ? <Tabs label="Locataires" value={tab} onChange={setTab} tabs={[{ value: 'actifs', label: `Locataires actifs (${everyone.length - archivedCount})` }, { value: 'archives', label: `Locataires archivés (${archivedCount})` }]} /> : null}
+      {all.length > 3 ? (
+        <div style={{ width: 'min(360px, 100%)' }}>
+          <Input label="Rechercher un locataire" hideLabel placeholder="Rechercher un locataire" value={q} onChange={setQ} />
+        </div>
+      ) : null}
       {items.length ? (
         <div className="tenant-list" style={{ background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: BAI.radius, padding: 8, display: 'flex', flexDirection: 'column' }}>
           <div className="table-row hide-sm" style={{ ...grid, padding: '12px 18px', fontSize: 13, fontWeight: 600, color: BAI.inkSoft }}>
-            <span>Locataire</span>
-            <span>Logement</span>
-            <span>Bail</span>
+            <span>Nom du locataire</span>
+            <span>Bien affecté</span>
+            <span>Durée du bail</span>
             <span>Loyer</span>
             <span>État du loyer</span>
           </div>
@@ -62,6 +74,8 @@ function List({ items }: { items: TenantSummary[] }) {
             </Link>
           ))}
         </div>
+      ) : all.length ? (
+        <p style={{ margin: 0, color: BAI.inkMid }}>Aucun locataire ne correspond à « {q} ».</p>
       ) : (
         <Empty title="Aucun locataire pour l’instant." text="Ajoutez votre locataire : son identité, son garant et ses justificatifs servent ensuite au bail et aux quittances." action={<Btn to="/espace/locataires/nouveau">Ajouter un locataire</Btn>} />
       )}

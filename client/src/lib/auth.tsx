@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await api('/auth/logout', { method: 'POST' }).catch(() => undefined)
     storage.set(SESSION_KEY, null)
+    storage.set('bailio.profile', null)
     setSpace(null)
     clearLoadCache()
     setUser(null)

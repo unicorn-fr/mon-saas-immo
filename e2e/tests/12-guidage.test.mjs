@@ -119,21 +119,21 @@ test('« Aujourd’hui » : tuiles du mois, raccourcis, agenda, rien qui débord
     await page.goto(`${BASE}/espace`)
     const tiles = page.getByRole('navigation', { name: 'Chiffres du mois' })
     await tiles.waitFor()
-    await tiles.getByText('Loyers en retard').waitFor()
-    await tiles.getByText('Dépôts à noter reçus').waitFor()
+    await tiles.getByText('Retards de paiement').waitFor()
+    await tiles.getByText('Dépôts de garantie non reçus').waitFor()
     await page.getByRole('navigation', { name: 'Raccourcis' }).waitFor()
-    await page.getByRole('heading', { name: 'Agenda' }).waitFor()
+    await page.getByRole('heading', { name: 'Mon agenda' }).waitFor()
     assert.ok((await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)), `débordement horizontal à ${w} px`)
     if (w === 1440) {
-      // Deux colonnes dès 1024 px : les raccourcis sont à droite des actions.
-      const a = await page.getByRole('heading', { name: 'À faire cette semaine' }).boundingBox()
+      // Deux colonnes dès 1024 px : l'agenda est à droite des raccourcis.
       const r = await page.getByRole('navigation', { name: 'Raccourcis' }).boundingBox()
-      assert.ok(r.x > a.x + 300)
+      const a = await page.getByRole('heading', { name: 'Mon agenda' }).boundingBox()
+      assert.ok(a.x > r.x + 300)
     }
     await page.screenshot({ path: `${SHOTS}${name}.png`, fullPage: true })
     if (w === 1440) {
       await page.getByRole('navigation', { name: 'Raccourcis' }).getByRole('link', { name: 'Noter un loyer reçu' }).click()
-      await page.waitForURL(/\/espace\/argent\/releve/)
+      await page.waitForURL(/\/espace\/banques/)
     }
     await ctx.close()
   }

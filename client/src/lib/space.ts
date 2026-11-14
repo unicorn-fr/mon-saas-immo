@@ -28,6 +28,11 @@ export interface PropertySummary {
   city: string | null
   /** Structure qui détient le logement (bailleur de ses baux). */
   structureId: string | null
+  /** Nom du bailleur (structure) qui détient le bien. */
+  structureName?: string | null
+  /** Lot d'un immeuble ou chambre d'une colocation : le bien parent. */
+  parentId?: string | null
+  archivedAt?: string | null
   kindLabel: string
   surface: number | null
   rooms: number | null
@@ -118,6 +123,7 @@ export interface TenantSummary {
   id: string
   name: string
   initials: string
+  archivedAt?: string | null
   email: string | null
   phone: string | null
   property: { id: string; name: string } | null
@@ -266,11 +272,15 @@ export interface TodayView {
     depositCents: number
     candidates: number
     candidatesPropertyId: string | null
+    /** Logements loués ce jour, sur le nombre total de logements. */
+    rented?: number
+    properties?: number
   }
   /** Le bail en cours, s'il n'y en a qu'un : les raccourcis y mènent directement. */
   singleLeaseId: string | null
   tasks: Task[]
-  upcoming: Array<{ date: string; iso: string; label: string }>
+  /** Échéances et rendez-vous ; ceux saisis par le propriétaire portent `interventionId` (modifiables). */
+  upcoming: Array<{ date: string; iso: string; label: string; interventionId?: string; propertyId?: string; title?: string; start?: string | null; end?: string | null }>
   properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'accent' | 'muted' } }>
   counts: { properties: number; tenants: number; leases: number; signedLeases?: number }
 }

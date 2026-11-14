@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { User } from '@prisma/client'
 import { accessScope, prisma } from '../db.js'
+import { aiPathDenied, isAiKey } from '../domain/aiAccess.js'
 import { isSelfPath, normalizePath, routeDenied, type AccessRole, type Scope } from '../domain/access.js'
 import { hashToken, newToken } from '../lib/tokens.js'
 import { HttpError } from '../lib/http.js'
@@ -19,6 +20,8 @@ declare module 'express-serve-static-core' {
     /** Espace partagé : la personne réellement connectée (req.user est alors le propriétaire). */
     actor?: User
     access?: { id: string; role: AccessRole; propertyIds: string[] }
+    /** Requête d'une IA connectée (clé de « Mon compte ») : lecture seule, adresses limitées (aiPathDenied). */
+    aiKeyId?: string
   }
 }
 
@@ -46,9 +49,17 @@ function bearer(req: Request): string | null {
   return h?.startsWith('Bearer ') ? h.slice(7).trim() || null : null
 }
 
-async function loadUser(req: Request): Promise<User | null> {
+async function loadUser(req: Request, allowAiKey = false): Promise<User | null> {
   const token = bearer(req)
   if (!token) return null
+  if (isAiKey(token)) {
+    if (!allowAiKey) return null
+    const key = await prisma.aiKey.findUnique({ where: { keyHash: hashToken(token) }, include: { user: true } })
+    if (!key) return null
+    if (!key.lastUsedAt || Date.now() - key.lastUsedAt.getTime() > TOUCH_MS) await prisma.aiKey.update({ where: { id: key.id }, data: { lastUsedAt: new Date() } }).catch(() => undefined)
+    req.aiKeyId = key.id
+    return key.user
+  }
   const session = await prisma.session.findUnique({ where: { tokenHash: hashToken(token) }, include: { user: true } })
   if (!session) return null
   const now = Date.now()
@@ -70,16 +81,38 @@ export async function optionalUser(req: Request, _res: Response, next: NextFunct
   next()
 }
 
+/** Pages de consultation filtrées par le profil bailleur choisi (en-tête X-Bailio-Profile). */
+const PROFILE_PATHS = ['/today', '/properties', '/tenants', '/candidates', '/portfolio', '/money', '/expenses', '/documents', '/leases']
+
 export async function requireUser(req: Request, res: Response, next: NextFunction) {
   // Plusieurs routeurs partagent le préfixe /api : la session n'est lue qu'une fois par requête.
   if (req.user) return next()
-  const user = await loadUser(req)
+  const user = await loadUser(req, true)
   if (!user) return next(new HttpError(401, 'Votre session a expiré. Reconnectez-vous.'))
-  const space = String(req.headers['x-bailio-space'] ?? '').trim()
   // Chemin complet sous /api (dans un sous-routeur, req.path est raccourci).
   const path = normalizePath(req.originalUrl.split('?')[0].replace(/^\/api(?=\/|$)/i, '') || '/')
+  if (req.aiKeyId) {
+    // IA connectée : son propre compte seulement (ni espace partagé ni profil), lecture des adresses prévues.
+    const refused = aiPathDenied(req.method, path)
+    if (refused) return next(new HttpError(403, refused))
+    req.user = user
+    res.setHeader('Cache-Control', 'no-store')
+    return next()
+  }
+  const space = String(req.headers['x-bailio-space'] ?? '').trim()
   if (!space || isSelfPath(path)) {
     req.user = user
+    // « Tous les profils » ou un profil bailleur (structure) choisi en haut du menu : les pages de consultation ne
+    // montrent que ses biens, avec le même filtre que les accès partagés (scopeQuery). Jamais à l'enregistrement.
+    const profile = String(req.headers['x-bailio-profile'] ?? '').trim()
+    if (!space && profile && (req.method === 'GET' || req.method === 'HEAD') && PROFILE_PATHS.some((x) => path === x || path.startsWith(`${x}/`))) {
+      const own = await prisma.property.findMany({ where: { userId: user.id, structureId: profile }, select: { id: true, structureId: true } })
+      const propertyIds = own.map((p) => p.id)
+      const leases = await prisma.lease.findMany({ where: { userId: user.id, propertyId: { in: propertyIds } }, select: { id: true, tenantIds: true } })
+      const scope: Scope = { ownerId: user.id, role: 'ASSOCIATE', propertyIds, leaseIds: leases.map((l) => l.id), tenantIds: [...new Set(leases.flatMap((l) => l.tenantIds))], structureIds: [profile] }
+      res.setHeader('Cache-Control', 'no-store')
+      return accessScope.run(scope, () => next())
+    }
     return next()
   }
   // Espace partagé : la personne travaille dans l'espace du propriétaire, limitée aux logements partagés.

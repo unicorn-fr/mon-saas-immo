@@ -58,6 +58,12 @@ export const landlordProfileSchema = z.object({
   payment: opt(z.object({ holder: opt(text(160)), iban: opt(text(40)) })),
   /** Signature dessinée (image PNG en data URL), apposée sur les quittances. */
   signature: opt(z.string().max(400_000).regex(/^data:image\/png;base64,/, 'Signature invalide').or(z.literal(''))),
+  /**
+   * Logo du bailleur (image PNG ou JPEG en data URL), gardé à un seul endroit : chaque quittance, avis d'échéance ou
+   * courrier le relit au moment où il est produit. Changer de logo suffit : rien n'est à refaire document par document.
+   * Une structure (SCI…) peut avoir le sien (`structureSchema.logo`), qui passe alors devant.
+   */
+  logo: opt(z.string().max(600_000).regex(/^data:image\/(png|jpeg);base64,/, 'Logo invalide : PNG ou JPEG').or(z.literal(''))),
 })
 export type LandlordProfile = z.infer<typeof landlordProfileSchema>
 

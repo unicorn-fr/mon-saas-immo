@@ -6,6 +6,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
 import { OwnerCard } from '../../components/StructurePicker'
 import { LoanCard } from '../../components/LoanCard'
+import { LotAndArchive } from '../../components/PropertyLinks'
 import { CoverPhoto } from '../../components/media'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
@@ -111,11 +112,13 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
   const rows: Array<{ label: string; value: string; to: string; tone?: 'accent' }> = parking ? [
     { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
+    { label: 'Comptabilité', value: 'Ouvrir', to: `/espace/logements/${p.id}/comptabilite` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
   ] : [
     { label: 'Fiche du logement', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
     { label: 'Diagnostics', value: diagValue, to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: toAdd + expired ? 'accent' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
+    { label: 'Comptabilité', value: 'Ouvrir', to: `/espace/logements/${p.id}/comptabilite` },
     { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
     { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
   ]
@@ -129,6 +132,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
       ))}
       <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} compact />
       <LoanCard propertyId={p.id} compact />
+      <LotAndArchive propertyId={p.id} onChanged={reload} />
       {p.energyWarning ? <Callout tone="warn">{p.energyWarning}</Callout> : null}
     </Card>
   )

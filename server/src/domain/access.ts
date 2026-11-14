@@ -24,7 +24,7 @@ export interface Scope {
 }
 
 /** Adresses qui concernent toujours la personne connectée elle-même : l'en-tête d'espace y est ignoré. */
-export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo', '/admin', '/feedback', '/signature-relay']
+export const SELF_PATHS = ['/auth', '/account', '/access', '/spaces', '/invitations', '/drafts', '/geo', '/admin', '/feedback', '/support', '/signature-relay']
 
 export const isSelfPath = (path: string) => SELF_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
@@ -87,6 +87,8 @@ function readFilter(model: string, s: Scope): Record<string, unknown> | 'DENY' |
     case 'Reminder':
     case 'SignatureRequest':
       return { leaseId: inList(s.leaseIds) }
+    case 'EmailLog':
+      return { OR: [{ leaseId: inList(s.leaseIds) }, { tenantId: inList(s.tenantIds) }] }
     case 'Signer':
       return { request: { leaseId: inList(s.leaseIds) } }
     case 'Structure':
@@ -129,6 +131,8 @@ function createAllowed(model: string, rows: Record<string, unknown>[], s: Scope)
       case 'Reminder':
       case 'SignatureRequest':
         return has(s.leaseIds, idOf(d, 'leaseId', 'lease'))
+      case 'EmailLog':
+        return has(s.leaseIds, idOf(d, 'leaseId', 'lease')) || has(s.tenantIds, idOf(d, 'tenantId', 'tenant'))
       case 'Document':
         return has(s.propertyIds, idOf(d, 'propertyId', 'property')) || has(s.leaseIds, idOf(d, 'leaseId', 'lease')) || has(s.tenantIds, idOf(d, 'tenantId', 'tenant'))
       case 'Signer':

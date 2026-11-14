@@ -284,7 +284,7 @@ router.get('/today', async (req, res) => {
   }
 
   // Prochaines échéances : loyers du mois suivant, rappels à venir, dernier jour pour donner congé.
-  const upcoming: { date: string; label: string; sort: number }[] = []
+  const upcoming: { date: string; label: string; sort: number; appt?: { interventionId: string; propertyId: string; title: string; start: string | null; end: string | null } }[] = []
   const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 5))
   if (running.length) upcoming.push({ date: short(nextMonth), label: `Loyers de ${['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'][nextMonth.getUTCMonth()]} attendus`, sort: nextMonth.getTime() })
   for (const r of reminders) {
@@ -294,7 +294,7 @@ router.get('/today', async (req, res) => {
     const label = { RENT_REVISION: `Révision du loyer, ${place}`, INSURANCE: `Attestation d’assurance, ${place}`, LEASE_END: `Dernier jour pour donner congé, ${place}`, INVENTORY_ENTRY: `État des lieux d’entrée, ${place}`, CHARGES_REGULARIZATION: 'Régularisation annuelle des charges', RENT_RECEIPT: '' }[r.type]
     upcoming.push({ date: short(r.dueDate), label, sort: r.dueDate.getTime() })
   }
-  for (const i of await upcomingInterventions(user.id, 60)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime() })
+  for (const i of await upcomingInterventions(user.id, 120)) upcoming.push({ date: short(i.date), label: i.label, sort: i.date.getTime(), appt: { interventionId: i.interventionId, propertyId: i.propertyId, title: i.title, start: i.start, end: i.end } })
   // Échéances fiscales, déduites des loyers et des baux (calendrier vérifié par année : domain/fiscalCalendar.ts).
   const y = now.getUTCFullYear()
   const lastYearPaid = leases.some((l) => l.payments.some((p) => p.period.startsWith(String(y - 1))))
@@ -351,7 +351,7 @@ router.get('/today', async (req, res) => {
       }
     }),
   )
-  const events = agenda(upcoming.map((u) => ({ iso: new Date(u.sort).toISOString().slice(0, 10), label: u.label })), iso(today)!)
+  const events = agenda(upcoming.map((u) => ({ iso: new Date(u.sort).toISOString().slice(0, 10), label: u.label, ...(u.appt ?? {}) })), iso(today)!, 20)
   const cashed = leases.flatMap((l) => l.payments).filter((p) => p.receivedAt.getUTCFullYear() === now.getUTCFullYear() && p.receivedAt.getUTCMonth() === now.getUTCMonth()).reduce((a, p) => a + p.amountCents, 0)
 
   res.json({
@@ -359,11 +359,11 @@ router.get('/today', async (req, res) => {
     data: {
       user: publicUser(user),
       date: iso(today),
-      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period, ...tiles, candidates: newCandidates.length, candidatesPropertyId: new Set(newCandidates.map((c) => c.propertyId)).size === 1 ? newCandidates[0].propertyId : null },
+      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period, ...tiles, rented: properties.filter((p) => leases.some((l) => l.propertyId === p.id && (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now)).length, properties: properties.length, candidates: newCandidates.length, candidatesPropertyId: new Set(newCandidates.map((c) => c.propertyId)).size === 1 ? newCandidates[0].propertyId : null },
       // Un seul bail en cours : les raccourcis (quittance, courrier, état des lieux) y mènent directement.
       singleLeaseId: running.length === 1 ? running[0].id : null,
       tasks,
-      upcoming: events.map(({ iso: day, label }) => ({ date: short(new Date(`${day}T00:00:00Z`)), iso: day, label })),
+      upcoming: events.map(({ iso: day, ...rest }) => ({ date: short(new Date(`${day}T00:00:00Z`)), iso: day, ...rest })),
       properties: properties.map((p) => {
         const ls = leases.filter((l) => l.propertyId === p.id)
         const current = ls.find((l) => (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now) ?? ls.find((l) => l.status === 'ACTIVE' && l.startDate > now)

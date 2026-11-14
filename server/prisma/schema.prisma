@@ -86,8 +86,10 @@ model User {
   interventions Intervention[]
   trashItems    TrashItem[]
   structures    Structure[]
-  accessGiven   Access[]  @relation("AccessOwner")
-  accessHeld    Access[]  @relation("AccessMember")
+  accessGiven   Access[]           @relation("AccessOwner")
+  accessHeld    Access[]           @relation("AccessMember")
+  emailLogs     EmailLog[]
+  aiKeys        AiKey[]
 }
 
 /// Accès partagé : le propriétaire invite une personne (associé, comptable, intervenant) sur certains logements.
@@ -194,28 +196,34 @@ model Draft {
 }
 
 model Property {
-  id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  address    String // libellé complet
-  postalCode String?
-  city       String?
-  inseeCode  String?
-  banId      String?
-  surface    Float?
-  rooms      Int?
-  dpeClass   String?
-  dpeNumber  String?
-  label      String? // nom court : « Studio rue Foch »
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     String // libellé complet
+  postalCode  String?
+  city        String?
+  inseeCode   String?
+  banId       String?
+  surface     Float?
+  rooms       Int?
+  dpeClass    String?
+  dpeNumber   String?
+  label       String? // nom court : « Studio rue Foch »
   // Structure propriétaire du logement (bailleur du bail) ; null : profil du bailleur
   structureId String?
   structure   Structure? @relation(fields: [structureId], references: [id], onDelete: SetNull)
   // Lien public de candidature (/candidature/:code), null si désactivé
-  applyCode  String?  @unique
+  applyCode   String?    @unique
+  // Lot d'un immeuble de rapport ou chambre d'une colocation : bien parent (null : bien seul ou parent)
+  parentId    String?
+  parent      Property?  @relation("PropertyUnits", fields: [parentId], references: [id], onDelete: SetNull)
+  units       Property[] @relation("PropertyUnits")
+  // Bien archivé (vendu, plus loué) : rangé dans « Biens archivés », toutes ses données gardées
+  archivedAt  DateTime?
   // Fiche complète du logement (domain/contract.ts, propertyFileSchema)
-  data       Json     @default("{}")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  data        Json       @default("{}")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   leases        Lease[]
   tenants       Tenant[]
@@ -226,6 +234,7 @@ model Property {
 
   @@index([userId])
   @@index([structureId])
+  @@index([parentId])
 }
 
 /// Candidature reçue par le lien public d'un logement. Effacée quand le candidat devient locataire,
@@ -255,6 +264,8 @@ model Tenant {
   // Lien sans compte remis au locataire pour compléter son dossier (informations et justificatifs manquants).
   formCode   String?   @unique
   formSentAt DateTime?
+  // Locataire archivé (parti) : rangé dans « Locataires archivés »
+  archivedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @default(now()) @updatedAt
 
@@ -567,4 +578,35 @@ model SocialAccount {
   connectedBy      String
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+/// Email envoyé au nom du propriétaire (quittance, courrier, relance, lien…) : onglet « Emails » de la fiche du locataire.
+/// Seulement l'objet, le destinataire et la date : le contenu reste dans le document rangé avec le bail.
+model EmailLog {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaseId  String?
+  tenantId String?
+  to       String
+  subject  String
+  kind     String   @default("OTHER")
+  sentAt   DateTime @default(now())
+
+  @@index([userId, sentAt])
+  @@index([tenantId])
+  @@index([leaseId])
+}
+
+/// Clé de connexion d'une IA (Claude, ChatGPT…) : lecture seule, empreinte seulement, révocable dans « Mon compte ».
+model AiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
 }

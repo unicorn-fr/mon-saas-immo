@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Empty, LoadError, Loader, PageHead, Pill, Stat, useLoad } from '../../components/kit'
+import { Btn, Empty, LoadError, Loader, PageHead, Pill, Stat, Tabs, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
 import { eurosCents, monthName, plural } from '../../lib/format'
 import type { PropertySummary } from '../../lib/space'
@@ -18,7 +19,7 @@ export default function Logements() {
       ) : error || !data ? (
         <LoadError message={error ?? ''} retry={reload} />
       ) : (
-        <List items={data} />
+        <Archivable items={data} />
       )}
     </AppShell>
   )
@@ -35,14 +36,41 @@ const buildingKey = (p: PropertySummary) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-/** Logements regroupés par immeuble, dans l'ordre de la liste. */
+/** Logements regroupés : un bien et ses lots (immeuble de rapport, colocation à la chambre), sinon même adresse. */
 function buildings(items: PropertySummary[]) {
   const groups = new Map<string, PropertySummary[]>()
+  const hasUnits = (p: PropertySummary) => items.some((u) => u.parentId === p.id)
   for (const p of items) {
-    const k = buildingKey(p) || p.id
+    const k = p.parentId && items.some((x) => x.id === p.parentId) ? `lot-${p.parentId}` : hasUnits(p) ? `lot-${p.id}` : buildingKey(p) || p.id
     groups.set(k, [...(groups.get(k) ?? []), p])
   }
-  return [...groups].map(([key, list]) => ({ key, label: list[0].address, items: list }))
+  return [...groups].map(([key, list]) => {
+    const parent = key.startsWith('lot-') ? items.find((x) => x.id === key.slice(4)) : undefined
+    // Le bien parent en premier, puis ses lots.
+    const sorted = parent ? [parent, ...list.filter((x) => x.id !== parent.id)] : list
+    return { key, label: parent ? parent.name : list[0].address, lots: Boolean(parent), items: sorted }
+  })
+}
+
+/** « Tous mes biens » et « Biens archivés » (vendus ou plus loués : rien n'est effacé). */
+function Archivable({ items }: { items: PropertySummary[] }) {
+  const archived = items.filter((p) => p.archivedAt)
+  const [tab, setTab] = useState('actifs')
+  if (!archived.length) return <List items={items} />
+  return (
+    <>
+      <Tabs label="Biens" value={tab} onChange={setTab} tabs={[{ value: 'actifs', label: 'Tous mes biens' }, { value: 'archives', label: `Biens archivés (${archived.length})` }]} />
+      {tab === 'archives' ? (
+        <div className="cards-3">
+          {archived.map((p, i) => (
+            <PropertyCard key={p.id} p={p} bg={PHOTO_BG[i % PHOTO_BG.length]} />
+          ))}
+        </div>
+      ) : (
+        <List items={items.filter((p) => !p.archivedAt)} />
+      )}
+    </>
+  )
 }
 
 function List({ items }: { items: PropertySummary[] }) {
@@ -54,17 +82,15 @@ function List({ items }: { items: PropertySummary[] }) {
   return (
     <>
       <PageHead
-        title="Vos logements"
+        over="Tableau de bord › Biens"
+        title="Biens"
         sub={items.length ? `${plural(items.length, 'logement')} · ${rented} loué${rented > 1 ? 's' : ''}, ${items.length - rented} disponible${items.length - rented > 1 ? 's' : ''}` : 'Ajoutez votre premier logement.'}
         actions={
           <>
-            <Btn variant="outline" to="/espace/structures">
-              Vos structures
-            </Btn>
             <Btn variant="outline" to="/espace/logements/importer">
               Importer depuis un fichier
             </Btn>
-            <Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>
+            <Btn to="/espace/logements/nouveau">Ajouter un bien</Btn>
           </>
         }
       />
@@ -77,14 +103,19 @@ function List({ items }: { items: PropertySummary[] }) {
             <Stat value={drafts} label={drafts > 1 ? 'baux en préparation' : 'bail en préparation'} />
           </div>
           <Link to="/espace/patrimoine" className="tap" style={{ alignSelf: 'flex-start', fontSize: 15, fontWeight: 600, color: BAI.owner }}>
-            Tableau de bord : ce qu’il vous reste chaque mois, et ce qui est à surveiller
+            Pilotage : ce qu’il vous reste chaque mois, et ce qui est à surveiller
           </Link>
           {groups.map((g) =>
             g.items.length > 1 ? (
               <section key={g.key} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
                   <h2 style={{ ...display('clamp(22px, 3vw, 26px)'), margin: 0 }}>{g.label}</h2>
-                  <span style={{ fontSize: 14, color: BAI.inkSoft }}>Même immeuble · {plural(g.items.length, 'logement')}</span>
+                  <span style={{ fontSize: 14, color: BAI.inkSoft }}>{g.lots ? `${plural(g.items.length - 1, 'lot')} · ${g.items.slice(1).filter((p) => p.status === 'RENTED').length} loué${g.items.slice(1).filter((p) => p.status === 'RENTED').length > 1 ? 's' : ''}` : `Même immeuble · ${plural(g.items.length, 'logement')}`}</span>
+                  {g.lots ? (
+                    <Link to={`/espace/logements/${g.items[0].id}/comptabilite`} className="tap" style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
+                      Comptabilité de l’ensemble
+                    </Link>
+                  ) : null}
                   <Link to={`/espace/argent/repartir?logements=${g.items.map((p) => p.id).join(',')}`} className="tap" style={{ fontSize: 14, fontWeight: 600, color: BAI.owner }}>
                     Répartir une dépense de l’immeuble
                   </Link>
@@ -122,6 +153,9 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
   const facts = [p.kindLabel, p.surface ? `${String(p.surface).replace('.', ',')} m²` : null, p.city].filter(Boolean).join(' · ')
   return (
     <Link to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: available ? `1.5px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {p.structureName ? (
+        <span style={{ padding: '10px 16px', fontSize: 12.5, fontWeight: 600, color: BAI.inkSoft, borderBottom: `1px solid ${BAI.divider}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.structureName}</span>
+      ) : null}
       {p.photoIds?.[0] ? (
         <CoverPhoto id={p.photoIds[0]} alt={`Photo : ${p.name}`} style={{ height: 150 }}>
           <StatusPill p={p} />

@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { Router } from 'express'
 import { z } from 'zod'
 import type { User } from '@prisma/client'
@@ -77,6 +78,9 @@ const interventionSchema = z.object({
   expenseCategory: z.enum(['REPAIR', 'MAINTENANCE']).optional().nullable(),
   /** Signalement du locataire : le prévenir par email de la date prévue ou de la fin. */
   notifyTenant: z.boolean().optional(),
+  /** Rendez-vous de l'agenda : créneau horaire facultatif (« 09:00 »), gardé dans data. */
+  start: z.string().regex(/^\d{2}:\d{2}$/).optional().nullable(),
+  end: z.string().regex(/^\d{2}:\d{2}$/).optional().nullable(),
 })
 
 type InterventionRow = Awaited<ReturnType<typeof prisma.intervention.findFirstOrThrow>> & { contact: { id: string; name: string; trade: string | null; phone: string | null } | null }
@@ -110,7 +114,9 @@ async function saveIntervention(userId: string, propertyId: string, body: z.infe
   if (contactId) await ownContact(userId, contactId)
   if (!contactId && body.newContact) contactId = (await prisma.contact.create({ data: { userId, kind: 'ARTISAN', name: body.newContact.name, trade: body.newContact.trade ?? null, phone: body.newContact.phone ?? null } })).id
   const date = body.date ? new Date(`${body.date}T00:00:00Z`) : null
-  const data = { title: body.title, description: body.description ?? null, status: body.status, date, contactId, costCents: body.costCents ?? null }
+  const prev = (existing?.data ?? {}) as Record<string, unknown>
+  const slot = body.start !== undefined || body.end !== undefined ? { start: body.start ?? null, end: body.end ?? null } : {}
+  const data = { title: body.title, description: body.description ?? null, status: body.status, date, contactId, costCents: body.costCents ?? null, data: { ...prev, ...slot } as Prisma.InputJsonValue }
   const row = existing
     ? await prisma.intervention.update({ where: { id: existing.id }, data, include: { contact: true } })
     : await prisma.intervention.create({ data: { ...data, userId, propertyId }, include: { contact: true } })
@@ -203,7 +209,10 @@ export async function upcomingInterventions(userId: string, days = 14) {
   const now = new Date()
   const until = new Date(now.getTime() + days * 86_400_000)
   const rows = await prisma.intervention.findMany({ where: { userId, status: 'PLANNED', date: { gte: new Date(now.toISOString().slice(0, 10)), lte: until } }, include: { property: true, contact: true }, orderBy: { date: 'asc' } })
-  return rows.map((r) => ({ date: r.date!, label: `${r.title}${r.contact ? ` avec ${r.contact.name}` : ''}, ${propertyName(r.property)}` }))
+  return rows.map((r) => {
+    const d = (r.data ?? {}) as { start?: string | null; end?: string | null }
+    return { date: r.date!, label: `${r.title}${r.contact ? ` avec ${r.contact.name}` : ''}, ${propertyName(r.property)}`, interventionId: r.id, propertyId: r.propertyId, title: r.title, start: d.start ?? null, end: d.end ?? null }
+  })
 }
 
 export default router

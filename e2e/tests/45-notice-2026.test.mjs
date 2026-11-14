@@ -31,7 +31,7 @@ test('nouvelle notice : bail signé avec l’ancienne, tâche « Envoyer la nouv
   await page.getByRole('button', { name: 'Oui, envoyer' }).click()
   await page.getByText('Notice envoyée à votre locataire.').waitFor()
   await page.reload()
-  await page.getByText('Bonjour').first().waitFor()
+  await page.getByText('Bienvenue').first().waitFor()
   assert.equal(await page.getByText(/Envoyer la nouvelle notice d’information à/).count(), 0, 'une seule fois')
   await browser.close()
   assert.deepEqual(errors, [])
