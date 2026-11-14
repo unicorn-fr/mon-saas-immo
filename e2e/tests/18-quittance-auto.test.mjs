@@ -38,7 +38,8 @@ test('loyer supposé reçu : coupé par défaut, puis 7 jours après l’échéa
   await assume.click()
   await page.getByText(/envoi automatique le 11 nov/).waitFor()
   await page.getByText('Le loyer n’est pas arrivé', { exact: true }).click()
-  await page.getByText('envoi annulé').waitFor()
+  // La carte, pas le message de confirmation « Envoi annulé. » qui peut s'afficher en même temps.
+  await page.getByText(/: envoi annulé$/).waitFor()
   await page.getByRole('link', { name: 'Envoyer une demande de paiement' }).waitFor()
 
   // Envoi annulé : rien ne part le 11 novembre.
