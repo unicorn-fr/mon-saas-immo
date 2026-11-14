@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { BAI } from '../../../constants/bailio-tokens'
 import { FicheLayout, FicheSection, Fields } from '../../../components/FlowLayout'
 import { SignaturePad } from '../../../components/media'
+import { LogoPicker } from '../../../components/LogoPicker'
 import { Callout, Chips, Input, LoadError, Loader, TextLink, useLoad, AddressInput } from '../../../components/kit'
 import { api } from '../../../lib/api'
 import { useAuth } from '../../../lib/auth'
@@ -104,6 +105,9 @@ export default function FicheBailleur() {
       <FicheSection id="signature" n={++n} title="Votre signature" done={done('signature')}>
         <SignaturePad value={p.signature} onChange={(v) => set({ signature: v ?? '' })} label="Signez ici avec la souris ou le doigt" />
         <span style={{ fontSize: 13, color: BAI.inkSoft }}>Apposée sur vos quittances. Un bail se signe à chaque fois.</span>
+      </FicheSection>
+      <FicheSection id="logo" n={++n} title="Votre logo" done={Boolean(p.logo)}>
+        <LogoPicker value={p.logo} onChange={(v) => set({ logo: v })} />
       </FicheSection>
     </FicheLayout>
   )

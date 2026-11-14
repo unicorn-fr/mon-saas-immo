@@ -184,3 +184,9 @@ export function SignatureBoxes({ boxes }: { boxes: { label: string; name?: strin
 export const ScriptName = ({ children }: { children: ReactNode }) => (
   <Text style={{ fontFamily: 'Cormorant', fontStyle: 'italic', fontWeight: 700, fontSize: 18, color: SIGN }}>{children}</Text>
 )
+
+/** Logo du bailleur en tête de document, s'il en a déposé un (profil ou structure) ; relu à chaque document produit. */
+export function LandlordLogo({ src }: { src?: string | null }) {
+  const img = embedded(src)
+  return img ? <Image src={img} style={{ height: 38, maxWidth: 160, objectFit: 'contain', marginBottom: 8, alignSelf: 'flex-start' }} /> : null
+}

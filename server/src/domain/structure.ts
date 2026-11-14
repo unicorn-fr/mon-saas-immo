@@ -41,6 +41,8 @@ export const structureSchema = z.object({
   associates: opt(z.array(z.object({ name: opt(text(160)), sharePct: opt(z.number().min(0).max(100)) })).max(20)),
   /** Compte qui reçoit les loyers de cette structure (celui du profil sinon). */
   payment: opt(z.object({ holder: opt(text(160)), iban: opt(text(40)) })),
+  /** Logo propre à cette structure (sinon celui du compte) : PNG ou JPEG en data URL. */
+  logo: opt(z.string().max(600_000).regex(/^data:image\/(png|jpeg);base64,/, 'Logo invalide : PNG ou JPEG').or(z.literal(''))),
 })
 export type StructureFile = z.infer<typeof structureSchema>
 
@@ -90,6 +92,8 @@ export function landlordFor(profile: LandlordProfile, s: StructureFile | null): 
     coOwners: kind === 'COUPLE' ? (s.coOwners ?? []) : null,
     company: isCompanyKind(kind) ? (s.company ?? {}) : null,
     payment: s.payment?.iban?.trim() ? s.payment : profile.payment,
+    // Logo propre à la structure s'il existe, sinon celui du compte.
+    logo: s.logo || profile.logo,
   }
 }
 

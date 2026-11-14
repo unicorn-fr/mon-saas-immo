@@ -4,7 +4,7 @@ import { formatDateFr } from '../domain/lease.js'
 import type { LetterContent } from '../domain/letters.js'
 import { landlordAddress, landlordName } from './labels.js'
 import { CONGE_NOTICE, NoticePages } from './notice.js'
-import { BLANK, MUTED, P, RULE, ScriptName, SignatureBoxes, Table, s, embedded } from './theme.js'
+import { BLANK, LandlordLogo, MUTED, P, RULE, ScriptName, SignatureBoxes, Table, s, embedded } from './theme.js'
 
 /** Courrier au locataire : expéditeur, destinataire, lieu et date, objet, texte, signature. */
 export interface LetterRender {
@@ -42,7 +42,9 @@ export function LetterDocument({ content, landlord, recipient, date = new Date()
         <Page size="A4" style={s.page}>
           {tenantForm ? null : (
             <View style={{ maxWidth: '55%' }}>
-              <Text style={{ fontWeight: 700 }}>{name}</Text>
+              <LandlordLogo src={landlord.logo} />
+              <LandlordLogo src={landlord.logo} />
+            <Text style={{ fontWeight: 700 }}>{name}</Text>
               <Text style={{ fontSize: 9.5, lineHeight: 1.5 }}>{landlordAddress(landlord)}</Text>
             </View>
           )}

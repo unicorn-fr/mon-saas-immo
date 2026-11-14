@@ -1,3 +1,4 @@
+import { LogoPicker } from '../../components/LogoPicker'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
@@ -207,6 +208,10 @@ export function StructureFiche() {
           <Input label="Titulaire (facultatif)" value={f.payment?.holder} onChange={(v) => set({ payment: { ...f.payment, holder: v } })} />
           <Input label="IBAN (facultatif)" value={f.payment?.iban} onChange={(v) => set({ payment: { ...f.payment, iban: v.toUpperCase() } })} />
         </Fields>
+      </Section>
+
+      <Section {...fold} k="logo" title="Logo de ce bailleur" summary={f.logo ? 'Logo propre' : 'Celui de votre profil'}>
+        <LogoPicker value={f.logo} onChange={(v) => set({ logo: v })} hint="Facultatif : sans logo ici, Bailio reprend celui de votre profil sur les documents de ces biens." />
       </Section>
 
       {!data.properties.length ? (

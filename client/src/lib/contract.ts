@@ -31,6 +31,8 @@ export interface LandlordProfile {
   agent?: N<{ enabled?: N<boolean>; name?: N<string>; address?: N<string>; cardNumber?: N<string>; cardIssuer?: N<string> }>
   payment?: N<{ holder?: N<string>; iban?: N<string> }>
   signature?: N<string>
+  /** Logo du bailleur (data URL), relu par chaque document produit. */
+  logo?: N<string>
 }
 
 export const EQUIPMENTS = {
