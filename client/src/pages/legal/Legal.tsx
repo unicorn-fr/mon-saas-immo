@@ -7,7 +7,7 @@ import { CONTACT_EMAIL, EDITOR, FOUNDER_LINKEDIN, LAUNCH_OFFER, MEDIATOR, priceD
 import { CALLBACK_PROMISE } from '../../content/inclus'
 
 /** Date de la dernière mise à jour des pages légales (affichée en tête de chacune). */
-const UPDATED = '9 novembre 2026'
+const UPDATED = '14 novembre 2026'
 
 const H2 = ({ children }: { children: ReactNode }) => (
   <h2 style={{ margin: '36px 0 12px', fontSize: 20, fontWeight: 700, color: BAI.ink }}>{children}</h2>
@@ -272,6 +272,7 @@ export function Confidentialite() {
         <li>Ce que le locataire envoie par le lien « Documents du locataire » que lui remet son propriétaire : attestation d'assurance habitation, attestation d'entretien de la chaudière, accord (ou retrait de l'accord) pour recevoir les quittances par email, avec sa date, les problèmes qu'il signale dans le logement (type, lieu, description, photos) et ses demandes pour compléter l'état des lieux d'entrée (description, photos, réponse du propriétaire). Ces éléments sont rangés avec le bail ou le logement et ne sont visibles que du propriétaire et des personnes à qui il en donne l'accès ; un problème signalé est conservé avec l'historique des interventions du logement ;</li>
         <li>Pour votre sécurité, chaque appareil connecté à votre compte : type d'appareil et de navigateur, adresse IP, date de connexion et de dernière visite. Vous les voyez dans « Mon compte » et pouvez les déconnecter.</li>
         <li>Si vous donnez votre avis depuis l'espace (« Votre avis ») : votre réponse, votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour améliorer Bailio et vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
+        <li>Si vous nous écrivez depuis la bulle de message de l'espace : votre message, la page d'où vous l'envoyez et votre adresse email. Ils nous parviennent par email pour vous répondre ; ils ne sont pas enregistrés dans votre espace.</li>
         <li>Si vous répondez au questionnaire des testeurs (« Votre avis sur Bailio ») : vos réponses et, si vous les donnez, votre nom ou compte Instagram et un email ou téléphone. Elles nous parviennent par email pour améliorer Bailio ; rien n'est enregistré par Bailio.</li>
         <li>Si vous demandez à être rappelé depuis la page « Contact » : votre besoin (choisi dans une liste) et votre numéro de téléphone ou votre email. Ils nous parviennent par email pour vous répondre ; rien n'est enregistré par Bailio.</li>
       </ul>

@@ -266,6 +266,9 @@ export interface TodayView {
     depositCents: number
     candidates: number
     candidatesPropertyId: string | null
+    /** Logements loués ce jour, sur le nombre total de logements. */
+    rented?: number
+    properties?: number
   }
   /** Le bail en cours, s'il n'y en a qu'un : les raccourcis y mènent directement. */
   singleLeaseId: string | null

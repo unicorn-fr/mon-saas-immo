@@ -359,7 +359,7 @@ router.get('/today', async (req, res) => {
     data: {
       user: publicUser(user),
       date: iso(today),
-      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period, ...tiles, candidates: newCandidates.length, candidatesPropertyId: new Set(newCandidates.map((c) => c.propertyId)).size === 1 ? newCandidates[0].propertyId : null },
+      stats: { rentsExpected: expected, rentsReceived: received, cashedCents: cashed, month: period, ...tiles, rented: properties.filter((p) => leases.some((l) => l.propertyId === p.id && (l.status === 'ACTIVE' || l.status === 'IMPORTED') && l.startDate <= now && l.endDate >= now)).length, properties: properties.length, candidates: newCandidates.length, candidatesPropertyId: new Set(newCandidates.map((c) => c.propertyId)).size === 1 ? newCandidates[0].propertyId : null },
       // Un seul bail en cours : les raccourcis (quittance, courrier, état des lieux) y mènent directement.
       singleLeaseId: running.length === 1 ? running[0].id : null,
       tasks,

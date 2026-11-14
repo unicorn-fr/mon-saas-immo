@@ -98,6 +98,28 @@ export const Book = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: I
   <svg {...base(size, color, strokeWidth)}><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h11M9 8h6" /></svg>
 )
 
+export const Grid = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" /></svg>
+)
+export const UserIcon = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><circle cx="12" cy="8" r="4" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg>
+)
+export const UserPlus = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><circle cx="10" cy="8" r="4" /><path d="M3 21a7 7 0 0 1 12.5-4.3M19 14v6M16 17h6" /></svg>
+)
+export const Chart = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M4 20h16M7 16v-5M12 16V7M17 16v-8" /></svg>
+)
+export const Bank = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M3 9.5 12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18" /></svg>
+)
+export const Receipt = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" /><path d="M9 8h6M9 12h6" /></svg>
+)
+export const Contacts = ({ size = 22, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M6 3h13v18H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /><circle cx="12.5" cy="10" r="2.5" /><path d="M8.5 17a4 4 0 0 1 8 0M2 7h3M2 12h3M2 17h3" /></svg>
+)
+
 /**
  * Icônes de la barre du bas (téléphone) : même grille de 24, même trait arrondi de 1,75. Au repos, le trait seul ;
  * l'onglet actif prend la couleur de la marque et une forme pleine en teinte claire. Documents reprend la page au coin

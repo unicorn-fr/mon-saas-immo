@@ -7,9 +7,10 @@ import { useAuth } from '../lib/auth'
 import { initialsOf } from '../lib/contract'
 import type { TodayView } from '../lib/space'
 import { ROLE_LABEL, ROLE_RIGHTS, getSpace, switchSpace } from '../lib/shared'
-import { Euro, Home, Page, People, Plus, Sun, Signpost, Book, TabIcon, type TabName } from './Icons'
+import { Bank, Chart, Contacts, Grid, Home, People, Plus, Receipt, TabIcon, UserIcon, UserPlus, type TabName } from './Icons'
 import { Modal } from './kit'
 import { FeedbackModal } from './Feedback'
+import { SupportChat } from './SupportChat'
 
 /**
  * Espace propriétaire : menu latéral sombre sur ordinateur (maquette « Aujourd'hui »),
@@ -30,13 +31,15 @@ export function useSpace(): SpaceState {
 }
 
 const NAV = [
-  { to: '/espace', label: 'Aujourd’hui', end: true, icon: Sun },
-  { to: '/espace/logements', label: 'Logements', icon: Home },
+  { to: '/espace', label: 'Tableau de bord', end: true, icon: Grid },
+  { to: '/espace/structures', label: 'Bailleurs', icon: UserIcon },
+  { to: '/espace/logements', label: 'Biens', icon: Home },
   { to: '/espace/locataires', label: 'Locataires', icon: People },
-  { to: '/espace/documents', label: 'Documents', icon: Page },
-  { to: '/espace/argent', label: 'Argent', icon: Euro },
-  { to: '/espace/carnet', label: 'Carnet', icon: Book },
-  { to: '/espace/situations', label: 'Que se passe-t-il ?', icon: Signpost },
+  { to: '/espace/candidats', label: 'Candidats', icon: UserPlus },
+  { to: '/espace/patrimoine', label: 'Pilotage', icon: Chart },
+  { to: '/espace/banques', label: 'Banques', icon: Bank },
+  { to: '/espace/fiscalite', label: 'Fiscalité', icon: Receipt },
+  { to: '/espace/carnet', label: 'Carnet d’adresses', icon: Contacts },
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -83,6 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <AddMenu open={addOpen} onClose={() => setAddOpen(false)} />
         {/* Hors de la barre latérale : sa position collante l'enfermerait sous le contenu de la page. */}
         <FeedbackModal open={feedback} onClose={() => setFeedback(false)} />
+        <SupportChat />
       </div>
     </SpaceContext.Provider>
   )
@@ -154,10 +158,10 @@ function MobileHeader() {
  * prend une pastille de couleur douce derrière son icône ; « Ajouter », l'action principale, est la seule en bleu plein.
  */
 const TABS: Array<{ to: string; label: string; end?: boolean; icon: TabName }> = [
-  { to: '/espace', label: 'Aujourd’hui', end: true, icon: 'today' },
-  { to: '/espace/logements', label: 'Logements', icon: 'homes' },
-  { to: '/espace/documents', label: 'Documents', icon: 'docs' },
-  { to: '/espace/argent', label: 'Argent', icon: 'money' },
+  { to: '/espace', label: 'Accueil', end: true, icon: 'today' },
+  { to: '/espace/logements', label: 'Biens', icon: 'homes' },
+  { to: '/espace/locataires', label: 'Locataires', icon: 'docs' },
+  { to: '/espace/banques', label: 'Banques', icon: 'money' },
 ]
 
 const tabStyle = { flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 56, textDecoration: 'none', fontSize: 12, letterSpacing: '0.01em', background: 'none', border: 'none', fontFamily: 'inherit', cursor: 'pointer', padding: 0 } as const

@@ -109,7 +109,7 @@ export default function Declaration() {
 
   return (
     <AppShell>
-      <Crumbs items={[{ label: 'Argent', to: '/espace/argent' }, { label: 'Déclaration de revenus' }]} />
+      <Crumbs items={[{ label: 'Tableau de bord', to: '/espace' }, { label: 'Fiscalité' }]} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <h1 style={display('clamp(26px, 3.2vw, 34px)')}>
           Déclarer vos revenus locatifs, <em>sans prise de tête.</em>
@@ -118,6 +118,7 @@ export default function Declaration() {
           Bailio a fait les calculs. Il vous reste quelques cases à recopier sur impots.gouv.fr.
         </span>
       </div>
+      <ExpertSoon />
       <Chips legend="Année des revenus" value={year} onChange={setYear} options={[thisYear - 2, thisYear - 1, thisYear].map((y) => ({ value: y, label: String(y) }))} />
       {loading && !data ? (
         <Loader />
@@ -368,5 +369,20 @@ function Contacts({ contacts }: { contacts: Contact[] }) {
         </div>
       ))}
     </Card>
+  )
+}
+
+/** Déclaration confiée à un expert-comptable : pas encore proposée (aucun partenaire signé), dit comme tel, sans prix. */
+function ExpertSoon() {
+  return (
+    <section aria-labelledby="expert-titre" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', background: BAI.ownerLight, border: `1px solid ${BAI.ownerBorder}`, borderRadius: BAI.radius, padding: '18px 22px' }}>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+        <h2 id="expert-titre" style={{ margin: 0, fontSize: 17, fontWeight: 700, color: BAI.ink }}>
+          Déclaration par un expert-comptable
+        </h2>
+        <span style={{ fontSize: 15, color: BAI.inkMid }}>Confiez votre déclaration à un professionnel, depuis Bailio.</span>
+      </span>
+      <span style={{ fontSize: 14, fontWeight: 700, color: BAI.owner, background: BAI.surface, border: `1px solid ${BAI.ownerBorder}`, borderRadius: 999, padding: '6px 14px' }}>Bientôt</span>
+    </section>
   )
 }

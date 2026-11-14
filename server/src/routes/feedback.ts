@@ -38,4 +38,22 @@ router.post('/feedback', limitPerVisitor(60, 10), requireUser, async (req, res) 
   res.json({ success: true, data: { sent: true } })
 })
 
+/** Bulle de message de l'espace : le message part par email à l'équipe, la réponse revient par email au propriétaire. */
+const supportSchema = z.object({
+  message: z.string().trim().min(3, 'Écrivez votre message.').max(3000, 'Votre message est trop long (3 000 caractères au plus).'),
+  page: z.string().trim().max(200).optional(),
+})
+
+router.post('/support', limitPerVisitor(60, 10), requireUser, async (req, res) => {
+  const body = supportSchema.parse(req.body)
+  const user = req.user!
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ')
+  const mail = layout({
+    title: 'Un message depuis l’espace Bailio',
+    paragraphs: [`De : ${name ? `${name} · ` : ''}${user.email}`, `Page : ${body.page || 'non précisée'}`, body.message, 'Répondez directement à cet email : la réponse part au propriétaire.'],
+  })
+  await sendEmail({ to: env.FEEDBACK_TO, subject: `Message de ${name || user.email}`, replyTo: user.email, ...mail })
+  res.json({ success: true, data: { sent: true } })
+})
+
 export default router
