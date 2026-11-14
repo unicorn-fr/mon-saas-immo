@@ -57,6 +57,7 @@ const expenseSchema = z.object({
   recoverableCents: z.number().int().min(0).max(100_000_000).default(0),
   chargeTo: z.enum(['OWNER', 'TENANT']).default('OWNER'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  documentId: z.uuid().nullable().optional(),
 })
 
 async function checkProperty(userId: string, id: string | null | undefined) {
@@ -99,6 +100,7 @@ router.get('/expenses/:id', async (req, res) => {
 router.post('/expenses', async (req, res) => {
   const body = expenseSchema.parse(req.body)
   await checkProperty(req.user!.id, body.propertyId)
+  if (body.documentId && !(await prisma.document.findFirst({ where: { id: body.documentId, userId: req.user!.id } }))) throw new HttpError(404, 'Justificatif introuvable.')
   const e = await prisma.expense.create({ data: { userId: req.user!.id, ...body, propertyId: body.propertyId ?? null, date: parseIsoDate(body.date), status: 'OK' }, include: { property: true } })
   res.status(201).json({ success: true, data: expenseView(e) })
 })
@@ -710,6 +712,29 @@ function withLoans(file: PropertyFile, year: number) {
 }
 
 // Emprunts du logement : tableau d'amortissement par année, mensualité du mois, trésorerie mensuelle.
+// Comptabilité d'un logement sur une année : loyers reçus (recettes) et dépenses, opération par opération, avec le solde.
+router.get('/properties/:id/ledger', async (req, res) => {
+  const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear()).parse(req.query.year)
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id }, include: { leases: { include: { payments: true } } } })
+  if (!p) throw new HttpError(404, 'Logement introuvable.')
+  const from = new Date(Date.UTC(year, 0, 1))
+  const to = new Date(Date.UTC(year + 1, 0, 1))
+  const tenantIds = [...new Set(p.leases.flatMap((l) => l.tenantIds))]
+  const tenants = tenantIds.length ? await prisma.tenant.findMany({ where: { id: { in: tenantIds } } }) : []
+  const who = (ids: string[]) => ids.map((id) => tenants.find((t) => t.id === id)).filter(Boolean).map((t) => tenantName(readTenant(t!))).join(' et ') || 'Locataire'
+  const ops = [
+    ...p.leases.flatMap((l) =>
+      l.payments
+        .filter((x) => x.receivedAt >= from && x.receivedAt < to)
+        .map((x) => ({ id: `pay-${x.id}`, kind: 'RENT' as const, date: iso(x.receivedAt)!, label: `Loyer de ${who(l.tenantIds)}`, sub: `Loyer de ${x.period.slice(5)}/${x.period.slice(0, 4)}`, amountCents: x.amountCents, category: 'RENT', leaseId: l.id, documentId: null as string | null })),
+    ),
+    ...(await prisma.expense.findMany({ where: { propertyId: p.id, date: { gte: from, lt: to } } })).map((e) => ({ id: e.id, kind: 'EXPENSE' as const, date: iso(e.date)!, label: e.vendor, sub: e.description ?? CATEGORY_LABEL[e.category] ?? 'autre', amountCents: -e.amountCents, category: e.category, leaseId: null as string | null, documentId: e.documentId })),
+  ].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  const income = ops.filter((o) => o.amountCents > 0).reduce((a, o) => a + o.amountCents, 0)
+  const spent = -ops.filter((o) => o.amountCents < 0).reduce((a, o) => a + o.amountCents, 0)
+  res.json({ success: true, data: { year, propertyId: p.id, propertyName: propertyName(p), incomeCents: income, expensesCents: spent, balanceCents: income - spent, ops } })
+})
+
 router.get('/properties/:id/loans', async (req, res) => {
   const userId = req.user!.id
   const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId }, include: { leases: { where: { status: { in: ['ACTIVE', 'IMPORTED'] } }, orderBy: { startDate: 'desc' }, take: 1 } } })

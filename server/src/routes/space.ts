@@ -9,6 +9,7 @@ import { requireUser } from '../services/session.js'
 import { PARKING_TYPES, landlordProfileSchema, propertyFileSchema, tenantFileSchema, type PropertyFile, type TenantFile } from '../domain/contract.js'
 import { guarantorCompletion, landlordCompletion, propertyCompletion, tenantCompletion } from '../domain/completion.js'
 import { diagnosticsFor, energyRentalWarning, isFurnished, isTenseZone, rentControlFor, rentControlLikely } from '../domain/rules.js'
+import { structureName } from '../domain/structure.js'
 import { propertyColumns, propertyName, readProfile, readProperty, readStructure, readTenant, readTerms, leaseKindOf, tenantName } from '../services/contract.js'
 import { aidsFor } from '../domain/aids.js'
 import { iso, mergeFile } from './helpers.js'
@@ -168,7 +169,10 @@ router.get('/properties', async (req, res) => {
   const userId = req.user!.id
   const props = await prisma.property.findMany({ where: { userId }, include: { leases: { include: { payments: true } } }, orderBy: { createdAt: 'asc' } })
   const names = await tenantNames(userId, props.flatMap((p) => p.leases.flatMap((l) => l.tenantIds)))
-  res.json({ success: true, data: props.map((p) => propertySummary(p, names)) })
+  // Nom du bailleur (structure) en tête de chaque carte de « Biens ».
+  const structures = await prisma.structure.findMany({ where: { userId } })
+  const owner = new Map(structures.map((st) => [st.id, structureName(readStructure(st))]))
+  res.json({ success: true, data: props.map((p) => ({ ...propertySummary(p, names), structureName: p.structureId ? (owner.get(p.structureId) ?? null) : null })) })
 })
 
 /** Zone tendue non renseignée : reprise de la liste officielle des communes (le propriétaire peut corriger). */

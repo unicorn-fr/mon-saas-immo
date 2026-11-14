@@ -54,17 +54,15 @@ function List({ items }: { items: PropertySummary[] }) {
   return (
     <>
       <PageHead
-        title="Vos logements"
+        over="Tableau de bord › Biens"
+        title="Biens"
         sub={items.length ? `${plural(items.length, 'logement')} · ${rented} loué${rented > 1 ? 's' : ''}, ${items.length - rented} disponible${items.length - rented > 1 ? 's' : ''}` : 'Ajoutez votre premier logement.'}
         actions={
           <>
-            <Btn variant="outline" to="/espace/structures">
-              Vos structures
-            </Btn>
             <Btn variant="outline" to="/espace/logements/importer">
               Importer depuis un fichier
             </Btn>
-            <Btn to="/espace/logements/nouveau">Ajouter un logement</Btn>
+            <Btn to="/espace/logements/nouveau">Ajouter un bien</Btn>
           </>
         }
       />
@@ -122,6 +120,9 @@ function PropertyCard({ p, bg }: { p: PropertySummary; bg: string }) {
   const facts = [p.kindLabel, p.surface ? `${String(p.surface).replace('.', ',')} m²` : null, p.city].filter(Boolean).join(' · ')
   return (
     <Link to={`/espace/logements/${p.id}`} style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: available ? `1.5px dashed ${BAI.dashed}` : `1px solid ${BAI.divider}`, borderRadius: 20, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {p.structureName ? (
+        <span style={{ padding: '10px 16px', fontSize: 12.5, fontWeight: 600, color: BAI.inkSoft, borderBottom: `1px solid ${BAI.divider}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.structureName}</span>
+      ) : null}
       {p.photoIds?.[0] ? (
         <CoverPhoto id={p.photoIds[0]} alt={`Photo : ${p.name}`} style={{ height: 150 }}>
           <StatusPill p={p} />

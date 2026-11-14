@@ -75,6 +75,7 @@ const Candidats = page('Candidats')
 const Declaration = page('Declaration')
 const Releve = page('Releve')
 const CandidatsTous = page('CandidatsTous')
+const Comptabilite = page('Comptabilite')
 const ImportTableur = page('ImportTableur')
 const Bilan = page('Bilan')
 const Carnet = page('Carnet')
@@ -254,6 +255,7 @@ function Pages() {
               <Route path="/espace/compte/profil" element={<RequireAuth><FicheBailleur /></RequireAuth>} />
               <Route path="/espace/logements/:id/fiche" element={<RequireAuth><FicheLogement /></RequireAuth>} />
               <Route path="/espace/logements/:id/emprunt" element={<RequireAuth><Emprunt /></RequireAuth>} />
+              <Route path="/espace/logements/:id/comptabilite" element={<RequireAuth><Comptabilite /></RequireAuth>} />
               <Route path="/espace/baux/:id/degradations" element={<RequireAuth><Degradations /></RequireAuth>} />
               <Route path="/espace/baux/:id/impots" element={<RequireAuth><ImpotsBail /></RequireAuth>} />
               <Route path="/espace/logements/:id/aides" element={<RequireAuth><Aides /></RequireAuth>} />

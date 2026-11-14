@@ -28,6 +28,8 @@ export interface PropertySummary {
   city: string | null
   /** Structure qui détient le logement (bailleur de ses baux). */
   structureId: string | null
+  /** Nom du bailleur (structure) qui détient le bien. */
+  structureName?: string | null
   kindLabel: string
   surface: number | null
   rooms: number | null
