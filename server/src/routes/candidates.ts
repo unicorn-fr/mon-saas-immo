@@ -286,7 +286,8 @@ router.get('/candidates', requireUser, async (req, res) => {
           receivedAt: r.createdAt.toISOString(),
           monthlyIncomeCents: d.monthlyIncomeCents,
           guarantee: GUARANTEE_LABEL[d.guarantee],
-          review: { level: review.level, label: review.label },
+          review: { level: review.level, label: review.label, points: review.points },
+          status: r.status,
           visitConfirmed: Boolean(d.visitConfirmedAt),
         }
       }),

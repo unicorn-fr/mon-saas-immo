@@ -46,6 +46,12 @@ export interface AgendaItem {
   /** Jour (AAAA-MM-JJ). */
   iso: string
   label: string
+  /** Rendez-vous saisi par le propriétaire (intervention prévue) : modifiable et supprimable depuis l'agenda. */
+  interventionId?: string
+  propertyId?: string
+  title?: string
+  start?: string | null
+  end?: string | null
 }
 
 /** Agenda : à partir d'aujourd'hui, du plus proche au plus lointain, sans doublon. */

@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { BAI } from '../../constants/bailio-tokens'
 import { AppShell, useSpace } from '../../components/AppShell'
 import { display } from '../../components/ui'
-import { Btn, Card, LoadError, Loader, Pill, Tabs, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
+import { Btn, Card, Input, LoadError, Loader, Modal, Pill, Select, Tabs, TextLink, useLoad, useToast, useConfirm } from '../../components/kit'
 import { Camera, Check, Euro, Home, Mail, Pencil, People, Upload } from '../../components/Icons'
 import { Onboarding } from '../../components/Onboarding'
 import { api, downloadPdf, pdfUrl } from '../../lib/api'
@@ -80,7 +80,7 @@ function TodayContent() {
 
       <div className="dash-grid">
         <Shortcuts leaseId={data.singleLeaseId} />
-        <Agenda items={data.upcoming} />
+        <Agenda items={data.upcoming} properties={data.properties} onChange={reload} />
       </div>
       <NewsCard />
       </>)}
@@ -337,39 +337,133 @@ function Shortcuts({ leaseId }: { leaseId: string | null }) {
 const MONTHS_ABBR = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
 
 /** Agenda : les prochains rendez-vous datés, groupés par jour (jour en gros, mois abrégé). Trois d'abord. */
-function Agenda({ items }: { items: TodayView['upcoming'] }) {
+type Upcoming = TodayView['upcoming'][number]
+
+/** « Mon agenda » : échéances déduites et rendez-vous saisis (artisan, état des lieux…), groupés par jour. */
+function Agenda({ items, properties, onChange }: { items: TodayView['upcoming']; properties: TodayView['properties']; onChange: () => void }) {
   const [all, setAll] = useState(false)
-  if (!items.length) return null
-  const shown = all ? items : items.slice(0, 3)
-  const groups: Array<{ iso: string; labels: string[] }> = []
+  const [edit, setEdit] = useState<Upcoming | 'new' | null>(null)
+  const toast = useToast()
+  const confirm = useConfirm()
+  const shown = all ? items : items.slice(0, 4)
+  const groups: Array<{ iso: string; items: Upcoming[] }> = []
   for (const it of shown) {
     const g = groups[groups.length - 1]
-    if (g && g.iso === it.iso) g.labels.push(it.label)
-    else groups.push({ iso: it.iso, labels: [it.label] })
+    if (g && g.iso === it.iso) g.items.push(it)
+    else groups.push({ iso: it.iso, items: [it] })
+  }
+  const remove = async (it: Upcoming) => {
+    if (!(await confirm({ title: 'Supprimer ce rendez-vous ?', text: it.label, confirm: 'Supprimer' }))) return
+    try {
+      await api(`/interventions/${it.interventionId}`, { method: 'DELETE' })
+      toast.show('Rendez-vous supprimé. Il reste 30 jours dans la corbeille.')
+      onChange()
+    } catch (e) {
+      toast.error(e)
+    }
   }
   return (
-    <Card title="Mon agenda" style={{ gap: 16 }}>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {groups.map((g) => (
-          <li key={g.iso} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <span style={{ width: 52, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', background: BAI.sky, color: BAI.owner, borderRadius: 12, padding: '6px 0', lineHeight: 1.1 }}>
-              <span style={{ fontSize: 22, fontWeight: 700 }}>{Number(g.iso.slice(8, 10))}</span>
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{MONTHS_ABBR[Number(g.iso.slice(5, 7)) - 1]}</span>
-            </span>
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0, fontSize: 15, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
-              {g.labels.map((l) => (
-                <span key={l}>{l}</span>
-              ))}
-            </span>
-          </li>
-        ))}
-      </ul>
-      {items.length > 3 ? (
-        <button type="button" onClick={() => setAll(!all)} className="tap" style={{ background: 'none', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: BAI.owner, textAlign: 'left', cursor: 'pointer' }}>
+    <section className="dash-card" aria-labelledby="agenda-titre">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <h2 id="agenda-titre" style={{ margin: 0, fontSize: 17, fontWeight: 700 }}>
+          Mon agenda
+        </h2>
+        {properties.length ? (
+          <button type="button" className="dash-link" onClick={() => setEdit('new')}>
+            + Ajouter un rendez-vous
+          </button>
+        ) : null}
+      </div>
+      {items.length ? (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {groups.map((g) => (
+            <li key={g.iso} className="agenda-day">
+              <span className="agenda-date">
+                <span style={{ fontSize: 20, fontWeight: 800 }}>{Number(g.iso.slice(8, 10))}</span>
+                <span style={{ fontSize: 12, fontWeight: 600 }}>{MONTHS_ABBR[Number(g.iso.slice(5, 7)) - 1]}</span>
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, flex: 1 }}>
+                {g.items.map((it) => (
+                  <span key={`${it.label}-${it.interventionId ?? ''}`} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, fontSize: 15, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                      <span style={{ fontWeight: it.interventionId ? 600 : 400 }}>{it.label}</span>
+                      {it.start ? <span style={{ fontSize: 13, color: BAI.inkSoft }}>{it.start}{it.end ? ` – ${it.end}` : ''}</span> : null}
+                    </span>
+                    {it.interventionId ? (
+                      <span style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button type="button" className="icon-btn" aria-label={`Modifier : ${it.label}`} onClick={() => setEdit(it)}>
+                          <Pencil size={16} />
+                        </button>
+                        <button type="button" className="icon-btn icon-btn--danger" aria-label={`Supprimer : ${it.label}`} onClick={() => remove(it)}>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden>
+                            <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />
+                          </svg>
+                        </button>
+                      </span>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p style={{ margin: 0, fontSize: 15, color: BAI.inkMid }}>Aucun rendez-vous à venir.</p>
+      )}
+      {items.length > 4 ? (
+        <button type="button" onClick={() => setAll(!all)} className="dash-link" style={{ alignSelf: 'flex-start' }}>
           {all ? 'Voir moins' : `Voir les ${items.length} rendez-vous`}
         </button>
       ) : null}
-    </Card>
+      {edit ? <AppointmentModal item={edit === 'new' ? null : edit} properties={properties} onClose={() => setEdit(null)} onDone={() => { setEdit(null); onChange() }} /> : null}
+    </section>
+  )
+}
+
+/** Rendez-vous de l'agenda : enregistré comme intervention prévue du bien (artisan, visite, état des lieux…). */
+function AppointmentModal({ item, properties, onClose, onDone }: { item: Upcoming | null; properties: TodayView['properties']; onClose: () => void; onDone: () => void }) {
+  const toast = useToast()
+  const [propertyId, setPropertyId] = useState<string | null>(item?.propertyId ?? (properties.length === 1 ? properties[0].id : null))
+  const [title, setTitle] = useState(item?.title ?? '')
+  const [date, setDate] = useState(item?.iso ?? new Date().toISOString().slice(0, 10))
+  const [start, setStart] = useState(item?.start ?? '')
+  const [end, setEnd] = useState(item?.end ?? '')
+  const [err, setErr] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const save = async () => {
+    if (!propertyId) return setErr('Choisissez le bien.')
+    if (!title.trim()) return setErr('Indiquez l’objet du rendez-vous.')
+    setBusy(true)
+    setErr(null)
+    const body = { title: title.trim(), status: 'PLANNED', date, start: start || null, end: end || null }
+    try {
+      if (item?.interventionId) await api(`/interventions/${item.interventionId}`, { method: 'PUT', body })
+      else await api(`/properties/${propertyId}/interventions`, { method: 'POST', body })
+      toast.show(item ? 'Rendez-vous modifié.' : 'Rendez-vous ajouté à l’agenda.')
+      onDone()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Le rendez-vous n’a pas été enregistré.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Modal open onClose={onClose} title={item ? 'Modifier le rendez-vous' : 'Ajouter un rendez-vous'} actions={<Btn onClick={save} disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer'}</Btn>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {item ? null : <Select label="Bien" value={propertyId} onChange={setPropertyId} options={properties.map((p) => ({ value: p.id, label: p.name }))} placeholder="Choisir un bien" />}
+        <Input label="Objet" value={title} onChange={setTitle} placeholder="Plombier, serrurier, état des lieux de sortie…" maxLength={160} />
+        <Input label="Date" type="date" value={date} onChange={setDate} />
+        <div className="grid-2" style={{ gap: 12 }}>
+          <Input label="Début (facultatif)" type="time" value={start} onChange={setStart} />
+          <Input label="Fin (facultatif)" type="time" value={end} onChange={setEnd} />
+        </div>
+        {err ? (
+          <p role="alert" style={{ margin: 0, color: BAI.error, fontSize: 14 }}>
+            {err}
+          </p>
+        ) : null}
+      </div>
+    </Modal>
   )
 }
 

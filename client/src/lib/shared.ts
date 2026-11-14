@@ -41,3 +41,12 @@ export function switchSpace(s: SharedSpace | null) {
   setSpace(s)
   window.location.assign(s?.role === 'CONTRACTOR' ? '/espace/partage' : '/espace')
 }
+
+/** Profil bailleur choisi en haut du menu (« Tous les profils » sinon) : en-tête X-Bailio-Profile des pages de consultation. */
+export const PROFILE_KEY = 'bailio.profile'
+export const getProfile = (): string | null => storage.get(PROFILE_KEY)
+/** Changer de profil : la page est rechargée pour repartir de données propres (cache des écrans compris). */
+export function switchProfile(id: string | null) {
+  storage.set(PROFILE_KEY, id)
+  window.location.reload()
+}

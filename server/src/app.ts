@@ -43,7 +43,7 @@ export function createApp() {
     cors({
       origin: (origin, cb) => cb(null, !origin || allowedOrigins.has(origin) || (env.NODE_ENV !== 'production' && origin.startsWith('http://localhost'))),
       exposedHeaders: ['Content-Disposition'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token', 'X-Bailio-Space'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Draft-Token', 'X-Bailio-Space', 'X-Bailio-Profile'],
     }),
   )
   // Signatures dessinées (images) et états des lieux : quelques centaines de Ko.

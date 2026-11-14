@@ -1,5 +1,5 @@
 import { DRAFT_KEY, SESSION_KEY, storage } from './storage'
-import { getSpace } from './shared'
+import { getProfile, getSpace } from './shared'
 
 // L'API est toujours appelée sur la même adresse que le site (/api) : relayée par Caddy sur le serveur,
 // ou par Vite en local. Le navigateur ne contacte donc jamais un autre domaine,
@@ -56,6 +56,10 @@ function headers(opts: RequestOptions): Headers {
   // Espace partagé ouvert : le serveur limite tout aux logements partagés (et ignore l'en-tête pour le compte lui-même).
   const space = getSpace()
   if (space) h.set('X-Bailio-Space', space.id)
+  else {
+    const profile = getProfile()
+    if (profile) h.set('X-Bailio-Profile', profile)
+  }
   if (opts.draft) {
     const draft = storage.get(DRAFT_KEY)
     if (draft) h.set('X-Draft-Token', draft)

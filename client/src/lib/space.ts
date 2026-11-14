@@ -275,7 +275,8 @@ export interface TodayView {
   /** Le bail en cours, s'il n'y en a qu'un : les raccourcis y mènent directement. */
   singleLeaseId: string | null
   tasks: Task[]
-  upcoming: Array<{ date: string; iso: string; label: string }>
+  /** Échéances et rendez-vous ; ceux saisis par le propriétaire portent `interventionId` (modifiables). */
+  upcoming: Array<{ date: string; iso: string; label: string; interventionId?: string; propertyId?: string; title?: string; start?: string | null; end?: string | null }>
   properties: Array<{ id: string; name: string; status: { label: string; tone: 'green' | 'error' | 'owner' | 'accent' | 'muted' } }>
   counts: { properties: number; tenants: number; leases: number; signedLeases?: number }
 }

@@ -11,6 +11,7 @@ import { Bank, Chart, Contacts, Grid, Home, People, Plus, Receipt, TabIcon, User
 import { Modal } from './kit'
 import { FeedbackModal } from './Feedback'
 import { SupportChat } from './SupportChat'
+import { ProfilePicker } from './ProfilePicker'
 
 /**
  * Espace propriétaire : menu latéral sombre sur ordinateur (maquette « Aujourd'hui »),
@@ -100,6 +101,7 @@ function Sidebar({ taskCount, onAdd, onFeedback }: { taskCount: number | null; o
       <div style={{ padding: '0 8px' }}>
         <Logo size={28} to="/espace" onBlue />
       </div>
+      <ProfilePicker />
       <button type="button" className="side-add" onClick={onAdd} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, borderRadius: BAI.radiusBtn, background: BAI.surface, color: BAI.owner, border: 'none', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
         <Plus />
         Ajouter

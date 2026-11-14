@@ -4,6 +4,7 @@ import { AppShell } from '../../components/AppShell'
 import { Btn, Empty, LoadError, Loader, PageHead, Pill, useLoad } from '../../components/kit'
 import { api } from '../../lib/api'
 import { eurosCents } from '../../lib/format'
+import { ScoreDots } from './Candidats'
 
 interface AllCandidates {
   properties: Array<{ id: string; name: string; open: boolean }>
@@ -15,7 +16,8 @@ interface AllCandidates {
     receivedAt: string
     monthlyIncomeCents: number | null
     guarantee: string
-    review: { level: 'SOLID' | 'CORRECT' | 'INCOMPLETE'; label: string }
+    review: { level: 'SOLID' | 'CORRECT' | 'INCOMPLETE'; label: string; points: number }
+    status: string
     visitConfirmed: boolean
   }>
 }
@@ -47,6 +49,7 @@ export default function CandidatsTous() {
                 <th scope="col">Bien</th>
                 <th scope="col">Ressources</th>
                 <th scope="col">Reçue le</th>
+                <th scope="col">Indice</th>
                 <th scope="col">Dossier</th>
               </tr>
             </thead>
@@ -70,7 +73,10 @@ export default function CandidatsTous() {
                   <td>{c.monthlyIncomeCents ? `${eurosCents(c.monthlyIncomeCents)} par mois` : '—'}</td>
                   <td>{new Date(c.receivedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                   <td>
-                    <Pill tone={TONE[c.review.level]}>{c.review.label}</Pill>
+                    <ScoreDots points={c.review.points} />
+                  </td>
+                  <td>
+                    {c.status === 'REJECTED' ? <Pill tone="muted">Refusé</Pill> : c.status === 'SHORTLIST' ? <Pill tone="green">Retenu</Pill> : <Pill tone={TONE[c.review.level]}>{c.review.label}</Pill>}
                   </td>
                 </tr>
               ))}

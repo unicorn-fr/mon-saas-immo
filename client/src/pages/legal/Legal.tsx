@@ -397,6 +397,7 @@ export function Cookies() {
           ['bailio.draft', 'Retrouver le bail commencé sans compte, si vous fermez la page', '30 jours, ou jusqu’à la création de votre espace'],
           ['bailio.boot, bailio.recover', 'Recharger une seule fois la page si elle s’est mal chargée', 'Le temps de l’onglet ouvert'],
           ['bailio.space', 'Retenir l’espace partagé que vous avez ouvert (invitation d’un propriétaire)', 'Jusqu’au retour à votre espace ou à la déconnexion'],
+          ['bailio.profile', 'Retenir le profil bailleur choisi en haut du menu de votre espace', 'Jusqu’au choix de « Tous les profils » ou à la déconnexion'],
           ['Service de mise à jour du site', 'Vider l’ancienne version du site après une mise à jour', 'Aucune donnée personnelle'],
         ]}
       />

@@ -287,3 +287,17 @@ button:not(:disabled):active { transform: scale(.98); }
 .ledger-drop { display: flex; flex-direction: column; gap: 4px; padding: 16px; border: 1.5px dashed #8590ab; border-radius: 12px; background: #f7f9fe; cursor: pointer; }
 .ledger-drop:focus-within { outline: 3px solid #2563eb; outline-offset: 2px; }
 @media (max-width: 768px) { .ledger-row { grid-template-columns: minmax(0, 1fr) auto; } }
+
+/* Agenda du tableau de bord : rendez-vous modifiables */
+.agenda-day { display: flex; gap: 14px; align-items: flex-start; padding: 10px; border: 1px solid #e2e8f4; border-radius: 12px; }
+.agenda-date { width: 50px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; background: #eaf1fe; color: #2563eb; border-radius: 10px; padding: 6px 0; line-height: 1.1; }
+.icon-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #e2e8f4; background: #ffffff; color: #56637f; display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { color: #2563eb; border-color: #b3cbfa; }
+.icon-btn--danger:hover { color: #c11f2b; border-color: #f2b8bd; }
+.dash-link { background: none; border: 0; padding: 4px 0; font: inherit; font-size: 14px; font-weight: 600; color: #2563eb; cursor: pointer; }
+.dash-link:hover { text-decoration: underline; text-underline-offset: 4px; }
+.profile-pick select { width: 100%; min-height: 42px; padding: 0 12px; border-radius: 10px; border: 0; background: #ffffff; color: #0d1b3e; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.score-dots { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #2b3a5c; white-space: nowrap; }
+.score-dots > span:first-child { display: inline-flex; gap: 3px; }
+.score-dots i { width: 9px; height: 9px; border-radius: 50%; background: #dfe6f5; }
+.score-dots i.on { background: #2563eb; }

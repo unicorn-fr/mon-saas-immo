@@ -128,7 +128,7 @@ export default function Candidats() {
                     <Card key={c.id} style={c.status === 'REJECTED' ? { background: BAI.bg } : undefined}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 18, fontWeight: 700 }}>{c.name}</span>
-                        {c.status === 'SHORTLIST' ? <Pill tone="green">Retenu</Pill> : c.status === 'REJECTED' ? <Pill tone="muted">Écarté</Pill> : <Pill tone="owner">Reçue le {dateNum(c.receivedAt)}</Pill>}
+                        {c.status === 'SHORTLIST' ? <Pill tone="green">Retenu</Pill> : c.status === 'REJECTED' ? <Pill tone="muted">Refusé</Pill> : <Pill tone="owner">Reçue le {dateNum(c.receivedAt)}</Pill>}
                       </div>
                       <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.55 }}>
                         {c.situation} · revenus {eurosCents(c.monthlyIncomeCents)} par mois{c.occupants ? ` · ${c.occupants} personne${c.occupants > 1 ? 's' : ''}` : ''}
@@ -139,7 +139,8 @@ export default function Candidats() {
                       </span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <span style={{ alignSelf: 'flex-start' }}>
-                          <Pill tone={c.review.level === 'SOLID' ? 'green' : c.review.level === 'CORRECT' ? 'owner' : 'accent'}>{c.review.label}</Pill>
+                          <Pill tone={c.review.level === 'SOLID' ? 'green' : c.review.level === 'CORRECT' ? 'owner' : 'accent'}>{c.review.label}</Pill>{' '}
+                          <ScoreDots points={c.review.points} />
                         </span>
                         <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.55, color: BAI.inkMid }}>
                           {c.review.criteria.map((x) => (
@@ -197,7 +198,7 @@ export default function Candidats() {
                         ) : null}
                         {c.status !== 'REJECTED' ? (
                           <Btn size="sm" variant="ghost" onClick={() => void act(() => api(`/candidates/${c.id}`, { method: 'PATCH', body: { status: 'REJECTED' } }))}>
-                            Écarter
+                            Refuser
                           </Btn>
                         ) : (
                           <Btn size="sm" variant="ghost" onClick={() => void act(() => api(`/candidates/${c.id}`, { method: 'DELETE' }), 'Candidature effacée.')}>
@@ -361,5 +362,20 @@ function Fold({ title, children }: { title: string; children: ReactNode }) {
       </h2>
       {open ? <div className="panel-in" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 20 }}>{children}</div> : null}
     </section>
+  )
+}
+
+/** Indice de 1 à 5 tiré de la note du dossier (ressources, garantie, pièces, date d'entrée) : une aide, jamais une décision. */
+export function ScoreDots({ points }: { points: number }) {
+  const n = Math.max(1, Math.min(5, Math.round(points / 20)))
+  return (
+    <span className="score-dots" title="Indice de 1 à 5 : ressources, garantie, pièces et date d’entrée">
+      <span aria-hidden>
+        {[1, 2, 3, 4, 5].map((k) => (
+          <i key={k} className={k <= n ? 'on' : undefined} />
+        ))}
+      </span>
+      <span>Indice {n}/5</span>
+    </span>
   )
 }
