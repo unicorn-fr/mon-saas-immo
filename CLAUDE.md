@@ -83,6 +83,12 @@
 - Profil bailleur (« Tous les profils » en haut du menu, `components/ProfilePicker.tsx`, stockage `bailio.profile`, en-tête `X-Bailio-Profile`) : les pages de consultation (`PROFILE_PATHS`, `services/session.ts`) ne montrent que les biens de cette structure, par le même filtre que les accès partagés ; jamais à l'enregistrement.
 - Candidats : indice de 1 à 5 tiré de la note du dossier (`ScoreDots`), « Refuser » ; page `/espace/candidats` pour tous les biens.
 
+## Connexion aux IA (lecture seule)
+
+- « Mon compte », onglet « Connexion aux IA » (`components/AiConnect.tsx`) : une clé par IA (Claude, ChatGPT…), 5 au plus, préfixe `bai_`, montrée une fois, seule son empreinte gardée (table `AiKey`, `GET/POST/DELETE /account/ai-keys`), retirable.
+- Serveur MCP sans état (`routes/mcp.ts`) : `POST /api/mcp` (clé dans `Authorization: Bearer`) ou `POST /api/mcp/<clé>` (connecteurs qui ne prennent qu'une adresse) ; outils `AI_TOOLS` (`domain/aiAccess.ts`, testé dans `aiAccess.test.ts`) qui relisent les adresses ordinaires de l'API avec la même clé.
+- Verrou unique dans `requireUser` (`services/session.ts`) : une clé d'IA ne lit que `AI_READ_PATHS` en GET (`aiPathDenied`), jamais un envoi, une écriture, un fichier, l'export, le compte ni les accès ; ni espace partagé ni profil. Réponses filtrées par `sanitizeForAi` (codes de liens, jetons, signatures, logos, IBAN, images). Nouvel outil : l'adresse doit être dans `AI_READ_PATHS`. Décrit dans `/confidentialite` et `/securite`. Test : `e2e/tests/54-connexion-ia.test.mjs`.
+
 ## Rédaction
 
 - Tout en français, on **vouvoie** le propriétaire, phrases courtes, zéro jargon technique.

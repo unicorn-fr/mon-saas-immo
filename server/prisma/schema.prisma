@@ -89,6 +89,7 @@ model User {
   accessGiven   Access[]           @relation("AccessOwner")
   accessHeld    Access[]           @relation("AccessMember")
   emailLogs     EmailLog[]
+  aiKeys        AiKey[]
 }
 
 /// Accès partagé : le propriétaire invite une personne (associé, comptable, intervenant) sur certains logements.
@@ -595,4 +596,17 @@ model EmailLog {
   @@index([userId, sentAt])
   @@index([tenantId])
   @@index([leaseId])
+}
+
+/// Clé de connexion d'une IA (Claude, ChatGPT…) : lecture seule, empreinte seulement, révocable dans « Mon compte ».
+model AiKey {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  keyHash    String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
 }

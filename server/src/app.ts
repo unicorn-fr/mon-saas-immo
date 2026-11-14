@@ -33,6 +33,7 @@ import contactRequestRoutes from './routes/contact.js'
 import testerFeedbackRoutes from './routes/testerFeedback.js'
 import signatureRelayRoutes from './routes/signatureRelay.js'
 import visitRoutes from './routes/visits.js'
+import mcpRoutes from './routes/mcp.js'
 
 export function createApp() {
   const app = express()
@@ -84,6 +85,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes)
   app.use('/api/geo', geoRoutes)
   app.use('/api', esignRoutes)
+  app.use('/api', mcpRoutes)
   app.use('/api', accountRoutes)
   app.use('/api', todayRoutes)
   app.use('/api', accessRoutes)
