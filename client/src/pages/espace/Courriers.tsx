@@ -75,7 +75,12 @@ const GROUPS: Array<{ title: string; tabs: Array<{ value: Tab; label: string }> 
 ]
 /** Garage loué seul : courriers qui ont un sens hors de la loi de 1989 (domain/letters.ts, PARKING_LETTERS). */
 const PARKING_TABS: Tab[] = ['RECEIPT', 'REVISION', 'CHARGES', 'UNPAID', 'INSURANCE', 'DAMAGE_REPAIR', 'DEPOSIT_RECEIPT', 'NOTICE_TO_LEAVE', 'TENANT_NOTICE', 'DEPOSIT_RETURN', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
-const groupsFor = (kind?: string) => (kind === 'PARKING' ? GROUPS.map((g) => ({ ...g, tabs: g.tabs.filter((t) => PARKING_TABS.includes(t.value)) })).filter((g) => g.tabs.length) : GROUPS)
+/** Bail commercial : relance amiable et courriers à un tiers ; congé, révision et mise en demeure passent par d'autres règles. */
+const COMMERCIAL_TABS: Tab[] = ['RECEIPT', 'UNPAID', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
+const groupsFor = (kind?: string) => {
+  const keep = kind === 'PARKING' ? PARKING_TABS : kind === 'COMMERCIAL' ? COMMERCIAL_TABS : null
+  return keep ? GROUPS.map((g) => ({ ...g, tabs: g.tabs.filter((t) => keep.includes(t.value)) })).filter((g) => g.tabs.length) : GROUPS
+}
 /** Courriers adressés à un tiers : le destinataire se choisit dans le carnet. */
 const THIRD_PARTY: LetterType[] = ['INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
 const TABS = GROUPS.flatMap((g) => g.tabs)

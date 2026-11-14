@@ -401,7 +401,7 @@ export const leaseTermsSchema = z.object({
   colocation: opt(z.boolean()),
   startDate: opt(isoDate),
   /** Bail mobilité : de 1 à 10 mois. Durée réduite (vide) : de 12 à 35 mois. */
-  durationMonths: opt(z.number().int().min(1).max(72)),
+  durationMonths: opt(z.number().int().min(1).max(144)), // bail commercial : jusqu’à 12 ans
   reduced: opt(z.object({ enabled: opt(z.boolean()), reason: opt(text(500)) })),
   mobilityReason: opt(z.enum(Object.keys(MOBILITY_REASONS) as [string, ...string[]])),
   /** Garage loué seul : préavis convenu au contrat, en mois, pour chaque partie (1 par défaut). */

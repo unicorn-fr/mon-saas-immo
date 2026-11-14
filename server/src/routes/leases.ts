@@ -941,7 +941,7 @@ export async function letterPdf(user: User, lease: LeaseWithProperty, letter: Le
   assertComplete(partiesMissing(c))
   const recipient = await recipientOf(user, lease, c)
   const kind = leaseKindOf(lease)
-  if (!letterAllowed(letter.type, kind)) throw new HttpError(400, 'Ce courrier concerne la location d’un logement, pas celle d’un garage.')
+  if (!letterAllowed(letter.type, kind)) throw new HttpError(400, kind === 'COMMERCIAL' ? 'Ce courrier ne s’applique pas à un bail commercial : congé, révision et mise en demeure suivent d’autres règles (commissaire de justice).' : 'Ce courrier concerne la location d’un logement, pas celle d’un garage.')
   const housing = kind !== 'PARKING'
   if (letter.type === 'NOTICE_TO_LEAVE' && !landlordNoticeMonthsFor(kind, c.terms)) throw new HttpError(400, 'Ce bail prend fin tout seul à son terme : aucun congé n’est nécessaire.')
   if (letter.type === 'NOTICE_TO_LEAVE' && letter.reason === 'SALE' && kind === 'VIDE' && !letter.priceCents) throw new HttpError(400, 'Indiquez le prix de vente : sans lui, le congé pour vendre est nul.')

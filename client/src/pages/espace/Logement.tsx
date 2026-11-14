@@ -109,7 +109,13 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
   const expired = required.filter((d) => diagnosticStatus(d, p.file).tone === 'error').length - toAdd
   const diagValue = [toAdd ? `${toAdd} à fournir` : '', expired ? `${expired} à refaire` : ''].filter(Boolean).join(', ') || 'À jour'
   const parking = p.nature === 'PARKING'
-  const rows: Array<{ label: string; value: string; to: string; tone?: 'accent' }> = parking ? [
+  const commercial = p.nature === 'COMMERCIAL'
+  const rows: Array<{ label: string; value: string; to: string; tone?: 'accent' }> = commercial ? [
+    { label: 'Fiche du local', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
+    { label: 'Diagnostics', value: diagValue, to: `/espace/logements/${p.id}?onglet=diagnostics`, tone: toAdd + expired ? 'accent' : undefined },
+    { label: 'Comptabilité', value: 'Ouvrir', to: `/espace/logements/${p.id}/comptabilite` },
+    { label: 'Travaux et interventions', value: 'Ouvrir', to: `/espace/logements/${p.id}?onglet=expenses` },
+  ] : parking ? [
     { label: 'Fiche du garage', value: p.completion.percent < 100 ? `${p.completion.percent} %, à compléter` : 'Complète', to: `/espace/logements/${p.id}/fiche`, tone: p.completion.percent < 100 ? 'accent' : undefined },
     { label: 'Annonce et candidats', value: 'Ouvrir', to: `/espace/logements/${p.id}/annonce` },
     { label: 'Comptabilité', value: 'Ouvrir', to: `/espace/logements/${p.id}/comptabilite` },
@@ -123,7 +129,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
     { label: 'Aides et dispositifs', value: 'Voir', to: `/espace/logements/${p.id}/aides` },
   ]
   return (
-    <Card title={parking ? 'Ce garage' : 'Ce logement'} style={{ gap: 0 }}>
+    <Card title={parking ? 'Ce garage' : commercial ? 'Ce local' : 'Ce logement'} style={{ gap: 0 }}>
       {rows.map((r) => (
         <Link key={r.label} to={r.to} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '13px 0', borderTop: `1px solid ${BAI.dividerSoft}`, textDecoration: 'none', color: BAI.ink, fontSize: 15 }}>
           <span style={{ fontWeight: 600 }}>{r.label}</span>

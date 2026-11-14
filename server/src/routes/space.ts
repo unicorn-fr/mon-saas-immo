@@ -139,6 +139,7 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
     floor: f.floorDoor ?? null,
     furnished: f.furnished ?? null,
     nature: f.nature ?? 'HOUSING',
+    commercial: f.nature === 'COMMERCIAL' ? { use: f.commercial?.use ?? null, equipped: Boolean(f.commercial?.equipped) } : null,
     dpeClass: f.diagnostics?.dpe?.class ?? null,
     // Photos du logement (fiche, « Photos ») : la première sert de couverture dans la liste et sur sa page.
     photoIds: f.photos ?? [],

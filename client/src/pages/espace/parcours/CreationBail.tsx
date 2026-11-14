@@ -4,7 +4,7 @@ import { BAI } from '../../../constants/bailio-tokens'
 import { Fields, StepFlow, StepNote, StepTitle } from '../../../components/FlowLayout'
 import { Btn, Callout, Chips, ChoiceCard, Input, Known, Loader, Money, Pill, Select, TextArea, TextLink, Toggle, errorMessage, useToast, useConfirm } from '../../../components/kit'
 import { api } from '../../../lib/api'
-import { KIND_LABEL, MOBILITY_REASONS, PARKING_TYPES, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
+import { KIND_LABEL, MOBILITY_REASONS, PARKING_TYPES, PAYMENT_FREQUENCIES, fullName, type LeaseKind, type LeaseTerms } from '../../../lib/contract'
 import { openDoc, printDoc } from '../../../lib/docs'
 import { dateFr, euros } from '../../../lib/format'
 import type { LeaseBlocker, LeaseView, ProfileView, PropertySummary, PropertyView, TenantSummary } from '../../../lib/space'
@@ -34,6 +34,9 @@ export default function CreationBail() {
   const setT = (patch: Partial<LeaseTerms>) => setTerms((t) => ({ ...t, ...patch }))
   // Garage, box ou place loué seul : contrat de droit commun, sans les étapes propres au logement.
   const parking = lease ? lease.kind === 'PARKING' : properties?.find((p) => p.id === propertyId)?.nature === 'PARKING'
+  // Local commercial : bail commercial (Code de commerce), sans les étapes de la loi de 1989 (docs/legal/bail-commercial.md).
+  const commercial = lease ? lease.kind === 'COMMERCIAL' : properties?.find((p) => p.id === propertyId)?.nature === 'COMMERCIAL'
+  const notHousing = parking || commercial
   // L'ordre est imposé : logement complet, puis locataire, puis le bail.
   const [propertyBlockers, setPropertyBlockers] = useState<LeaseBlocker[] | null>(null)
   const [tenantBlockers, setTenantBlockers] = useState<Record<string, TenantBlocker[]>>({})
@@ -116,7 +119,7 @@ export default function CreationBail() {
           if (tenantIds.some((t) => tenantBlockers[t]?.some((b) => b.level === 'ESSENTIAL'))) throw new Error('Complétez d’abord ce qui est primordial pour le locataire et son garant.')
           if (!id) {
             const p = properties?.find((x) => x.id === propertyId)
-            const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.nature === 'PARKING' ? 'PARKING' : p?.furnished ? 'MEUBLE' : 'VIDE' } } })
+            const created = await api<{ id: string }>('/leases', { method: 'POST', body: { propertyId, tenantIds, terms: { kind: p?.nature === 'PARKING' ? 'PARKING' : p?.nature === 'COMMERCIAL' ? 'COMMERCIAL' : p?.furnished ? 'MEUBLE' : 'VIDE' } } })
             goto(3, created.id)
           } else {
             await putTerms({ tenantIds })
@@ -136,12 +139,12 @@ export default function CreationBail() {
           return
         case 5:
           if (!terms.rentCents) throw new Error('Indiquez le loyer hors charges.')
-          if (!parking && (terms.zone?.tense === null || terms.zone?.tense === undefined)) throw new Error('Indiquez si la commune est en zone tendue.')
+          if (!notHousing && (terms.zone?.tense === null || terms.zone?.tense === undefined)) throw new Error('Indiquez si la commune est en zone tendue.')
           if (terms.zone?.control && (!terms.zone.refRentCentsM2 || !terms.zone.refRentMaxCentsM2)) throw new Error('Encadrement des loyers : indiquez le loyer de référence et le loyer de référence majoré.')
           if (terms.zone?.complementCents && !terms.zone.complementJustification?.trim()) throw new Error('Justifiez le complément de loyer par les caractéristiques du logement.')
-          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, paymentTerm: terms.paymentTerm ?? 'ADVANCE', paymentMethod: terms.paymentMethod ?? 'TRANSFER', paymentPlace: terms.paymentPlace, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? (parking ? terms.rentCents : maxDeposit(terms.kind ?? 'VIDE', terms.rentCents)), ...(parking ? {} : { zone: terms.zone }) })
-          // Garage loué seul : ni locataire précédent ni travaux à déclarer (loi de 1989).
-          goto(parking ? 7 : 6)
+          await putTerms({ rentCents: terms.rentCents, chargesCents: terms.chargesCents ?? 0, chargesMode: terms.chargesMode ?? 'PROVISION', paymentDay: terms.paymentDay ?? 5, paymentTerm: terms.paymentTerm ?? 'ADVANCE', paymentMethod: terms.paymentMethod ?? 'TRANSFER', paymentPlace: terms.paymentPlace, depositCents: terms.kind === 'MOBILITE' ? 0 : terms.depositCents ?? (parking ? terms.rentCents : maxDeposit(terms.kind ?? 'VIDE', terms.rentCents)), ...(notHousing ? {} : { zone: terms.zone }), ...(commercial ? { paymentFrequency: terms.paymentFrequency ?? 'QUARTERLY', commercial: terms.commercial } : {}) })
+          // Garage ou local commercial : ni locataire précédent ni travaux à déclarer (loi de 1989).
+          goto(notHousing ? 7 : 6)
           return
         case 6:
           if (terms.previous?.rentedWithin18Months === undefined || terms.previous?.rentedWithin18Months === null) throw new Error('Indiquez s’il y avait un locataire avant.')
@@ -150,7 +153,7 @@ export default function CreationBail() {
           goto(7)
           return
         case 7:
-          await putTerms({ revision: terms.revision, clauses: { ...terms.clauses, custom: (terms.clauses?.custom ?? []).map((c) => c.trim()).filter(Boolean) }, signature: { ...terms.signature, place: terms.signature?.place || property?.city || lease?.contract.property.city || null, mode: terms.signature?.mode ?? 'PAPER' } })
+          await putTerms({ revision: terms.revision, ...(commercial ? { commercial: terms.commercial } : {}), clauses: { ...terms.clauses, custom: (terms.clauses?.custom ?? []).map((c) => c.trim()).filter(Boolean) }, signature: { ...terms.signature, place: terms.signature?.place || property?.city || lease?.contract.property.city || null, mode: terms.signature?.mode ?? 'PAPER' } })
           goto(8)
           return
         case 8:
@@ -168,7 +171,7 @@ export default function CreationBail() {
   const tenantName = lease?.tenants[0]?.name.split(' ')[0] ?? tenants.find((t) => t.id === tenantIds[0])?.name.split(' ')[0] ?? 'votre locataire'
   const property = properties.find((p) => p.id === propertyId)
   const c = lease?.computed
-  const shown = parking && step > 6 ? step - 1 : step
+  const shown = notHousing && step > 6 ? step - 1 : step
 
   return (
     <StepFlow
@@ -176,8 +179,8 @@ export default function CreationBail() {
       closeTo={id ? `/espace/baux/${id}` : '/espace'}
       label={LABELS[step - 1]}
       step={shown}
-      total={parking ? 7 : 8}
-      onBack={step > 1 ? () => goto(parking && step === 7 ? 5 : step - 1) : undefined}
+      total={notHousing ? 7 : 8}
+      onBack={step > 1 ? () => goto(notHousing && step === 7 ? 5 : step - 1) : undefined}
       onNext={next}
       busy={busy}
       nextLabel={step === 8 ? 'Terminer' : 'Continuer'}
@@ -255,10 +258,10 @@ export default function CreationBail() {
               Votre nom et votre adresse doivent figurer dans le bail. <TextLink to={`/espace/compte/profil?retour=${encodeURIComponent(`/espace/baux/nouveau?id=${id}&etape=3`)}`} style={{ fontSize: 13 }}>Compléter mon profil</TextLink>
             </Callout>
           ) : null}
-          {parking ? null : <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />}
+          {notHousing ? null : <KindChoice furnished={property?.furnished ?? lease.kind !== 'VIDE'} kind={terms.kind ?? lease.kind} onChange={(k) => setT({ kind: k })} />}
           <div style={{ background: BAI.night, borderRadius: 18, padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 10, color: BAI.surface }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: BAI.accent }}>Il reste quelques questions</span>
-            <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer. Un garage loué seul a son propre contrat.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
+            <span style={{ fontSize: 15, color: BAI.onDark }}>{parking ? 'La date d’entrée, la durée, le préavis et le loyer. Un garage loué seul a son propre contrat.' : commercial ? 'La date d’entrée, la durée, le loyer et sa périodicité, la TVA. Un local commercial se loue avec un bail commercial.' : 'La date d’entrée, le loyer, le loyer du locataire précédent et les options du bail.'}</span>
           </div>
         </>
       ) : null}
@@ -279,6 +282,9 @@ export default function CreationBail() {
               <Chips legend="Préavis pour y mettre fin" value={terms.noticeMonths ?? 1} onChange={(v) => setT({ noticeMonths: v })} options={[1, 2, 3].map((n) => ({ value: n, label: `${n} mois` }))} hint="Le même pour les deux parties. Un mois est l’usage." />
             </>
           ) : null}
+          {commercial ? (
+            <Chips big legend="Durée du bail" value={terms.durationMonths ?? 108} onChange={(v) => setT({ durationMonths: v })} options={[108, 120, 144].map((n) => ({ value: n, label: durationText(n) }))} hint="9 ans au moins. Au-delà de 12 ans, le bail doit être fait chez un notaire." />
+          ) : null}
           {c ? <Known items={[`Durée : ${durationText(c.durationMonths)}${terms.startDate && c.endDate ? `, jusqu’au ${dateFr(c.endDate)}` : ''}`, c.renewal]} /> : null}
         </>
       ) : null}
@@ -289,7 +295,7 @@ export default function CreationBail() {
           <Fields>
             <Money
               big
-              label="Loyer hors charges"
+              label={commercial ? 'Loyer hors charges, hors taxes, par mois' : 'Loyer hors charges'}
               cents={terms.rentCents}
               onChange={(v) => {
                 const kind = terms.kind ?? 'VIDE'
@@ -309,17 +315,25 @@ export default function CreationBail() {
             options={c.chargesModes.map((m) => ({ value: m, label: m === 'PROVISION' ? 'Provision' : m === 'FORFAIT' ? 'Forfait' : 'Paiement périodique' }))}
             hint={terms.chargesMode === 'FORFAIT' ? 'Forfait : un montant fixe, sans régularisation.' : 'Provision : une avance, régularisée une fois par an avec les dépenses réelles.'}
           />
+          {commercial ? (
+            <>
+              <Chips big legend="Le loyer se paie" value={terms.paymentFrequency ?? 'QUARTERLY'} onChange={(v) => setT({ paymentFrequency: v })} options={(Object.keys(PAYMENT_FREQUENCIES) as Array<keyof typeof PAYMENT_FREQUENCIES>).map((v) => ({ value: v, label: PAYMENT_FREQUENCIES[v] }))} hint={terms.rentCents ? `Soit ${euros(terms.rentCents * ((terms.paymentFrequency ?? 'QUARTERLY') === 'QUARTERLY' ? 3 : (terms.paymentFrequency ?? 'QUARTERLY') === 'YEARLY' ? 12 : 1))} hors taxes par échéance. Par trimestre, d’avance : c’est l’usage.` : 'Par trimestre, d’avance : c’est l’usage.'} />
+              <Toggle checked={Boolean(terms.commercial?.vat)} onChange={(v) => setT({ commercial: { ...terms.commercial, vat: v } })} label="Loyer soumis à la TVA (20 %)" sub={property?.commercial?.equipped ? 'Local équipé : la TVA s’applique.' : 'Local nu : exonéré, sauf si vous avez choisi la TVA auprès du service des impôts des entreprises.'} />
+            </>
+          ) : null}
           <Fields>
             <Select label="Payé au plus tard le" value={String(terms.paymentDay ?? 5)} onChange={(v) => setT({ paymentDay: Number(v) })} options={Array.from({ length: 28 }, (_, i) => ({ value: String(i + 1), label: `${i === 0 ? '1er' : i + 1} du mois` }))} />
             <Select label="Moyen de paiement" value={terms.paymentMethod ?? 'TRANSFER'} onChange={(v) => setT({ paymentMethod: v })} options={[{ value: 'TRANSFER', label: 'Virement' }, { value: 'CHEQUE', label: 'Chèque' }, { value: 'CASH', label: 'Espèces (contre reçu)' }, { value: 'OTHER', label: 'Autre' }]} />
           </Fields>
           <Chips legend="Le loyer se paie" value={terms.paymentTerm ?? 'ADVANCE'} onChange={(v) => setT({ paymentTerm: v })} options={[{ value: 'ADVANCE', label: 'D’avance (à échoir)' }, { value: 'ARREARS', label: 'À la fin du mois (à terme échu)' }]} hint="D’avance : le loyer d’octobre est payé début octobre. C’est l’usage." />
           {terms.paymentMethod === 'OTHER' ? <Input label="Précisez le moyen et le lieu de paiement" value={terms.paymentPlace ?? ''} onChange={(v) => setT({ paymentPlace: v })} /> : null}
-          {parking ? null : <StepNote>Le prélèvement automatique ne peut pas être imposé au locataire (article 4 de la loi du 6 juillet 1989).</StepNote>}
-          {parking ? (
+          {notHousing ? null : <StepNote>Le prélèvement automatique ne peut pas être imposé au locataire (article 4 de la loi du 6 juillet 1989).</StepNote>}
+          {commercial ? (
+            <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint="Un trimestre de loyer hors taxes au plus : c’est le plafond légal d’un commerce depuis le 28 mai 2026. Rendu dans les 3 mois après la remise des clés." error={terms.rentCents && terms.depositCents && terms.depositCents > terms.rentCents * 3 ? 'Bailio limite le dépôt d’un local commercial à un trimestre de loyer.' : null} />
+          ) : parking ? (
             <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint="Libre pour un garage : un mois de loyer est l’usage, deux au plus." error={terms.rentCents && terms.depositCents && terms.depositCents > terms.rentCents * 2 ? 'Bailio limite le dépôt d’un garage à deux mois de loyer.' : null} />
           ) : terms.kind !== 'MOBILITE' ? <Money big label="Dépôt de garantie" cents={terms.depositCents} onChange={(v) => setT({ depositCents: v })} hint={terms.rentCents ? `Au maximum ${euros(maxDeposit(terms.kind ?? 'VIDE', terms.rentCents))} : ${terms.kind === 'VIDE' ? 'un mois' : 'deux mois'} de loyer hors charges.` : undefined} error={terms.rentCents && terms.depositCents && terms.depositCents > maxDeposit(terms.kind ?? 'VIDE', terms.rentCents) ? 'Au-dessus du maximum légal.' : null} /> : <Callout tone="info">En bail mobilité, aucun dépôt de garantie ne peut être demandé.</Callout>}
-          {parking ? null : <>
+          {notHousing ? null : <>
           <Chips legend="La commune est-elle en zone tendue ?" value={terms.zone?.tense ?? null} onChange={(v) => setT({ zone: { ...terms.zone, tense: v } })} options={[{ value: true, label: 'Oui' }, { value: false, label: 'Non' }]} hint={<>En zone tendue, le loyer à la relocation est encadré. <a href="https://www.service-public.gouv.fr/simulateur/calcul/zones-tendues" target="_blank" rel="noreferrer">Vérifier ma commune</a></>} />
           <Chips legend="Le logement est soumis à l’encadrement des loyers ?" value={terms.zone?.control ?? (c.rentControlLikely ? true : null)} onChange={(v) => setT({ zone: { ...terms.zone, control: v } })} options={[{ value: false, label: 'Non' }, { value: true, label: 'Oui' }]} hint={c.rentControlLikely ? 'Cette commune applique l’encadrement : le loyer ne peut pas dépasser le loyer de référence majoré.' : 'Paris, Lille, Lyon, Montpellier, Bordeaux et quelques communes d’Île-de-France l’appliquent.'} />
           {terms.zone?.control ?? c.rentControlLikely ? (
@@ -334,7 +348,7 @@ export default function CreationBail() {
             </>
           ) : null}
           </>}
-          <Known items={[terms.kind === 'MOBILITE' ? 'Pas de révision du loyer en bail mobilité' : c.revisionAllowed ? 'Révision chaque année avec l’indice officiel' : 'Logement classé F ou G : le loyer ne peut pas être révisé']} />
+          <Known items={[commercial ? `Révision tous les 3 ans à la demande d’une partie, avec l’indice ${terms.commercial?.index === 'ILAT' ? 'ILAT' : 'ILC'}` : terms.kind === 'MOBILITE' ? 'Pas de révision du loyer en bail mobilité' : c.revisionAllowed ? 'Révision chaque année avec l’indice officiel' : 'Logement classé F ou G : le loyer ne peut pas être révisé']} />
         </>
       ) : null}
 
@@ -366,6 +380,9 @@ export default function CreationBail() {
       {step === 7 && c ? (
         <>
           <StepTitle>{parking ? 'Les options du contrat' : 'Les options du bail'}</StepTitle>
+          {commercial ? (
+            <CommercialOptions terms={terms} setT={setT} use={property?.commercial?.use ?? lease?.contract.property.commercial?.use ?? null} />
+          ) : (
           <div>
             <Toggle
               checked={terms.kind !== 'MOBILITE' && c.revisionAllowed && terms.revision?.enabled !== false}
@@ -377,7 +394,8 @@ export default function CreationBail() {
             {parking ? null : <Toggle checked={terms.clauses?.resolutoire !== false} onChange={(v) => setT({ clauses: { ...terms.clauses, resolutoire: v } })} label="Étendre la clause de fin de bail" sub="Au défaut d’assurance et aux troubles de voisinage. La clause pour loyers impayés et dépôt non versé est toujours incluse : la loi l’impose depuis 2023." />}
             {parking ? null : <Toggle checked={Boolean(terms.clauses?.solidarite)} disabled={(lease?.tenants.length ?? 1) < 2 && !terms.colocation} onChange={(v) => setT({ clauses: { ...terms.clauses, solidarite: v } })} label="Solidarité entre colocataires" sub="Chacun peut être tenu de payer tout le loyer. Seulement pour plusieurs locataires." />}
           </div>
-          <CustomClauses parking={parking} clauses={terms.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => setT({ clauses: { ...terms.clauses, custom } })} />
+          )}
+          <CustomClauses parking={notHousing} clauses={terms.clauses?.custom ?? []} warnings={c.clauseWarnings} onChange={(custom) => setT({ clauses: { ...terms.clauses, custom } })} />
           <Fields>
             <Input big label="Fait à" value={terms.signature?.place ?? ''} onChange={(v) => setT({ signature: { ...terms.signature, place: v } })} placeholder={property?.city ?? 'Montpellier'} />
           </Fields>
@@ -388,7 +406,7 @@ export default function CreationBail() {
       {step === 8 && lease ? (
         <>
           <StepTitle>{lease.ready ? `Le bail de ${tenantName} est prêt.` : `Le bail de ${tenantName} est presque prêt.`}</StepTitle>
-          <Known items={[...(parking ? ['Contrat de location de l’emplacement (Code civil)'] : [`Contrat de location ${KIND_LABEL[lease.kind].toLowerCase().replace('location ', '')}, conforme au contrat type`, 'Notice d’information']), ...lease.annexes.filter((a) => a.done && a.key !== 'notice').map((a) => a.label)]} />
+          <Known items={[...(commercial ? ['Bail commercial (Code de commerce)'] : parking ? ['Contrat de location de l’emplacement (Code civil)'] : [`Contrat de location ${KIND_LABEL[lease.kind].toLowerCase().replace('location ', '')}, conforme au contrat type`, 'Notice d’information']), ...lease.annexes.filter((a) => a.done && a.key !== 'notice').map((a) => a.label)]} />
           {!lease.ready ? (
             <Callout tone="tip" title="Avant la signature">
               Il manque : {lease.completion.steps.filter((s) => s.applicable && !s.done).map((s) => s.label.toLowerCase()).join(', ')}. <TextLink to={`/espace/baux/${lease.id}/contrat`} style={{ fontSize: 13 }}>Compléter le contrat</TextLink>
@@ -406,6 +424,25 @@ export default function CreationBail() {
         </>
       ) : null}
     </StepFlow>
+  )
+}
+
+/**
+ * Options du bail commercial : indice de révision, résiliation triennale (écartée seulement pour des bureaux, un entrepôt
+ * ou un bail de plus de 9 ans, F31707), inventaire des charges (sans lui, aucune charge refacturable, F32336), travaux.
+ */
+function CommercialOptions({ terms, setT, use }: { terms: LeaseTerms; setT: (p: Partial<LeaseTerms>) => void; use: string | null }) {
+  const k = terms.commercial ?? {}
+  const sk = (patch: NonNullable<LeaseTerms['commercial']>) => setT({ commercial: { ...k, ...patch } })
+  const canExclude = use === 'OFFICE' || use === 'STORAGE' || (terms.durationMonths ?? 108) > 108
+  return (
+    <>
+      <Chips legend="Indice de révision" value={k.index ?? (use === 'RETAIL' || !use ? 'ILC' : 'ILAT')} onChange={(v) => sk({ index: v })} options={[{ value: 'ILC', label: 'ILC : commerce, artisanat' }, { value: 'ILAT', label: 'ILAT : bureaux, autres activités' }]} hint="Révision possible tous les 3 ans, plafonnée à la variation de l’indice." />
+      <Toggle checked={Boolean(k.noTriennial) && canExclude} disabled={!canExclude} onChange={(v) => sk({ noTriennial: v })} label="Écarter le congé du locataire tous les 3 ans" sub={canExclude ? 'Permis pour des bureaux, un entrepôt ou un bail de plus de 9 ans.' : 'Seulement pour des bureaux, un entrepôt ou un bail de plus de 9 ans.'} />
+      <TextArea label="Inventaire des charges, impôts et taxes refacturés (facultatif)" value={k.chargesInventory ?? ''} onChange={(v) => sk({ chargesInventory: v || null })} placeholder="Taxe d’enlèvement des ordures ménagères, entretien des parties communes…" rows={3} />
+      <StepNote>Sans inventaire précis, aucune charge ne peut être refacturée. Grosses réparations et honoraires de gestion restent toujours à votre charge.</StepNote>
+      <TextArea label="Travaux des 3 dernières et des 3 prochaines années, avec leur budget (facultatif)" value={k.works ?? ''} onChange={(v) => sk({ works: v || null })} placeholder="2025 : réfection de la toiture, 12 000 €" rows={2} />
+    </>
   )
 }
 

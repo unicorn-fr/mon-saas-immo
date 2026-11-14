@@ -103,7 +103,7 @@ export function termsCompletion(t: LeaseTerms, ctx: { hasLandlord: boolean; hasP
     { key: 'rent', label: 'Loyer', done: filled(t.rentCents, t.paymentDay), applicable: true },
     { key: 'zone', label: 'Encadrement', done: t.zone?.tense !== undefined && t.zone?.tense !== null, applicable: housing },
     { key: 'previous', label: 'Locataire précédent', done: prev?.rentedWithin18Months === false || filled(prev?.lastRentCents, prev?.lastPaymentDate), applicable: housing },
-    { key: 'revision', label: 'Révision', done: t.revision?.enabled === false || filled(t.revision?.irlQuarter), applicable: t.kind !== 'MOBILITE' },
+    { key: 'revision', label: 'Révision', done: t.revision?.enabled === false || filled(t.revision?.irlQuarter), applicable: t.kind !== 'MOBILITE' && t.kind !== 'COMMERCIAL' },
     { key: 'charges', label: 'Charges', done: filled(t.chargesMode) && t.chargesCents !== undefined && t.chargesCents !== null, applicable: true },
     { key: 'first', label: 'Première échéance', done: filled(t.startDate, t.rentCents), applicable: true },
     { key: 'works', label: 'Travaux', done: t.works !== undefined && t.works !== null, applicable: housing && t.kind !== 'MOBILITE' },

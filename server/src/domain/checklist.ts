@@ -122,7 +122,7 @@ export function leaseMissing(c: ContractInput): Missing[] {
   if (t.zone?.complementCents && !has(t.zone.complementJustification)) push('terms.complement', 'La justification du complément de loyer', 'TERMS', 'zone')
   const prev = t.previous
   if (housing && !(prev?.rentedWithin18Months === false || (has(prev?.lastRentCents) && has(prev?.lastPaymentDate)))) push('terms.previous', 'Le loyer du locataire précédent (ou « pas loué depuis 18 mois »)', 'TERMS', 'previous')
-  if (kind !== 'MOBILITE' && t.revision?.enabled !== false && !has(t.revision?.irlQuarter)) push('terms.irl', 'Le trimestre de référence de l’IRL', 'TERMS', 'revision')
+  if (kind !== 'MOBILITE' && kind !== 'COMMERCIAL' && t.revision?.enabled !== false && !has(t.revision?.irlQuarter)) push('terms.irl', 'Le trimestre de référence de l’IRL', 'TERMS', 'revision')
   if (!has(t.chargesMode) || t.chargesCents === undefined || t.chargesCents === null) push('terms.charges', 'Le montant et le mode des charges', 'TERMS', 'charges')
   if (kind !== 'MOBILITE' && (t.depositCents === undefined || t.depositCents === null)) push('terms.deposit', 'Le dépôt de garantie', 'TERMS', 'deposit')
   if (l.agent?.enabled && (!has(t.fees?.tenantVisitFileCents) || !has(t.fees?.landlordCents))) push('terms.fees', 'Les honoraires du mandataire', 'TERMS', 'clauses')

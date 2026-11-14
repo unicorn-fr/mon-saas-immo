@@ -9,7 +9,7 @@ export type Civility = 'MADAME' | 'MONSIEUR'
 export type LandlordKind = 'PERSON' | 'COUPLE' | 'SCI' | 'COMPANY'
 export type Dpe = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
 /** PARKING : garage, box ou place loué seul (Code civil, pas la loi de 1989). */
-export type LeaseKind = 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING'
+export type LeaseKind = 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING' | 'COMMERCIAL'
 
 export interface LandlordProfile {
   kind?: N<LandlordKind>
@@ -112,6 +112,11 @@ interface Diag {
 export type ParkingType = 'GARAGE' | 'BOX' | 'PLACE'
 export const PARKING_TYPES: Record<ParkingType, string> = { GARAGE: 'Garage', BOX: 'Box fermé', PLACE: 'Place de stationnement' }
 export const isParking = (f: Pick<PropertyFile, 'nature'> | null | undefined) => f?.nature === 'PARKING'
+/** Local commercial loué avec un bail commercial (Code de commerce), docs/legal/bail-commercial.md. */
+export const isCommercial = (f: Pick<PropertyFile, 'nature'> | null | undefined) => f?.nature === 'COMMERCIAL'
+export type CommercialUse = 'RETAIL' | 'OFFICE' | 'STORAGE' | 'OTHER'
+export const COMMERCIAL_USES: Record<CommercialUse, string> = { RETAIL: 'Commerce ou artisanat', OFFICE: 'Bureaux', STORAGE: 'Entrepôt ou stockage', OTHER: 'Autre activité' }
+export const PAYMENT_FREQUENCIES = { MONTHLY: 'Chaque mois', QUARTERLY: 'Chaque trimestre', YEARLY: 'Chaque année' } as const
 
 export interface PropertyFile {
   label?: N<string>
@@ -126,7 +131,9 @@ export interface PropertyFile {
   fiscalId?: N<string>
   habitat?: N<'COLLECTIVE' | 'INDIVIDUAL'>
   /** Logement (par défaut) ou emplacement de stationnement loué seul. */
-  nature?: N<'HOUSING' | 'PARKING'>
+  nature?: N<'HOUSING' | 'PARKING' | 'COMMERCIAL'>
+  /** Local commercial : usage, activité autorisée (destination), équipé ou nu (TVA d'office si équipé). */
+  commercial?: N<{ use?: N<CommercialUse>; activity?: N<string>; equipped?: N<boolean> }>
   parking?: N<{ type?: N<ParkingType>; number?: N<string>; level?: N<string>; covered?: N<boolean>; access?: N<string> }>
   legalRegime?: N<'MONO' | 'COPRO'>
   furnished?: N<boolean>
@@ -232,6 +239,9 @@ export interface LeaseTerms {
   mobilityReason?: N<keyof typeof MOBILITY_REASONS>
   /** Garage loué seul : préavis du contrat, en mois. */
   noticeMonths?: N<number>
+  /** Bail commercial : paiement par mois, trimestre ou an. */
+  paymentFrequency?: N<'MONTHLY' | 'QUARTERLY' | 'YEARLY'>
+  commercial?: N<{ index?: N<'ILC' | 'ILAT'>; vat?: N<boolean>; noTriennial?: N<boolean>; chargesInventory?: N<string>; works?: N<string> }>
   rentCents?: N<number>
   chargesCents?: N<number>
   chargesMode?: N<'PROVISION' | 'PERIODIC' | 'FORFAIT'>
@@ -275,6 +285,7 @@ export const KIND_LABEL: Record<LeaseKind, string> = {
   ETUDIANT: 'Bail étudiant',
   MOBILITE: 'Bail mobilité',
   PARKING: 'Location d’un garage',
+  COMMERCIAL: 'Bail commercial',
 }
 
 export const CONSTRUCTION_LABEL = {
