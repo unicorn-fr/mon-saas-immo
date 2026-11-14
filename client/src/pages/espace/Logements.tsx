@@ -103,7 +103,7 @@ function List({ items }: { items: PropertySummary[] }) {
             <Stat value={drafts} label={drafts > 1 ? 'baux en préparation' : 'bail en préparation'} />
           </div>
           <Link to="/espace/patrimoine" className="tap" style={{ alignSelf: 'flex-start', fontSize: 15, fontWeight: 600, color: BAI.owner }}>
-            Tableau de bord : ce qu’il vous reste chaque mois, et ce qui est à surveiller
+            Pilotage : ce qu’il vous reste chaque mois, et ce qui est à surveiller
           </Link>
           {groups.map((g) =>
             g.items.length > 1 ? (
