@@ -39,7 +39,8 @@ export interface PropertySummary {
   floor: string | null
   furnished: boolean | null
   /** Logement ou garage, box, place loué seul. */
-  nature?: 'HOUSING' | 'PARKING'
+  nature?: 'HOUSING' | 'PARKING' | 'COMMERCIAL'
+  commercial?: { use: 'RETAIL' | 'OFFICE' | 'STORAGE' | 'OTHER' | null; equipped: boolean } | null
   dpeClass: string | null
   /** Photos du logement ; la première sert de couverture. */
   photoIds?: string[]

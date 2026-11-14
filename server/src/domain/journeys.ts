@@ -78,9 +78,10 @@ export function inWinterTruce(iso: string): boolean {
 
 export function buildJourney(kind: JourneyKind, input: JourneyInput): Journey {
   const journey = journeyFor(kind, input)
-  if (input.leaseKind !== 'PARKING') return journey
-  // Garage loué seul : seulement les courriers qui ont un sens hors de la loi de 1989, sans les aides au logement.
-  return { ...journey, steps: journey.steps.filter((s) => (s.action.type !== 'LETTER' || letterAllowed(s.action.letter as never, 'PARKING')) && s.key !== 'help') }
+  if (input.leaseKind !== 'PARKING' && input.leaseKind !== 'COMMERCIAL') return journey
+  // Garage loué seul ou bail commercial : seulement les courriers qui ont un sens hors de la loi de 1989, sans les aides au logement.
+  const leaseKind = input.leaseKind
+  return { ...journey, steps: journey.steps.filter((s) => (s.action.type !== 'LETTER' || letterAllowed(s.action.letter as never, leaseKind)) && s.key !== 'help') }
 }
 
 function journeyFor(kind: JourneyKind, input: JourneyInput): Journey {

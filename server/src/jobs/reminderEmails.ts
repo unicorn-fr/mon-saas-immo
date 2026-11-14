@@ -1,5 +1,5 @@
 import { prisma } from '../db.js'
-import { amountsAt, amountsForPeriod, historyOf } from '../domain/rentHistory.js'
+import { amountsAt, amountsForPeriod, historyOf, isTermStart, termDueCents } from '../domain/rentHistory.js'
 import { env } from '../env.js'
 import { formatDateFr } from '../domain/lease.js'
 import { layout, sendEmail } from '../lib/email.js'
@@ -43,8 +43,8 @@ export async function runDailyReminders(now = new Date()): Promise<void> {
       const late = running.filter((l) => {
         const paid = l.payments.reduce((a, p) => a + p.amountCents, 0)
         const days = Math.floor((now.getTime() - Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), l.paymentDay)) / 86_400_000)
-        const due = amountsForPeriod(l, period)
-        return paid < due.rentCents + due.chargesCents && days > 0 ? days : false
+        if (!isTermStart(l, period)) return false
+        return paid < termDueCents(l, period) && days > 0 ? days : false
       })
       const line = (r: (typeof reminders)[number]) => `${formatDateFr(r.dueDate)} · ${LABELS[r.type] ?? 'Échéance'} · ${r.lease.property.label || r.lease.property.address}`
       const lateLine = (l: (typeof running)[number]) => `Loyer de ${l.property.label || l.property.address} pas encore reçu (attendu le ${l.paymentDay === 1 ? '1er' : l.paymentDay})`

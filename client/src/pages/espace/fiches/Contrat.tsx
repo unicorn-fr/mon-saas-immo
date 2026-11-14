@@ -88,6 +88,16 @@ export default function Contrat() {
     }
   }
 
+  // Bail commercial : ses conditions se règlent dans « Créer un bail » (durée, périodicité, TVA, indice, charges).
+  if (kind === 'COMMERCIAL')
+    return (
+      <FicheLayout backTo={`/espace/baux/${id}`} title="Bail commercial" subtitle={`${view.property.name}, ${view.tenantName}`} completion={completion} save={save} onSave={saveNow} extraAction={<Btn size="sm" variant="outline" onClick={preview} style={{ height: 44 }}>Aperçu du bail</Btn>}>
+        {view.status === 'DRAFT' && view.checklist?.length ? <MissingList items={view.checklist} title={`Pour un bail complet, il manque ${view.checklist.length} information${view.checklist.length > 1 ? 's' : ''} :`} /> : null}
+        <Callout tone="info" title="Code de commerce">Un bail commercial ne suit pas la loi du 6 juillet 1989 : 9 ans au moins, loyer hors taxes, révision tous les 3 ans. Faites relire le bail par un avocat avant de le signer.</Callout>
+        {view.status === 'DRAFT' ? <Btn variant="outline" to={`/espace/baux/nouveau?id=${id}&etape=4`}>Modifier la durée, le loyer et les options</Btn> : null}
+      </FicheLayout>
+    )
+
   return (
     <FicheLayout
       backTo={`/espace/baux/${id}`}

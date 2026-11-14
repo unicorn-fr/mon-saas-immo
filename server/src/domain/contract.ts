@@ -137,7 +137,19 @@ export const propertyFileSchema = z.object({
   fiscalId: opt(text(40)),
   habitat: opt(z.enum(['COLLECTIVE', 'INDIVIDUAL'])),
   /** Logement (par défaut) ou emplacement de stationnement loué seul : garage, box, place (Code civil, pas la loi de 1989). */
-  nature: opt(z.enum(['HOUSING', 'PARKING'])),
+  nature: opt(z.enum(['HOUSING', 'PARKING', 'COMMERCIAL'])),
+  /**
+   * Local commercial (bail commercial, Code de commerce art. L145-1 et suivants ; docs/legal/bail-commercial.md) :
+   * usage (commerce de détail ou de gros, prestations commerciales ou artisanales : RETAIL ; bureaux ; entrepôt ; autre),
+   * activité autorisée (clause de destination), local équipé (mobilier et matériel : TVA à 20 %).
+   */
+  commercial: opt(
+    z.object({
+      use: opt(z.enum(['RETAIL', 'OFFICE', 'STORAGE', 'OTHER'])),
+      activity: opt(text(300)),
+      equipped: opt(z.boolean()),
+    }),
+  ),
   parking: opt(
     z.object({
       type: opt(z.enum(['GARAGE', 'BOX', 'PLACE'])),
@@ -370,7 +382,8 @@ export type TenantFile = z.infer<typeof tenantFileSchema>
 // ── Conditions du bail ───────────────────────────────────────────────────────
 
 /** PARKING : garage, box ou place de stationnement loué seul, régi par le Code civil (art. 1709 et suivants), pas par la loi de 1989. */
-export const leaseKind = z.enum(['VIDE', 'MEUBLE', 'ETUDIANT', 'MOBILITE', 'PARKING'])
+/** COMMERCIAL : bail commercial (Code de commerce, art. L145-1 et suivants), pas la loi de 1989. */
+export const leaseKind = z.enum(['VIDE', 'MEUBLE', 'ETUDIANT', 'MOBILITE', 'PARKING', 'COMMERCIAL'])
 export type LeaseKind = z.infer<typeof leaseKind>
 
 export const MOBILITY_REASONS = {
@@ -388,11 +401,23 @@ export const leaseTermsSchema = z.object({
   colocation: opt(z.boolean()),
   startDate: opt(isoDate),
   /** Bail mobilité : de 1 à 10 mois. Durée réduite (vide) : de 12 à 35 mois. */
-  durationMonths: opt(z.number().int().min(1).max(72)),
+  durationMonths: opt(z.number().int().min(1).max(144)), // bail commercial : jusqu’à 12 ans
   reduced: opt(z.object({ enabled: opt(z.boolean()), reason: opt(text(500)) })),
   mobilityReason: opt(z.enum(Object.keys(MOBILITY_REASONS) as [string, ...string[]])),
   /** Garage loué seul : préavis convenu au contrat, en mois, pour chaque partie (1 par défaut). */
   noticeMonths: opt(z.number().int().min(0).max(12)),
+  /** Périodicité du paiement (bail commercial) : mois, trimestre ou an. Habitation et garage : toujours au mois. */
+  paymentFrequency: opt(z.enum(['MONTHLY', 'QUARTERLY', 'YEARLY'])),
+  /** Bail commercial : indice de révision, TVA sur option, résiliation triennale écartée (cas permis), inventaire des charges. */
+  commercial: opt(
+    z.object({
+      index: opt(z.enum(['ILC', 'ILAT'])),
+      vat: opt(z.boolean()),
+      noTriennial: opt(z.boolean()),
+      chargesInventory: opt(text(3000)),
+      works: opt(text(3000)),
+    }),
+  ),
   rentCents: opt(cents),
   chargesCents: opt(cents),
   chargesMode: opt(z.enum(['PROVISION', 'PERIODIC', 'FORFAIT'])),

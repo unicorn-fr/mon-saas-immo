@@ -50,3 +50,16 @@ test('bail commercial payé par trimestre : une échéance tous les 3 mois, mont
   const yearly = { ...quarterly, data: { terms: { paymentFrequency: 'YEARLY' } } }
   assert.deepEqual(unpaidPeriods(yearly, [], now), [{ period: '2026-01', missing: 1320000 }])
 })
+
+test('bail commercial : TVA, échéance qui contient un mois, part du loyer hors taxes', async () => {
+  const { termAmounts, termDueCents, termStartOf, splitTermPayment } = await import('./rentHistory.js')
+  const l = { data: { terms: { kind: 'COMMERCIAL', paymentFrequency: 'QUARTERLY', commercial: { vat: true } } }, startDate: new Date('2026-02-01T00:00:00Z'), rentCents: 100000, chargesCents: 10000, paymentDay: 1 }
+  assert.deepEqual(termAmounts(l, '2026-02'), { rentCents: 300000, chargesCents: 30000, vatCents: 66000 })
+  assert.equal(termDueCents(l, '2026-02'), 396000)
+  assert.deepEqual(['2026-02', '2026-03', '2026-04', '2026-05', '2027-01', '2025-12'].map((p) => termStartOf(l, p)), ['2026-02', '2026-02', '2026-02', '2026-05', '2026-11', '2025-12'])
+  assert.deepEqual(splitTermPayment(l, '2026-02', 396000), { rentCents: 300000, chargesCents: 30000 })
+  // Sans TVA ni bail commercial : rien ne change.
+  const flat = { ...l, data: {} }
+  assert.deepEqual(termAmounts(flat, '2026-02'), { rentCents: 100000, chargesCents: 10000, vatCents: 0 })
+  assert.equal(termStartOf(flat, '2026-03'), '2026-03')
+})

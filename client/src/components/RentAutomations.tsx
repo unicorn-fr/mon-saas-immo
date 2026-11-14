@@ -41,7 +41,7 @@ export function RentAutomations({ l, reload }: { l: LeaseView; reload: () => voi
                     />
                   ) : null}
                 
-      {l.status !== 'ENDED' && l.facts?.dunning ? <DunningSettings leaseId={l.id} value={l.facts.dunning} tenantName={l.tenantName} onChange={reload} /> : null}
+      {l.status !== 'ENDED' && l.kind !== 'COMMERCIAL' && l.facts?.dunning ? <DunningSettings leaseId={l.id} value={l.facts.dunning} tenantName={l.tenantName} onChange={reload} /> : null}
     </>
   )
 }

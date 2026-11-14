@@ -7,7 +7,7 @@ import { AuthImage, uploadPhotos } from '../../../components/media'
 import { Btn, Callout, Check, Chips, Computed, Input, LoadError, Loader, Money, MultiChips, NumberField, Pill, Select, TextArea, TextLink, useToast, AddressInput } from '../../../components/kit'
 import { Spinner } from '../../../components/ui'
 import { api } from '../../../lib/api'
-import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, PARKING_TYPES, isParking, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
+import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, EQUIPMENTS, ENERGY_LABEL, FURNITURE_REQUIRED, PARKING_TYPES, isParking, isCommercial, COMMERCIAL_USES, type CommercialUse, type DiagnosticRule, type FurnitureKey, type PropertyFile } from '../../../lib/contract'
 import { useFiche } from '../../../lib/fiche'
 import { dateNum } from '../../../lib/format'
 import type { PropertyView } from '../../../lib/space'
@@ -42,6 +42,47 @@ export default function FicheLogement() {
   const d = f.diagnostics ?? {}
   const collective = f.habitat === 'COLLECTIVE'
   let n = 0
+
+  // Local commercial : adresse, local et activité, loyer hors taxes, DPE, photos (bail commercial, F23927).
+  if (isCommercial(f)) {
+    const k = f.commercial ?? {}
+    const sk = (patch: NonNullable<PropertyFile['commercial']>) => set({ commercial: { ...k, ...patch } })
+    return (
+      <FicheLayout backTo={`/espace/logements/${id}`} title="Fiche du local" subtitle={[view.name, f.city].filter(Boolean).join(', ')} completion={completion} save={save} onSave={saveNow}>
+        <FicheSection id="address" n={++n} title="Adresse" done={done('address')}>
+          <AddressInput label="Adresse" value={f.address} onChange={(v) => set({ address: v })} onSelect={(s) => set({ address: s.label.replace(` ${s.postalCode} ${s.city}`, '').trim(), postalCode: s.postalCode, city: s.city, inseeCode: s.inseeCode })} />
+          <Fields>
+            <Input label="Code postal" value={f.postalCode} inputMode="numeric" maxLength={5} onChange={(v) => set({ postalCode: v })} />
+            <Input label="Ville" value={f.city} onChange={(v) => set({ city: v })} />
+          </Fields>
+          <Input label="Nom pour le reconnaître" value={f.label} onChange={(v) => set({ label: v })} placeholder="Boutique rue Foch" />
+        </FicheSection>
+        <FicheSection id="commercial" n={++n} title="Le local et l’activité" intro="Repris dans le bail commercial." done={done('commercial')}>
+          <Chips legend="Type de local" value={k.use ?? null} onChange={(v) => sk({ use: v })} options={(Object.keys(COMMERCIAL_USES) as CommercialUse[]).map((v) => ({ value: v, label: COMMERCIAL_USES[v] }))} />
+          <Input label="Activité autorisée (destination)" value={k.activity} onChange={(v) => sk({ activity: v })} placeholder="Boulangerie, pâtisserie" />
+          <Fields>
+            <NumberField label="Surface en m²" step="decimal" value={f.surface ?? null} onChange={(v) => set({ surface: v })} />
+            <Input label="Numéro de lot de copropriété (facultatif)" value={f.lotNumber} onChange={(v) => set({ lotNumber: v })} />
+          </Fields>
+          <Chips legend="Le local est loué" value={k.equipped ?? false} onChange={(v) => sk({ equipped: v })} options={[{ value: false, label: 'Nu' }, { value: true, label: 'Équipé (mobilier et matériel)' }]} />
+          <Input label="Clés remises (facultatif)" value={f.keys} onChange={(v) => set({ keys: v })} placeholder="2 clés et 1 badge" />
+        </FicheSection>
+        <FicheSection id="rent" n={++n} title="Loyer" intro="Saisi une seule fois : il est repris dans le bail.">
+          <Fields>
+            <Money label="Loyer hors charges et hors taxes, par mois" cents={f.rent?.rentCents ?? null} onChange={(c) => set({ rent: { ...f.rent, rentCents: c } })} />
+            <Money label="Charges, par mois" cents={f.rent?.chargesCents ?? null} onChange={(c) => set({ rent: { ...f.rent, chargesCents: c } })} />
+          </Fields>
+          <Fields>
+            <Money label="Dépôt de garantie" cents={f.rent?.depositCents ?? null} onChange={(c) => set({ rent: { ...f.rent, depositCents: c } })} hint="Un trimestre de loyer au plus." />
+            <NumberField label="Jour de paiement du loyer" value={f.rent?.paymentDay ?? 1} onChange={(v) => set({ rent: { ...f.rent, paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null } })} />
+          </Fields>
+        </FicheSection>
+        <FicheSection id="photos" n={++n} title="Photos" done={done('photos')}>
+          <Photos f={f} set={set} onError={toast.error} />
+        </FicheSection>
+      </FicheLayout>
+    )
+  }
 
   // Garage, box ou place loué seul : seulement ce que le contrat demande.
   if (isParking(f)) {

@@ -5,6 +5,7 @@ import { assumePaymentOn, autoReceiptStep, dueDateOf, periodsToCheck, sendDateOf
 import { monthYearFr } from '../domain/lease.js'
 import { propertyName } from './contract.js'
 import { patchLeaseData, recordPayment } from '../routes/leases.js'
+import { isTermStart } from '../domain/rentHistory.js'
 
 type Facts = { receiptAuto?: boolean; receiptHold?: Record<string, string>; receiptWarned?: Record<string, string> }
 const fr = (d: string) => d.split('-').reverse().join('/')
@@ -25,6 +26,8 @@ export async function runAutoReceipts(now = new Date(), only?: string[]): Promis
     const day = l.paymentDay
     const paid = new Set(l.payments.map((p) => p.period))
     for (const period of periodsToCheck(today)) {
+      // Bail payé par trimestre ou par an : une quittance par échéance, pas par mois.
+      if (!isTermStart(l, period)) continue
       const step = autoReceiptStep({ period, paymentDay: day, today, startDate: l.startDate.toISOString().slice(0, 10), endDate: null, paid: paid.has(period), held: Boolean(f.receiptHold?.[period]), warned: Boolean(f.receiptWarned?.[period]) })
       if (!step) continue
       const [y, m] = period.split('-').map(Number)

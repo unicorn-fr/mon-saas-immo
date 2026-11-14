@@ -27,6 +27,12 @@ export interface ReceiptInput {
   iban?: string | null
   /** Garage, box ou place loué seul : hors loi de 1989 (pas d'article 21), location en franchise de TVA. */
   parking?: boolean
+  /**
+   * Bail commercial (Code de commerce, pas l'article 21 de la loi de 1989) : nombre de mois de l'échéance (1, 3 ou 12),
+   * montants de loyer et de charges hors taxes pour toute l'échéance, et TVA à 20 % s'il y a lieu.
+   */
+  commercial?: { vat: boolean; months: number }
+  vatCents?: number
 }
 
 const euros2 = (cents: number) =>
@@ -42,21 +48,23 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 }
 
 export function ReceiptDocument(r: ReceiptInput) {
+  const months = r.commercial?.months ?? 1
   const period = monthYearFr(r.year, r.month)
   const from = new Date(Date.UTC(r.year, r.month - 1, 1))
-  const to = new Date(Date.UTC(r.year, r.month, 0))
-  const total = r.rentCents + r.chargesCents
+  const to = new Date(Date.UTC(r.year, r.month - 1 + months, 0))
+  const vat = r.vatCents ?? 0
+  const total = r.rentCents + r.chargesCents + vat
   const paid = r.paidCents ?? total
   const tenants = r.tenants.map((t) => personName(t)).join(' et ') || BLANK
   const landlord = landlordName(r.landlord) || BLANK
   const signer = [r.landlord.firstNames?.split(' ')[0]?.[0] ? `${r.landlord.firstNames.split(' ')[0][0]}.` : '', r.landlord.lastName].filter(Boolean).join(' ')
   const title = r.kind === 'RECEIPT' ? 'Quittance de loyer' : r.kind === 'PARTIAL' ? 'Reçu de paiement partiel' : 'Avis d’échéance'
-  const periodText = `du 1er au ${to.getUTCDate()} ${monthYearFr(r.year, r.month)}`
+  const periodText = months > 1 ? `du 1er ${monthYearFr(r.year, r.month)} au ${formatDateFr(to)}` : `du 1er au ${to.getUTCDate()} ${monthYearFr(r.year, r.month)}`
   const place = r.place || r.landlord.city || ''
   const issued = r.kind === 'NOTICE' ? new Date() : r.paidOn ?? new Date()
   const soussigne = r.landlord.civility === 'MADAME' ? 'Je soussignée' : 'Je soussigné'
-  const thing = r.parking ? 'de l’emplacement' : 'du logement'
-  const law = r.parking ? '; TVA non applicable, article 293 B du code général des impôts.' : '(article 21 de la loi n° 89-462 du 6 juillet 1989).'
+  const thing = r.parking ? 'de l’emplacement' : r.commercial ? 'du local' : 'du logement'
+  const law = r.parking ? '; TVA non applicable, article 293 B du code général des impôts.' : r.commercial ? (r.commercial.vat ? 'pour le bail commercial ; loyer soumis à la TVA.' : 'pour le bail commercial.') : '(article 21 de la loi n° 89-462 du 6 juillet 1989).'
 
   return (
     <Document title={`${title}, ${period}`} author={landlord} creator="Bailio" language="fr-FR">
@@ -77,7 +85,7 @@ export function ReceiptDocument(r: ReceiptInput) {
         <Text style={{ textAlign: 'center', color: MUTED, fontSize: 11, marginTop: 8, marginBottom: 26 }}>{period.replace(/^./, (c) => c.toUpperCase())}</Text>
 
         <View style={s.row}>
-          <Text style={s.label}>{r.parking ? 'Emplacement loué' : 'Adresse du logement loué'}</Text>
+          <Text style={s.label}>{r.parking ? 'Emplacement loué' : r.commercial ? 'Local loué' : 'Adresse du logement loué'}</Text>
           <Text style={s.value}>{r.propertyAddress}</Text>
         </View>
         <View style={s.row}>
@@ -92,8 +100,9 @@ export function ReceiptDocument(r: ReceiptInput) {
         ) : null}
 
         <View style={{ marginTop: 18 }}>
-          <Line label="Loyer hors charges" value={euros2(r.rentCents)} />
-          <Line label={r.chargesLabel} value={euros2(r.chargesCents)} />
+          <Line label={r.commercial?.vat ? 'Loyer hors charges, hors taxes' : 'Loyer hors charges'} value={euros2(r.rentCents)} />
+          <Line label={r.commercial?.vat ? `${r.chargesLabel}, hors taxes` : r.chargesLabel} value={euros2(r.chargesCents)} />
+          {r.commercial?.vat ? <Line label="TVA à 20 %" value={euros2(vat)} /> : null}
           {r.kind === 'PARTIAL' ? (
             <>
               <Line label="Total dû pour la période" value={euros2(total)} />

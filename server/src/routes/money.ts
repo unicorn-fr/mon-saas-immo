@@ -3,7 +3,7 @@ import { Router } from 'express'
 import { SPLIT_KEY_LABEL, splitExpense } from '../domain/split.js'
 import { lmnpEstimate } from '../domain/lmnp.js'
 import { loanSchedule, loanSignedAt, loanYear, loansAt, loansDeductible, monthlyCashflow, monthlyPaymentCents } from '../domain/loan.js'
-import { amountsForPeriod } from '../domain/rentHistory.js'
+import { amountsForPeriod, isTermStart, splitTermPayment } from '../domain/rentHistory.js'
 import { BINDER_UPLOADS } from '../domain/binder.js'
 import { z } from 'zod'
 import type { Document as DocRow, Prisma, User } from '@prisma/client'
@@ -28,7 +28,7 @@ import { renderReceiptPdf, type ReceiptInput } from '../pdf/receipt.js'
 import { renderLetterPdf, type LetterRender } from '../pdf/letter.js'
 import { renderInventoryPdf, type InventoryInput } from '../pdf/inventory.js'
 import { propertyFileSchema, type ContractInput, type Guarantor, type PropertyFile } from '../domain/contract.js'
-import { splitPayment, taxSummary, type TaxProperty } from '../domain/tax.js'
+import { taxSummary, type TaxProperty } from '../domain/tax.js'
 import { propertyReport } from '../domain/report.js'
 import { toTrash } from '../services/trash.js'
 import { parseIsoDate } from '../domain/lease.js'
@@ -274,7 +274,7 @@ router.get('/money/export', async (req, res) => {
   const rows = [
     ['Date', 'Type', 'Structure', 'Logement', 'Locataire', 'Période', 'Libellé', 'Catégorie', 'Loyer hors charges (€)', 'Charges (€)', 'Montant (€)', 'Dont récupérable (€)'].map(cell).join(';'),
     ...payments.map((p) => {
-      const part = splitPayment(p.amountCents, amountsForPeriod(p.lease, p.period).rentCents)
+      const part = splitTermPayment(p.lease, p.period, p.amountCents)
       return [cell(iso(p.receivedAt)), cell('Loyer'), text(owner(p.lease.property)), text(propertyName(p.lease.property)), text(p.lease.tenantIds.map((id) => tenantOf.get(id)).filter(Boolean).join(', ')), cell(p.period), cell(`Loyer ${p.period}`), cell('loyer'), cell(eur(part.rentCents)), cell(eur(part.chargesCents)), cell(eur(p.amountCents)), cell('')].join(';')
     }),
     ...expenses.map((e) => [cell(iso(e.date)), cell('Dépense'), text(owner(e.property)), text(e.property ? propertyName(e.property) : ''), cell(''), cell((iso(e.date) ?? '').slice(0, 7)), text(`${e.vendor}${e.description ? `, ${e.description}` : ''}`), cell(CATEGORY_LABEL[e.category] ?? ''), cell(''), cell(''), cell(`-${eur(e.amountCents)}`), cell(eur(e.recoverableCents))].join(';')),
@@ -317,7 +317,7 @@ router.get('/money/report', async (req, res) => {
       name: propertyName(p),
       year,
       purchasePriceCents: readProperty(p).purchase?.priceCents ?? null,
-      payments: pays.map((x) => ({ period: x.period, ...splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents) })),
+      payments: pays.map((x) => ({ period: x.period, ...splitTermPayment(x.lease, x.period, x.amountCents) })),
       expenses: expenses.filter((e) => e.propertyId === p.id),
       leases: mine.map((l) => ({ status: l.status, start: iso(l.startDate)!, end: iso(l.endDate)!, rentCents: l.rentCents, chargesCents: l.chargesCents })),
       unpaidCents: Math.max(0, expected - received),
@@ -553,7 +553,7 @@ async function taxView(user: User, year: number) {
         id: p.id,
         name: propertyName(p),
         furnished,
-        payments: mine.filter((x) => (isFurnished(leaseKindOf(x.lease))) === furnished).map((x) => splitPayment(x.amountCents, amountsForPeriod(x.lease, x.period).rentCents)),
+        payments: mine.filter((x) => (isFurnished(leaseKindOf(x.lease))) === furnished).map((x) => splitTermPayment(x.lease, x.period, x.amountCents)),
         expenses: kinds.size > 1 && furnished ? [] : expenses.filter((e) => e.propertyId === p.id),
         extra: withLoans(file, year),
       })
@@ -650,7 +650,7 @@ async function taxView(user: User, year: number) {
   const periodPays = await prisma.payment.findMany({ where: { userId, period: { startsWith: `${year}-` } }, select: { leaseId: true, period: true } })
   const paid = new Set(periodPays.map((x) => `${x.leaseId}:${x.period}`))
   const missingRents = personalLeases
-    .map((l) => ({ leaseId: l.id, name: propertyName(properties.find((p) => p.id === l.propertyId)!), periods: dueMonths(year, { startDate: iso(l.startDate)!, endDate: l.status === 'ENDED' ? iso(l.endDate) : null, paymentDay: l.paymentDay }, today).filter((m) => !paid.has(`${l.id}:${m}`)) }))
+    .map((l) => ({ leaseId: l.id, name: propertyName(properties.find((p) => p.id === l.propertyId)!), periods: dueMonths(year, { startDate: iso(l.startDate)!, endDate: l.status === 'ENDED' ? iso(l.endDate) : null, paymentDay: l.paymentDay }, today).filter((m) => isTermStart(l, m) && !paid.has(`${l.id}:${m}`)) }))
     .filter((m) => m.periods.length)
   const realVide = regimes.vide?.chosen === 'REAL'
   const realMeuble = regimes.meuble?.chosen === 'REAL'

@@ -9,6 +9,7 @@ import { CONSTRUCTION, ENERGY, NET, TV, annexesLabel, commonAreasLabel, dateLong
 import { CertificatePage, type CertificateData } from './certificate.js'
 import { NoticePages, leaseNoticeFor } from './notice.js'
 import { ParkingContractDocument } from './parkingContract.js'
+import { CommercialContractDocument } from './commercialContract.js'
 import { BLANK, Check, Footer, INK, MUTED, SignatureBoxes, Table, orBlank, s } from './theme.js'
 
 /**
@@ -163,7 +164,7 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
   const landlordNotice = landlordNoticeMonthsFor(kind)
   const tenantNotice = kind === 'VIDE' ? 'trois mois, réduit à un mois dans les cas prévus par l’article 15 de la loi du 6 juillet 1989 (notamment logement situé en zone tendue, premier emploi, mutation, perte d’emploi, nouvel emploi consécutif à une perte d’emploi, état de santé justifiant un changement de domicile, bénéficiaire du revenu de solidarité active ou de l’allocation aux adultes handicapés)' : 'un mois'
   const cityUpper = (p.city || '').toLocaleUpperCase('fr-FR')
-  const kindTitle = { VIDE: 'logement nu', MEUBLE: 'logement meublé', ETUDIANT: 'logement meublé, location à un étudiant', MOBILITE: 'logement meublé, bail mobilité', PARKING: 'emplacement de stationnement' }[kind]
+  const kindTitle = { VIDE: 'logement nu', MEUBLE: 'logement meublé', ETUDIANT: 'logement meublé, location à un étudiant', MOBILITE: 'logement meublé, bail mobilité', PARKING: 'emplacement de stationnement', COMMERCIAL: 'local commercial' }[kind]
   const ownerQuality =
     l.kind === 'SCI' ? `personne morale${l.sciFamily ? ', société civile constituée exclusivement entre parents et alliés jusqu’au quatrième degré inclus' : ''}` : l.kind === 'COMPANY' ? 'personne morale' : 'personne physique'
   const boiler = p.heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(p.heating.energy))
@@ -631,6 +632,8 @@ export function ContractDocument({ c, signed }: { c: ContractInput; signed?: Sig
 export function renderContractPdf(c: ContractInput, signed?: SignedLease): Promise<Buffer> {
   // Garage, box ou place loué seul : contrat de droit commun (Code civil), pas le contrat type de la loi de 1989.
   if (c.terms.kind === 'PARKING') return renderToBuffer(<ParkingContractDocument c={c} signed={signed} />)
+  // Local commercial : bail commercial (Code de commerce).
+  if (c.terms.kind === 'COMMERCIAL') return renderToBuffer(<CommercialContractDocument c={c} signed={signed} />)
   return renderToBuffer(<ContractDocument c={c} signed={signed} />)
 }
 

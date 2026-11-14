@@ -213,7 +213,7 @@ export interface LetterContext {
   propertyAddress: string
   guarantorName?: string | null
   /** Type de bail : le congé ne suit pas les mêmes règles en vide (art. 15) et en meublé (art. 25-8). */
-  kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING'
+  kind?: 'VIDE' | 'MEUBLE' | 'ETUDIANT' | 'MOBILITE' | 'PARKING' | 'COMMERCIAL'
   /** Garage loué seul : préavis convenu au contrat, en mois. */
   noticeMonths?: number | null
   /** Désignation des locaux loués, reprise du bail (obligatoire dans le congé pour vendre). */
@@ -231,7 +231,14 @@ export interface LetterContext {
  */
 export const PARKING_LETTERS: LetterType[] = ['REVISION', 'CHARGES', 'INSURANCE', 'REMINDER', 'FORMAL_NOTICE', 'NOTICE_TO_LEAVE', 'TENANT_NOTICE', 'DEPOSIT_RECEIPT', 'DEPOSIT_RETURN', 'GUARANTOR_CALL', 'DAMAGE_REPAIR', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
 
-export const letterAllowed = (type: LetterType, kind: LetterContext['kind']) => kind !== 'PARKING' || PARKING_LETTERS.includes(type)
+/**
+ * Bail commercial (Code de commerce) : seulement les courriers qui ne citent pas la loi du 6 juillet 1989. Le congé, la
+ * révision (ILC ou ILAT) et la mise en demeure suivent d'autres règles (commissaire de justice) : pas encore dans Bailio.
+ */
+export const COMMERCIAL_LETTERS: LetterType[] = ['REMINDER', 'INSURANCE_CLAIM', 'CONTRACTOR_CLAIM']
+
+export const letterAllowed = (type: LetterType, kind: LetterContext['kind']) =>
+  kind === 'PARKING' ? PARKING_LETTERS.includes(type) : kind === 'COMMERCIAL' ? COMMERCIAL_LETTERS.includes(type) : true
 
 /** Variantes du garage loué seul : le contrat fixe le préavis, le dépôt et l'assurance, pas la loi du 6 juillet 1989. */
 function parkingLetter(l: LetterInput, ctx: LetterContext): LetterContent | null {
@@ -339,6 +346,11 @@ export function letterContent(l: LetterInput, ctx: LetterContext): LetterContent
   if (ctx.kind === 'PARKING') {
     const parking = parkingLetter(l, ctx)
     if (parking) return parking
+  }
+  if (ctx.kind === 'COMMERCIAL') {
+    // Mêmes lettres que pour un logement, au mot près : « le local » au lieu de « le logement ».
+    const c = letterContent(l, { ...ctx, kind: 'VIDE' })
+    return { ...c, paragraphs: c.paragraphs.map((p) => p.replace(/\ble logement\b/g, 'le local')) }
   }
   switch (l.type) {
     case 'REVISION': {

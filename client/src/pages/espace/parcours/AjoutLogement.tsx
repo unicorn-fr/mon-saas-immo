@@ -12,13 +12,14 @@ import { Callout, Check, ChipButton, Chips, ChoiceCard, Input, Loader, Money, Nu
 import { Spinner } from '../../../components/ui'
 import { Camera } from '../../../components/Icons'
 import { api } from '../../../lib/api'
-import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile, PARKING_TYPES, isParking } from '../../../lib/contract'
+import { ANNEXES, COMMON_AREAS, CONSTRUCTION_LABEL, ENERGY_LABEL, EQUIPMENTS, FURNITURE_REQUIRED, type AnnexKey, type CommonKey, type DiagnosticRule, type EquipmentKey, type FurnitureKey, type PropertyFile, PARKING_TYPES, isParking, isCommercial, COMMERCIAL_USES, type CommercialUse } from '../../../lib/contract'
 import type { PropertyView } from '../../../lib/space'
 
-type StepId = 'address' | 'parking' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'rent' | 'photos'
+type StepId = 'address' | 'parking' | 'commercial' | 'type' | 'copro' | 'size' | 'heating' | 'annexes' | 'equipments' | 'furniture' | 'diagnostics' | 'rent' | 'photos'
 const LABELS: Record<StepId, string> = {
   address: 'Adresse',
   parking: 'L’emplacement',
+  commercial: 'Le local',
   type: 'Type de location',
   copro: 'Copropriété',
   size: 'Construction et pièces',
@@ -33,7 +34,7 @@ const LABELS: Record<StepId, string> = {
 /** Étapes utiles pour ce logement : la copropriété et le mobilier seulement quand ils le concernent. */
 const stepsFor = (f: PropertyFile): StepId[] =>
   // Garage, box ou place loué seul : ni pièces, ni chauffage, ni diagnostics (ce n'est pas un logement).
-  isParking(f) ? ['address', 'parking', 'rent', 'photos'] : (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'rent', 'photos'] as Array<StepId | null>).filter(
+  isParking(f) ? ['address', 'parking', 'rent', 'photos'] : isCommercial(f) ? ['address', 'commercial', 'rent', 'photos'] : (['address', 'type', f.legalRegime === 'COPRO' ? 'copro' : null, 'size', 'heating', 'annexes', 'equipments', f.furnished === true ? 'furniture' : null, 'diagnostics', 'rent', 'photos'] as Array<StepId | null>).filter(
     (x): x is StepId => Boolean(x),
   )
 
@@ -48,7 +49,7 @@ export default function AjoutLogement() {
   const toast = useToast()
   const id = params.get('id')
   // Arrivée depuis « Garage » sur l'accueil ou le tunnel : le choix est déjà fait.
-  const [f, setF] = useState<PropertyFile>(() => (!id && params.get('nature') === 'parking' ? { nature: 'PARKING' } : {}))
+  const [f, setF] = useState<PropertyFile>(() => (!id && params.get('nature') === 'parking' ? { nature: 'PARKING' } : !id && params.get('nature') === 'commercial' ? { nature: 'COMMERCIAL' } : {}))
   const [diagnostics, setDiagnostics] = useState<DiagnosticRule[]>([])
   const [loading, setLoading] = useState(Boolean(id))
   const [busy, setBusy] = useState(false)
@@ -133,6 +134,7 @@ export default function AjoutLogement() {
       {error ? <Callout tone="warn">{error}</Callout> : null}
       {current === 'address' ? <StepAddress f={f} set={set} fresh={!id} /> : null}
       {current === 'parking' ? <StepParking f={f} set={set} /> : null}
+      {current === 'commercial' ? <StepCommercial f={f} set={set} /> : null}
       {current === 'address' && !id ? <StructurePicker value={structureId} onChange={setStructureId} /> : null}
       {current === 'type' ? <StepType f={f} set={set} /> : null}
       {current === 'copro' ? <StepCopro f={f} set={set} /> : null}
@@ -168,7 +170,11 @@ export default function AjoutLogement() {
 function validate(step: StepId, f: PropertyFile): string | null {
   switch (step) {
     case 'address':
-      return f.address?.trim() ? null : isParking(f) ? 'Indiquez l’adresse du garage ou du parking.' : 'Indiquez l’adresse du logement.'
+      return f.address?.trim() ? null : isParking(f) ? 'Indiquez l’adresse du garage ou du parking.' : isCommercial(f) ? 'Indiquez l’adresse du local.' : 'Indiquez l’adresse du logement.'
+    case 'commercial':
+      if (!f.commercial?.use) return 'Indiquez le type de local.'
+      if (!f.commercial.activity?.trim()) return 'Indiquez l’activité autorisée dans le local : elle figure dans le bail.'
+      return f.surface ? null : 'Indiquez la surface du local.'
     case 'parking':
       return f.parking?.type ? null : 'Indiquez s’il s’agit d’un garage, d’un box ou d’une place.'
     case 'type':
@@ -196,8 +202,8 @@ function validate(step: StepId, f: PropertyFile): string | null {
       const r = f.rent ?? {}
       if (!r.rentCents) return 'Indiquez le loyer hors charges.'
       if (r.chargesCents === null || r.chargesCents === undefined) return 'Indiquez les charges par mois (0 s’il n’y en a pas).'
-      const max = r.rentCents * (f.furnished || isParking(f) ? 2 : 1)
-      if (r.depositCents && r.depositCents > max) return isParking(f) ? 'Bailio limite le dépôt de garantie d’un garage à deux mois de loyer.' : `Le dépôt de garantie ne peut pas dépasser ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`
+      const max = r.rentCents * (isCommercial(f) ? 3 : f.furnished || isParking(f) ? 2 : 1)
+      if (r.depositCents && r.depositCents > max) return isCommercial(f) ? 'Bailio limite le dépôt de garantie d’un local commercial à un trimestre de loyer.' : isParking(f) ? 'Bailio limite le dépôt de garantie d’un garage à deux mois de loyer.' : `Le dépôt de garantie ne peut pas dépasser ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.`
       return null
     }
     default:
@@ -212,6 +218,8 @@ function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
       return { nature: f.nature ?? 'HOUSING', address: f.address, postalCode: f.postalCode, city: f.city, inseeCode: f.inseeCode, banId: f.banId, building: f.building, floorDoor: f.floorDoor, label: f.label }
     case 'parking':
       return { parking: f.parking, surface: f.surface, lotNumber: f.lotNumber, keys: f.keys }
+    case 'commercial':
+      return { commercial: f.commercial, surface: f.surface, lotNumber: f.lotNumber, keys: f.keys }
     case 'type':
       return { habitat: f.habitat, furnished: f.furnished, legalRegime: f.legalRegime, destination: f.destination ?? 'HABITATION', mainResidenceEasement: f.mainResidenceEasement, fiscalId: f.fiscalId, rentalPermit: f.rentalPermit }
     case 'copro':
@@ -229,7 +237,7 @@ function patchFor(step: StepId, f: PropertyFile): Partial<PropertyFile> {
     case 'diagnostics':
       return { diagnostics: f.diagnostics, constructionPeriod: f.constructionPeriod, permitBefore1997: f.permitBefore1997 }
     case 'rent':
-      return { rent: { ...f.rent, chargesMode: f.rent?.chargesMode ?? 'PROVISION', depositCents: f.rent?.depositCents ?? (f.rent?.rentCents ? f.rent.rentCents * (f.furnished && !isParking(f) ? 2 : 1) : null), paymentDay: f.rent?.paymentDay ?? 5 } }
+      return { rent: { ...f.rent, chargesMode: f.rent?.chargesMode ?? 'PROVISION', depositCents: f.rent?.depositCents ?? (f.rent?.rentCents ? f.rent.rentCents * (isCommercial(f) ? 3 : f.furnished && !isParking(f) ? 2 : 1) : null), paymentDay: f.rent?.paymentDay ?? (isCommercial(f) ? 1 : 5) } }
     default:
       return { photos: f.photos ?? [] }
   }
@@ -246,22 +254,24 @@ function defaultRooms(f: PropertyFile): Array<{ name: string }> {
 
 function StepAddress({ f, set, fresh }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void; fresh: boolean }) {
   const parking = isParking(f)
+  const commercial = isCommercial(f)
   return (
     <>
       {fresh ? (
         <Chips
           big
           legend="Vous louez"
-          value={parking ? 'PARKING' : 'HOUSING'}
+          value={parking ? 'PARKING' : commercial ? 'COMMERCIAL' : 'HOUSING'}
           onChange={(v) => set({ nature: v })}
           options={[
             { value: 'HOUSING', label: 'Un logement' },
             { value: 'PARKING', label: 'Un garage, un box ou une place' },
+            { value: 'COMMERCIAL', label: 'Un local commercial ou des bureaux' },
           ]}
-          hint={parking ? 'Loué seul, sans logement : un contrat simple, sans diagnostic ni DPE.' : undefined}
+          hint={parking ? 'Loué seul, sans logement : un contrat simple, sans diagnostic ni DPE.' : commercial ? 'Un bail commercial de 9 ans au moins, avec ses propres règles (Code de commerce).' : undefined}
         />
       ) : null}
-      <StepTitle>{parking ? 'Où se trouve-t-il ?' : 'Où se trouve le logement ?'}</StepTitle>
+      <StepTitle>{parking ? 'Où se trouve-t-il ?' : commercial ? 'Où se trouve le local ?' : 'Où se trouve le logement ?'}</StepTitle>
       <AddressField
         label="Adresse"
         value={f.address ?? ''}
@@ -273,9 +283,24 @@ function StepAddress({ f, set, fresh }: { f: PropertyFile; set: (p: Partial<Prop
         }}
         placeholder="12 rue de la Loge, Montpellier"
       />
-      {parking ? null : <Input big label="Bâtiment, étage, porte" value={f.floorDoor ?? ''} onChange={(v) => set({ floorDoor: v })} placeholder="Bâtiment B, 2e étage, porte gauche" />}
-      <Input big label="Un nom pour le reconnaître (facultatif)" value={f.label ?? ''} onChange={(v) => set({ label: v })} placeholder={parking ? 'Box rue Foch' : 'Studio rue Foch'} />
+      {parking || commercial ? null : <Input big label="Bâtiment, étage, porte" value={f.floorDoor ?? ''} onChange={(v) => set({ floorDoor: v })} placeholder="Bâtiment B, 2e étage, porte gauche" />}
+      <Input big label="Un nom pour le reconnaître (facultatif)" value={f.label ?? ''} onChange={(v) => set({ label: v })} placeholder={parking ? 'Box rue Foch' : commercial ? 'Boutique rue Foch' : 'Studio rue Foch'} />
       <StepNote>L’adresse apparaîtra {parking ? 'dans le contrat' : 'dans le bail'} et sur vos quittances.</StepNote>
+    </>
+  )
+}
+
+function StepCommercial({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>) => void }) {
+  const k = f.commercial ?? {}
+  const sk = (patch: NonNullable<PropertyFile['commercial']>) => set({ commercial: { ...k, ...patch } })
+  return (
+    <>
+      <StepTitle>Quel local louez-vous ?</StepTitle>
+      <Chips big legend="Type de local" value={k.use ?? null} onChange={(v) => sk({ use: v })} options={(Object.keys(COMMERCIAL_USES) as CommercialUse[]).map((v) => ({ value: v, label: COMMERCIAL_USES[v] }))} />
+      <Input big label="Activité autorisée dans le local" value={k.activity ?? ''} onChange={(v) => sk({ activity: v })} placeholder="Boulangerie, pâtisserie" hint="Elle figure dans le bail (clause de destination) : le locataire ne peut pas en changer sans votre accord." />
+      <NumberField big label="Surface" suffix="m²" step="decimal" value={f.surface} onChange={(v) => set({ surface: v })} />
+      <Chips legend="Le local est loué" value={k.equipped ?? false} onChange={(v) => sk({ equipped: v })} options={[{ value: false, label: 'Nu' }, { value: true, label: 'Équipé (mobilier et matériel)' }]} hint={k.equipped ? 'Local équipé : le loyer est soumis à la TVA à 20 %.' : 'Local nu : pas de TVA, sauf si vous choisissez de l’appliquer.'} />
+      <Input label="Clés remises (facultatif)" value={f.keys ?? ''} onChange={(v) => set({ keys: v })} placeholder="2 clés et 1 badge" />
     </>
   )
 }
@@ -646,13 +671,14 @@ function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
   const r = f.rent ?? {}
   const sr = (patch: NonNullable<PropertyFile['rent']>) => set({ rent: { ...r, ...patch } })
   const parking = isParking(f)
-  const max = r.rentCents ? r.rentCents * (f.furnished && !parking ? 2 : 1) : null
+  const commercial = isCommercial(f)
+  const max = r.rentCents ? r.rentCents * (commercial ? 3 : f.furnished && !parking ? 2 : 1) : null
   return (
     <>
       <StepTitle>Quel loyer demandez-vous ?</StepTitle>
       {parking ? <Callout tone="info">Un garage loué seul relève en principe de la TVA, mais un particulier en est dispensé tant que ses recettes restent sous le seuil de la franchise (37 500 € par an en 2026). Bailio l’indique sur le contrat et les quittances (article 293 B du code général des impôts). Au-delà, parlez-en à votre comptable.</Callout> : null}
       <Fields>
-        <Money big label="Loyer hors charges, par mois" cents={r.rentCents ?? null} onChange={(c) => sr({ rentCents: c })} />
+        <Money big label={commercial ? 'Loyer hors charges et hors taxes, par mois' : 'Loyer hors charges, par mois'} cents={r.rentCents ?? null} onChange={(c) => sr({ rentCents: c })} hint={commercial ? 'Le bail précise ensuite s’il se paie par mois, par trimestre ou par an.' : undefined} />
         <Money big label="Charges, par mois" cents={r.chargesCents ?? null} onChange={(c) => sr({ chargesCents: c })} hint="0 s’il n’y en a pas." />
       </Fields>
       <Chips
@@ -663,10 +689,10 @@ function StepRent({ f, set }: { f: PropertyFile; set: (p: Partial<PropertyFile>)
           { value: 'PROVISION', label: 'Une provision, régularisée chaque année' },
           { value: 'FORFAIT', label: 'Un forfait' },
         ]}
-        hint={parking || f.furnished ? 'Provision : le locataire paie une avance, comparée chaque année aux dépenses réelles. Forfait : un montant fixe, sans régularisation.' : 'En location vide, le forfait n’est permis qu’en colocation.'}
+        hint={parking || commercial || f.furnished ? 'Provision : le locataire paie une avance, comparée chaque année aux dépenses réelles. Forfait : un montant fixe, sans régularisation.' : 'En location vide, le forfait n’est permis qu’en colocation.'}
       />
       <Fields>
-        <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={parking ? 'Libre pour un garage. Bailio propose un mois de loyer, deux au plus.' : max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
+        <Money label="Dépôt de garantie" cents={r.depositCents ?? max} onChange={(c) => sr({ depositCents: c })} hint={commercial ? 'Bailio propose un trimestre de loyer, au plus.' : parking ? 'Libre pour un garage. Bailio propose un mois de loyer, deux au plus.' : max ? `Au plus ${f.furnished ? 'deux mois' : 'un mois'} de loyer hors charges.` : 'Au plus un mois de loyer hors charges en vide, deux en meublé.'} />
         <NumberField label="Jour de paiement du loyer" value={r.paymentDay ?? 5} onChange={(v) => sr({ paymentDay: v ? Math.min(28, Math.max(1, Math.round(v))) : null })} />
       </Fields>
       <StepNote>Repris dans l’annonce et {parking ? 'le contrat' : 'le bail'}. Modifiable à tout moment.</StepNote>

@@ -17,7 +17,7 @@ import { adPrompt, buildAd, parseAiAd } from '../domain/ad.js'
 import { adSettings } from '../services/ad.js'
 import { rentalJourneys } from '../services/rental.js'
 import { rentPatch } from '../services/rent.js'
-import { amountsForPeriod, rentSchedule, unpaidPeriods } from '../domain/rentHistory.js'
+import { rentSchedule, termDueCents, termStartOf, unpaidPeriods } from '../domain/rentHistory.js'
 import { formatEuros } from '../domain/lease.js'
 import { binderMissing, propertyBinder } from '../domain/binder.js'
 import { toTrash } from '../services/trash.js'
@@ -66,9 +66,9 @@ export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'pa
   const none = { lateDays: 0, unpaidCents: 0, unpaidPeriods: [] as string[] }
   if (lease.status === 'DRAFT') return { key: 'DRAFT', label: 'Bail en préparation', ...none }
   if (lease.startDate > now) return { key: 'UPCOMING', label: 'Bail signé, entrée à venir', ...none }
-  const period = monthKey(now)
-  const amounts = amountsForPeriod(lease, period)
-  const due = amounts.rentCents + amounts.chargesCents
+  // Échéance en cours : le mois, ou le premier mois du trimestre ou de l'année pour un bail commercial.
+  const period = termStartOf(lease, monthKey(now))
+  const due = termDueCents(lease, period)
   const p = payments.find((x) => x.period === period)
   const unpaid = unpaidPeriods(lease, payments, now)
   const unpaidCents = unpaid.reduce((sum, u) => sum + u.missing, 0)
@@ -83,7 +83,7 @@ export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'pa
   }
   if (p && p.amountCents >= due) return { key: 'PAID', label: 'Payé', ...none }
   if (p) return { key: 'PARTIAL', label: 'Paiement partiel', ...none }
-  const dueDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), lease.paymentDay))
+  const dueDate = new Date(Date.UTC(Number(period.slice(0, 4)), Number(period.slice(5, 7)) - 1, lease.paymentDay))
   // Premier mois commencé après le jour de paiement : loyer au prorata, réglé à l'entrée et noté par le propriétaire.
   if (dueDate < lease.startDate) return { key: 'FIRST', label: 'Premier loyer au prorata, à noter à sa réception', ...none }
   return { key: 'EXPECTED', label: `Attendu le ${lease.paymentDay}`, ...none }
@@ -91,6 +91,7 @@ export function rentStatus(lease: Pick<Lease, 'rentCents' | 'chargesCents' | 'pa
 
 const PROPERTY_KIND = (f: PropertyFile) => {
   if (f.nature === 'PARKING') return f.parking?.type ? PARKING_TYPES[f.parking.type] : 'Garage ou place'
+  if (f.nature === 'COMMERCIAL') return f.commercial?.use === 'OFFICE' ? 'Bureaux' : f.commercial?.use === 'STORAGE' ? 'Entrepôt' : 'Local commercial'
   const type = f.habitat === 'INDIVIDUAL' ? 'Maison' : (f.rooms ?? 0) <= 1 ? 'Studio' : 'Appartement'
   const t = f.rooms && type !== 'Studio' ? ` T${f.rooms}` : ''
   return `${type}${t}${f.furnished === true ? ' meublé' : f.furnished === false ? ' vide' : ''}`
@@ -138,6 +139,7 @@ function propertySummary(p: Property & { leases: LeaseFull[] }, names: Record<st
     floor: f.floorDoor ?? null,
     furnished: f.furnished ?? null,
     nature: f.nature ?? 'HOUSING',
+    commercial: f.nature === 'COMMERCIAL' ? { use: f.commercial?.use ?? null, equipped: Boolean(f.commercial?.equipped) } : null,
     dpeClass: f.diagnostics?.dpe?.class ?? null,
     // Photos du logement (fiche, « Photos ») : la première sert de couverture dans la liste et sur sa page.
     photoIds: f.photos ?? [],
@@ -270,9 +272,9 @@ router.get('/properties/:id', async (req, res) => {
       completion: propertyCompletion(f),
       diagnostics: diagnosticsFor(f),
       /** Ce qui manque au logement pour faire un bail (contrat type, diagnostics, mobilier). */
-      leaseMissing: propertyLeaseMissing(f, f.nature === 'PARKING' ? 'PARKING' : f.furnished ? 'MEUBLE' : 'VIDE'),
+      leaseMissing: propertyLeaseMissing(f, f.nature === 'PARKING' ? 'PARKING' : f.nature === 'COMMERCIAL' ? 'COMMERCIAL' : f.furnished ? 'MEUBLE' : 'VIDE'),
       journey: (await rentalJourneys(req.user!, [p.id])).get(p.id) ?? [],
-      energyWarning: f.nature === 'PARKING' ? null : energyRentalWarning(f.diagnostics?.dpe?.class, new Date(), f.postalCode),
+      energyWarning: f.nature === 'PARKING' || f.nature === 'COMMERCIAL' ? null : energyRentalWarning(f.diagnostics?.dpe?.class, new Date(), f.postalCode),
       rentControlLikely: rentControlLikely(f.inseeCode),
       /** D'après les listes officielles des communes : zone tendue (null si commune inconnue) et encadrement. */
       tenseOfficial: isTenseZone(f.inseeCode),
@@ -309,7 +311,7 @@ router.get('/properties/:id/aids', async (req, res) => {
   const tenant = lease?.tenantIds[0] ? await prisma.tenant.findFirst({ where: { id: lease.tenantIds[0], userId } }) : null
   const t = tenant ? readTenant(tenant) : null
   // Garage, box ou place loué seul : ces aides concernent la location d'un logement.
-  const aids = file.nature === 'PARKING' ? [] : aidsFor({
+  const aids = file.nature === 'PARKING' || file.nature === 'COMMERCIAL' ? [] : aidsFor({
     today: iso(new Date())!,
     dpe: file.diagnostics?.dpe?.class ?? null,
     furnished: lease ? isFurnished(leaseKindOf(lease)) : Boolean(file.furnished),
@@ -531,7 +533,7 @@ router.get('/tenants/:id', async (req, res) => {
       homes: tenantHomes(t, leases),
       /** Loyers du bail mois par mois (Paiements). */
       schedule: lease && lease.status !== 'DRAFT' ? rentSchedule(lease, lease.payments).map((m) => ({ ...m, receivedAt: m.receivedAt ? iso(m.receivedAt) : null })) : [],
-      payments: (lease?.payments ?? []).slice(0, 12).map((x) => ({ period: x.period, amountCents: x.amountCents, receivedAt: iso(x.receivedAt), full: lease ? x.amountCents >= lease.rentCents + lease.chargesCents : true })),
+      payments: (lease?.payments ?? []).slice(0, 12).map((x) => ({ period: x.period, amountCents: x.amountCents, receivedAt: iso(x.receivedAt), full: lease ? x.amountCents >= termDueCents(lease, x.period) : true })),
     },
   })
 })
