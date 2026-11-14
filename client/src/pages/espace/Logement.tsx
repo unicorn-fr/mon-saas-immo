@@ -6,6 +6,7 @@ import { BAI } from '../../constants/bailio-tokens'
 import { Interventions } from '../../components/Interventions'
 import { OwnerCard } from '../../components/StructurePicker'
 import { LoanCard } from '../../components/LoanCard'
+import { LotAndArchive } from '../../components/PropertyLinks'
 import { CoverPhoto } from '../../components/media'
 import { AppShell } from '../../components/AppShell'
 import { ExpenseModal } from '../../components/ExpenseModal'
@@ -131,6 +132,7 @@ function PropertyLinks({ p, reload }: { p: PropertyView; reload: () => void }) {
       ))}
       <OwnerCard propertyId={p.id} structureId={p.structureId} onChanged={reload} compact />
       <LoanCard propertyId={p.id} compact />
+      <LotAndArchive propertyId={p.id} onChanged={reload} />
       {p.energyWarning ? <Callout tone="warn">{p.energyWarning}</Callout> : null}
     </Card>
   )

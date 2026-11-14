@@ -715,24 +715,28 @@ function withLoans(file: PropertyFile, year: number) {
 // Comptabilité d'un logement sur une année : loyers reçus (recettes) et dépenses, opération par opération, avec le solde.
 router.get('/properties/:id/ledger', async (req, res) => {
   const year = z.coerce.number().int().min(2000).max(2100).default(new Date().getUTCFullYear()).parse(req.query.year)
-  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id }, include: { leases: { include: { payments: true } } } })
+  const p = await prisma.property.findFirst({ where: { id: String(req.params.id), userId: req.user!.id }, include: { leases: { include: { payments: true } }, units: { include: { leases: { include: { payments: true } } } } } })
   if (!p) throw new HttpError(404, 'Logement introuvable.')
+  // Immeuble ou colocation : ses lots comptent aussi (chaque opération porte le nom de son lot).
+  const all = [p, ...p.units]
+  const unitName = (id: string) => (p.units.length ? ` · ${propertyName(all.find((x) => x.id === id)!)}` : '')
   const from = new Date(Date.UTC(year, 0, 1))
   const to = new Date(Date.UTC(year + 1, 0, 1))
-  const tenantIds = [...new Set(p.leases.flatMap((l) => l.tenantIds))]
+  const leases = all.flatMap((x) => x.leases)
+  const tenantIds = [...new Set(leases.flatMap((l) => l.tenantIds))]
   const tenants = tenantIds.length ? await prisma.tenant.findMany({ where: { id: { in: tenantIds } } }) : []
   const who = (ids: string[]) => ids.map((id) => tenants.find((t) => t.id === id)).filter(Boolean).map((t) => tenantName(readTenant(t!))).join(' et ') || 'Locataire'
   const ops = [
-    ...p.leases.flatMap((l) =>
+    ...leases.flatMap((l) =>
       l.payments
         .filter((x) => x.receivedAt >= from && x.receivedAt < to)
-        .map((x) => ({ id: `pay-${x.id}`, kind: 'RENT' as const, date: iso(x.receivedAt)!, label: `Loyer de ${who(l.tenantIds)}`, sub: `Loyer de ${x.period.slice(5)}/${x.period.slice(0, 4)}`, amountCents: x.amountCents, category: 'RENT', leaseId: l.id, documentId: null as string | null })),
+        .map((x) => ({ id: `pay-${x.id}`, kind: 'RENT' as const, date: iso(x.receivedAt)!, label: `Loyer de ${who(l.tenantIds)}`, sub: `Loyer de ${x.period.slice(5)}/${x.period.slice(0, 4)}${unitName(l.propertyId)}`, amountCents: x.amountCents, category: 'RENT', leaseId: l.id, documentId: null as string | null })),
     ),
-    ...(await prisma.expense.findMany({ where: { propertyId: p.id, date: { gte: from, lt: to } } })).map((e) => ({ id: e.id, kind: 'EXPENSE' as const, date: iso(e.date)!, label: e.vendor, sub: e.description ?? CATEGORY_LABEL[e.category] ?? 'autre', amountCents: -e.amountCents, category: e.category, leaseId: null as string | null, documentId: e.documentId })),
+    ...(await prisma.expense.findMany({ where: { propertyId: { in: all.map((x) => x.id) }, date: { gte: from, lt: to } } })).map((e) => ({ id: e.id, kind: 'EXPENSE' as const, date: iso(e.date)!, label: e.vendor, sub: `${e.description ?? CATEGORY_LABEL[e.category] ?? 'autre'}${unitName(e.propertyId!)}`, amountCents: -e.amountCents, category: e.category, leaseId: null as string | null, documentId: e.documentId })),
   ].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   const income = ops.filter((o) => o.amountCents > 0).reduce((a, o) => a + o.amountCents, 0)
   const spent = -ops.filter((o) => o.amountCents < 0).reduce((a, o) => a + o.amountCents, 0)
-  res.json({ success: true, data: { year, propertyId: p.id, propertyName: propertyName(p), incomeCents: income, expensesCents: spent, balanceCents: income - spent, ops } })
+  res.json({ success: true, data: { year, propertyId: p.id, propertyName: propertyName(p), units: p.units.map((u) => ({ id: u.id, name: propertyName(u) })), incomeCents: income, expensesCents: spent, balanceCents: income - spent, ops } })
 })
 
 router.get('/properties/:id/loans', async (req, res) => {

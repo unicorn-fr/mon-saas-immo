@@ -74,6 +74,15 @@
 - Agents d'IA et moteurs : `robots.txt` (liens privés exclus), `sitemap.xml` et `llms.txt` générés par `vite.config.ts` (prix repris de `config.ts`) ; `<noscript>` descriptif dans `index.html`. Nouvelle page publique : l'ajouter à `PUBLIC_PAGES` et à `llms.txt`.
 - Référencement (`staticPages`, `vite.config.ts`) : à la construction, chaque page publique de `PUBLIC_PAGES` reçoit son fichier HTML (`dist/guides/<slug>.html`, `dist/conditions.html`…) avec son titre, sa description, son adresse canonique, son partage, son fil d'Ariane et, pour un guide, ses données `Article` (texte complet, sources, dates) et le texte de l'article dans `<noscript>` ; Caddy les sert avant l'application (`try_files {path}.html {path} /index.html`). Sans ce fichier, la page reçoit l'accueil comme adresse canonique et Google l'ignore. Nouvelle page publique hors guide : titre et description dans `PAGE_META`. `lastmod` des guides dans `sitemap.xml`. Après chaque mise à jour, les pages du plan du site sont signalées par IndexNow (`update.sh`, clé dans `client/public/<clé>.txt`).
 
+## Lots, archives, agenda, profils, historique des emails (novembre 2026, vidéo de Qalimo)
+
+- Lots : un bien peut être le lot d'un autre (`Property.parentId`, immeuble de rapport ou chambre d'une colocation ; un seul niveau, `PUT /properties/:id/parent`, choix « Lot de : … » sur la page du bien, `components/PropertyLinks.tsx`) ; chaque lot a son bail et son loyer ; « Biens » les regroupe sous leur parent ; la comptabilité du parent additionne ses lots (`GET /properties/:id/ledger`, page `/espace/logements/:id/comptabilite`, `Comptabilite.tsx`, catégories fiscales avec leur ligne de la 2044, justificatif joint).
+- Archives : `Property.archivedAt`, `Tenant.archivedAt` (`POST /properties/:id/archive`, `POST /tenants/:id/archive`) : onglets « Biens archivés », « Locataires archivés » ; rien n'est effacé.
+- Historique des emails (`EmailLog` : objet, destinataire, date, jamais le contenu ; `sendEmail({ log })`, `lib/email.ts`) : bail, quittances, notice, courriers, lien du locataire ; onglet « Emails » de la fiche du locataire (`GET /tenants/:id/emails`) ; filtré dans les espaces partagés (`scopeQuery`). Nouvel email au nom du propriétaire : passer `log`.
+- Agenda : rendez-vous du propriétaire (artisan, visite, état des lieux…) enregistrés comme interventions prévues avec créneau (`data.start`, `data.end`), ajoutés, modifiés ou supprimés depuis « Mon agenda ».
+- Profil bailleur (« Tous les profils » en haut du menu, `components/ProfilePicker.tsx`, stockage `bailio.profile`, en-tête `X-Bailio-Profile`) : les pages de consultation (`PROFILE_PATHS`, `services/session.ts`) ne montrent que les biens de cette structure, par le même filtre que les accès partagés ; jamais à l'enregistrement.
+- Candidats : indice de 1 à 5 tiré de la note du dossier (`ScoreDots`), « Refuser » ; page `/espace/candidats` pour tous les biens.
+
 ## Rédaction
 
 - Tout en français, on **vouvoie** le propriétaire, phrases courtes, zéro jargon technique.

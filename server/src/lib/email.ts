@@ -15,6 +15,8 @@ export interface Email {
   attachments?: EmailAttachment[]
   /** Adresse de réponse (le propriétaire, pour un email envoyé à son locataire). */
   replyTo?: string
+  /** Email au nom du propriétaire : gardé dans l'historique (onglet « Emails » de la fiche du locataire). */
+  log?: { userId: string; leaseId?: string | null; tenantId?: string | null; kind?: string }
 }
 
 /**
@@ -51,6 +53,7 @@ const transient = (err: unknown) => {
 export async function sendEmail(email: Email): Promise<void> {
   if (!smtp) {
     console.info(`[email] (non envoyé, aucun service d'email configuré) → ${email.to} · ${email.subject}\n${email.text}`)
+    await logEmail(email)
     return
   }
   const message = {
@@ -78,6 +81,16 @@ export async function sendEmail(email: Email): Promise<void> {
     console.error(`[email] envoi refusé → ${email.to} · ${email.subject} · ${e.code ?? ''} ${e.responseCode ?? ''} ${e.response ?? (err as Error).message}`)
     throw mailError(err, email.to)
   }
+  await logEmail(email)
+}
+
+/** Trace d'un email parti au nom du propriétaire : objet, destinataire, date (jamais le contenu). */
+async function logEmail(email: Email) {
+  if (!email.log) return
+  const { prisma } = await import('../db.js')
+  await prisma.emailLog
+    .create({ data: { userId: email.log.userId, leaseId: email.log.leaseId ?? null, tenantId: email.log.tenantId ?? null, to: email.to, subject: email.subject.slice(0, 300), kind: email.log.kind ?? 'OTHER' } })
+    .catch((e) => console.error('[email] historique', e))
 }
 
 const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)

@@ -548,7 +548,7 @@ router.post('/leases/:id/send', async (req, res) => {
     ],
   })
   for (const email of to) {
-    await sendEmail({ to: email, subject: 'Votre bail de location', ...mail, replyTo: user.email, attachments: [{ filename: 'bail.pdf', content: pdf }] })
+    await sendEmail({ to: email, subject: 'Votre bail de location', ...mail, replyTo: user.email, log: { userId: user.id, leaseId: lease.id, kind: 'LEASE' }, attachments: [{ filename: 'bail.pdf', content: pdf }] })
   }
   res.json({ success: true, data: { sentTo: to } })
 })
@@ -703,7 +703,7 @@ export async function sendReceipt(user: User, lease: LeaseWithProperty, period: 
   const [y, m] = period.split('-').map(Number)
   const what = full ? 'quittance' : 'reçu'
   const mail = layout({ title: `Votre ${what} de ${monthYearFr(y, m)}.`, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe votre ${what} de loyer de ${monthYearFr(y, m)}.`, 'Bonne journée.'] })
-  for (const email of to) await sendEmail({ to: email, subject: `Votre ${what} de loyer, ${monthYearFr(y, m)}`, ...mail, replyTo: user.email, attachments: [{ filename: `${what}-${period}.pdf`, content: pdf }] })
+  for (const email of to) await sendEmail({ to: email, subject: `Votre ${what} de loyer, ${monthYearFr(y, m)}`, ...mail, replyTo: user.email, log: { userId: user.id, leaseId: lease.id, kind: 'RECEIPT' }, attachments: [{ filename: `${what}-${period}.pdf`, content: pdf }] })
   await patchLeaseData(lease.id, (f) => ({ receiptsSent: { ...((f as { receiptsSent?: Record<string, string> }).receiptsSent ?? {}), [period]: new Date().toISOString() } }))
   return to
 }
@@ -1035,7 +1035,7 @@ router.post('/leases/:id/notice/send', async (req, res) => {
   const pdf = await renderNoticePdf(LEASE_NOTICE)
   const subject = 'Notice d’information de votre bail, version d’octobre 2026'
   const mail = layout({ title: subject, paragraphs: ['Bonjour,', 'La notice d’information jointe aux baux d’habitation a été mise à jour par l’arrêté du 9 octobre 2026. Vous trouverez la nouvelle version en pièce jointe : elle complète votre bail, qui ne change pas.', 'Bonne journée.'] })
-  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: 'notice-information-bail.pdf', content: pdf }] })
+  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, log: { userId: user.id, leaseId: lease.id, kind: 'NOTICE' }, attachments: [{ filename: 'notice-information-bail.pdf', content: pdf }] })
   await patchLeaseData(lease.id, () => ({ noticeUpdateSentAt: new Date().toISOString() }))
   res.json({ success: true, data: { sentTo: to } })
 })
@@ -1112,7 +1112,7 @@ export async function emailLetter(user: User, leaseId: string, pdf: Buffer, subj
     if (!to.length) throw noTenantEmail(lease, 'Ajoutez l’email du locataire dans sa fiche pour lui envoyer ce courrier.')
   }
   const mail = layout({ title: subject, paragraphs: ['Bonjour,', `Vous trouverez en pièce jointe un courrier de ${from}.`, 'Bonne journée.'] })
-  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, attachments: [{ filename: `${fileSlug(subject)}.pdf`, content: pdf }] })
+  for (const email of to) await sendEmail({ to: email, subject, ...mail, replyTo: user.email, log: { userId: user.id, leaseId: lease.id, kind: letter?.type ?? 'LETTER' }, attachments: [{ filename: `${fileSlug(subject)}.pdf`, content: pdf }] })
   return to
 }
 

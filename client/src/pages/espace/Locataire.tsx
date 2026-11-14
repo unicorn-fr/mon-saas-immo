@@ -129,7 +129,21 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
           <div id="dossier" style={{ scrollMarginTop: 90 }}>
             <TenantDossier tenantId={t.id} email={f.email} />
           </div>
-          <div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Btn
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                void api(`/tenants/${t.id}/archive`, { method: 'POST', body: { archived: !t.archivedAt } })
+                  .then(() => {
+                    toast.show(t.archivedAt ? 'Locataire remis dans la liste.' : 'Locataire archivé : sa fiche et ses documents sont gardés.')
+                    reload()
+                  })
+                  .catch(toast.error)
+              }
+            >
+              {t.archivedAt ? 'Ressortir des archives' : 'Archiver ce locataire'}
+            </Btn>
             <Btn variant="danger" size="sm" onClick={remove}>
               Supprimer ce locataire
             </Btn>
@@ -213,6 +227,7 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
           <LeaseDocs lease={detail.data} loading={detail.loading} hasLease={Boolean(lease)} />
         </div>
       ) : null}
+      {tab === 'emails' ? <EmailsTab tenantId={t.id} /> : null}
       {tab === 'actions' ? <ActionsTab t={t} detail={detail.data} reload={() => { reload(); detail.reload() }} /> : null}
       {lease ? <PaymentModal open={payOpen} onClose={() => setPayOpen(false)} onSaved={() => { reload(); detail.reload() }} leaseId={lease.id} dueCents={lease.rentCents + lease.chargesCents} tenantEmail={f.email} /> : null}
       <UploadModal open={upload} onClose={() => setUpload(false)} onSaved={reload} tenantId={t.id} />
@@ -220,13 +235,44 @@ function TenantPage({ t, reload }: { t: TenantView; reload: () => void }) {
   )
 }
 
-type TenantTab = 'general' | 'paiements' | 'documents' | 'actions'
+type TenantTab = 'general' | 'paiements' | 'documents' | 'emails' | 'actions'
 const TENANT_TABS: Array<{ value: TenantTab; label: string }> = [
   { value: 'general', label: 'Général' },
   { value: 'paiements', label: 'Paiements' },
   { value: 'documents', label: 'Documents' },
+  { value: 'emails', label: 'Emails' },
   { value: 'actions', label: 'Actions' },
 ]
+
+/** Onglet « Emails » : ce qui est parti au nom du propriétaire (objet, destinataire, date). */
+function EmailsTab({ tenantId }: { tenantId: string }) {
+  const { data, error, loading, reload } = useLoad(() => api<Array<{ id: string; to: string; subject: string; sentAt: string }>>(`/tenants/${tenantId}/emails`), [tenantId])
+  if (loading && !data) return <Loader />
+  if (error || !data) return <LoadError message={error ?? ''} retry={reload} />
+  if (!data.length) return <Card><span style={{ fontSize: 15, color: BAI.inkMid }}>Aucun email envoyé pour l’instant. Quittances, courriers et liens envoyés par Bailio apparaîtront ici.</span></Card>
+  return (
+    <div className="dash-table" role="region" aria-label="Emails envoyés" tabIndex={0}>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Objet</th>
+            <th scope="col">Envoyé à</th>
+            <th scope="col">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((e) => (
+            <tr key={e.id}>
+              <td style={{ fontWeight: 600, color: BAI.ink }}>{e.subject}</td>
+              <td>{e.to}</td>
+              <td>{new Date(e.sentAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
 const MONTH_STATE = {
   PAID: { label: 'Reçu', tone: 'green' },

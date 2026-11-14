@@ -85,7 +85,7 @@ router.post('/leases/:id/tenant-link/send', requireUser, async (req, res) => {
     ],
     cta: { label: 'Envoyer mes documents', url: `${env.CLIENT_URL}/locataire/${lease.tenantCode}` },
   })
-  for (const email of to) await sendEmail({ to: email, subject: 'Vos documents de location', ...mail, replyTo: user.email })
+  for (const email of to) await sendEmail({ to: email, subject: 'Vos documents de location', ...mail, replyTo: user.email, log: { userId: user.id, leaseId: lease.id, kind: 'TENANT_LINK' } })
   res.json({ success: true, data: { sentTo: to } })
 })
 
