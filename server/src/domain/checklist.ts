@@ -62,6 +62,13 @@ export function propertyLeaseMissing(p: ContractInput['property'], kind: NonNull
   const out: Missing[] = []
   const push = (key: string, label: string, where: Where, section: string) => out.push({ key, label, where, section })
   // Garage, box ou place loué seul (Code civil) : il suffit de désigner l'emplacement.
+  // Local commercial (bail commercial) : la désignation des locaux et leur destination (F23927).
+  if (kind === 'COMMERCIAL' || p.nature === 'COMMERCIAL') {
+    if (!has(p.commercial?.use)) push('property.commercialUse', 'Le type de local (commerce, bureaux, entrepôt…)', 'PROPERTY', 'commercial')
+    if (!has(p.commercial?.activity)) push('property.activity', 'L’activité autorisée dans le local (destination)', 'PROPERTY', 'commercial')
+    if (!has(p.surface)) push('property.surface', 'La surface du local', 'PROPERTY', 'commercial')
+    return withLevel(out)
+  }
   if (kind === 'PARKING' || p.nature === 'PARKING') {
     if (!has(p.parking?.type)) push('property.parkingType', 'Garage, box ou place de stationnement', 'PROPERTY', 'parking')
     return withLevel(out)
@@ -109,7 +116,7 @@ export function leaseMissing(c: ContractInput): Missing[] {
   if (t.reduced?.enabled && !has(t.reduced.reason)) push('terms.reduced', 'L’événement qui justifie une durée réduite', 'TERMS', 'dates')
   if (!has(t.rentCents)) push('terms.rent', 'Le montant du loyer', 'TERMS', 'rent')
   if (!has(t.paymentDay)) push('terms.paymentDay', 'Le jour de paiement du loyer', 'TERMS', 'rent')
-  const housing = kind !== 'PARKING'
+  const housing = kind !== 'PARKING' && kind !== 'COMMERCIAL'
   if (housing && (t.zone?.tense === undefined || t.zone?.tense === null)) push('terms.zone', 'Si la commune est en zone tendue', 'TERMS', 'zone')
   if (t.zone?.control && (!has(t.zone.refRentCentsM2) || !has(t.zone.refRentMaxCentsM2))) push('terms.control', 'Les loyers de référence (encadrement)', 'TERMS', 'zone')
   if (t.zone?.complementCents && !has(t.zone.complementJustification)) push('terms.complement', 'La justification du complément de loyer', 'TERMS', 'zone')

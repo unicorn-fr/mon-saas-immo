@@ -25,7 +25,7 @@ import { declarationDeadline, occupancyDeclarationDue } from '../domain/fiscalCa
 import { readProfile } from '../services/contract.js'
 import { rentalJourneys } from '../services/rental.js'
 import { agenda, monthTiles } from '../domain/todayBoard.js'
-import { amountsForPeriod } from '../domain/rentHistory.js'
+import { isTermStart, termDueCents } from '../domain/rentHistory.js'
 
 /**
  * « Aujourd'hui » : ce qu'il y a à faire cette semaine, déjà préparé, et les prochaines échéances.
@@ -112,7 +112,7 @@ router.get('/today', async (req, res) => {
       tasks.push({ id: `late-${l.id}`, type: 'LATE_RENT', tag: many ? 'Loyers en retard' : 'Loyer en retard', tone: 'error', place: propertyName(l.property), title: many ? `${who} doit ${formatEuros(st.unpaidCents)} : ${st.unpaidPeriods.length} loyers non réglés depuis ${monthYearFr(oy, om)}` : `Le loyer de ${who} n’est pas arrivé (attendu le ${short(oldestDue)})`, text: many ? 'Suivez les étapes dans l’ordre : relance, mise en demeure, caution. Chaque courrier est déjà rempli.' : 'Une relance amiable, polie et courte, est rédigée. Vous pouvez la relire avant l’envoi.', leaseId: l.id, amountCents: st.unpaidCents, period: st.unpaidPeriods[0] })
     } else if (st.key === 'PARTIAL') {
       const paid = l.payments.find((p) => p.period === period)?.amountCents ?? 0
-      tasks.push({ id: `partial-${l.id}`, type: 'PARTIAL_RENT', tag: 'Paiement partiel', tone: 'accent', place: propertyName(l.property), title: `${who} a payé ${formatEuros(paid)} sur ${formatEuros(l.rentCents + l.chargesCents)}`, text: 'Un reçu a été établi. Il reste à recevoir le solde.', leaseId: l.id, period })
+      tasks.push({ id: `partial-${l.id}`, type: 'PARTIAL_RENT', tag: 'Paiement partiel', tone: 'accent', place: propertyName(l.property), title: `${who} a payé ${formatEuros(paid)} sur ${formatEuros(termDueCents(l, period))}`, text: 'Un reçu a été établi. Il reste à recevoir le solde.', leaseId: l.id, period })
     }
   }
 
@@ -191,14 +191,14 @@ router.get('/today', async (req, res) => {
     }
     // Chaudière individuelle : attestation d'entretien chaque année.
     const heating = (l.property.data as { heating?: { mode?: string; energy?: string; lastMaintenance?: string } } | null)?.heating
-    if (l.status === 'ACTIVE' && heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(heating.energy)) && !snoozed('BOILER')) {
+    if (l.status === 'ACTIVE' && isHousing(leaseKindOf(l)) && heating?.mode === 'INDIVIDUAL' && ['GAS', 'FUEL', 'WOOD'].includes(String(heating.energy)) && !snoozed('BOILER')) {
       const last = [facts.boilerServiceDate ? new Date(`${facts.boilerServiceDate}T00:00:00Z`) : null, heating.lastMaintenance ? new Date(`${heating.lastMaintenance}T00:00:00Z`) : null, lastLetter(l.id, 'BOILER')].filter((d): d is Date => Boolean(d)).sort((a, b) => b.getTime() - a.getTime())[0] ?? l.startDate
       if (today.getTime() - last.getTime() >= 365 * DAY)
         tasks.push({ id: `boiler-${l.id}`, type: 'BOILER', tag: 'Chaudière', tone: 'accent', place, title: `Demander l’attestation d’entretien de la chaudière à ${who}`, text: 'L’entretien annuel est obligatoire et à la charge du locataire. Le courrier est prêt.', leaseId: l.id })
     }
     // Bail signé entre le 18 octobre 2026 et la mise à jour de Bailio : il porte l'ancienne notice d'information.
     // La nouvelle (arrêté du 9 octobre 2026) est à envoyer au locataire, une fois.
-    if (noticeUpdateDue(l.status, l.signedAt, l.data))
+    if (isHousing(leaseKindOf(l)) && noticeUpdateDue(l.status, l.signedAt, l.data))
       tasks.push({ id: `notice-${l.id}`, type: 'NOTICE_UPDATE', tag: 'Notice du bail', tone: 'owner', place, title: `Envoyer la nouvelle notice d’information à ${who}`, text: 'Elle a changé le 18 octobre 2026 : votre bail porte l’ancienne version. Un email suffit, la nouvelle est prête.', leaseId: l.id })
     // Arrivée ou départ du locataire : à signaler aux impôts (occupation du logement), sans attendre le printemps.
     const taxMode = leaseTaxMode({ status: l.status, startDate: iso(l.startDate)!, endDate: iso(l.endDate)!, housing: isHousing(leaseKindOf(l)) }, iso(today)!)
@@ -333,16 +333,17 @@ router.get('/today', async (req, res) => {
   }
   upcoming.sort((a, b) => a.sort - b.sort)
 
-  const expected = running.length
-  const received = running.filter((l) => l.payments.some((p) => p.period === period && p.amountCents >= l.rentCents + l.chargesCents)).length
+  // Bail payé par trimestre ou par an : appelé seulement le mois où son échéance s'ouvre.
+  const called = running.filter((l) => isTermStart(l, period))
+  const expected = called.length
+  const received = called.filter((l) => l.payments.some((p) => p.period === period && p.amountCents >= termDueCents(l, period))).length
   const tiles = monthTiles(
     leases.map((l) => {
       const st = rentStatus(l, l.payments, now)
-      const amounts = amountsForPeriod(l, period)
       return {
         status: l.status,
         running: running.includes(l),
-        dueCents: amounts.rentCents + amounts.chargesCents,
+        dueCents: isTermStart(l, period) ? termDueCents(l, period) : 0,
         paidCents: l.payments.find((p) => p.period === period)?.amountCents ?? 0,
         statusKey: st.key,
         unpaidCents: st.unpaidCents,

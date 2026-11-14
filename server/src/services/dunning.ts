@@ -33,6 +33,8 @@ export async function runDunning(now = new Date(), only?: string[]): Promise<{ s
   for (const l of leases) {
     const settings = dunningSettings(l.data)
     if (!settings.enabled) continue
+    // Bail commercial : la mise en demeure passe par un commissaire de justice, pas par une lettre de Bailio.
+    if ((l.data as { terms?: { kind?: string } } | null)?.terms?.kind === 'COMMERCIAL') continue
     const unpaid = unpaidPeriods(l, l.payments, now)
     if (!unpaid.length) continue
     // La suite suit le mois impayé le plus récent ; chaque lettre reprend toute la dette.

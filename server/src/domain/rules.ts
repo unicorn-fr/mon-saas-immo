@@ -40,8 +40,16 @@ export function leaseDurationMonths(kind: LeaseKind, landlord: Pick<LandlordProf
       return Math.min(10, Math.max(1, terms.durationMonths ?? 10))
     case 'PARKING':
       return terms.durationMonths ?? 12
+    case 'COMMERCIAL':
+      // 9 ans au moins (F22854) ; au-delà de 12 ans, acte notarié obligatoire (F23927) : Bailio s'arrête à 12 ans.
+      return Math.min(144, Math.max(COMMERCIAL_MIN_MONTHS, terms.durationMonths ?? COMMERCIAL_MIN_MONTHS))
   }
 }
+
+/** Bail commercial : 9 ans au moins (service-public F22854), 12 ans au plus sans notaire (F23927). */
+export const COMMERCIAL_MIN_MONTHS = 108
+/** Baux commerciaux signés depuis cette date : dépôt plafonné à un trimestre pour un commerce (F36538). */
+export const COMMERCIAL_DEPOSIT_CAP_FROM = '2026-05-28'
 
 /** Ce qui se passe à l'échéance, en une phrase. */
 export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'kind' | 'sciFamily'>, terms: Pick<LeaseTerms, 'durationMonths'> = {}): string {
@@ -58,6 +66,8 @@ export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'k
       const months = terms.durationMonths ?? 12
       return `Reconduit tacitement pour ${months % 12 === 0 ? `${months / 12} an${months > 12 ? 's' : ''}` : `${months} mois`}`
     }
+    case 'COMMERCIAL':
+      return 'Sans congé, prolongé tacitement pour une durée indéterminée'
   }
 }
 
@@ -67,6 +77,9 @@ export function renewalLabel(kind: LeaseKind, landlord: Pick<LandlordProfile, 'k
  */
 export function maxDepositFor(kind: LeaseKind, rentCents: number): number {
   if (kind === 'MOBILITE') return 0
+  // Bail commercial : un trimestre de loyer au plus dans Bailio. C'est le plafond légal d'un commerce depuis le 28 mai 2026,
+  // et en deçà de tout seuil d'intérêts dus au locataire (3 ou 6 mois, F36538).
+  if (kind === 'COMMERCIAL') return rentCents * 3
   return kind === 'VIDE' ? rentCents : rentCents * 2
 }
 
@@ -78,11 +91,17 @@ export function landlordNoticeMonthsFor(kind: LeaseKind, terms: Pick<LeaseTerms,
   if (kind === 'VIDE') return 6
   if (kind === 'MEUBLE') return 3
   if (kind === 'PARKING') return terms.noticeMonths ?? 1
+  // Bail commercial : congé 6 mois avant l'échéance, par acte de commissaire de justice (F36537).
+  if (kind === 'COMMERCIAL') return 6
   return null
 }
 
 /** Bail d'habitation (loi de 1989) : tout sauf le garage loué seul. */
-export const isHousing = (kind: LeaseKind) => kind !== 'PARKING'
+/** Bail d'habitation (loi de 1989) : ni le garage loué seul, ni le bail commercial. */
+export const isHousing = (kind: LeaseKind) => kind !== 'PARKING' && kind !== 'COMMERCIAL'
+
+/** Bail régi par le Code de commerce (bail commercial). */
+export const isCommercial = (kind: LeaseKind) => kind === 'COMMERCIAL'
 
 /** Bail meublé au sens de la loi de 1989 (meublé, étudiant, mobilité). Le garage loué seul n'est jamais meublé. */
 export const isFurnished = (kind: LeaseKind) => kind === 'MEUBLE' || kind === 'ETUDIANT' || kind === 'MOBILITE'
@@ -232,6 +251,12 @@ export interface DiagnosticRule {
 export function diagnosticsFor(p: PropertyFile): DiagnosticRule[] {
   // Garage, box ou place loué seul : aucun diagnostic n'est exigé (ce n'est pas un logement).
   if (p.nature === 'PARKING') return []
+  // Local commercial : DPE et état des risques (moins de 6 mois, si le local est en zone concernée) annexés au bail (F23927).
+  if (p.nature === 'COMMERCIAL')
+    return [
+      { key: 'dpe', label: 'Performance énergétique (DPE)', required: true, reason: 'Annexé au bail commercial', validity: '10 ans', annexed: true },
+      { key: 'erp', label: 'État des risques et pollutions', required: true, reason: 'Si le local est dans une zone concernée', validity: '6 mois', annexed: true },
+    ]
   const period = p.constructionPeriod
   const before1949 = period === 'BEFORE_1949'
   const before1997 = p.permitBefore1997 ?? (period ? ['BEFORE_1949', '1949_1974', '1975_1989'].includes(period) : true)

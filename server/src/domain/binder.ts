@@ -81,7 +81,7 @@ export function propertyBinder(i: BinderInput): BinderSection[] {
 
   sections.push({
     key: 'PROPERTY',
-    title: parking ? 'L’emplacement' : 'Le logement',
+    title: parking ? 'L’emplacement' : f.nature === 'COMMERCIAL' ? 'Le local' : 'Le logement',
     items: [
       item('deed', 'Titre de propriété (acte notarié)', 'Prouve que vous êtes propriétaire ; utile en cas de vente, de sinistre ou de litige.', 'Tant que vous êtes propriétaire'),
       item('propertyTax', 'Dernier avis de taxe foncière', 'Sert à la déclaration des revenus et à récupérer la taxe d’enlèvement des ordures ménagères sur le locataire.', 'Jusqu’à la fin de l’année suivante'),

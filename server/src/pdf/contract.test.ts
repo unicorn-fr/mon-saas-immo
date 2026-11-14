@@ -93,3 +93,25 @@ test('contrat type modifié par le décret n° 2026-596 : téléphone facultatif
   const plain = await text(SAMPLE_CONTRACT)
   assert.doesNotMatch(plain, /Servitude de résidence principale/)
 })
+
+test('bail commercial : Code de commerce, 9 ans, triennale, trimestre, TVA, ILC, sans loi de 1989', { skip: !hasPoppler && 'pdftotext absent', timeout: 60_000 }, async () => {
+  const c = {
+    ...SAMPLE_CONTRACT,
+    property: { address: '8 rue de la Loge', postalCode: '34000', city: 'Montpellier', nature: 'COMMERCIAL' as const, surface: 60, commercial: { use: 'RETAIL' as const, activity: 'Boulangerie, pâtisserie', equipped: false }, keys: '2 clés' },
+    terms: { ...SAMPLE_CONTRACT.terms, kind: 'COMMERCIAL' as const, startDate: '2027-01-01', durationMonths: 108, paymentFrequency: 'QUARTERLY' as const, paymentDay: 1, rentCents: 150000, chargesCents: 0, depositCents: 450000, commercial: { index: 'ILC' as const, vat: true } },
+  }
+  const t = await text(c)
+  assert.match(t, /BAIL COMMERCIAL/)
+  assert.match(t, /L145-38/)
+  assert.match(t, /Boulangerie, pâtisserie/)
+  assert.match(t, /durée de 9 ans/)
+  assert.match(t, /Échéance : le 1er du premier mois de chaque trimestre/)
+  assert.match(t, /chaque période de trois ans, au moins six mois à l’avance/)
+  assert.match(t, /18 000 €.*hors taxes, payable par trimestre/)
+  assert.match(t, /4 500 € hors taxes par échéance/)
+  assert.match(t, /TVA|taxe sur la valeur ajoutée au taux de 20 %/)
+  assert.match(t, /loyers commerciaux \(ILC\)/)
+  assert.match(t, /au plus tard trois mois après la remise des clés/)
+  assert.match(t, /commissaire de justice/)
+  assert.doesNotMatch(t, /2015-587|Notice d’information|89-462 du 6 juillet 1989 tendant|IRL/)
+})

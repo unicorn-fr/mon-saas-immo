@@ -87,6 +87,21 @@ export function initialInventory(p: PropertyFile, kind: 'ENTRY' | 'EXIT', previo
     }
   }
   // Garage, box ou place loué seul : l'emplacement, sa porte ou son accès, et les moyens d'accès remis.
+  // Local commercial : une pièce principale, la façade, les compteurs et les clés.
+  if (p.nature === 'COMMERCIAL') {
+    return {
+      meters: [
+        { key: 'elec', label: 'Électricité', number: '', index: '' },
+        { key: 'water', label: 'Eau froide', number: '', index: '' },
+      ],
+      keys: [{ type: 'Clé', count: 1, destination: 'Porte d’entrée du local' }],
+      rooms: [
+        { name: 'Local', done: false, items: ['Sol', 'Murs', 'Plafond', 'Portes et serrures', 'Fenêtres', 'Éclairage', 'Prises électriques'].map((label) => ({ label })) },
+        { name: 'Façade et vitrine', done: false, items: ['Vitrine', 'Devanture', 'Rideau métallique'].map((label) => ({ label })) },
+        { name: 'Sanitaires', done: false, items: ['Lavabo', 'WC', 'Murs et sol'].map((label) => ({ label })) },
+      ],
+    }
+  }
   if (p.nature === 'PARKING') {
     const closed = p.parking?.type !== 'PLACE'
     return {

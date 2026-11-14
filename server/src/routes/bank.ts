@@ -8,7 +8,7 @@ import { parseStatement } from '../domain/bankStatement.js'
 import { matchRents, type ExpectedRent } from '../domain/rentMatch.js'
 import { assumePaymentOn, receiptAutoOn } from '../domain/autoReceipt.js'
 import { dunningSettings, validDays } from '../domain/dunning.js'
-import { amountsForPeriod } from '../domain/rentHistory.js'
+import { isTermStart, termDueCents } from '../domain/rentHistory.js'
 import { upload } from './helpers.js'
 import { patchLeaseData, recordPayment } from './leases.js'
 
@@ -54,8 +54,9 @@ router.post('/bank/statement', upload.single('file'), async (req, res) => {
     for (let p = from > start ? from : start; p <= to; p = nextPeriod(p)) {
       if (end && p > end) break
       if (paid.has(p)) continue
-      const a = amountsForPeriod(l, p)
-      const due = a.rentCents + a.chargesCents
+      // Bail payé par trimestre ou par an : un loyer attendu seulement au début de chaque échéance, TVA comprise.
+      if (!isTermStart(l, p)) continue
+      const due = termDueCents(l, p)
       if (due <= 0) continue
       expected.push({ leaseId: l.id, label, names, period: p, dueDate: `${p}-${String(day).padStart(2, '0')}`, dueCents: due })
     }
@@ -121,6 +122,7 @@ router.put('/leases/:id/dunning', async (req, res) => {
   const lease = await leaseOwned(req.user!.id, String(req.params.id))
   const body = z.object({ enabled: z.boolean().optional(), days: z.array(z.number().int()).length(3).optional() }).parse(req.body)
   if (body.days && !validDays(body.days)) throw new HttpError(400, 'Choisissez des jours croissants, entre 1 et 60 jours après l’échéance.')
+  if (body.enabled && (lease.data as { terms?: { kind?: string } } | null)?.terms?.kind === 'COMMERCIAL') throw new HttpError(400, 'Bail commercial : les relances automatiques ne sont pas proposées, la mise en demeure passe par un commissaire de justice.')
   await patchLeaseData(lease.id, (f) => ({ dunning: { ...dunningSettings(f), ...(body.enabled !== undefined ? { enabled: body.enabled } : {}), ...(body.days ? { days: body.days } : {}) } }))
   const after = await leaseOwned(req.user!.id, lease.id)
   res.json({ success: true, data: dunningSettings(after.data) })

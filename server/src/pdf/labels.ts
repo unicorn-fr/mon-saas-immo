@@ -75,7 +75,7 @@ export const annexesLabel = (p: PropertyFile) => {
 export const commonAreasLabel = (p: PropertyFile) => listOf(COMMON_AREAS, p.commonAreas).join(', ')
 
 export function kindTitle(kind: LeaseKind, colocation: boolean): string {
-  const base = { VIDE: 'Logement vide', MEUBLE: 'Logement meublé', ETUDIANT: 'Logement meublé, bail étudiant de neuf mois', MOBILITE: 'Bail mobilité, logement meublé', PARKING: 'Garage ou place de stationnement' }[kind]
+  const base = { VIDE: 'Logement vide', MEUBLE: 'Logement meublé', ETUDIANT: 'Logement meublé, bail étudiant de neuf mois', MOBILITE: 'Bail mobilité, logement meublé', PARKING: 'Garage ou place de stationnement', COMMERCIAL: 'Bail commercial' }[kind]
   return colocation ? `${base}, colocation` : base
 }
 

@@ -55,11 +55,45 @@ export function isTermStart(lease: Pick<LeaseLike, 'data' | 'startDate'>, period
   return diff >= 0 && diff % n === 0
 }
 
-/** Montant dû pour l'échéance qui s'ouvre ce mois : loyer et charges du mois × nombre de mois de l'échéance. */
-export function termAmounts(lease: LeaseLike, period: string): { rentCents: number; chargesCents: number } {
+/** Bail commercial soumis à la TVA (option ou local équipé) : 20 % sur le loyer et les charges (F31925). */
+export const VAT_RATE = 0.2
+export const vatOn = (lease: Pick<LeaseLike, 'data'>) => Boolean((lease.data as { terms?: { kind?: string; commercial?: { vat?: boolean } } } | null)?.terms?.kind === 'COMMERCIAL' && (lease.data as { terms?: { commercial?: { vat?: boolean } } }).terms?.commercial?.vat)
+
+/** Premier mois (AAAA-MM) de l'échéance qui contient ce mois. Paiement mensuel : le mois lui-même. */
+export function termStartOf(lease: Pick<LeaseLike, 'data' | 'startDate'>, period: string): string {
+  const n = termMonthsOf(lease)
+  if (n === 1) return period
+  const start = monthIndex(lease.startDate.toISOString().slice(0, 7))
+  const i = monthIndex(period)
+  const k = i < start ? i : start + Math.floor((i - start) / n) * n
+  return `${Math.floor(k / 12)}-${String((k % 12) + 1).padStart(2, '0')}`
+}
+
+/**
+ * Montant dû pour l'échéance qui s'ouvre ce mois : loyer et charges du mois (hors taxes) × nombre de mois de l'échéance,
+ * et la TVA s'il y a lieu. Le total dû est rentCents + chargesCents + vatCents.
+ */
+export function termAmounts(lease: LeaseLike, period: string): { rentCents: number; chargesCents: number; vatCents: number } {
   const n = termMonthsOf(lease)
   const a = amountsForPeriod(lease, period)
-  return { rentCents: a.rentCents * n, chargesCents: a.chargesCents * n }
+  const rentCents = a.rentCents * n
+  const chargesCents = a.chargesCents * n
+  return { rentCents, chargesCents, vatCents: vatOn(lease) ? Math.round((rentCents + chargesCents) * VAT_RATE) : 0 }
+}
+
+export const termDueCents = (lease: LeaseLike, period: string) => {
+  const a = termAmounts(lease, period)
+  return a.rentCents + a.chargesCents + a.vatCents
+}
+
+/**
+ * Part du loyer et des charges (hors taxes) dans un paiement : la TVA éventuelle est retirée d'abord, puis le loyer de
+ * l'échéance est servi en premier (comme splitPayment de domain/tax.ts). Sert à l'aide à la déclaration et à l'export.
+ */
+export function splitTermPayment(lease: LeaseLike, period: string, amountCents: number): { rentCents: number; chargesCents: number } {
+  const exVat = vatOn(lease) ? Math.round(amountCents / (1 + VAT_RATE)) : amountCents
+  const rent = Math.min(exVat, termAmounts(lease, period).rentCents)
+  return { rentCents: rent, chargesCents: Math.max(0, exVat - rent) }
 }
 
 /** Montants dus pour un mois (AAAA-MM), à sa date d'échéance. */
@@ -84,8 +118,7 @@ export function unpaidPeriods(lease: LeaseLike, payments: Array<{ period: string
     const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
     if (!isTermStart(lease, period)) continue
     const paid = payments.find((p) => p.period === period)?.amountCents ?? 0
-    const a = termAmounts(lease, period)
-    const due = a.rentCents + a.chargesCents
+    const due = termDueCents(lease, period)
     if (paid < due) out.push({ period, missing: due - paid })
   }
   return out
@@ -110,8 +143,7 @@ export function rentSchedule(
     if (d.getTime() < startMonth || d > lease.endDate) continue
     const period = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
     if (!isTermStart(lease, period)) continue
-    const a = termAmounts(lease, period)
-    const dueCents = a.rentCents + a.chargesCents
+    const dueCents = termDueCents(lease, period)
     const pay = payments.find((p) => p.period === period)
     const paidCents = pay?.amountCents ?? 0
     const state: MonthState = paidCents >= dueCents ? 'PAID' : late.has(period) ? (paidCents > 0 ? 'PARTIAL' : 'LATE') : d > now ? 'UPCOMING' : d < lease.startDate ? 'FIRST' : 'UPCOMING'

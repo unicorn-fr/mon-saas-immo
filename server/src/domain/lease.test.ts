@@ -160,3 +160,18 @@ test('brouillon : nombres vides ou écrits en texte remis en forme, message clai
   assert.deepEqual(day30.error!.issues[0].path, ['rent', 'paymentDay'])
   assert.match(leaseIssue(['rent', 'paymentDay'], day30.error!.issues[0].code).message, /du 1 au 28/)
 })
+
+test('bail commercial : 9 à 12 ans, dépôt d’un trimestre au plus, congé 6 mois, prolongation tacite, courriers limités', async () => {
+  const { maxDepositFor, landlordNoticeMonthsFor, renewalLabel, isHousing } = await import('./rules.js')
+  const { letterAllowed } = await import('./letters.js')
+  const person = { kind: 'PERSON' as const }
+  assert.equal(leaseDurationMonths('COMMERCIAL', person), 108)
+  assert.equal(leaseDurationMonths('COMMERCIAL', person, { durationMonths: 24 }), 108, 'jamais moins de 9 ans')
+  assert.equal(leaseDurationMonths('COMMERCIAL', person, { durationMonths: 200 }), 144, 'au-delà de 12 ans, notaire : Bailio s’arrête à 12 ans')
+  assert.equal(maxDepositFor('COMMERCIAL', 100000), 300000)
+  assert.equal(landlordNoticeMonthsFor('COMMERCIAL'), 6)
+  assert.match(renewalLabel('COMMERCIAL', person), /durée indéterminée/)
+  assert.equal(isHousing('COMMERCIAL'), false)
+  assert.equal(letterAllowed('REMINDER', 'COMMERCIAL'), true)
+  for (const t of ['FORMAL_NOTICE', 'NOTICE_TO_LEAVE', 'REVISION', 'DEPOSIT_RETURN', 'BOILER'] as const) assert.equal(letterAllowed(t, 'COMMERCIAL'), false, t)
+})
