@@ -1276,7 +1276,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
     if (out.textContent !== String(k)) { out.textContent = k; out.classList.remove('tic'); void out.offsetWidth; out.classList.add('tic'); }
     n.style.setProperty('--pc', ((k - 1) / 19 * 100) + '%');
     if (prixVu) vise(k);
-    const b = an ? k * 34.90 : k * 3.49;
+    const b = an ? Math.min(k * 34.90, 299) : Math.min(k * 3.49, 29.90);   /* plafond : toujours sous Qalimo */
     const q = an ? (k > 7 ? 343 : k * 49) : (k > 7 ? 34.30 : k * 4.90);
     const a = k * LOYER * TAUX * (an ? 12 : 1);
     $('forfait').classList.toggle('on', k > 7);

@@ -9,6 +9,11 @@ import {
   PARKING_PRICE,
   PRICE_UNIT,
   YEARLY_PRICE,
+  billCents,
+  CAP_FROM_HOMES,
+  CAP_MAX_HOMES,
+  CAP_MONTHLY,
+  CAP_MONTHLY_CENTS,
 } from "../config";
 import { CALLBACK_PROMISE, INCLUS } from "../content/inclus";
 
@@ -185,14 +190,13 @@ export function Tarifs() {
   const [homes, setHomes] = useState(2);
   const [garages, setGarages] = useState(0);
   const [rent, setRent] = useState(750);
-  const month = cents(MONTHLY_PRICE);
   const year = cents(YEARLY_PRICE);
-  const parking = cents(PARKING_PRICE);
-  const perYear = homes * year + garages * parking * 12;
-  const perMonth = homes * month + garages * parking;
+  const perYear = billCents(homes, garages, true);
+  const perMonth = billCents(homes, garages, false);
+  const capped = perMonth !== null && perMonth === CAP_MONTHLY_CENTS && homes + garages >= CAP_FROM_HOMES;
   const agencyLow = Math.round(rent * 100 * 12 * homes * 0.04);
   const agencyHigh = Math.round(rent * 100 * 12 * homes * 0.1);
-  const bailioYear = homes * year;
+  const bailioYear = billCents(homes, 0, true) ?? homes * year;
 
   return (
     <SimplePage title="Un prix, tout compris" wide>
@@ -248,7 +252,7 @@ export function Tarifs() {
             label="Logements"
             value={homes}
             min={0}
-            max={100}
+            max={CAP_MAX_HOMES + 1}
             onChange={setHomes}
           />
           <Counter
@@ -256,7 +260,7 @@ export function Tarifs() {
             label="Garages, box ou places loués seuls"
             value={garages}
             min={0}
-            max={100}
+            max={CAP_MAX_HOMES + 1}
             onChange={setGarages}
           />
           <p aria-live="polite" style={{ margin: 0, color: BAI.ink }}>
@@ -268,16 +272,23 @@ export function Tarifs() {
                 lineHeight: 1.1,
               }}
             >
-              {yearly
-                ? `${euros(perYear)} par an`
-                : `${euros(perMonth)} par mois`}
+              {perYear === null || perMonth === null
+                ? "Sur devis"
+                : yearly
+                  ? `${euros(perYear)} par an`
+                  : `${euros(perMonth)} par mois`}
             </strong>
             <span>
-              {yearly
-                ? `soit ${euros(Math.round(perYear / 12))} par mois`
-                : `soit ${euros(perMonth * 12)} par an`}
-              , après le mois offert.
-              {garages ? ` Garages : ${PARKING_PRICE} par mois chacun.` : ""}
+              {perYear === null || perMonth === null
+                ? `Au-delà de ${CAP_MAX_HOMES} biens, écrivez-nous : le prix reste sous celui du marché.`
+                : <>
+                    {yearly
+                      ? `soit ${euros(Math.round(perYear / 12))} par mois`
+                      : `soit ${euros(perMonth * 12)} par an`}
+                    , après le mois offert.
+                    {capped ? ` Plafond atteint : jamais plus de ${CAP_MONTHLY} par mois, jusqu'à ${CAP_MAX_HOMES} biens.` : ""}
+                    {garages && !capped ? ` Garages : ${PARKING_PRICE} par mois chacun.` : ""}
+                  </>}
             </span>
           </p>
           <Link
