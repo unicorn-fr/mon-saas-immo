@@ -250,14 +250,15 @@ export async function tunnelLoyer(page, { rent = '780', charges = '60', startDat
  * Inscription en questions (`/inscription`) : propriétaire, attentes, nombre de logements, outil actuel, provenance,
  * puis prénom, nom, email. Renvoie le lien de connexion relu dans le journal de l'API.
  */
-export async function signupQuestions(page, { email, firstName = 'Claire', lastName = 'Martin', homes = '1 logement', tool = 'Je commence', phone = '' } = {}) {
+export async function signupQuestions(page, { email, firstName = 'Claire', lastName = 'Martin', homes = 1, tool = 'Je commence', phone = '' } = {}) {
   await page.getByRole('heading', { name: 'Créez votre espace.' }).waitFor()
   await page.getByRole('button', { name: /Je suis propriétaire/ }).click()
   await page.getByRole('heading', { name: /Qu’attendez-vous de Bailio/ }).waitFor()
   await page.getByRole('button', { name: /Gagner du temps/ }).click()
   await page.getByRole('button', { name: 'Continuer' }).click()
   await page.getByRole('heading', { name: /Combien de logements/ }).waitFor()
-  await page.getByRole('button', { name: new RegExp(`^${homes}`) }).click()
+  await page.getByLabel('Nombre de logements').fill(String(homes))
+  await page.getByRole('button', { name: 'Continuer' }).click()
   await page.getByRole('heading', { name: /Comment gérez-vous/ }).waitFor()
   await page.getByRole('button', { name: new RegExp(`^${tool}`) }).click()
   await page.getByRole('heading', { name: /Comment avez-vous connu/ }).waitFor()

@@ -25,6 +25,8 @@ export const signupAnswersSchema = z.object({
   role: z.enum(SIGNUP_ROLES),
   goals: z.array(z.enum(SIGNUP_GOALS)).max(SIGNUP_GOALS.length).default([]),
   homes: z.enum(SIGNUP_HOMES),
+  /** Nombre exact choisi au curseur (50 = « 50 et plus »). */
+  homeCount: z.number().int().min(1).max(50).optional(),
   tool: z.enum(SIGNUP_TOOLS),
   source: z.enum(SIGNUP_SOURCES).optional(),
   firstName: name,
@@ -64,6 +66,6 @@ export function applySignup(a: SignupAnswers, profile: Record<string, unknown>, 
       ...(phone && !filled(profile.phone) ? { phone } : {}),
       ...(a.role === 'AGENCY' && !profile.agent ? { agent: { enabled: true } } : {}),
     },
-    onboarding: { role: a.role, goals: a.goals, homes: a.homes, tool: a.tool, ...(a.source ? { source: a.source } : {}), at: at.toISOString() },
+    onboarding: { role: a.role, goals: a.goals, homes: a.homes, ...(a.homeCount ? { homeCount: a.homeCount } : {}), tool: a.tool, ...(a.source ? { source: a.source } : {}), at: at.toISOString() },
   }
 }

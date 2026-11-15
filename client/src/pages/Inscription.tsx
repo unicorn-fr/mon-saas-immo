@@ -46,13 +46,17 @@ const GOALS: Array<{ value: Goal; title: string; text: string; icon: ReactNode }
   { value: 'FINANCES', title: 'Piloter mes finances', text: 'Rentabilité, dépenses et trésorerie d’un coup d’œil.', icon: <Chart size={26} /> },
   { value: 'TAXES', title: 'Déclarer mes revenus', text: 'Les cases à recopier, sans prise de tête.', icon: <Calculator /> },
 ]
-const HOMES: Array<{ value: Homes; title: string; text: string }> = [
-  { value: 'ONE', title: '1 logement', text: 'Tout l’essentiel en un écran.' },
-  { value: 'TWO', title: '2 logements', text: 'Chaque bail suivi à part.' },
-  { value: 'FEW', title: '3 à 9', text: 'Vos chiffres du mois en tête.' },
-  { value: 'MANY', title: '10 à 20', text: 'Actions groupées, alertes.' },
-  { value: 'LOTS', title: 'Plus de 20', text: 'Patrimoine, exports, structures.' },
-]
+/** Ce que le tableau de bord met en avant selon le nombre de logements (mêmes seuils que le serveur). */
+const VIEW_OF: Record<Homes, string> = {
+  ONE: 'Tout l’essentiel sur un seul écran.',
+  TWO: 'Chaque bail suivi à part, rien ne se mélange.',
+  FEW: 'Les chiffres du mois en tête, les retards en premier.',
+  MANY: 'Relances et quittances groupées, en un clic.',
+  LOTS: 'Patrimoine, exports et structures d’abord.',
+}
+const MAX_HOMES = 50
+const homesOf = (n: number): Homes => (n <= 1 ? 'ONE' : n === 2 ? 'TWO' : n <= 9 ? 'FEW' : n <= 20 ? 'MANY' : 'LOTS')
+const homesLabel = (n: number) => (n >= MAX_HOMES ? `${MAX_HOMES} logements et plus` : `${n} logement${n > 1 ? 's' : ''}`)
 const TOOLS: Array<{ value: Tool; title: string; text: string }> = [
   { value: 'NONE', title: 'Je commence', text: 'Premier bail ou premier logement.' },
   { value: 'SPREADSHEET', title: 'Un tableur', text: 'Excel, Google Sheets, papier.' },
@@ -75,7 +79,8 @@ const SOURCES: Array<{ value: Source; label: string }> = [
 interface Answers {
   role?: Role
   goals: Goal[]
-  homes?: Homes
+  homes: Homes
+  homeCount: number
   tool?: Tool
   source?: Source
   firstName: string
@@ -223,6 +228,85 @@ function Card({ i, selected, onClick, title, text, icon, tag, multi }: { i: numb
   )
 }
 
+/** Une petite maison dessinée trait par trait ; celles déjà là ne rejouent pas leur apparition. */
+function House({ i }: { i: number }) {
+  return (
+    <svg className="su-house" viewBox="0 0 24 24" width="26" height="26" aria-hidden style={{ ['--i' as string]: i % 10 } as CSSProperties}>
+      <path pathLength={1} d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5M10 20v-5h4v5" fill="none" stroke={DA2.ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <rect className="su-house-win" x="10.6" y="10.4" width="2.8" height="2.6" rx=".4" fill={DA2.sun} />
+    </svg>
+  )
+}
+
+/**
+ * Nombre de logements au curseur : le chiffre exact en grand (il glisse à chaque changement), une maison par
+ * logement qui se dessine, et ce que le tableau de bord mettra en avant. − et + pour ajuster d'un logement.
+ */
+function HomesSlider({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const shown = Math.min(value, 20)
+  const pct = ((value - 1) / (MAX_HOMES - 1)) * 100
+  const step = (d: number) => onChange(Math.min(MAX_HOMES, Math.max(1, value + d)))
+  const round: CSSProperties = { width: 48, height: 48, borderRadius: 999, border: `1.5px solid ${DA2.lineStrong}`, background: DA2.white, color: DA2.ink, font: `400 24px/1 ${DA2.sans}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, background: DA2.white, border: `1px solid ${DA2.line}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 32px)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <button type="button" className="su-btn" style={round} onClick={() => step(-1)} disabled={value <= 1} aria-label="Un logement de moins">
+          −
+        </button>
+        <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', gap: 12, overflow: 'hidden' }}>
+          <span key={value} className="su-num" style={{ font: `300 clamp(64px, 9vw, 96px)/1 ${DA2.serif}`, letterSpacing: '-0.04em', color: DA2.ink, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+            {value}
+            {value >= MAX_HOMES ? '+' : ''}
+          </span>
+          <span style={{ font: `400 22px/1 ${DA2.serif}`, color: DA2.mid }}>logement{value > 1 ? 's' : ''}</span>
+        </div>
+        <button type="button" className="su-btn" style={round} onClick={() => step(1)} disabled={value >= MAX_HOMES} aria-label="Un logement de plus">
+          +
+        </button>
+      </div>
+      <input
+        type="range"
+        className="su-range"
+        min={1}
+        max={MAX_HOMES}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label="Nombre de logements"
+        aria-valuetext={homesLabel(value)}
+        style={{ ['--p' as string]: `${pct}%` } as CSSProperties}
+      />
+      <div style={{ position: 'relative', height: 16, fontSize: 13, color: DA2.soft, marginTop: -12, margin: '-12px 15px 0' }} aria-hidden>
+        {[1, 10, 20, 30, 40, MAX_HOMES].map((n) => (
+          <button
+            key={n}
+            type="button"
+            tabIndex={-1}
+            onClick={() => onChange(n)}
+            style={{ position: 'absolute', left: `${((n - 1) / (MAX_HOMES - 1)) * 100}%`, transform: 'translateX(-50%)', background: 'none', border: 'none', padding: 0, font: 'inherit', color: value === n ? DA2.ink : DA2.soft, fontWeight: value === n ? 700 : 400, cursor: 'pointer' }}
+          >
+            {n === MAX_HOMES ? `${n}+` : n}
+          </button>
+        ))}
+      </div>
+      <div aria-hidden style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 64, alignContent: 'flex-start' }}>
+        {Array.from({ length: shown }, (_, i) => (
+          <House key={i} i={i} />
+        ))}
+        {value > 20 ? (
+          <span key="plus" className="su-num" style={{ alignSelf: 'center', font: `400 18px/1 ${DA2.serif}`, color: DA2.sunInk, marginLeft: 6 }}>
+            {value >= MAX_HOMES ? 'et plus encore' : `et ${value - 20} de plus`}
+          </span>
+        ) : null}
+      </div>
+      <p key={homesOf(value)} className="su-num" role="status" style={{ margin: 0, fontSize: 16, color: DA2.mid, borderTop: `1px solid ${DA2.line}`, paddingTop: 16 }}>
+        <strong style={{ color: DA2.ink, fontWeight: 600 }}>Votre tableau de bord : </strong>
+        {VIEW_OF[homesOf(value)]}
+      </p>
+    </div>
+  )
+}
+
 /** Colonne bleu nuit : la plaque, la promesse, les quatre étapes allumées au fil des réponses, ce que vous avez dit. */
 function Side({ q, chips }: { q: number; chips: string[] }) {
   return (
@@ -281,7 +365,7 @@ export default function Inscription() {
   const navigate = useNavigate()
   const { state } = useLocation() as { state: { from?: string } | null }
   const { q, go, next, prev } = useQuestion(COUNT)
-  const [a, setA] = useState<Answers>({ goals: [], firstName: '', lastName: '', email: '', phone: '' })
+  const [a, setA] = useState<Answers>({ goals: [], homes: 'ONE', homeCount: 1, firstName: '', lastName: '', email: '', phone: '' })
   const [tenant, setTenant] = useState(false)
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -312,7 +396,7 @@ export default function Inscription() {
   const chips = [
     a.role === 'OWNER' ? 'Propriétaire' : a.role === 'AGENCY' ? 'Gestion pour d’autres' : null,
     ...(q > 2 ? a.goals.map((g) => GOALS.find((x) => x.value === g)!.title) : []),
-    a.homes ? HOMES.find((x) => x.value === a.homes)!.title.replace(/^(\d+ à \d+|Plus de 20)$/, '$1 logements') : null,
+    q > 3 ? homesLabel(a.homeCount) : null,
     a.tool ? (a.tool === 'NONE' ? 'Je commence' : `Aujourd’hui : ${TOOLS.find((x) => x.value === a.tool)!.title}`) : null,
   ].filter((x): x is string => Boolean(x))
 
@@ -335,7 +419,7 @@ export default function Inscription() {
           email: a.email.trim(),
           signup: true,
           next: safePath(state?.from) ?? undefined,
-          answers: { role: a.role, goals: a.goals, homes: a.homes, tool: a.tool, source: a.source, firstName: a.firstName.trim(), lastName: a.lastName.trim(), phone: a.phone.trim() || undefined },
+          answers: { role: a.role, goals: a.goals, homes: a.homes, homeCount: a.homeCount, tool: a.tool, source: a.source, firstName: a.firstName.trim(), lastName: a.lastName.trim(), phone: a.phone.trim() || undefined },
         },
       })
       setSent(true)
@@ -405,12 +489,8 @@ export default function Inscription() {
     )
   } else if (q === 3) {
     body = (
-      <Screen q={3} title={<>Combien de logements <em style={em}>{a.role === 'AGENCY' ? 'gérez-vous' : 'louez-vous'}</em> ?</>} hint="Garages compris. Votre tableau de bord s’adapte." onBack={prev}>
-        <div className="su-grid" role="group" aria-label="Nombre de logements">
-          {HOMES.map((h, i) => (
-            <Card key={h.value} i={i} selected={a.homes === h.value} onClick={() => pick({ homes: h.value })} title={h.title} text={h.text} />
-          ))}
-        </div>
+      <Screen q={3} title={<>Combien de logements <em style={em}>{a.role === 'AGENCY' ? 'gérez-vous' : 'louez-vous'}</em> ?</>} hint="Garages compris. Glissez jusqu’au bon chiffre." onBack={prev} onNext={next}>
+        <HomesSlider value={a.homeCount} onChange={(n) => set({ homeCount: n, homes: homesOf(n) })} />
       </Screen>
     )
   } else if (q === 4) {

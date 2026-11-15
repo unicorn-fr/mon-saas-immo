@@ -31,7 +31,7 @@ test('inscription en questions, puis import avec le bail en cours', async () => 
   await page.getByRole('button', { name: 'Retour' }).click()
 
   const email = `qalimo+${Date.now()}@example.fr`
-  const link = await signupQuestions(page, { email, homes: '3 à 9', tool: 'Qalimo', phone: '06 12 34 56 78' })
+  const link = await signupQuestions(page, { email, homes: 5, tool: 'Qalimo', phone: '06 12 34 56 78' })
   await page.getByText(/directement sur l’import de votre fichier/).waitFor()
   await page.goto(link)
   await page.waitForURL(/\/espace\/logements\/importer/)

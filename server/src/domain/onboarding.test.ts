@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { applySignup, firstPathFor, signupAnswersSchema, viewModeFor } from './onboarding.js'
 
-const base = { role: 'OWNER', goals: ['TIME', 'RENTS'], homes: 'FEW', tool: 'QALIMO', source: 'SEARCH', firstName: ' Claire ', lastName: 'Martin', phone: '06 12 34 56 78' } as const
+const base = { role: 'OWNER', goals: ['TIME', 'RENTS'], homes: 'FEW', homeCount: 4, tool: 'QALIMO', source: 'SEARCH', firstName: ' Claire ', lastName: 'Martin', phone: '06 12 34 56 78' } as const
 
 test('réponses lues et nettoyées ; une réponse inconnue est refusée', () => {
   const a = signupAnswersSchema.parse(base)
@@ -32,7 +32,7 @@ test('le profil existant n’est jamais écrasé ; téléphone illisible ignoré
   const fresh = applySignup(a, {}, at)
   assert.deepEqual(fresh.profile, { firstNames: 'Claire', lastName: 'Martin', phone: '06 12 34 56 78' })
   assert.equal(fresh.viewMode, 'PORTFOLIO')
-  assert.deepEqual(fresh.onboarding, { role: 'OWNER', goals: ['TIME', 'RENTS'], homes: 'FEW', tool: 'QALIMO', source: 'SEARCH', at: '2026-11-15T10:00:00.000Z' })
+  assert.deepEqual(fresh.onboarding, { role: 'OWNER', goals: ['TIME', 'RENTS'], homes: 'FEW', homeCount: 4, tool: 'QALIMO', source: 'SEARCH', at: '2026-11-15T10:00:00.000Z' })
   const kept = applySignup({ ...a, phone: 'pas un numéro' }, { firstNames: 'Jeanne', city: 'Lyon' }, at)
   assert.deepEqual(kept.profile, { firstNames: 'Jeanne', city: 'Lyon', lastName: 'Martin' })
   assert.deepEqual(applySignup({ ...a, role: 'AGENCY' }, {}, at).profile.agent, { enabled: true })
