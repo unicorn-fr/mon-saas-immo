@@ -43,6 +43,8 @@ const rowSchema = z.object({
     chargesCents: cents,
     depositCents: cents,
     paymentDay: z.number().int().min(1).max(28).optional(),
+    dpeClass: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']).optional(),
+    gesClass: z.enum(['A', 'B', 'C', 'D', 'E', 'F', 'G']).optional(),
   }),
   tenants: z
     .array(z.object({ firstNames: str(120), lastName: str(80), email: z.email().optional(), phone: str(30) }))
@@ -65,6 +67,7 @@ function propertyFile(p: z.infer<typeof rowSchema>['property'] | ImportProperty)
     file.rooms = p.rooms
   }
   if (hasRent) file.rent = Object.fromEntries(Object.entries(rent).filter(([, v]) => v != null))
+  if (p.kind !== 'PARKING' && (p.dpeClass || p.gesClass)) file.diagnostics = { dpe: { ...(p.dpeClass ? { class: p.dpeClass } : {}), ...(p.gesClass ? { ges: p.gesClass } : {}) } }
   return file as PropertyFile
 }
 

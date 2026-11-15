@@ -8,7 +8,7 @@ import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { VideoButton } from '../components/VideoDialog'
 import { BAI } from '../constants/bailio-tokens'
 import { useAuth } from '../lib/auth'
-import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS, PARKING_PRICE, priceText } from '../config'
+import { CONTACT_EMAIL, LAUNCH_OFFER, MONTHLY_PRICE, PARKING_PRICE, priceText, billCents, CAP_MONTHLY } from '../config'
 import { HeroProduct } from '../components/HeroProduct'
 import { AUTOMATIONS, COMPARE, GUARANTEES, TRUST } from '../content/accueil'
 import { AVIS } from '../content/avis'
@@ -261,7 +261,9 @@ function PriceCalc() {
   const [n, setN] = useState(3)
   const [yearly, setYearly] = useState(true)
   const agency = Math.round(n * SAMPLE_RENT * AGENCY_RATE * 12 * 100)
-  const bailio = yearly ? n * YEARLY_PRICE_CENTS : n * MONTHLY_PRICE_CENTS * 12
+  const perMonth = billCents(n, 0, false) ?? 0
+  const bailio = yearly ? (billCents(n, 0, true) ?? 0) : perMonth * 12
+  const capped = n >= 9
   const keep = Math.max(0, agency - bailio)
   const share = agency ? Math.max(0.02, bailio / agency) : 0
   const set = (k: number) => setN(Math.min(30, Math.max(1, k)))
@@ -311,9 +313,9 @@ function PriceCalc() {
         <div className="calc2-result">
           <p className="calc2-label">Bailio, {yearly ? 'à l’année' : 'au mois'}</p>
           <p className="calc2-price">
-            <Money cents={yearly ? bailio : n * MONTHLY_PRICE_CENTS} />
+            <Money cents={yearly ? bailio : perMonth} />
           </p>
-          <p className="calc2-sub">{yearly ? `soit ${eur(Math.round(bailio / 12))} par mois` : `soit ${eur(bailio)} par an`}, garage seul {PARKING_PRICE} par mois</p>
+          <p className="calc2-sub">{yearly ? `soit ${eur(Math.round(bailio / 12))} par mois` : `soit ${eur(bailio)} par an`}{capped ? `, plafond de ${CAP_MONTHLY} par mois atteint` : `, garage seul ${PARKING_PRICE} par mois`}</p>
           <div className="calc2-bars" aria-hidden>
             <div className="calc2-bar">
               <span>Une agence</span>
