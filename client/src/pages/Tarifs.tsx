@@ -300,7 +300,7 @@ export function Tarifs() {
               minHeight: 52,
               padding: "0 26px",
               borderRadius: 999,
-              background: BAI.owner,
+              background: BAI.cta,
               color: BAI.surface,
               fontWeight: 600,
               textDecoration: "none",

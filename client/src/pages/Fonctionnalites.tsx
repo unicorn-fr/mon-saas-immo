@@ -33,7 +33,7 @@ function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean
   )
 }
 
-const blueButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, boxShadow: BAI.ctaShadow, background: BAI.owner, color: BAI.surface, fontWeight: 600, textDecoration: 'none' } as const
+const blueButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 28px', borderRadius: BAI.radiusBtn, boxShadow: BAI.ctaShadow, background: BAI.cta, color: BAI.surface, fontWeight: 600, textDecoration: 'none' } as const
 const outlineButton = { display: 'inline-flex', alignItems: 'center', minHeight: 56, padding: '0 26px', borderRadius: BAI.radiusBtn, background: BAI.surface, border: `1px solid ${BAI.border}`, color: BAI.ink, fontWeight: 600, textDecoration: 'none' } as const
 const h2 = { margin: '0 0 16px', fontSize: 'clamp(26px, 3.4vw, 36px)', fontWeight: 700, color: BAI.ink, lineHeight: 1.2 } as const
 const pill = { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: BAI.owner, background: BAI.sky, borderRadius: 999, padding: '4px 14px' } as const

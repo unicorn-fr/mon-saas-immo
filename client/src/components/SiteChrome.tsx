@@ -362,7 +362,7 @@ function PageAside({
             minHeight: 44,
             padding: "0 20px",
             borderRadius: 999,
-            background: BAI.owner,
+            background: BAI.cta,
             color: BAI.surface,
             fontWeight: 600,
             textDecoration: "none",
