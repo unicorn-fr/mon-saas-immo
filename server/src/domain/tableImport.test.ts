@@ -144,3 +144,23 @@ test('date Excel et nom complet', () => {
 test('ancien format .xls refusé avec un message clair', () => {
   assert.throws(() => parseTable(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0, 0, 0, 0])), /\.xlsx ou en CSV/)
 })
+
+test('« Bien » et « Adresse » : l’adresse gagne, « Bien » devient le nom du bien', () => {
+  const p = parseTable(Buffer.from('Bien;Adresse;Code postal;Ville;Loyer HC\nT2 Croix-Rousse;12 rue des Lilas;69004;Lyon;780'))
+  assert.equal(p.rows[0].property.address, '12 rue des Lilas')
+  assert.equal(p.rows[0].property.label, 'T2 Croix-Rousse')
+  assert.ok(!p.columns.ignored.includes('Adresse'))
+})
+
+test('« Nom, Prénom », colocataires dans une même case, DPE et jour 31 signalé', () => {
+  assert.deepEqual(splitName('Leroy, Tom'), { lastName: 'Leroy', firstNames: 'Tom' })
+  const p = parseTable(Buffer.from('Adresse;Locataire;Email;Classe DPE;GES;Jour d’échéance\n27 avenue de Toulouse;Paul Girard et Nora Benali;paul@example.fr;C;D;31'))
+  const r = p.rows[0]
+  assert.equal(r.tenants.length, 2)
+  assert.deepEqual([r.tenants[0].firstNames, r.tenants[0].lastName, r.tenants[0].email], ['Paul', 'Girard', 'paul@example.fr'])
+  assert.deepEqual([r.tenants[1].firstNames, r.tenants[1].lastName, r.tenants[1].email], ['Nora', 'Benali', undefined])
+  assert.equal(r.property.dpeClass, 'C')
+  assert.equal(r.property.gesClass, 'D')
+  assert.equal(r.property.paymentDay, undefined)
+  assert.ok(r.issues.some((i) => i.includes('jour de paiement 31')))
+})

@@ -26,7 +26,12 @@ export interface ImportProperty {
   chargesCents?: number
   depositCents?: number
   paymentDay?: number
+  /** Classes du DPE (énergie, climat) lues dans le fichier. */
+  dpeClass?: DpeLetter
+  gesClass?: DpeLetter
 }
+
+export type DpeLetter = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
 
 export interface ImportTenant {
   firstNames?: string
@@ -56,7 +61,7 @@ export interface ImportPreview {
 
 // ── Colonnes ────────────────────────────────────────────────────────────────
 
-type Field = 'address' | 'postalCode' | 'city' | 'surface' | 'rooms' | 'kind' | 'rent' | 'charges' | 'deposit' | 'paymentDay' | 'entryDate' | 'label' | 'tenantFull' | 'lastName' | 'firstNames' | 'email' | 'phone'
+type Field = 'address' | 'postalCode' | 'city' | 'surface' | 'rooms' | 'kind' | 'rent' | 'charges' | 'deposit' | 'paymentDay' | 'entryDate' | 'label' | 'tenantFull' | 'lastName' | 'firstNames' | 'email' | 'phone' | 'dpe' | 'ges'
 
 const FIELD_LABEL: Record<Field, string> = {
   address: 'Adresse',
@@ -76,6 +81,8 @@ const FIELD_LABEL: Record<Field, string> = {
   firstNames: 'Prénom du locataire',
   email: 'Email du locataire',
   phone: 'Téléphone du locataire',
+  dpe: 'Classe énergie (DPE)',
+  ges: 'Classe climat (GES)',
 }
 
 /** Intitulés reconnus, sans accents ni majuscules ni ponctuation (voir `norm`). */
@@ -97,6 +104,8 @@ const SYNONYMS: Record<Field, string[]> = {
   firstNames: ['prenom', 'prenom du locataire', 'prenom locataire', 'prenoms', 'locataire prenom'],
   email: ['email', 'e mail', 'mail', 'courriel', 'adresse mail', 'adresse email', 'email du locataire', 'mail du locataire', 'adresse e mail'],
   phone: ['telephone', 'tel', 'portable', 'mobile', 'telephone du locataire', 'tel locataire', 'telephone portable', 'numero de telephone', 'tel portable', 'n de telephone'],
+  dpe: ['dpe', 'classe dpe', 'classe energie', 'classe energetique', 'etiquette energie', 'etiquette dpe', 'dpe classe', 'etiquette energetique', 'performance energetique', 'classe dpe energie', 'lettre dpe'],
+  ges: ['ges', 'classe ges', 'etiquette ges', 'etiquette climat', 'classe climat', 'dpe ges'],
 }
 
 const SYNONYM_INDEX = new Map<string, Field>()
@@ -316,6 +325,13 @@ const CIVILITY = /^(m|mr|mme|mlle|monsieur|madame|mademoiselle|melle|m\.|mme\.|m
 
 /** « DUPONT Jean », « Jean Dupont », « Mme Claire Martin » → prénom et nom. */
 export function splitName(full: string): { firstNames?: string; lastName?: string } {
+  const comma = clean(full).match(/^([^,]+),\s*(.+)$/)
+  if (comma) {
+    // « Leroy, Tom » : le nom d'abord, puis le prénom.
+    const last = comma[1].split(' ').filter((t) => t && !CIVILITY.test(t)).join(' ')
+    const first = comma[2].split(' ').filter((t) => t && !CIVILITY.test(t)).join(' ')
+    return { ...(last ? { lastName: last } : {}), ...(first ? { firstNames: first } : {}) }
+  }
   const tokens = clean(full)
     .split(' ')
     .filter((t) => t && !CIVILITY.test(t))
@@ -427,12 +443,26 @@ function readRow(cells: string[], at: Partial<Record<Field, number>>, line: numb
   if (day) {
     const n = Number(day.match(/\d{1,2}/)?.[0])
     if (Number.isInteger(n) && n >= 1 && n <= 28) p.paymentDay = n
-    else issues.push('jour de paiement illisible (de 1 à 28)')
+    else issues.push(Number.isInteger(n) && n >= 29 && n <= 31 ? `jour de paiement ${n} non repris : choisissez un jour du 1 au 28 dans la fiche` : 'jour de paiement illisible (de 1 à 28)')
+  }
+
+  for (const [f, k] of [['dpe', 'dpeClass'], ['ges', 'gesClass']] as const) {
+    const raw = get(f)
+    if (!raw) continue
+    const letter = raw.trim().toUpperCase().match(/^(?:CLASSE\s+)?([A-G])\b/)?.[1]
+    if (letter) p[k] = letter as DpeLetter
+    else issues.push(f === 'dpe' ? 'classe énergie illisible (A à G)' : 'classe climat illisible (A à G)')
   }
 
   const t: ImportTenant = {}
   const full = get('tenantFull')
-  if (full) Object.assign(t, splitName(full))
+  // Plusieurs locataires dans la même case : « Paul Girard et Nora Benali », « A / B », « A & B », « A ; B ».
+  const others: ImportTenant[] = []
+  if (full) {
+    const parts = full.split(/\s+(?:et|&|\+)\s+|\s*[/;]\s*/i).map((x) => x.trim()).filter(Boolean)
+    Object.assign(t, splitName(parts[0]))
+    for (const x of parts.slice(1)) { const o = splitName(x); if (o.lastName || o.firstNames) others.push(o) }
+  }
   const last = get('lastName')
   const first = get('firstNames')
   if (last) t.lastName = last
@@ -467,7 +497,7 @@ function readRow(cells: string[], at: Partial<Record<Field, number>>, line: numb
     issues.unshift('adresse manquante')
     blocking = true
   }
-  return { line, lines: [line], property: p, tenants: hasTenant ? [t] : [], issues, blocking }
+  return { line, lines: [line], property: p, tenants: hasTenant ? [t, ...others.map((o) => ({ ...o, entryDate: t.entryDate }))] : others, issues, blocking }
 }
 
 // ── Lecture du fichier ──────────────────────────────────────────────────────
@@ -499,13 +529,24 @@ export function parseTable(buf: Buffer): ImportPreview {
   for (let i = 0; i < Math.min(grid.length, 15); i++) {
     const found: Partial<Record<Field, number>> = {}
     const list: ImportPreview['columns']['detected'] = []
+    // Rang d'un intitulé : sa place dans la liste des synonymes (0 = le plus précis), 50 s'il est reconnu autrement.
+    const rank = (f: Field, h: string) => { const r = SYNONYMS[f].indexOf(norm(h)); return r < 0 ? 50 : r }
+    const best: Partial<Record<Field, { idx: number; r: number }>> = {}
+    const weak: Array<{ idx: number; h: string }> = []
     grid[i].cells.forEach((h, idx) => {
       const f = fieldOf(h)
-      if (f && found[f] === undefined) {
-        found[f] = idx
-        list.push({ header: clean(h), field: f, label: FIELD_LABEL[f] })
-      }
+      if (!f) return
+      const r = rank(f, h)
+      const cur = best[f]
+      if (!cur || r < cur.r) {
+        if (cur) weak.push({ idx: cur.idx, h: grid[i].cells[cur.idx] })
+        best[f] = { idx, r }
+      } else weak.push({ idx, h })
     })
+    // « Bien » ou « Logement » écarté de l'adresse : c'est le nom du bien.
+    for (const w of weak) if (best.label === undefined && /^(bien|logement|nom du bien|nom du logement)$/.test(norm(w.h))) best.label = { idx: w.idx, r: 99 }
+    for (const [f, v] of Object.entries(best) as Array<[Field, { idx: number }]>) found[f] = v.idx
+    for (const [f, idx] of (Object.entries(found) as Array<[Field, number]>).sort((a, b) => a[1] - b[1])) list.push({ header: clean(grid[i].cells[idx]), field: f, label: FIELD_LABEL[f] })
     if (list.length >= 2 && (found.address !== undefined || found.label !== undefined)) {
       headerAt = i
       at = found
