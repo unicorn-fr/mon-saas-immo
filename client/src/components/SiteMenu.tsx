@@ -181,7 +181,7 @@ const Chevron = ({ open }: { open: boolean }) => (
  * et au clavier (Entrée, Échap pour fermer). Un seul panneau ouvert ; il se ferme en quittant le menu ou en changeant de
  * page. Le header qui l'accueille doit être positionné (relative ou sticky).
  */
-export function MegaMenu({ linkStyle, linkClass }: { linkStyle?: CSSProperties; linkClass?: string }) {
+export function MegaMenu({ linkStyle, linkClass, onDark }: { linkStyle?: CSSProperties; linkClass?: string; onDark?: boolean }) {
   const [open, setOpen] = useState<number | null>(null)
   const timer = useRef<number | undefined>(undefined)
   const buttons = useRef<Array<HTMLButtonElement | null>>([])
@@ -231,7 +231,7 @@ export function MegaMenu({ linkStyle, linkClass }: { linkStyle?: CSSProperties; 
               aria-expanded={open === i}
               aria-controls={`${base}-${i}`}
               onClick={() => setOpen(open === i ? null : i)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 12px', border: 'none', borderRadius: 999, background: open === i ? BAI.ownerLight : 'transparent', color: open === i ? BAI.owner : BAI.ink, font: 'inherit', fontWeight: 500, fontSize: 15, cursor: 'pointer' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 12px', border: 'none', borderRadius: 999, background: open === i ? BAI.ownerLight : 'transparent', color: open === i ? BAI.owner : onDark ? BAI.surface : BAI.ink, font: 'inherit', fontWeight: 500, fontSize: 15, cursor: 'pointer' }}
             >
               {s.label}
               <Chevron open={open === i} />

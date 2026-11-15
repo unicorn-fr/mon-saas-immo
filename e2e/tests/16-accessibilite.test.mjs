@@ -11,6 +11,9 @@ import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, signedI
 const AXE = fs.readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8')
 
 async function audit(page, path) {
+  // Accueil : façade, tableau de bord et prix s'animent au défilement. Contrôlé dans son état final, celui que voit
+  // aussi un visiteur qui a demandé moins d'animations (tout est affiché, rien ne bouge).
+  await page.emulateMedia({ reducedMotion: path === '/' ? 'reduce' : 'no-preference' })
   await page.goto(BASE + path)
   await page.waitForLoadState('networkidle')
   await wait(300)

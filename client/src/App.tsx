@@ -10,7 +10,7 @@ import { Spinner } from './components/ui'
 import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
 import { countVisit } from './lib/visits'
-import Home from './pages/Home'
+import Home from './pages/HomeDusk'
 // Pages publiques dans le fichier principal ; l'espace dans un second fichier (pages/espace/index.ts),
 // téléchargé dès que la première page est affichée.
 import TypeStep from './pages/tunnel/TypeStep'

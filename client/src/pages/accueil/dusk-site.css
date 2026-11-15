@@ -1,0 +1,16 @@
+/* Accueil « Tombée du jour » branché sur le site : vrai menu, plaque cliquable, façade chargée à part. */
+.dusk .wa-fond { display: contents; }
+.dusk .wa .nav .plaque { text-decoration: none; }
+.dusk .dusk-menu { display: flex; align-items: center; gap: 22px; }
+.dusk .dusk-link { color: #E4E8FA; text-decoration: none; font: 500 15px/1 "Inter Variable", system-ui, sans-serif; padding: 12px 2px; background: none; border: none; cursor: pointer; white-space: nowrap; }
+.dusk .dusk-link:hover { color: #FFFFFF; text-decoration: underline; text-underline-offset: 6px; }
+.dusk .dusk-account { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 999px; border: 1.5px solid #1D2433; color: #1D2433; font-weight: 600; text-decoration: none; }
+.dusk .wa .acts .btn { min-height: 48px; }
+.dusk .wa .acts .btn svg { width: 17px; height: 17px; }
+/* Téléphone : la colonne du menu du tableau de bord est cachée, le contenu prend toute la largeur. */
+@media (max-width: 860px) { .dusk .app2 { grid-template-columns: minmax(0, 1fr) !important; } }
+/* Titres mot à mot : chaque mot monte de sous son masque, toujours à pleine encre (lisible dès qu'il apparaît). */
+.dusk.anime .mots:not(.vu) .m > span { opacity: 1 !important; filter: none !important; }
+/* Filigrane de la petite scène « pièces protégées » : encre pleine, lisible. */
+.dusk .v-doc .marque { color: #A8324F; }
+.dusk .prix-s .sources { color: #A9A398; }
