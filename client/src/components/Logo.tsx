@@ -21,33 +21,27 @@ export function LogoMark({ size = 28, onBlue = false }: { size?: number; onDark?
   )
 }
 
-export function Logo({ size = 28, onDark = false, onBlue = false, to = '/' }: { size?: number; onDark?: boolean; onBlue?: boolean; to?: string | null }) {
-  const style = {
-    textDecoration: 'none',
-    fontFamily: BAI.fontDisplay,
-    fontWeight: 700,
-    letterSpacing: '-0.045em',
-    fontSize: size,
-    color: onDark || onBlue ? BAI.surface : BAI.ink,
-    lineHeight: 1,
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: Math.round(size * 0.3),
-  }
-  const content = (
-    <>
-      <LogoMark size={Math.round(size * 1.12)} onBlue={onBlue} />
-      <span aria-hidden>bailio</span>
-    </>
+/**
+ * Logo de la direction « Tombée du jour » : la plaque « bailio », comme une plaque de rue. Tuile bleue, filet blanc,
+ * nom en Bricolage Grotesque 800. Identique sur fond clair, sur fond sombre et sur le menu de l'espace.
+ */
+export function Logo({ size = 28, to = '/' }: { size?: number; onDark?: boolean; onBlue?: boolean; to?: string | null }) {
+  const plate = (
+    <span aria-hidden style={{ display: 'inline-flex', background: BAI.brand, borderRadius: Math.round(size * 0.4), padding: Math.max(2, Math.round(size * 0.13)) }}>
+      <span style={{ border: `${size >= 24 ? 2 : 1.5}px solid ${BAI.surface}`, borderRadius: Math.round(size * 0.3), padding: `${Math.round(size * 0.14)}px ${Math.round(size * 0.42)}px ${Math.round(size * 0.18)}px`, font: `800 ${Math.round(size * 0.78)}px/1 ${BAI.fontBrand}`, letterSpacing: '-0.03em', color: BAI.surface }}>
+        bailio
+      </span>
+    </span>
   )
+  const style = { textDecoration: 'none', display: 'inline-flex', alignItems: 'center', lineHeight: 1 }
   return to ? (
     // Marge intérieure invisible : le logo reste touchable au doigt (44 px de haut).
-    <Link to={to} style={{ ...style, padding: `${Math.max(0, Math.ceil((44 - size) / 2))}px 0` }} aria-label="Bailio, accueil">
-      {content}
+    <Link to={to} style={{ ...style, minHeight: 44 }} aria-label="Bailio, accueil">
+      {plate}
     </Link>
   ) : (
     <span style={style} role="img" aria-label="Bailio">
-      {content}
+      {plate}
     </span>
   )
 }

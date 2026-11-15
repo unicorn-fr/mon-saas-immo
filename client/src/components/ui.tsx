@@ -6,8 +6,9 @@ import { BAI } from '../constants/bailio-tokens'
 export const display = (size: number | string, extra: CSSProperties = {}): CSSProperties => ({
   margin: 0,
   fontFamily: BAI.fontDisplay,
-  fontWeight: 700,
-  letterSpacing: '-0.03em',
+  fontWeight: 400,
+  letterSpacing: '-0.025em',
+  fontVariationSettings: '"opsz" 60',
   fontSize: size,
   lineHeight: 1.06,
   color: BAI.ink,
