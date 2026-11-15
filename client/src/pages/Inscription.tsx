@@ -228,41 +228,72 @@ function Card({ i, selected, onClick, title, text, icon, tag, multi }: { i: numb
   )
 }
 
-/** Une petite maison dessinée trait par trait ; celles déjà là ne rejouent pas leur apparition. */
-function House({ i }: { i: number }) {
+/** Les traits d'une maison, dans l'ordre où ils se dessinent : toit, murs, sol, fenêtres, porte (comme l'accueil). */
+const TRAITS = ['M5 20 L20 6', 'M20 6 L35 20', 'M5 20 V40', 'M35 20 V40', 'M5 40 H35', 'M10 22 h6 v7 h-6 z', 'M24 22 h6 v7 h-6 z', 'M17 40 v-8 h6 v8']
+
+/** Une maison éteinte (contour pâle) qui, allumée, se dessine trait par trait en doré puis éclaire ses fenêtres. */
+function House({ on }: { on: boolean }) {
   return (
-    <svg className="su-house" viewBox="0 0 24 24" width="26" height="26" aria-hidden style={{ ['--i' as string]: i % 10 } as CSSProperties}>
-      <path pathLength={1} d="M3.5 11 12 4l8.5 7M6 9.5V20h12V9.5M10 20v-5h4v5" fill="none" stroke={DA2.ink} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-      <rect className="su-house-win" x="10.6" y="10.4" width="2.8" height="2.6" rx=".4" fill={DA2.sun} />
+    <svg className={`maison${on ? ' on' : ''}`} viewBox="0 0 40 44" aria-hidden>
+      <path className="mur" d="M5 20L20 6l15 14v20H5z" />
+      <path className="vitre-m" d="M10 22h6v7h-6zM24 22h6v7h-6z" />
+      <path className="porte-m" d="M17 40v-8h6v8z" />
+      <g>
+        {TRAITS.map((d) => (
+          <path key={d} className="t0" d={d} pathLength={1} />
+        ))}
+      </g>
+      <g className="allume">
+        {TRAITS.map((d, k) => (
+          <path key={d} className="t1" d={d} pathLength={1} style={{ ['--k' as string]: k } as CSSProperties} />
+        ))}
+      </g>
     </svg>
   )
 }
 
 /**
- * Nombre de logements au curseur : le chiffre exact en grand (il glisse à chaque changement), une maison par
- * logement qui se dessine, et ce que le tableau de bord mettra en avant. − et + pour ajuster d'un logement.
+ * Nombre de logements au curseur, sur fond de nuit comme le prix de l'accueil : le chiffre exact en grand, et une
+ * maison qui s'allume par logement (20 au plus), une à la fois, jusqu'au nombre choisi. − et + ajustent d'un logement.
  */
 function HomesSlider({ value, onChange }: { value: number; onChange: (n: number) => void }) {
-  const shown = Math.min(value, 20)
+  const target = Math.min(value, 20)
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  const [lit, setLit] = useState(0)
+  // Une seule file : le nombre de maisons allumées rejoint toujours le nombre choisi, une maison à la fois.
+  useEffect(() => {
+    if (reduce) {
+      setLit(target)
+      return
+    }
+    if (lit === target) return
+    const t = window.setTimeout(() => setLit((n) => n + (n < target ? 1 : -1)), lit === 0 ? 250 : 140)
+    return () => window.clearTimeout(t)
+  }, [lit, target, reduce])
   const pct = ((value - 1) / (MAX_HOMES - 1)) * 100
   const step = (d: number) => onChange(Math.min(MAX_HOMES, Math.max(1, value + d)))
-  const round: CSSProperties = { width: 48, height: 48, borderRadius: 999, border: `1.5px solid ${DA2.lineStrong}`, background: DA2.white, color: DA2.ink, font: `400 24px/1 ${DA2.sans}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
+  const round: CSSProperties = { width: 48, height: 48, borderRadius: 999, border: `1.5px solid ${DA2.nightLine}`, background: 'transparent', color: DA2.white, font: `400 24px/1 ${DA2.sans}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, background: DA2.white, border: `1px solid ${DA2.line}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 32px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 22, background: DA2.night, color: DA2.white, borderRadius: 24, padding: 'clamp(20px, 3vw, 32px)', boxShadow: DA2.shadow }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         <button type="button" className="su-btn" style={round} onClick={() => step(-1)} disabled={value <= 1} aria-label="Un logement de moins">
           −
         </button>
         <div aria-hidden style={{ display: 'flex', alignItems: 'baseline', gap: 12, overflow: 'hidden' }}>
-          <span key={value} className="su-num" style={{ font: `300 clamp(64px, 9vw, 96px)/1 ${DA2.serif}`, letterSpacing: '-0.04em', color: DA2.ink, fontVariantNumeric: 'lining-nums tabular-nums' }}>
+          <span key={value} className="su-num" style={{ font: `300 clamp(64px, 9vw, 96px)/1 ${DA2.serif}`, letterSpacing: '-0.04em', color: DA2.white, fontVariantNumeric: 'lining-nums tabular-nums' }}>
             {value}
             {value >= MAX_HOMES ? '+' : ''}
           </span>
-          <span style={{ font: `400 22px/1 ${DA2.serif}`, color: DA2.mid }}>logement{value > 1 ? 's' : ''}</span>
+          <span style={{ font: `400 22px/1 ${DA2.serif}`, color: DA2.onNight }}>logement{value > 1 ? 's' : ''}</span>
         </div>
         <button type="button" className="su-btn" style={round} onClick={() => step(1)} disabled={value >= MAX_HOMES} aria-label="Un logement de plus">
           +
         </button>
+      </div>
+      <div className="maisons" aria-hidden>
+        {Array.from({ length: 20 }, (_, i) => (
+          <House key={i} on={i < lit} />
+        ))}
       </div>
       <input
         type="range"
@@ -276,32 +307,23 @@ function HomesSlider({ value, onChange }: { value: number; onChange: (n: number)
         aria-valuetext={homesLabel(value)}
         style={{ ['--p' as string]: `${pct}%` } as CSSProperties}
       />
-      <div style={{ position: 'relative', height: 16, fontSize: 13, color: DA2.soft, marginTop: -12, margin: '-12px 15px 0' }} aria-hidden>
+      <div style={{ position: 'relative', height: 16, fontSize: 13, margin: '-12px 15px 0' }} aria-hidden>
         {[1, 10, 20, 30, 40, MAX_HOMES].map((n) => (
           <button
             key={n}
             type="button"
             tabIndex={-1}
             onClick={() => onChange(n)}
-            style={{ position: 'absolute', left: `${((n - 1) / (MAX_HOMES - 1)) * 100}%`, transform: 'translateX(-50%)', background: 'none', border: 'none', padding: 0, font: 'inherit', color: value === n ? DA2.ink : DA2.soft, fontWeight: value === n ? 700 : 400, cursor: 'pointer' }}
+            style={{ position: 'absolute', left: `${((n - 1) / (MAX_HOMES - 1)) * 100}%`, transform: 'translateX(-50%)', background: 'none', border: 'none', padding: 0, font: 'inherit', color: value === n ? DA2.sun : DA2.onNightSoft, fontWeight: value === n ? 700 : 400, cursor: 'pointer' }}
           >
             {n === MAX_HOMES ? `${n}+` : n}
           </button>
         ))}
       </div>
-      <div aria-hidden style={{ display: 'flex', flexWrap: 'wrap', gap: 6, minHeight: 64, alignContent: 'flex-start' }}>
-        {Array.from({ length: shown }, (_, i) => (
-          <House key={i} i={i} />
-        ))}
-        {value > 20 ? (
-          <span key="plus" className="su-num" style={{ alignSelf: 'center', font: `400 18px/1 ${DA2.serif}`, color: DA2.sunInk, marginLeft: 6 }}>
-            {value >= MAX_HOMES ? 'et plus encore' : `et ${value - 20} de plus`}
-          </span>
-        ) : null}
-      </div>
-      <p key={homesOf(value)} className="su-num" role="status" style={{ margin: 0, fontSize: 16, color: DA2.mid, borderTop: `1px solid ${DA2.line}`, paddingTop: 16 }}>
-        <strong style={{ color: DA2.ink, fontWeight: 600 }}>Votre tableau de bord : </strong>
+      <p key={homesOf(value)} className="su-num" role="status" style={{ margin: 0, fontSize: 16, color: DA2.onNight, borderTop: `1px solid ${DA2.nightLine}`, paddingTop: 16 }}>
+        <strong style={{ color: DA2.sun, fontWeight: 600 }}>Votre tableau de bord : </strong>
         {VIEW_OF[homesOf(value)]}
+        {value > 20 ? ` Et ${value >= MAX_HOMES ? 'bien plus' : value - 20} de plus que ces 20 fenêtres.` : ''}
       </p>
     </div>
   )

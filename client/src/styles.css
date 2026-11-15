@@ -334,17 +334,29 @@ button:not(:disabled):active { transform: scale(.98); }
 @keyframes su-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @keyframes su-light { from { opacity: 0; } to { opacity: 1; } }
 .su-num { display: inline-block; animation: su-num .32s cubic-bezier(.2, .8, .2, 1) both; }
-.su-house { animation: su-rise .3s ease both; }
-.su-house path { stroke-dasharray: 1; animation: su-draw .5s ease both; }
-.su-house-win { animation: su-light .3s .35s ease both; }
 .su-range { -webkit-appearance: none; appearance: none; width: 100%; height: 44px; background: transparent; cursor: pointer; margin: 0; }
-.su-range::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: linear-gradient(to right, #1D2433 var(--p), rgba(29, 36, 51, .16) var(--p)); }
-.su-range::-moz-range-track { height: 6px; border-radius: 6px; background: rgba(29, 36, 51, .16); }
-.su-range::-moz-range-progress { height: 6px; border-radius: 6px; background: #1D2433; }
-.su-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -12px; border-radius: 999px; background: #FFFFFF; border: 3px solid #1D2433; box-shadow: 0 0 0 0 rgba(242, 180, 92, .5); transition: transform .15s ease, box-shadow .2s ease; }
-.su-range::-moz-range-thumb { width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; border: 3px solid #1D2433; transition: transform .15s ease; }
+.su-range::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: linear-gradient(to right, #F2B45C var(--p), rgba(255, 255, 255, .2) var(--p)); }
+.su-range::-moz-range-track { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, .2); }
+.su-range::-moz-range-progress { height: 6px; border-radius: 6px; background: #F2B45C; }
+.su-range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -12px; border-radius: 999px; background: #FFFFFF; border: 3px solid #F2B45C; box-shadow: 0 0 0 0 rgba(242, 180, 92, .5); transition: transform .15s ease, box-shadow .2s ease; }
+.su-range::-moz-range-thumb { width: 26px; height: 26px; border-radius: 999px; background: #FFFFFF; border: 3px solid #F2B45C; transition: transform .15s ease; }
 .su-range:active::-webkit-slider-thumb, .su-range:focus-visible::-webkit-slider-thumb { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(242, 180, 92, .45); }
 .su-range:active::-moz-range-thumb { transform: scale(1.15); }
-.su-range:focus-visible { outline: 2px solid #2F4FB3; outline-offset: 4px; border-radius: 8px; }
+.su-range:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 4px; border-radius: 8px; }
 .su-btn:disabled { opacity: .4; cursor: default; }
-@media (prefers-reduced-motion: reduce) { .su-num, .su-house, .su-house path, .su-house-win { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .su-num { animation: none; } .maison * { transition: none !important; } }
+/* Maisons du nombre de logements, comme le prix de l'accueil : contour pâle éteint, trait doré qui se dessine,
+   puis les fenêtres et la porte s'allument. */
+.maisons { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px 4px; padding: 4px 0; }
+@media (max-width: 520px) { .maisons { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.maison { width: 100%; height: auto; display: block; overflow: visible; }
+.maison .mur { fill: transparent; transition: fill .8s; }
+.maison .vitre-m, .maison .porte-m { fill: rgba(238, 233, 224, .05); transition: fill .5s, filter .5s; }
+.maison .t0 { fill: none; stroke: rgba(238, 233, 224, .22); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.maison .t1 { fill: none; stroke: #F6C578; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .26s ease-out; }
+.maison .allume { filter: drop-shadow(0 0 2.5px rgba(242, 180, 92, .9)); }
+.maison.on .t1 { stroke-dashoffset: 0; transition-delay: calc(var(--k) * 80ms); }
+.maison.on .mur { fill: rgba(242, 180, 92, .12); transition-delay: .55s; }
+.maison.on .vitre-m { fill: #FFD996; filter: drop-shadow(0 0 3px #F2B45C); transition-delay: .7s; }
+.maison.on .porte-m { fill: rgba(242, 180, 92, .5); transition-delay: .75s; }
+.su-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, .5) !important; }

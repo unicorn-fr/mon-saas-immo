@@ -288,17 +288,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             <Line label="Révision" value={t.revision?.enabled === false || !l.computed.revisionAllowed ? 'aucune' : `chaque ${dateFr(`2000-${t.revision?.date ?? l.columns.startDate.slice(5)}`, false)}`} />
             <Line label="Durée" value={`${l.computed.durationMonths >= 12 && l.computed.durationMonths % 12 === 0 ? `${l.computed.durationMonths / 12} an${l.computed.durationMonths > 12 ? 's' : ''}` : `${l.computed.durationMonths} mois`}`} />
             <span style={{ fontSize: 13, color: BAI.inkSoft }}>{l.computed.renewal}.</span>
-            {signed && l.status === 'IMPORTED' && !l.leaseDocumentId ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14 }}>
-                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Bail repris de votre fichier. Ajoutez le bail signé pour l’avoir sous la main.</span>
-                <div>
-                  <Btn variant="outline" onClick={() => setAddSigned(true)}>
-                    Ajouter le bail signé
-                  </Btn>
-                </div>
-                <UploadModal open={addSigned} onClose={() => setAddSigned(false)} onSaved={reload} leaseId={l.id} propertyId={l.property.id} kind="LEASE_IMPORTED" />
-              </div>
-            ) : signed ? (
+            {signed && !(l.status === 'IMPORTED' && !l.leaseDocumentId) ? (
               <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap', borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14 }}>
                 <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir le bail</TextLink>
                 <TextLink onClick={guard(() => printDoc(pdf))}>Imprimer</TextLink>
@@ -423,6 +413,17 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             </Card>
           ) : null}
 
+          {signed && l.status === 'IMPORTED' && !l.leaseDocumentId ? (
+            <Card title="Ajoutez le bail signé">
+              <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Bail repris de votre fichier : loyers, quittances et rappels le suivent déjà. Joignez le bail signé pour l’avoir sous la main.</span>
+              <div>
+                <Btn variant="outline" onClick={() => setAddSigned(true)}>
+                  Ajouter le bail signé
+                </Btn>
+              </div>
+              <UploadModal open={addSigned} onClose={() => setAddSigned(false)} onSaved={reload} leaseId={l.id} propertyId={l.property.id} kind="LEASE_IMPORTED" />
+            </Card>
+          ) : null}
           {signed ? (
             <>
               <Tabs label="Sections du bail" tabs={tabs} value={tab} onChange={pickTab} />
