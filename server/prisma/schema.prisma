@@ -66,6 +66,8 @@ model User {
   taxProgress     Json      @default("{}")
   // Vue du tableau de bord choisie à la première connexion (domain/viewMode.ts) : SIMPLE, PORTFOLIO, LARGE, AGENCY.
   viewMode        String?
+  // Réponses de l'inscription (domain/onboarding.ts) : rôle, attentes, nombre de logements, logiciel actuel, provenance.
+  onboarding      Json      @default("{}")
   createdAt       DateTime  @default(now())
 
   sessions      Session[]
@@ -167,6 +169,8 @@ model LoginToken {
   draftId   String?
   /// Invitation acceptée au clic sur ce lien (accès partagé)
   accessId  String?
+  /// Réponses de l'inscription, appliquées au compte à sa création (domain/onboarding.ts)
+  signup    Json?
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())

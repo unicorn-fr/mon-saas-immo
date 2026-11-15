@@ -1,6 +1,6 @@
 import { Router, type Request } from 'express'
 import { z } from 'zod'
-import type { User } from '@prisma/client'
+import { Prisma, type User } from '@prisma/client'
 import { prisma } from '../db.js'
 import { env } from '../env.js'
 import { HttpError } from '../lib/http.js'
@@ -18,6 +18,7 @@ const limiter = limitPerVisitor(15, 20)
 const LINK_MINUTES = 30
 
 import { isViewMode } from '../domain/viewMode.js'
+import { applySignup, firstPathFor, signupAnswersSchema, type SignupAnswers } from '../domain/onboarding.js'
 
 const emailSchema = z.object({ email: z.email('Email invalide').max(200).transform((e) => e.trim().toLowerCase()) })
 
@@ -46,10 +47,10 @@ const nextPath = z
   .optional()
   .catch(undefined)
 
-async function sendMagicLink(email: string, draftId: string | null, isNew = false, accessId: string | null = null, next?: string): Promise<void> {
+async function sendMagicLink(email: string, draftId: string | null, isNew = false, accessId: string | null = null, next?: string, signup?: SignupAnswers): Promise<void> {
   const token = newToken()
   await prisma.loginToken.create({
-    data: { tokenHash: hashToken(token), email, draftId, accessId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000) },
+    data: { tokenHash: hashToken(token), email, draftId, accessId, expiresAt: new Date(Date.now() + LINK_MINUTES * 60_000), ...(signup ? { signup } : {}) },
   })
   const url = `${env.CLIENT_URL}/connexion/lien?jeton=${encodeURIComponent(token)}${next ? `&suite=${encodeURIComponent(next)}` : ''}`
   const mail = accessId
@@ -112,13 +113,15 @@ router.post('/finish-draft', limiter, optionalUser, async (req, res) => {
 // Connexion par lien magique.
 // Avec « signup », l'espace sera créé au premier clic sur le lien (l'adresse est ainsi vérifiée).
 router.post('/magic-link', limiter, async (req, res) => {
-  const { email, signup, next } = emailSchema.extend({ signup: z.boolean().optional(), next: nextPath }).parse(req.body)
+  const { email, signup, next, answers } = emailSchema.extend({ signup: z.boolean().optional(), next: nextPath, answers: signupAnswersSchema.optional() }).parse(req.body)
   const user = await prisma.user.findUnique({ where: { email } })
+  // Inscription en questions : l'ancien logiciel mène tout droit à l'import du fichier (sauf page demandée avant).
+  const suite = next ?? (answers && !user ? firstPathFor(answers) : undefined)
   // Page demandée avant la connexion : le lien de l'email y ramène.
   // Même réponse, et même délai, que le compte existe ou non (on ne révèle pas les adresses inscrites) : l'envoi
   // se fait après la réponse, et une limite atteinte pour cette adresse n'est pas dévoilée.
   if (user || signup) {
-    void sendMagicLink(email, null, !user, null, next).catch((e) => {
+    void sendMagicLink(email, null, !user, null, suite, user ? undefined : answers).catch((e) => {
       if (!(e instanceof HttpError && e.status === 429)) console.error('[auth] lien de connexion non envoyé :', e)
     })
   }
@@ -143,12 +146,21 @@ router.post('/magic-link/verify', limiter, async (req, res) => {
   if (!row || !used?.count) {
     throw new HttpError(400, 'Ce lien a expiré ou a déjà servi. Demandez-en un nouveau.')
   }
-  const user = await prisma.user.upsert({
+  const existed = await prisma.user.findUnique({ where: { email: row.email }, select: { id: true } })
+  let user = await prisma.user.upsert({
     where: { email: row.email },
     update: { emailVerifiedAt: new Date() },
     // Rappels par email actifs dès l'inscription (désactivables dans « Mon compte »).
     create: { email: row.email, emailVerifiedAt: new Date(), followUpSince: new Date() },
   })
+  // Réponses de l'inscription : seulement pour un compte qui vient d'être créé, jamais sur un compte existant.
+  const answers = !existed && row.signup ? signupAnswersSchema.safeParse(row.signup).data : undefined
+  // Réponses gardées le temps du lien seulement.
+  if (row.signup) await prisma.loginToken.update({ where: { id: row.id }, data: { signup: Prisma.DbNull } })
+  if (answers) {
+    const applied = applySignup(answers, (user.profile ?? {}) as Record<string, unknown>, new Date())
+    user = await prisma.user.update({ where: { id: user.id }, data: { ...applied, profile: applied.profile as Prisma.InputJsonObject } })
+  }
   const leaseId = row.draftId ? (await createLeaseFromDraft(user, row.draftId)).lease.id : null
   // Lien envoyé depuis une invitation : elle est acceptée, l'espace partagé s'ouvre.
   let space: { id: string; role: string; ownerName: string } | null = null

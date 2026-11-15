@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
-import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, shot, tunnelLoyer, tunnelPersonnes, watch } from '../lib.mjs'
+import { BASE, api, completeLease, fromLog, launch, logSize, newAccount, shot, tunnelLoyer, tunnelPersonnes, watch, signupQuestions } from '../lib.mjs'
 
 /**
  * Corrections de l'audit par personas (docs/audit/audit-personas-2026-10.md) : email mal tapé (suggestion et
@@ -93,13 +93,8 @@ test('garage : de la page du bail de garage à « Ajouter un logement » avec le
   page.setDefaultTimeout(15000)
   await page.goto(BASE + '/bail/garage-parking')
   await page.getByRole('link', { name: 'Créer mon contrat de garage' }).first().click()
-  await page.getByRole('heading', { name: 'Créez votre espace.' }).waitFor()
-  const email = `garage+${Date.now()}@example.fr`
-  await page.getByLabel('Email').fill(email)
-  const before = logSize()
-  await page.getByRole('button', { name: 'Créer mon espace' }).click()
-  const [link] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
-  await page.goto(link[1].replace(/^http:\/\/[^/]+/, BASE))
+  const link = await signupQuestions(page, { email: `garage+${Date.now()}@example.fr` })
+  await page.goto(link)
   await page.waitForURL(/\/espace\/logements\/nouveau/)
   assert.equal(await page.getByRole('button', { name: 'Un garage, un box ou une place' }).getAttribute('aria-pressed'), 'true')
   // Le tunnel propose aussi le garage.

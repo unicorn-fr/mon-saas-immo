@@ -245,3 +245,32 @@ export async function tunnelLoyer(page, { rent = '780', charges = '60', startDat
   await ask(page, 'Tout est juste ?')
   await go(page)
 }
+
+/**
+ * Inscription en questions (`/inscription`) : propriétaire, attentes, nombre de logements, outil actuel, provenance,
+ * puis prénom, nom, email. Renvoie le lien de connexion relu dans le journal de l'API.
+ */
+export async function signupQuestions(page, { email, firstName = 'Claire', lastName = 'Martin', homes = 1, tool = 'Je commence', phone = '' } = {}) {
+  await page.getByRole('heading', { name: 'Créez votre espace.' }).waitFor()
+  await page.getByRole('button', { name: /Je suis propriétaire/ }).click()
+  await page.getByRole('heading', { name: /Qu’attendez-vous de Bailio/ }).waitFor()
+  await page.getByRole('button', { name: /Gagner du temps/ }).click()
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: /Combien de logements/ }).waitFor()
+  await page.getByLabel('Nombre de logements').fill(String(homes))
+  await page.getByRole('button', { name: 'Continuer' }).click()
+  await page.getByRole('heading', { name: /Comment gérez-vous/ }).waitFor()
+  await page.getByRole('button', { name: new RegExp(`^${tool}`) }).click()
+  await page.getByRole('heading', { name: /Comment avez-vous connu/ }).waitFor()
+  await page.getByRole('button', { name: 'Passer' }).click()
+  await page.getByRole('heading', { name: /Dernière étape/ }).waitFor()
+  await page.getByLabel('Prénom').fill(firstName)
+  await page.getByLabel('Nom', { exact: true }).fill(lastName)
+  await page.getByLabel('Email').fill(email)
+  if (phone) await page.getByLabel('Téléphone (facultatif)').fill(phone)
+  const before = logSize()
+  await page.getByRole('button', { name: 'Créer mon espace' }).click()
+  await page.getByRole('heading', { name: /Regardez vos/ }).waitFor()
+  const [link] = await fromLog(/(http:\/\/[^\s]+\/connexion\/lien\?jeton=[^\s)]+)/g, before)
+  return link[1].replace(/^http:\/\/[^/]+/, BASE)
+}

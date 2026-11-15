@@ -10,9 +10,10 @@ interface Row {
   line: number
   lines: number[]
   property: { label?: string; address?: string; postalCode?: string; city?: string; kind: 'VIDE' | 'MEUBLE' | 'PARKING'; rentCents?: number; chargesCents?: number }
-  tenants: Array<{ firstNames?: string; lastName?: string; email?: string }>
+  tenants: Array<{ firstNames?: string; lastName?: string; email?: string; entryDate?: string; leaseEnd?: string }>
   issues: string[]
   blocking: boolean
+  lease?: { create: true; startDate: string; endDate?: string } | { create: false; reason: string }
 }
 interface Preview {
   rows: Row[]
@@ -21,6 +22,7 @@ interface Preview {
 interface Done {
   properties: number
   tenants: number
+  leases: number
   skipped: number
   failed: Array<{ line?: number; address: string; message: string }>
 }
@@ -29,11 +31,13 @@ const KIND = { VIDE: 'Vide', MEUBLE: 'Meublé', PARKING: 'Garage ou place' } as 
 const th = { textAlign: 'left', fontSize: 13, fontWeight: 700, color: BAI.inkSoft, padding: '8px 10px', whiteSpace: 'nowrap' } as const
 const td = { padding: '10px', verticalAlign: 'top', fontSize: 14, lineHeight: 1.4, borderTop: `1px solid ${BAI.dividerSoft}` } as const
 
+const dateFr = (iso: string) => iso.split('-').reverse().join('/')
 const tenantLabel = (t: Row['tenants'][number]) => [t.firstNames, t.lastName].filter(Boolean).join(' ') || t.email || ''
 
 /**
  * Tous les logements et locataires d'un coup, depuis le fichier d'un ancien logiciel ou d'un tableur (CSV ou Excel).
- * Le fichier est lu sur le serveur, jamais enregistré ; seules les lignes cochées créent des fiches. Pas de bail créé.
+ * Le fichier est lu sur le serveur, jamais enregistré ; seules les lignes cochées créent des fiches et, pour un
+ * logement loué, son bail en cours (« signé, importé »).
  */
 export default function ImportTableur() {
   const toast = useToast()
@@ -41,6 +45,7 @@ export default function ImportTableur() {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [chosen, setChosen] = useState<Set<number>>(new Set())
   const [done, setDone] = useState<Done | null>(null)
+  const [withLeases, setWithLeases] = useState(true)
 
   const read = async (file: File) => {
     setBusy(true)
@@ -64,7 +69,7 @@ export default function ImportTableur() {
     if (!rows.length) return
     setBusy(true)
     try {
-      setDone(await api<Done>('/import/table/confirm', { method: 'POST', body: { rows } }))
+      setDone(await api<Done>('/import/table/confirm', { method: 'POST', body: { rows, leases: withLeases } }))
       setPreview(null)
     } catch (e) {
       toast.error(e)
@@ -73,6 +78,7 @@ export default function ImportTableur() {
     }
   }
 
+  const chosenLeases = preview ? preview.rows.filter((r, i) => chosen.has(i) && r.lease?.create).length : 0
   const chosenTenants = preview ? preview.rows.filter((_, i) => chosen.has(i)).reduce((a, r) => a + r.tenants.length, 0) : 0
 
   return (
@@ -86,9 +92,11 @@ export default function ImportTableur() {
         <>
           <Card>
             <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>
-              {plural(done.properties, 'logement')} et {plural(done.tenants, 'locataire')} ajouté{done.properties > 1 || done.tenants > 1 ? 's' : ''}
+              {done.leases ? `${plural(done.properties, 'logement')}, ${plural(done.tenants, 'locataire')} et ${plural(done.leases, 'bail en cours', 'baux en cours')} ajoutés` : `${plural(done.properties, 'logement')} et ${plural(done.tenants, 'locataire')} ajoutés`}
             </h2>
-            <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Pour chaque bail déjà signé, utilisez « J’ai déjà un bail » ; pour un nouveau bail, « Créer un bail » reprend ces fiches.</span>
+            <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
+              {done.leases ? 'Loyers, quittances et rappels suivent déjà ces baux. Ajoutez chaque bail signé en PDF depuis sa page.' : 'Pour un nouveau bail, « Créer un bail » reprend ces fiches.'}
+            </span>
             <div>
               <Btn to="/espace/logements">Voir mes logements</Btn>
             </div>
@@ -131,11 +139,17 @@ export default function ImportTableur() {
 
       {preview ? (
         <Card title={<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Vérifiez avant d’ajouter</h2>}>
+          {preview.rows.some((r) => r.lease?.create) ? (
+            <label style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 15, fontWeight: 600, minHeight: 44, cursor: 'pointer' }}>
+              <input type="checkbox" checked={withLeases} onChange={(e) => setWithLeases(e.target.checked)} style={{ width: 24, height: 24, margin: 0, accentColor: BAI.owner }} />
+              Reprendre les baux en cours (déjà signés)
+            </label>
+          ) : null}
           <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>
             {plural(preview.rows.length, 'logement')} lu{preview.rows.length > 1 ? 's' : ''}. Décochez ceux que vous ne voulez pas ajouter.
           </span>
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
               <caption className="sr-only">Logements et locataires lus dans le fichier</caption>
               <thead>
                 <tr>
@@ -150,6 +164,9 @@ export default function ImportTableur() {
                   </th>
                   <th scope="col" style={th}>
                     Locataire
+                  </th>
+                  <th scope="col" style={th}>
+                    Bail en cours
                   </th>
                   <th scope="col" style={th}>
                     À savoir
@@ -188,6 +205,18 @@ export default function ImportTableur() {
                         {r.property.chargesCents ? <span style={{ color: BAI.inkSoft }}> + {eurosCents(r.property.chargesCents)}</span> : null}
                       </td>
                       <td style={td}>{r.tenants.length ? r.tenants.map((t, k) => <div key={k}>{tenantLabel(t)}</div>) : '—'}</td>
+                      <td style={td}>
+                        {!r.lease ? (
+                          '—'
+                        ) : r.lease.create ? (
+                          <span>
+                            Depuis le {dateFr(r.lease.startDate)}
+                            {r.lease.endDate ? <span style={{ color: BAI.inkSoft }}>, jusqu’au {dateFr(r.lease.endDate)}</span> : null}
+                          </span>
+                        ) : (
+                          <span style={{ color: BAI.inkSoft }}>{r.lease.reason.charAt(0).toUpperCase() + r.lease.reason.slice(1)}</span>
+                        )}
+                      </td>
                       <td style={td}>
                         {r.issues.length ? (
                           <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -232,7 +261,12 @@ export default function ImportTableur() {
             >
               Choisir un autre fichier
             </Btn>
-            {chosenTenants ? <span style={{ fontSize: 14, color: BAI.inkSoft }}>avec {plural(chosenTenants, 'locataire')}</span> : null}
+            {chosenTenants ? (
+              <span style={{ fontSize: 14, color: BAI.inkSoft }}>
+                avec {plural(chosenTenants, 'locataire')}
+                {withLeases && chosenLeases ? ` et ${plural(chosenLeases, 'bail en cours', 'baux en cours')}` : ''}
+              </span>
+            ) : null}
           </div>
         </Card>
       ) : null}

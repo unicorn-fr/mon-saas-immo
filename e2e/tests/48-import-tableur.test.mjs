@@ -41,7 +41,7 @@ test('import par fichier : aperçu puis fiches créées avec leur loyer', async 
   await page.getByRole('button', { name: 'Ajouter 2 logements' }).click()
 
   await page.getByRole('heading', { name: '2 logements et 3 locataires ajoutés' }).waitFor()
-  await page.getByText(/« J’ai déjà un bail »/).waitFor()
+  await page.getByText(/« Créer un bail » reprend ces fiches/).waitFor()
   await shot(page, 'import-tableur-resultat')
   await page.getByRole('link', { name: 'Voir mes logements' }).waitFor()
   await browser.close()

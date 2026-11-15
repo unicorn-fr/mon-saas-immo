@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { strToU8, zipSync } from 'fflate'
-import { excelDate, parseTable, splitName } from './tableImport.js'
+import { currentTermEnd, excelDate, leasePlan, parseTable, splitName } from './tableImport.js'
 
 const QALIMO = [
   'Nom du bien;Adresse;Code postal;Ville;Type;Surface (m²);Pièces;Loyer HC;Charges;Dépôt de garantie;Jour de paiement;Date d\'entrée;Locataire;Email;Téléphone;Référence interne',
@@ -163,4 +163,22 @@ test('« Nom, Prénom », colocataires dans une même case, DPE et jour 31 signa
   assert.equal(r.property.gesClass, 'D')
   assert.equal(r.property.paymentDay, undefined)
   assert.ok(r.issues.some((i) => i.includes('jour de paiement 31')))
+})
+
+test('bail en cours : repris avec locataire, date d’entrée et loyer ; fin passée ou loyer manquant écartés', () => {
+  const p = parseTable(Buffer.from('Adresse;Locataire;Loyer;Date d’entrée;Date de fin du bail\n1 rue A;Jean Roux;700;15/03/2020;\n2 rue B;Léa Bon;650;01/09/2019;31/08/2022\n3 rue C;Tom Gris;;01/01/2024;\n4 rue D;;500;01/01/2024;'))
+  assert.equal(p.columns.detected.find((c) => c.field === 'leaseEnd')?.header, 'Date de fin du bail')
+  assert.deepEqual(p.rows[0].lease, { create: true, startDate: '2020-03-15' })
+  assert.deepEqual(p.rows[1].lease, { create: false, reason: 'bail terminé le 31/08/2022, non repris' })
+  assert.equal(p.rows[2].lease?.create, false)
+  assert.equal(p.rows[3].lease, undefined)
+  assert.equal(leasePlan({ rentCents: 50000 }, [{ lastName: 'X' }], '2026-11-15')?.create, false)
+  assert.deepEqual(leasePlan({ rentCents: 50000 }, [{ lastName: 'X', entryDate: '2026-01-01', leaseEnd: '2027-12-31' }], '2026-11-15'), { create: true, startDate: '2026-01-01', endDate: '2027-12-31' })
+})
+
+test('fin de la période en cours : tacite reconduction pour la même durée', () => {
+  // Vide, 3 ans depuis le 15 mars 2020 : 1re période jusqu'au 14 mars 2023, 2e jusqu'au 14 mars 2026, 3e jusqu'au 14 mars 2029.
+  assert.equal(currentTermEnd('2020-03-15', 36, '2026-11-15'), '2029-03-14')
+  assert.equal(currentTermEnd('2025-10-01', 12, '2026-11-15'), '2027-09-30')
+  assert.equal(currentTermEnd('2026-11-15', 12, '2026-11-15'), '2027-11-14')
 })
