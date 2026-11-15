@@ -580,9 +580,9 @@ export default function Inscription() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: DA2.linen, color: DA2.ink, fontFamily: DA2.sans, display: 'flex' }} className="col-md">
+    <div style={{ minHeight: '100vh', background: DA2.linen, color: DA2.ink, fontFamily: DA2.sans, display: 'flex', overflowX: 'clip' }} className="col-md">
       <Side q={sent ? COUNT + 1 : q} chips={sent || tenant ? [] : chips} />
-      <main id="contenu" style={{ flexGrow: 1, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(28px, 7vh, 88px) 20px 56px' }}>
+      <main id="contenu" style={{ flexGrow: 1, minWidth: 0, overflowX: 'clip', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(28px, 7vh, 88px) 20px 56px' }}>
         <div key={sent ? 'sent' : tenant ? 'tenant' : q} className="su-q" style={{ ['--dir' as string]: dir, width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 24 } as CSSProperties}>
           {body}
           {q === 1 && !sent && !tenant ? (
