@@ -24,24 +24,18 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 | 2026-11-14 10 h | YouTube : choisir son locataire, 4 règles | Motion design paysage | F1169, F33453, F31270 |
 | 2026-11-14 11 h 30 | Visale, caution gratuite | Motion design | F33453 |
 | 2026-11-15 10 h 30 | 3 ans pour réclamer un impayé | Motion design | F947 |
+| 2026-11-16 18 h 30 | Assurance du locataire : sans attestation, 2 solutions (voix 452 crédits) | Motion design | F31300 (15 novembre 2026) |
+| 2026-11-17 18 h 30 | Entretien de la chaudière : le locataire (444) | Motion design | F31697 |
+| 2026-11-18 18 h 30 | Meublé : la liste du mobilier obligatoire (415) | Motion design | F1165 |
+| 2026-11-19 18 h 30 | Diagnostics à remettre au locataire (379) | Motion design | F33463 |
+| 2026-11-20 18 h 30 | Micro-BIC : 83 600 € en 2026, abattement de 50 % (401) | Motion design | F32744 |
+| 2026-11-21 10 h | YouTube : louer un local commercial, 4 règles (1 658) | Motion design paysage | F22854, F31707, F36538, F31925 |
+| 2026-11-21 11 h 30 | Bail commercial : départ du locataire tous les 3 ans (411) | Motion design | F31707 |
+| 2026-11-22 10 h 30 | Bail commercial : dépôt plafonné à un trimestre (409) | Motion design | F36538 |
 
-## Préparés, en attente de validation (semaine 47)
+## Préparés, en attente de validation
 
-Scripts dans `semaine-47/scripts/`, textes dans `semaine-47/textes/`, scènes décrites en données (`semaine-47/plans.js`).
-Voix « Léo – Energetic & Engaging » (une prise chacune) : 452 + 444 + 415 + 379 + 401 + 411 + 409 + 1 658 (YouTube)
-= 4 569 crédits. Statistiques : toujours rien d'exploitable (YouTube non relevé, Meta bloqué, visites seulement dans
-le Pilotage) ; heures gardées.
-
-| Jour prévu | Sujet | Source vérifiée le 15 novembre 2026 |
-|---|---|---|
-| Lun 16, 18 h 30 | Assurance du locataire : sans attestation, 2 solutions | F31300 |
-| Mar 17, 18 h 30 | Entretien de la chaudière : le locataire | F31697 |
-| Mer 18, 18 h 30 | Meublé : la liste du mobilier obligatoire | F1165 |
-| Jeu 19, 18 h 30 | Diagnostics à remettre au locataire | F33463 |
-| Ven 20, 18 h 30 | Micro-BIC : 83 600 € en 2026, abattement de 50 % | F32744 |
-| Sam 21, 10 h | YouTube : louer un local commercial, 4 règles | F22854, F31707, F36538, F31925 |
-| Sam 21, 11 h 30 | Bail commercial : départ du locataire tous les 3 ans | F31707 |
-| Dim 22, 10 h 30 | Bail commercial : dépôt plafonné à un trimestre depuis le 28 mai 2026 | F36538 |
+Rien en attente : la semaine 47 a été validée le 15 novembre 2026 et programmée (YouTube, Facebook, Instagram).
 
 ## Idées à creuser (à vérifier avant d'écrire)
 
