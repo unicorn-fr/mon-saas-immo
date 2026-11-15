@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="meuble.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 25.4
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Un seul meuble manque ?", "at": 0.05, "size": 130}, {"s": "Plus un meublé", "at": "plus", "bg": C.night, "size": 100, "color": C.white}] },
+  { on: "la", bg: 'night', items: [{"s": "La liste minimum", "at": "liste", "bg": C.orange, "size": 110}] },
+  { on: "literie", bg: 'cream', items: [{"s": "Literie + couette", "at": "literie", "bg": C.sky, "size": 76}, {"s": "Rideaux ou volets", "at": "rideaux", "size": 76}, {"s": "Plaques · four", "at": "plaques", "bg": C.peach, "size": 76}] },
+  { on: "refrigerateur", bg: 'sky', items: [{"s": "Réfrigérateur", "at": "refrigerateur", "size": 80}, {"s": "Congélateur", "at": "congelateur", "bg": C.orange, "size": 80}, {"s": "Vaisselle · ustensiles", "at": "vaisselle", "bg": C.peach, "size": 70}] },
+  { on: "table", bg: 'blue', items: [{"s": "Table · sièges", "at": "table", "size": 80}, {"s": "Étagères · luminaires", "at": "etageres", "bg": C.sky, "size": 74}, {"s": "Matériel de ménage", "at": "menage", "bg": C.orange, "size": 74}] },
+  { on: "inventaire", bg: 'peach', items: [{"s": "Inventaire", "at": "inventaire", "bg": C.night, "size": 110, "color": C.white}, {"s": "à la remise des clés", "at": "remise", "size": 70}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F1165'),
+]
+</script></body></html>

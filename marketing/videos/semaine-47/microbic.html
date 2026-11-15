@@ -1,0 +1,15 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="microbic.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 25.5
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Location meublée", "at": 0.05, "size": 140}, {"s": "quel impôt ?", "at": "meuble", "bg": C.night, "size": 90, "color": C.white}] },
+  { on: "jusqu’a", bg: 'night', items: [{"s": "83 600 €", "at": "83", "bg": C.orange, "size": 170}, {"s": "de loyers par an (2026)", "at": "an", "size": 60}, {"s": "= micro-BIC", "at": "micro-bic", "bg": C.sky, "size": 90}] },
+  { on: "le", bg: 'sky', items: [{"s": "− 50 %", "at": "50 %", "bg": C.orange, "size": 200}, {"s": "pour vos frais", "at": "frais", "size": 70}] },
+  { on: "exemple", bg: 'cream', items: [{"s": "10 000 € de loyers", "at": "10", "bg": C.sky, "size": 80}, {"s": "5 000 € imposables", "at": "5", "bg": C.orange, "size": 90}] },
+  { on: "attention", bg: 'blue', items: [{"s": "⚠ Tourisme non classé", "at": "tourisme", "size": 72}, {"s": "15 000 €", "at": "15", "bg": C.orange, "size": 150}, {"s": "− 30 % seulement", "at": "30 %", "bg": C.peach, "size": 80}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F32744'),
+]
+</script></body></html>

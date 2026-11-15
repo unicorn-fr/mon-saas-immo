@@ -1,0 +1,15 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="triennale.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 23.6
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Local commercial", "at": 0.05, "size": 140}, {"s": "votre locataire peut partir", "at": "votre", "bg": C.night, "size": 70, "color": C.white}] },
+  { on: "tous", bg: 'night', items: [{"s": "Tous les 3 ans", "at": "tous", "bg": C.orange, "size": 130}, {"s": "sans motif", "at": "motif", "size": 80}] },
+  { on: "le", bg: 'cream', items: [{"s": "Bail : 9 ans minimum", "at": "9", "bg": C.sky, "size": 86}, {"s": "congé à chaque période de 3 ans", "at": "periode", "size": 58}] },
+  { on: "condition", bg: 'sky', items: [{"s": "6 mois avant", "at": "6", "bg": C.orange, "size": 130}, {"s": "lettre recommandée", "at": "lettre", "size": 66}, {"s": "ou commissaire de justice", "at": "commissaire", "bg": C.peach, "size": 60}] },
+  { on: "en", bg: 'blue', items: [{"s": "En retard ?", "at": "retard", "bg": C.white, "size": 90}, {"s": "+ 3 ans", "at": ["3", 3], "bg": C.orange, "size": 170}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr (Entreprendre), fiche F31707'),
+]
+</script></body></html>

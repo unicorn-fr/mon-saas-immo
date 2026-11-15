@@ -1,0 +1,15 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="depot-commercial.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 25.6
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Nouveau depuis le 28 mai 2026", "at": 0.05, "size": 110}, {"s": "Dépôt de garantie plafonné", "at": "depot", "bg": C.night, "size": 74, "color": C.white}] },
+  { on: "pour", bg: 'night', items: [{"s": "Commerce · artisan", "at": "commerce", "bg": C.sky, "size": 86}, {"s": "1 trimestre max", "at": "trimestre", "bg": C.orange, "size": 120}] },
+  { on: "exemple", bg: 'cream', items: [{"s": "1 500 € / mois", "at": ["500", 1], "bg": C.sky, "size": 100}, {"s": "4 500 € maximum", "at": ["500", 2], "bg": C.orange, "size": 110}] },
+  { on: "ca", bg: 'sky', items: [{"s": "Baux signés ou renouvelés", "at": "baux", "size": 70}, {"s": "depuis le 28 mai 2026", "at": "cette", "bg": C.orange, "size": 74}] },
+  { on: "bureaux", bg: 'blue', items: [{"s": "Bureaux, entrepôts", "at": "bureaux", "bg": C.white, "size": 86}, {"s": "pas concernés", "at": "concernes", "bg": C.peach, "size": 86}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr (Entreprendre), fiche F36538'),
+]
+</script></body></html>

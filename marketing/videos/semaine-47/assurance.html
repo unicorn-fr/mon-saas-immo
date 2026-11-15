@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="assurance.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 25.4
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Pas d’attestation", "at": 0.05, "size": 140}, {"s": "d’assurance ?", "at": "d’assurance", "bg": C.night, "size": 100, "color": C.white}] },
+  { on: "deux", bg: 'night', items: [{"s": "2 solutions", "at": "deux", "bg": C.orange, "size": 150}] },
+  { on: "il", bg: 'cream', items: [{"slam": "Il doit être assuré", "size": 110}, {"s": "risques locatifs", "at": "risques", "bg": C.sky, "size": 90}, {"s": "attestation chaque année", "at": "chaque", "size": 64}] },
+  { on: "sans", bg: 'sky', items: [{"s": "Sans réponse", "at": "sans", "size": 80}, {"s": "1 mois", "at": "mois", "bg": C.orange, "size": 170}, {"s": "après la lettre recommandée", "at": "lettre", "size": 58}] },
+  { on: "pouvez", bg: 'blue', items: [{"s": "① L’assurer à sa place", "at": "l’assurer", "bg": C.white, "size": 74}, {"s": "prime refacturée", "at": "refacturer", "bg": C.sky, "size": 70}, {"s": "+ 10 % au plus", "at": "majoree", "bg": C.orange, "size": 110}] },
+  { on: "ou", bg: 'peach', items: [{"s": "② Ou engager", "at": "ou", "size": 80}, {"s": "la résiliation du bail", "at": "resiliation", "bg": C.night, "size": 78, "color": C.white}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F31300'),
+]
+</script></body></html>

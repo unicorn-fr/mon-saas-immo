@@ -1,0 +1,68 @@
+{
+ "videos": [
+  {
+   "date": "2026-11-16",
+   "heure": "18:30",
+   "nom": "assurance-attestation",
+   "type": "vertical",
+   "fichier": "sortie/assurance.mp4",
+   "textes": "textes/assurance.json"
+  },
+  {
+   "date": "2026-11-17",
+   "heure": "18:30",
+   "nom": "chaudiere-entretien",
+   "type": "vertical",
+   "fichier": "sortie/chaudiere.mp4",
+   "textes": "textes/chaudiere.json"
+  },
+  {
+   "date": "2026-11-18",
+   "heure": "18:30",
+   "nom": "mobilier-meuble",
+   "type": "vertical",
+   "fichier": "sortie/meuble.mp4",
+   "textes": "textes/meuble.json"
+  },
+  {
+   "date": "2026-11-19",
+   "heure": "18:30",
+   "nom": "diagnostics-location",
+   "type": "vertical",
+   "fichier": "sortie/diagnostics.mp4",
+   "textes": "textes/diagnostics.json"
+  },
+  {
+   "date": "2026-11-20",
+   "heure": "18:30",
+   "nom": "micro-bic",
+   "type": "vertical",
+   "fichier": "sortie/microbic.mp4",
+   "textes": "textes/microbic.json"
+  },
+  {
+   "date": "2026-11-21",
+   "heure": "10:00",
+   "nom": "bail-commercial",
+   "type": "youtube",
+   "fichier": "sortie/yt.mp4",
+   "textes": "textes/yt.json"
+  },
+  {
+   "date": "2026-11-21",
+   "heure": "11:30",
+   "nom": "bail-commercial-triennale",
+   "type": "vertical",
+   "fichier": "sortie/triennale.mp4",
+   "textes": "textes/triennale.json"
+  },
+  {
+   "date": "2026-11-22",
+   "heure": "10:30",
+   "nom": "bail-commercial-depot",
+   "type": "vertical",
+   "fichier": "sortie/depot-commercial.mp4",
+   "textes": "textes/depot-commercial.json"
+  }
+ ]
+}
