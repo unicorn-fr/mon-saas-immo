@@ -386,6 +386,8 @@ export default function Inscription() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { state } = useLocation() as { state: { from?: string } | null }
+  // Page demandée avant l'inscription (garage…) : retenue dès l'arrivée, l'état de la page se perd en changeant de question.
+  const [from] = useState(() => safePath(state?.from) ?? undefined)
   const { q, go, next, prev } = useQuestion(COUNT)
   const [a, setA] = useState<Answers>({ goals: [], homes: 'ONE', homeCount: 1, firstName: '', lastName: '', email: '', phone: '' })
   const [tenant, setTenant] = useState(false)
@@ -400,8 +402,8 @@ export default function Inscription() {
   }, [q])
 
   useEffect(() => {
-    if (user) navigate(safePath(state?.from) ?? '/espace', { replace: true })
-  }, [user, navigate, state])
+    if (user) navigate(from ?? '/espace', { replace: true })
+  }, [user, navigate, from])
   // Page rechargée au milieu : les réponses ne sont gardées nulle part, on repart du début.
   useEffect(() => {
     if (q > 1 && !a.role) go(1)
@@ -440,7 +442,7 @@ export default function Inscription() {
         body: {
           email: a.email.trim(),
           signup: true,
-          next: safePath(state?.from) ?? undefined,
+          next: from,
           answers: { role: a.role, goals: a.goals, homes: a.homes, homeCount: a.homeCount, tool: a.tool, source: a.source, firstName: a.firstName.trim(), lastName: a.lastName.trim(), phone: a.phone.trim() || undefined },
         },
       })
