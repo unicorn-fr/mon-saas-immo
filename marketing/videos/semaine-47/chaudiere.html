@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="chaudiere.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 25.7
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "L’entretien de la chaudière", "at": 0.05, "size": 120}, {"s": "Vous ou le locataire ?", "at": "vous", "bg": C.night, "size": 80, "color": C.white}] },
+  { on: "c’est", bg: 'night', items: [{"s": "Le locataire", "at": ["locataire", 2], "bg": C.orange, "size": 140}] },
+  { on: "il", bg: 'cream', items: [{"s": "Chaque année", "at": "chaque", "bg": C.sky, "size": 110}, {"s": "sauf clause contraire du bail", "at": "sauf", "size": 60}] },
+  { on: "meme", bg: 'sky', items: [{"s": "Ramonage aussi", "at": "ramonage", "bg": C.orange, "size": 100}, {"s": "chaudière · cheminée · VMC", "at": ["chaudiere", 2], "size": 62}] },
+  { on: "petites", bg: 'blue', items: [{"s": "Petites réparations", "at": "petites", "bg": C.white, "size": 80}, {"s": "joints · clés", "at": "joints", "bg": C.sky, "size": 74}, {"s": "ampoules · détecteur de fumée", "at": "ampoules", "bg": C.peach, "size": 62}] },
+  { on: "tout", bg: 'peach', items: [{"slam": "Le reste : pour vous", "at": "tout", "size": 120}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F31697'),
+]
+</script></body></html>

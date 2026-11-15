@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="diagnostics.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 23.8
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{"slam": "Quels diagnostics", "at": 0.05, "size": 140}, {"s": "avant de louer ?", "at": "remettre", "bg": C.night, "size": 90, "color": C.white}] },
+  { on: "le", bg: 'night', items: [{"s": "DPE", "at": "dpe", "bg": C.orange, "size": 200}, {"s": "d’abord", "at": "d’abord", "size": 70}] },
+  { on: ["le", 2], bg: 'cream', items: [{"s": "Plomb", "at": "plomb", "bg": C.sky, "size": 120}, {"s": "avant 1949", "at": "1949", "bg": C.orange, "size": 90}] },
+  { on: "l’electricite", bg: 'sky', items: [{"s": "Électricité + gaz", "at": "l’electricite", "size": 86}, {"s": "installation de + 15 ans", "at": "15", "bg": C.orange, "size": 74}] },
+  { on: "l’etat", bg: 'blue', items: [{"s": "État des risques", "at": "risques", "bg": C.white, "size": 86}, {"s": "Bruit près d’un aéroport", "at": "aeroport", "bg": C.peach, "size": 66}] },
+  { on: "tout", bg: 'peach', items: [{"slam": "Un seul dossier", "at": "tout", "size": 120}, {"s": "annexé au bail", "at": "annexe", "bg": C.night, "size": 80, "color": C.white}] },
+  ]),
+  endScene(W('abonnez-vous'), W('guide'), 'Source : service-public.fr, fiche F33463'),
+]
+</script></body></html>

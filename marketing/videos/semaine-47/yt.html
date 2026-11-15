@@ -1,0 +1,31 @@
+<!doctype html><html lang="fr" class="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="yt.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+/* Vidéo YouTube paysage (1920 × 1080) : louer un local commercial, 4 règles du bail commercial. Voix de 93,1 s. */
+window.DURATION = 96
+const N = C.night, O = C.orange, Wh = C.white
+window.SCENES = [
+  ...PLAN([
+    { on: 0, lead: 0, bg: 'night', items: [{ slam: 'Louer un local commercial', size: 130, at: .05 }, { s: 'boutique · bureaux', at: 1.9, bg: C.peach, size: 64 }] },
+    { on: 3.3, bg: 'orange', items: [{ s: '⚠ Pas un bail d’habitation', at: 3.4, bg: Wh, size: 80 }, { s: 'Un bail commercial', at: 5.8, bg: N, color: Wh, size: 100 }, { s: '4 règles, vérifiées', at: 8.7, bg: C.sky, size: 64 }] },
+    { on: 11.7, bg: 'blue', items: [{ s: 'Règle n° 1', at: 11.8, bg: O, size: 90 }, { slam: 'La durée', size: 150, at: 13 }] },
+    { on: 13.8, bg: 'cream', items: [{ s: '9 ans', at: 14.9, bg: O, size: 200 }, { s: 'au minimum', at: 15.4, size: 70 }, { s: 'puis prolongé tout seul, mêmes conditions', at: 18.4, bg: C.sky, size: 52 }] },
+    { on: 20.9, bg: 'blue', items: [{ s: 'Règle n° 2', at: 21, bg: O, size: 90 }, { slam: 'Le départ du locataire', size: 120, at: 22.2 }] },
+    { on: 22.9, bg: 'sky', items: [{ s: 'Tous les 3 ans, sans motif', at: 23.4, bg: Wh, size: 80 }, { s: '6 mois avant', at: 26.5, bg: O, size: 130 }, { s: 'lettre recommandée ou commissaire de justice', at: 29.1, bg: C.peach, size: 46 }] },
+    { on: 31.5, bg: 'peach', items: [{ s: 'Trop tard ?', at: 32.2, bg: Wh, size: 90 }, { s: 'Repoussé à la période suivante', at: 33.5, bg: N, color: Wh, size: 70 }] },
+    { on: 35.5, bg: 'blue', items: [{ s: 'Règle n° 3', at: 35.6, bg: O, size: 90 }, { slam: 'Le dépôt de garantie', size: 130, at: 36.8 }] },
+    { on: 38.1, bg: 'cream', items: [{ s: 'Depuis le 28 mai 2026', at: 38.3, bg: C.sky, size: 70 }, { s: 'Commerce · artisan', at: 40.4, size: 64 }, { s: '1 trimestre maximum', at: 42.5, bg: O, size: 100 }] },
+    { on: 43.8, bg: 'sky', items: [{ s: '1 500 € / mois', at: 44.6, bg: Wh, size: 90 }, { s: '→ 4 500 € au plus', at: 46.1, bg: O, size: 110 }, { s: 'Bureaux, entrepôts : non concernés', at: 48.0, bg: C.peach, size: 54 }] },
+    { on: 50.7, bg: 'blue', items: [{ s: 'Règle n° 4', at: 50.8, bg: O, size: 90 }, { slam: 'La révision du loyer', size: 130, at: 52 }] },
+    { on: 53.3, bg: 'cream', items: [{ s: 'Tous les 3 ans', at: 54.1, bg: O, size: 110 }, { s: 'ILC : commerce, artisanat', at: 58.5, bg: C.sky, size: 70 }, { s: 'ILAT : bureaux, autres activités', at: 63.1, bg: C.peach, size: 64 }] },
+    { on: 66, bg: 'night', items: [{ s: '9 ans minimum', at: 67, bg: Wh, size: 64 }, { s: 'Départ tous les 3 ans · 6 mois de préavis', at: 68.4, bg: C.sky, size: 52 }, { s: 'Dépôt : 1 trimestre (commerce)', at: 71.5, bg: C.peach, size: 56 }, { s: 'Révision tous les 3 ans', at: 74.3, bg: O, size: 60 }] },
+    { on: 77, bg: 'orange', items: [{ slam: 'Sur Bailio', size: 130, at: 77.1 }, { s: 'durée · dépôt · mois, trimestre ou an · TVA', at: 80.4, bg: Wh, size: 52 }, { s: 'Relu par un avocat avant de signer', at: 85.7, bg: N, color: Wh, size: 58 }] },
+  ]),
+  { start: W('abonnez-vous') - .2, bg: C.blue, burst: C.blue, noCaption: true, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.12)')}"></div><div class="abs" id="l" style="left:200px;top:300px"></div><div class="abs" id="r" style="left:900px;right:140px;top:250px;text-align:center"></div>`,
+    update(lt, t) {
+      const s = this.start, g = W('guide')
+      $('l').innerHTML = `<div style="display:inline-block;transform:scale(${lerp(.3, 1, back((t - s) / .45))})">${LOGO(300)}</div><div style="font-family:Fraunces;font-weight:800;font-size:130px;color:#fff;-webkit-text-stroke:5px ${C.night};paint-order:stroke fill;opacity:${eo((t - s - .2) / .3)}">bailio</div>`
+      $('r').innerHTML = `${sticker('+ S’abonner', { bg: C.orange, size: 96, pad: '26px 60px', rot: -3, t0: s + .05, t, shadow: 16 })}<div style="margin-top:60px">${sticker('Le guide complet, gratuit', { bg: C.white, size: 56, rot: -2, t0: g, t })}</div><div style="margin-top:34px">${sticker('bailio.fr/guides', { bg: C.orange, size: 80, pad: '24px 56px', rot: 2, t0: g + .3, t, shadow: 14 })}</div><div style="margin-top:56px;font-size:28px;font-weight:800;color:#fff;opacity:${eo((t - g - .6) / .4)}">Sources : service-public.fr (Entreprendre), fiches F22854, F31707, F36538 et F31925. Information générale, pas un conseil personnalisé.</div>`
+    } },
+]
+</script></body></html>

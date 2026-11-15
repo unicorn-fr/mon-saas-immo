@@ -16,39 +16,44 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 | 2026-11-07 10 h | YouTube : 5 erreurs qui coûtent cher (congé, dépôt, révision, DPE, quittance) | Motion design paysage | F929, F31269, F1311, F2042, loi 1989 art. 21 |
 | 2026-11-07 11 h 30 | DPE : G interdit depuis 2025, F en 2028, E en 2034 | Motion design | service-public F2042, F1311 (3 novembre 2026) |
 | 2026-11-08 10 h 30 | Quittance de loyer gratuite et obligatoire sur demande | Motion design | loi 1989 art. 4 et 21, notice officielle |
+| 2026-11-09 18 h 30 | Sous-location sur Airbnb sans accord écrit | Motion design | F2449 (8 novembre 2026) |
+| 2026-11-10 18 h 30 | Préavis du locataire : 1 mois en zone tendue s'il l'écrit | Motion design | F1168 |
+| 2026-11-11 10 h 30 | Taxe foncière non récupérable, ordures ménagères oui | Motion design | F947 |
+| 2026-11-12 18 h 30 | Pièces interdites dans un dossier (3 000 €) | Motion design | F1169 |
+| 2026-11-13 18 h 30 | État des lieux d'entrée : 10 jours pour le compléter | Motion design | F31270 |
+| 2026-11-14 10 h | YouTube : choisir son locataire, 4 règles | Motion design paysage | F1169, F33453, F31270 |
+| 2026-11-14 11 h 30 | Visale, caution gratuite | Motion design | F33453 |
+| 2026-11-15 10 h 30 | 3 ans pour réclamer un impayé | Motion design | F947 |
 
-## Préparés, en attente de validation (semaine 46)
+## Préparés, en attente de validation (semaine 47)
 
-Scripts dans `semaine-46/scripts/`, textes dans `semaine-46/textes/`, guides en ligne le 8 novembre 2026. Voix (une
-prise chacune) : 459 + 529 + 511 + 508 + 513 + 468 + 506 + 1 218 (YouTube raccourcie) = 4 712 crédits. Forfait
-ElevenLabs remis à zéro le 19 de chaque mois.
+Scripts dans `semaine-47/scripts/`, textes dans `semaine-47/textes/`, scènes décrites en données (`semaine-47/plans.js`).
+Voix « Léo – Energetic & Engaging » (une prise chacune) : 452 + 444 + 415 + 379 + 401 + 411 + 409 + 1 658 (YouTube)
+= 4 569 crédits. Statistiques : toujours rien d'exploitable (YouTube non relevé, Meta bloqué, visites seulement dans
+le Pilotage) ; heures gardées.
 
-| Jour prévu | Sujet | Source vérifiée le 8 novembre 2026 |
+| Jour prévu | Sujet | Source vérifiée le 15 novembre 2026 |
 |---|---|---|
-| Lun 9, 18 h 30 | Sous-location sur Airbnb sans accord écrit | F2449 |
-| Mar 10, 18 h 30 | Préavis du locataire : 1 mois en zone tendue s'il l'écrit | F1168 |
-| Mer 11, 10 h 30 | Taxe foncière non récupérable, ordures ménagères oui | F947 |
-| Jeu 12, 18 h 30 | Pièces interdites dans un dossier (3 000 €) | F1169 |
-| Ven 13, 18 h 30 | État des lieux d'entrée : 10 jours pour le compléter | F31270 |
-| Sam 14, 10 h | YouTube : choisir son locataire, 4 règles | F1169, F33453, F31270 |
-| Sam 14, 11 h 30 | Visale, caution gratuite | F33453 |
-| Dim 15, 10 h 30 | 3 ans pour réclamer un impayé | F947 |
+| Lun 16, 18 h 30 | Assurance du locataire : sans attestation, 2 solutions | F31300 |
+| Mar 17, 18 h 30 | Entretien de la chaudière : le locataire | F31697 |
+| Mer 18, 18 h 30 | Meublé : la liste du mobilier obligatoire | F1165 |
+| Jeu 19, 18 h 30 | Diagnostics à remettre au locataire | F33463 |
+| Ven 20, 18 h 30 | Micro-BIC : 83 600 € en 2026, abattement de 50 % | F32744 |
+| Sam 21, 10 h | YouTube : louer un local commercial, 4 règles | F22854, F31707, F36538, F31925 |
+| Sam 21, 11 h 30 | Bail commercial : départ du locataire tous les 3 ans | F31707 |
+| Dim 22, 10 h 30 | Bail commercial : dépôt plafonné à un trimestre depuis le 28 mai 2026 | F36538 |
 
 ## Idées à creuser (à vérifier avant d'écrire)
 
 - Encadrement des loyers après le 24 novembre 2026 : le Sénat a voté une prolongation de deux ans le 21 octobre ;
   à faire seulement une fois la loi adoptée et publiée (et mettre à jour `RENT_CONTROL_END`).
 
-- Réparations locatives : qui paie quoi (décret 87-712), la chaudière.
 - Encadrement des loyers : villes concernées, fin ou prolongation de l'expérimentation (24 novembre 2026).
-- Bail meublé : liste du mobilier obligatoire (décret 2015-981).
-- Location meublée : micro-BIC ou réel, le seuil.
-- Déclaration d'occupation des logements (« Gérer mes biens immobiliers »).
+- Déclaration d'occupation des logements (« Gérer mes biens immobiliers ») : source impots.gouv.fr à lire.
 - Impayé : les étapes, du rappel au commandement de payer.
-- Assurance habitation du locataire : obligation, que faire sans attestation.
-- Colocation : bail unique ou baux séparés, clause de solidarité.
+- Colocation : clause de solidarité (pas trouvée sur F21478 le 15 novembre ; chercher la bonne fiche).
 - Travaux pendant le bail : ce que le propriétaire peut imposer.
-- Diagnostics obligatoires et leur durée de validité.
+- Diagnostics : durée de validité de chacun (pas trouvée sur F33463 le 15 novembre ; chercher la bonne fiche).
 - Dépôt de garantie en meublé : 2 mois maximum.
 - Augmenter le loyer au renouvellement d'un bail sous-évalué.
 
@@ -60,3 +65,4 @@ ElevenLabs remis à zéro le 19 de chaque mois.
   Meta est bloqué depuis le 7 novembre (« API access blocked » : Instagram du 7 non publié) et les visites par
   `utm_source` ne se lisent que dans le Pilotage. Heures gardées (soir de semaine, fin de matinée le week-end,
   10 h 30 le 11 novembre, férié).
+- 2026-11-15 : semaine 46 publiée comme prévu (programme Instagram et exécutions n8n). Pas de chiffres de vues ; heures gardées. Sujet nouveau : le bail commercial (fonction sortie le 14 novembre), en YouTube et deux courtes.
