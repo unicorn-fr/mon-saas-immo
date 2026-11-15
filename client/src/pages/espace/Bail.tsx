@@ -1,3 +1,4 @@
+import { UploadModal } from '../../components/UploadModal'
 import { useEffect, useState } from 'react'
 import { MissingList } from '../../components/Missing'
 import { ESignCard } from './ESign'
@@ -52,6 +53,7 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
   const [showAnnexes, setShowAnnexes] = useState(false)
   const [allDocs, setAllDocs] = useState(false)
   const [allPays, setAllPays] = useState(false)
+  const [addSigned, setAddSigned] = useState(false)
   const status = STATUS[l.status === 'DRAFT' && l.ready ? 'READY' : l.status]
   const first = l.tenants[0]?.name.split(' ')[0] || 'votre locataire'
   const pdf = `/leases/${l.id}/lease.pdf`
@@ -286,7 +288,17 @@ function LeasePage({ l, reload, setLease }: { l: LeaseView; reload: () => void; 
             <Line label="Révision" value={t.revision?.enabled === false || !l.computed.revisionAllowed ? 'aucune' : `chaque ${dateFr(`2000-${t.revision?.date ?? l.columns.startDate.slice(5)}`, false)}`} />
             <Line label="Durée" value={`${l.computed.durationMonths >= 12 && l.computed.durationMonths % 12 === 0 ? `${l.computed.durationMonths / 12} an${l.computed.durationMonths > 12 ? 's' : ''}` : `${l.computed.durationMonths} mois`}`} />
             <span style={{ fontSize: 13, color: BAI.inkSoft }}>{l.computed.renewal}.</span>
-            {signed ? (
+            {signed && l.status === 'IMPORTED' && !l.leaseDocumentId ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14 }}>
+                <span style={{ fontSize: 14, color: BAI.inkMid, lineHeight: 1.5 }}>Bail repris de votre fichier. Ajoutez le bail signé pour l’avoir sous la main.</span>
+                <div>
+                  <Btn variant="outline" onClick={() => setAddSigned(true)}>
+                    Ajouter le bail signé
+                  </Btn>
+                </div>
+                <UploadModal open={addSigned} onClose={() => setAddSigned(false)} onSaved={reload} leaseId={l.id} propertyId={l.property.id} kind="LEASE_IMPORTED" />
+              </div>
+            ) : signed ? (
               <div style={{ display: 'flex', gap: '10px 22px', flexWrap: 'wrap', borderTop: `1px solid ${BAI.dividerSoft}`, paddingTop: 14 }}>
                 <TextLink onClick={guard(() => openDoc(pdf))}>Ouvrir le bail</TextLink>
                 <TextLink onClick={guard(() => printDoc(pdf))}>Imprimer</TextLink>

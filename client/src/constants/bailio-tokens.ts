@@ -86,3 +86,34 @@ export const BAI = {
   bpMd: 768,
   bpLg: 1024,
 } as const
+
+/**
+ * Nouvelle direction « Tombée du jour » (maquette `docs/maquette/accueil-tombee-du-jour/`) : fond lin, encre bleu
+ * nuit, titres en Newsreader, plaque « bailio » bleue. Appliquée page par page, d'abord à l'inscription.
+ */
+export const DA2 = {
+  linen: '#F3EEE6',
+  plaster: '#E9E1D5',
+  paper: '#FBF9F5',
+  ink: '#1D2433',
+  mid: '#4A5163',
+  soft: '#5E6577',
+  line: 'rgba(29, 36, 51, 0.14)',
+  lineStrong: 'rgba(29, 36, 51, 0.6)',
+  blue: '#1E34B8',
+  night: '#0E1538',
+  sky: '#2F4FB3',
+  skyTint: '#E6EAF7',
+  sun: '#F2B45C',
+  sunInk: '#8A5310',
+  sunTint: '#F8E7C9',
+  white: '#FFFFFF',
+  onNight: 'rgba(255, 255, 255, 0.78)',
+  onNightSoft: 'rgba(255, 255, 255, 0.6)',
+  nightLine: 'rgba(255, 255, 255, 0.18)',
+  error: '#B3261E',
+  shadow: '0 18px 40px -22px rgba(29, 36, 51, 0.45)',
+  serif: "'Newsreader Variable', 'Iowan Old Style', Georgia, serif",
+  sans: "'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif",
+  brand: "'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif",
+} as const

@@ -3,10 +3,12 @@
  * uniquement et en mémoire : rien n'est conservé. Formats : CSV (séparateur ; , ou tabulation, guillemets, BOM UTF-8,
  * accents en Windows-1252) et XLSX (premier onglet, lu avec fflate). Les colonnes sont reconnues par leur intitulé
  * (sans accents ni majuscules, avec des synonymes). Une ligne = un logement avec 0 ou 1 locataire ; les lignes de
- * même adresse et même libellé forment un seul logement qui reçoit leurs locataires.
+ * même adresse et même libellé forment un seul logement qui reçoit leurs locataires. Un logement loué (locataire,
+ * date d'entrée et loyer) reçoit son bail en cours, noté « signé, importé » (`leasePlan`).
  */
 import { unzipSync, strFromU8 } from 'fflate'
 import { parseAmount, parseDate } from './bankStatement.js'
+import { contractEndDate } from './rules.js'
 
 export const MAX_IMPORT_ROWS = 200
 
@@ -38,9 +40,14 @@ export interface ImportTenant {
   lastName?: string
   email?: string
   phone?: string
-  /** AAAA-MM-JJ : affichée dans l'aperçu, le bail n'est pas créé par l'import. */
+  /** AAAA-MM-JJ : date d'entrée, début du bail en cours repris par l'import. */
   entryDate?: string
+  /** AAAA-MM-JJ : fin du bail indiquée dans le fichier. */
+  leaseEnd?: string
 }
+
+/** Bail en cours d'un logement importé : créé seulement s'il a un locataire, une date d'entrée et un loyer. */
+export type LeasePlan = { create: true; startDate: string; endDate?: string } | { create: false; reason: string }
 
 export interface ImportRow {
   /** Première ligne du fichier qui a donné ce logement (les suivantes sont dans `lines`). */
@@ -52,6 +59,8 @@ export interface ImportRow {
   issues: string[]
   /** Un problème qui empêche d'ajouter le logement (adresse manquante). */
   blocking: boolean
+  /** Bail en cours repris avec le logement ; absent sans locataire. */
+  lease?: LeasePlan
 }
 
 export interface ImportPreview {
@@ -61,7 +70,7 @@ export interface ImportPreview {
 
 // ── Colonnes ────────────────────────────────────────────────────────────────
 
-type Field = 'address' | 'postalCode' | 'city' | 'surface' | 'rooms' | 'kind' | 'rent' | 'charges' | 'deposit' | 'paymentDay' | 'entryDate' | 'label' | 'tenantFull' | 'lastName' | 'firstNames' | 'email' | 'phone' | 'dpe' | 'ges'
+type Field = 'address' | 'postalCode' | 'city' | 'surface' | 'rooms' | 'kind' | 'rent' | 'charges' | 'deposit' | 'paymentDay' | 'entryDate' | 'leaseEnd' | 'label' | 'tenantFull' | 'lastName' | 'firstNames' | 'email' | 'phone' | 'dpe' | 'ges'
 
 const FIELD_LABEL: Record<Field, string> = {
   address: 'Adresse',
@@ -75,6 +84,7 @@ const FIELD_LABEL: Record<Field, string> = {
   deposit: 'Dépôt de garantie',
   paymentDay: 'Jour de paiement',
   entryDate: 'Date d’entrée',
+  leaseEnd: 'Fin du bail',
   label: 'Nom du bien',
   tenantFull: 'Locataire',
   lastName: 'Nom du locataire',
@@ -98,6 +108,7 @@ const SYNONYMS: Record<Field, string[]> = {
   deposit: ['depot', 'depot de garantie', 'caution', 'depot garantie', 'montant du depot de garantie', 'montant depot de garantie'],
   paymentDay: ['jour de paiement', 'echeance', 'jour echeance', 'jour d echeance', 'jour de paiement du loyer', 'date de paiement', 'jour du loyer'],
   entryDate: ['date d entree', 'debut du bail', 'date de debut', 'debut de bail', 'date entree', 'entree', 'date debut bail', 'date de debut du bail', 'date d effet', 'date d entree du locataire'],
+  leaseEnd: ['date de fin', 'fin du bail', 'date de fin du bail', 'fin de bail', 'echeance du bail', 'date de sortie', 'sortie', 'date fin bail', 'date de fin de bail', 'terme du bail'],
   label: ['nom du bien', 'libelle', 'designation', 'reference', 'nom du logement', 'nom bien', 'intitule'],
   tenantFull: ['locataire', 'locataires', 'occupant', 'nom et prenom', 'nom prenom', 'nom complet', 'nom du locataire et prenom'],
   lastName: ['nom', 'nom du locataire', 'nom locataire', 'nom de famille', 'locataire nom'],
@@ -138,6 +149,7 @@ function fieldOf(header: string): Field | null {
   if (/^(provision|charge)/.test(n)) return 'charges'
   if (/^(adresse)/.test(n) && !/mail|email/.test(n)) return 'address'
   if (/^(date d entree|date entree|debut)/.test(n)) return 'entryDate'
+  if (/^(date de fin|fin du bail|fin de bail|date de sortie|terme du bail)/.test(n)) return 'leaseEnd'
   if (/^(jour de paiement|jour d echeance|echeance)/.test(n)) return 'paymentDay'
   if (/^(telephone|tel )/.test(n)) return 'phone'
   return null
@@ -489,6 +501,12 @@ function readRow(cells: string[], at: Partial<Record<Field, number>>, line: numb
     if (d) t.entryDate = d
     else issues.push('date d’entrée illisible')
   }
+  const end = get('leaseEnd')
+  if (end) {
+    const d = entryDate(end)
+    if (d) t.leaseEnd = d
+    else issues.push('date de fin du bail illisible')
+  }
   const hasTenant = Boolean(t.lastName || t.firstNames || t.email)
   if (!hasTenant && (t.phone || t.entryDate)) issues.push('locataire sans nom ni email, ignoré')
 
@@ -497,7 +515,7 @@ function readRow(cells: string[], at: Partial<Record<Field, number>>, line: numb
     issues.unshift('adresse manquante')
     blocking = true
   }
-  return { line, lines: [line], property: p, tenants: hasTenant ? [t, ...others.map((o) => ({ ...o, entryDate: t.entryDate }))] : others, issues, blocking }
+  return { line, lines: [line], property: p, tenants: hasTenant ? [t, ...others.map((o) => ({ ...o, entryDate: t.entryDate, leaseEnd: t.leaseEnd }))] : others, issues, blocking }
 }
 
 // ── Lecture du fichier ──────────────────────────────────────────────────────
@@ -573,5 +591,41 @@ export function parseTable(buf: Buffer): ImportPreview {
       if (k) byKey.set(k, row)
     }
   }
+  const today = new Date().toISOString().slice(0, 10)
+  for (const row of rows) {
+    const plan = leasePlan(row.property, row.tenants, today)
+    if (plan) row.lease = plan
+  }
   return { rows, columns: { detected, ignored } }
+}
+
+const frDate = (iso: string) => iso.split('-').reverse().join('/')
+
+/**
+ * Bail en cours d'un logement lu dans le fichier : il faut un locataire, sa date d'entrée et le loyer. Un bail dont
+ * la fin indiquée est passée n'est pas repris (le locataire est parti) ; une entrée à plus de deux ans non plus.
+ */
+export function leasePlan(p: Pick<ImportProperty, 'rentCents'>, tenants: ImportTenant[], today: string): LeasePlan | undefined {
+  if (!tenants.length) return undefined
+  const start = tenants.find((t) => t.entryDate)?.entryDate
+  const end = tenants.find((t) => t.leaseEnd)?.leaseEnd
+  if (!start) return { create: false, reason: 'date d’entrée manquante : bail à ajouter ensuite' }
+  if (!p.rentCents) return { create: false, reason: 'loyer manquant : bail à ajouter ensuite' }
+  const limit = `${Number(today.slice(0, 4)) + 2}${today.slice(4)}`
+  if (start > limit) return { create: false, reason: `entrée le ${frDate(start)}, trop lointaine` }
+  if (end && end <= start) return { create: false, reason: 'fin du bail avant la date d’entrée' }
+  if (end && end < today) return { create: false, reason: `bail terminé le ${frDate(end)}, non repris` }
+  return { create: true, startDate: start, ...(end ? { endDate: end } : {}) }
+}
+
+/**
+ * Fin de la période en cours d'un bail repris : les baux d'habitation se renouvellent par tacite reconduction pour la
+ * même durée (loi de 1989, art. 10), un bail commencé il y a 5 ans en vide finit donc à la fin de sa 2e période.
+ */
+export function currentTermEnd(startIso: string, months: number, todayIso: string): string {
+  for (let k = 1; k < 200; k++) {
+    const end = contractEndDate(startIso, months * k).toISOString().slice(0, 10)
+    if (end >= todayIso) return end
+  }
+  return todayIso
 }

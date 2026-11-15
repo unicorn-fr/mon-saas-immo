@@ -166,3 +166,23 @@ export function TabIcon({ name, active = false, size = 24 }: { name: TabName; ac
     </svg>
   )
 }
+
+/** Inscription : une icône par attente et par profil. */
+export const Clock = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+)
+export const Scale = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M12 4v16M8 20h8M5 7h14" /><path d="M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z" /></svg>
+)
+export const Shield = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>
+)
+export const Key = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M17 6l3 3M15 8l2 2" /></svg>
+)
+export const Building = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><path d="M4 21V5l8-2v18M12 21V9l8 3v9M2 21h20" /><path d="M7 8h2M7 12h2M7 16h2M15 14h2M15 18h2" /></svg>
+)
+export const Calculator = ({ size = 26, color = 'currentColor', strokeWidth = 1.8 }: IconProps) => (
+  <svg {...base(size, color, strokeWidth)}><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01" /></svg>
+)

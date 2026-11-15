@@ -303,3 +303,29 @@ button:not(:disabled):active { transform: scale(.98); }
 .score-dots i.on { background: #2563eb; }
 .logo-btn { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid #8590ab; background: #ffffff; color: #0d1b3e; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .logo-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+/* Inscription en questions (pages/Inscription.tsx) : chaque question glisse dans le sens de la marche, les choix
+   arrivent l'un après l'autre, la coche apparaît d'un coup. Rien ne bouge si l'appareil demande moins d'animations. */
+@keyframes su-in { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 36px)); } to { opacity: 1; transform: none; } }
+@keyframes su-rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes su-pop { 0% { transform: scale(0); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+@keyframes su-fill { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.su-q { animation: su-in .45s cubic-bezier(.2, .8, .2, 1) both; }
+.su-card { animation: su-rise .42s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i, 0) * 55ms); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
+.su-card:hover { transform: translateY(-2px); }
+.su-card:active { transform: translateY(0) scale(.99); }
+.su-tick { animation: su-pop .32s cubic-bezier(.3, 1.4, .5, 1) both; }
+.su-rail { transform-origin: top; animation: su-fill .5s ease both; }
+.su-chip { animation: su-rise .35s ease both; }
+.su-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.su-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 560px) { .su-grid, .su-two { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .su-q, .su-card, .su-tick, .su-rail, .su-chip { animation: none; } .su-card:hover { transform: none; } }
+/* Nouvelle direction sur l'inscription : la case de l'étape en cours luit comme une fenêtre qui s'allume. */
+@keyframes su-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(242, 180, 92, 0); } 50% { box-shadow: 0 0 18px 4px rgba(242, 180, 92, .55); } }
+.su-lamp { animation: su-glow 2.4s ease-in-out infinite; }
+.su-btn { transition: transform .12s ease-out, background-color .2s ease-out; }
+.su-btn:active { transform: scale(.98); }
+.su-input:focus { outline: 2px solid #2F4FB3; outline-offset: 2px; }
+.su-card:hover { border-color: rgba(29, 36, 51, .6) !important; }
+@media (prefers-reduced-motion: reduce) { .su-lamp { animation: none; } }
