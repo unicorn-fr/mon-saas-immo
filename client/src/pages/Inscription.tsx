@@ -94,8 +94,8 @@ const IMPORT_TOOLS: Tool[] = ['SPREADSHEET', 'QALIMO', 'RENTILA', 'SOFTWARE']
 /** La plaque « bailio » de la nouvelle direction : tuile bleue, filet blanc, nom en Bricolage Grotesque. */
 export function Plaque({ size = 22 }: { size?: number }) {
   return (
-    <span style={{ display: 'inline-flex', background: DA2.blue, borderRadius: size * 0.55, padding: 4, boxShadow: '0 10px 30px -12px rgba(0, 0, 0, 0.55)' }}>
-      <span style={{ border: `2px solid ${DA2.white}`, borderRadius: size * 0.42, padding: `${size * 0.22}px ${size * 0.62}px ${size * 0.27}px`, font: `800 ${size}px/1 ${DA2.brand}`, letterSpacing: '-0.03em', color: DA2.white }}>bailio</span>
+    <span style={{ display: 'inline-flex', background: DA2.blueFrame, borderRadius: size * 0.55, padding: 4, boxShadow: '0 10px 30px -12px rgba(0, 0, 0, 0.55)' }}>
+      <span style={{ background: DA2.blue, border: `2px solid ${DA2.white}`, borderRadius: size * 0.42, padding: `${size * 0.22}px ${size * 0.62}px ${size * 0.27}px`, font: `800 ${size}px/1 ${DA2.brand}`, letterSpacing: '-0.03em', color: DA2.white }}>bailio</span>
     </span>
   )
 }

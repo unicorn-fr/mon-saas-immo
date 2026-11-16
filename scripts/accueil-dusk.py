@@ -166,6 +166,7 @@ js = js.replace("if (!reduce && window.gsap && window.ScrollTrigger) {", "if (!r
 js = js.replace("gsap.registerPlugin(ScrollTrigger);", '')
 js = js.replace("new IntersectionObserver(", 'new IO(').replace('new MutationObserver(', 'new MO(')
 js = js.replace('<img src="img/', '<img src="/accueil/img/')
+js = js.replace("'img/facade-trou-hd.webp'", "'/accueil/img/facade-trou-hd.webp'")
 js = js.replace("c.photo + '.jpg", "c.photo + '.webp")
 js = js.replace("addEventListener('load', () => ScrollTrigger.refresh());", "window.addEventListener('load', refresh); cleanups.push(() => window.removeEventListener('load', refresh));")
 js = js.replace("if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());", "if (document.fonts) document.fonts.ready.then(() => { if (alive) ScrollTrigger.refresh() });")

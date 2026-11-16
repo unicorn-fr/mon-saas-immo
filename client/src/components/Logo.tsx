@@ -22,13 +22,13 @@ export function LogoMark({ size = 28, onBlue = false }: { size?: number; onDark?
 }
 
 /**
- * Logo de la direction « Tombée du jour » : la plaque « bailio », comme une plaque de rue. Tuile bleue, filet blanc,
- * nom en Bricolage Grotesque 800. Identique sur fond clair, sur fond sombre et sur le menu de l'espace.
+ * Logo de la direction « Tombée du jour » : la plaque « bailio », aux couleurs des plaques de rue parisiennes (cadre
+ * vert, filet blanc, émail bleu), nom en Bricolage Grotesque 800. Favicon : la même plaque avec un « b » (public/favicon.svg). Identique sur fond clair, sur fond sombre et sur le menu de l'espace.
  */
 export function Logo({ size = 28, to = '/' }: { size?: number; onDark?: boolean; onBlue?: boolean; to?: string | null }) {
   const plate = (
-    <span aria-hidden style={{ display: 'inline-flex', background: BAI.brand, borderRadius: Math.round(size * 0.4), padding: Math.max(2, Math.round(size * 0.13)) }}>
-      <span style={{ border: `${size >= 24 ? 2 : 1.5}px solid ${BAI.surface}`, borderRadius: Math.round(size * 0.3), padding: `${Math.round(size * 0.14)}px ${Math.round(size * 0.42)}px ${Math.round(size * 0.18)}px`, font: `800 ${Math.round(size * 0.78)}px/1 ${BAI.fontBrand}`, letterSpacing: '-0.03em', color: BAI.surface }}>
+    <span aria-hidden style={{ display: 'inline-flex', background: BAI.brandFrame, borderRadius: Math.round(size * 0.4), padding: Math.max(2, Math.round(size * 0.12)) }}>
+      <span style={{ background: BAI.brand, border: `${size >= 24 ? 2 : 1.5}px solid ${BAI.surface}`, borderRadius: Math.round(size * 0.3), padding: `${Math.round(size * 0.14)}px ${Math.round(size * 0.42)}px ${Math.round(size * 0.18)}px`, font: `800 ${Math.round(size * 0.78)}px/1 ${BAI.fontBrand}`, letterSpacing: '-0.03em', color: BAI.surface }}>
         bailio
       </span>
     </span>

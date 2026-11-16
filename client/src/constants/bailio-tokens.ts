@@ -12,8 +12,9 @@
  * Contrastes vérifiés (WCAG 2.1 AA) : tableau dans la direction artistique.
  */
 export const BAI = {
-  // Plaque du logo (bleu de la façade)
-  brand: '#1e34b8',
+  // Plaque du logo, aux couleurs des plaques de rue parisiennes : émail bleu, filet blanc, cadre vert
+  brand: '#22408c',
+  brandFrame: '#1d5a3f',
   fontBrand: "'Bricolage Grotesque Variable', 'Inter Variable', system-ui, sans-serif",
   // Fonds
   bg: '#f3eee6', // fond lin de tout le site,
@@ -107,7 +108,8 @@ export const DA2 = {
   soft: '#5E6577',
   line: 'rgba(29, 36, 51, 0.14)',
   lineStrong: 'rgba(29, 36, 51, 0.6)',
-  blue: '#1E34B8',
+  blue: '#22408C',
+  blueFrame: '#1D5A3F',
   night: '#0E1538',
   sky: '#2F4FB3',
   skyTint: '#E6EAF7',

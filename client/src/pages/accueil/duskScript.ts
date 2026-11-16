@@ -46,21 +46,17 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   /* Façade : tout est éteint, puis une fenêtre s'allume ; au-delà de trois, la plus ancienne s'éteint */
   const villes = { a1:'Lyon 3e', a2:'Nantes', a3:'Paris 11e', a4:'Lille', b1:'Bordeaux', b2:'Rennes', b3:'Lyon 7e', b4:'Toulouse', c1:'Paris 18e', c2:'Nantes', c3:'Lille', c4:'Marseille', d1:'Grenoble', d2:'Montpellier', d3:'Strasbourg' };
   const vitres = [...document.querySelectorAll('#vitres .vitre')];
-  const cnt = document.getElementById('cnt'), feed = document.getElementById('feed');
-  const allumees = [];
+    const allumees = [];
   let zoomEnCours = false;
   let recus = 0, derniere = null;
-  const dire = (k) => { const li = document.createElement('li'); li.className = 'new'; li.innerHTML = '<b></b>Loyer reçu, ' + villes[k]; feed.prepend(li); while (feed.children.length > 3) feed.lastChild.remove(); };
   const allume = (v) => {
     if (allumees.length >= 3) allumees.shift().classList.remove('on');
     allumees.push(v); derniere = v;
     v.classList.remove('flick'); void v.getBBox(); v.classList.add('on', 'flick');
-    recus = recus >= 13 ? 1 : recus + 1; cnt.textContent = recus; dire(v.dataset.k);
+   
   };
   if (reduce) {
     vitres.filter(v => ['a3','b2','c1'].includes(v.dataset.k)).forEach(v => { v.classList.add('on'); allumees.push(v); });
-    recus = 3; cnt.textContent = 3;
-    feed.innerHTML = '<li><b></b>Loyer reçu, Paris 18e</li><li><b></b>Loyer reçu, Rennes</li><li><b></b>Loyer reçu, Paris 11e</li>';
   } else {
     const tour = () => {
       if (zoomEnCours) { setTimeout(tour, 500); return; }
@@ -86,6 +82,9 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   };
   cadrer();
   addEventListener('resize', cadrer);
+  /* Façade en haute définition (pour un zoom net), chargée une fois la page affichée, puis échangée sans à-coup */
+  const passerHD = () => { const t = document.getElementById('facade-trou'); if (!t) return; const hd = new Image(); hd.src = '/accueil/img/facade-trou-hd.webp'; (hd.decode ? hd.decode() : Promise.resolve()).then(() => { t.src = hd.src; }).catch(() => {}); };
+  if (document.readyState === 'complete') setTimeout(passerHD, 600); else addEventListener('load', () => setTimeout(passerHD, 600), { once: true });
   const eur = (v, dec) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
   const tween = (el, from, to, fmt, ms = 900) => {
     if (reduce) { el.textContent = fmt(to); return; }
@@ -235,26 +234,26 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   };
   const C = [
     { nom: 'Mettre en location', photo: 'visite', puce: '<b>5 candidatures</b> reçues', titre: 'Trouvez le bon locataire.',
-      cases: [['Lien de candidature', V.lien('bailio.fr/candidature/t2-lyon')], ['Pièces protégées', V.doc('Uniquement pour louer à Lyon'), 'sombre'], ['Dossiers notés', V.notes(4)], ['Annonce conforme', V.coches(['Loyer', 'Dépôt', 'Classe énergie']), 'soleil']] },
+      points: [['Lien de candidature', 'À coller sur Leboncoin'], ['Pièces protégées', 'Filigrane sur chaque justificatif'], ['Dossiers notés', 'Les plus solides en premier'], ['Annonce conforme', 'Mentions obligatoires ajoutées']] },
     { nom: 'Bail et signature', photo: 'bail', puce: '<b>Bail signé</b> en ligne', titre: 'Un bail juste, signé au doigt.',
-      cases: [['Règles vérifiées', V.coches(['Durée', 'Dépôt', 'Plafond de loyer']), 'soleil'], ['Signature en ligne', V.trait()], ['Tous les baux', V.puces(['Vide', 'Meublé', 'Étudiant', 'Colocation', 'Garage', 'Commerce'])], ['Annexes jointes', V.puces(['Notice', 'Diagnostics', 'Charges']), 'sombre']] },
+      points: [['Règles vérifiées', 'Durée, dépôt, plafond de loyer'], ['Signature en ligne', 'Au doigt, sur le téléphone'], ['Tous les baux', 'Vide, meublé, garage, commerce'], ['Annexes jointes', 'Notice et diagnostics inclus']] },
     { nom: 'État des lieux', photo: 'edl', puce: '<b>Séjour</b> identique', titre: 'L’état des lieux sur votre téléphone.',
-      cases: [['Entrée et sortie comparées', V.compare([['Parquet', 'Identique', 'ok'], ['Peinture', 'À regarder', 'av']]), 'soleil'], ['Retenues justifiées', V.compte(780, 700, 'rendus')], ['Signé sur place', V.trait(), 'sombre'], ['Oublis signalés', V.frise(['J1', 'J5', 'J10'])]] },
+      points: [['Pièce par pièce', 'Avec les photos'], ['Entrée et sortie comparées', 'Ce qui a changé, d’un coup d’œil'], ['Retenues justifiées', 'Avec les factures'], ['Signé sur place', 'Par vous et le locataire']] },
     { nom: 'Loyers et quittances', photo: 'matin', puce: '<b>Quittance</b> partie à 8&#8239;h&#8239;02', titre: 'Le loyer arrive, la quittance part.',
-      cases: [['Relevé lu', V.coches(['780,00 €', '520,00 €'])], ['Relances automatiques', V.frise(['J+3', 'J+8', 'J+15']), 'sombre'], ['Loyer révisé', V.compte(720, 735.4, 'nouveau loyer', 2), 'soleil'], ['Charges régularisées', V.barres([['Provisions', 72], ['Réel', 64, 'clair']])]] },
+      points: [['Relevé lu', 'Les virements reconnus'], ['Quittance envoyée', 'Dès le loyer reçu'], ['Relances automatiques', 'J+3, J+8, J+15'], ['Loyer révisé', 'Selon l’IRL, à la bonne date']] },
     { nom: 'Côté locataire', photo: 'cles', puce: '<b>Assurance</b> reçue', titre: 'Un lien, sans compte.',
-      cases: [['Assurance suivie', V.coches(['Reçue', 'Rappel prévu'])], ['Fuite signalée', V.alerte('Fuite', 'Urgent'), 'soleil'], ['Préavis calculé', V.frise(['Lettre', '1 mois', 'Départ'])], ['Quittance par email', V.interrupteur('Accord'), 'sombre']] },
+      points: [['Rien à installer', 'Un simple lien personnel'], ['Assurance suivie', 'Rappel avant l’échéance'], ['Problème signalé', 'Avec photos, urgence repérée'], ['Préavis calculé', 'La date de départ exacte']] },
     { nom: 'Impôts', photo: 'impots', puce: '<b>Case 4BE</b> prête', titre: 'Vos impôts, en cases à recopier.',
-      cases: [['2044 remplie', V.coches(['Ligne 211', 'Ligne 221', 'Ligne 250']), 'soleil'], ['Micro ou réel', V.barres([['Micro', 80], ['Réel', 46, 'clair']])], ['Bonnes dates', V.puces(['Déclaration', 'Occupation', 'CFE']), 'sombre'], ['SCI incluses', V.gens([['CD', '50 %'], ['MD', '50 %']])]] },
+      points: [['Cases à recopier', '4BE ou 2044, une par une'], ['Micro ou réel', 'Le plus avantageux'], ['Bonnes dates', 'Déclaration, occupation, CFE'], ['SCI incluses', 'La part de chaque associé']] },
     { nom: 'Gestion et comptes', photo: 'cartons', puce: '<b>5,8&#8239;%</b> de rendement', titre: 'Votre patrimoine, bien rangé.',
-      cases: [['Pilotage', V.barres([['Lyon', 84], ['Nantes', 58], ['Sète', 70]]), 'sombre'], ['Comptable invité', V.gens([['AS', 'Associé'], ['EC', 'Comptable'], ['PL', 'Artisan']])], ['IA en lecture', V.discussion('Qui est en retard ?', 'Inès, 970 €.'), 'soleil'], ['Corbeille 30 jours', V.corbeille('Plombier, 180 €')]] }
+      points: [['Pilotage', 'Rendement et trésorerie'], ['Accès partagés', 'Associé, comptable, artisan'], ['Connexion aux IA', 'En lecture seule'], ['Corbeille 30 jours', 'Rien ne se perd']] }
   ];
   const piste = $('fx-piste'), nav = $('fx-nav');
   piste.innerHTML = C.map((c, i) =>
     '<article class="fx-panneau" aria-label="' + c.nom + '">' +
       '<figure class="fx-photo" style="margin:0"><img src="/accueil/img/' + c.photo + '.webp" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
       '<div><p class="fx-moment">' + (i + 1) + ' sur ' + C.length + ', ' + c.nom.toLowerCase() + '</p><h3 class="fx-titre">' + c.titre + '</h3>' +
-      '<div class="fx-cases">' + c.cases.map((x, j) => '<div class="case ' + (x[2] || '') + '" style="--i:' + j + '"><div class="vis">' + x[1] + '</div><h3>' + x[0] + '</h3></div>').join('') + '</div></div>' +
+      '<ul class="fx-liste">' + c.points.map((x, j) => '<li style="--i:' + j + '"><span class="pt-ic" aria-hidden="true">' + OK + '</span><b>' + x[0] + '</b><span>' + x[1] + '</span></li>').join('') + '</ul></div>' +
     '</article>').join('');
   nav.innerHTML = C.map((c, i) => '<button type="button" data-i="' + i + '">' + c.nom + '</button>').join('') + '<span class="barre" aria-hidden="true"></span>';
   const navB = [...nav.querySelectorAll('button')], barre = nav.querySelector('.barre');
@@ -264,7 +263,17 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     navB.forEach((b, j) => b.classList.toggle('on', j === i));
     const b = navB[i]; barre.style.width = b.offsetWidth + 'px'; barre.style.transform = 'translateX(' + b.offsetLeft + 'px)';
   };
-  navB.forEach((b, i) => b.addEventListener('click', () => { if (allerA) allerA(i); }));
+  const panneauxFx = [...piste.querySelectorAll('.fx-panneau')];
+  let fxTimer = null, fxLibre = true, fxVu = false;
+  const montre = (i) => {
+    panneauxFx.forEach((p, j) => { p.classList.toggle('actif', j === i); p.setAttribute('aria-hidden', j === i ? 'false' : 'true'); if (j === i) p.classList.add('joue'); });
+    marque(i);
+    const b = navB[i]; nav.scrollTo({ left: b.offsetLeft - 16, behavior: 'smooth' });
+  };
+  const suivant = () => { if (!fxLibre || !fxVu) return; montre((actif + 1) % panneauxFx.length); fxTimer = setTimeout(suivant, 7000); };
+  navB.forEach((b, i) => b.addEventListener('click', () => { fxLibre = false; clearTimeout(fxTimer); montre(i); }));
+  montre(0);
+  if (!reduce) new IO((es) => es.forEach(e => { fxVu = e.isIntersecting; clearTimeout(fxTimer); if (fxVu && fxLibre) fxTimer = setTimeout(suivant, 7000); }), { threshold: .35 }).observe(piste);
   /* compteurs des petites scènes : quand leur panneau joue */
   const compte = new MO((ms) => ms.forEach(m => { if (m.target.classList.contains('joue') && !m.target.dataset.compte) { m.target.dataset.compte = 1; m.target.querySelectorAll('[data-a]').forEach(el => setTimeout(() => tween(el, +el.dataset.de, +el.dataset.a, v => eur(v, +el.dataset.dec), 1400), 500)); } }));
   piste.querySelectorAll('.fx-panneau').forEach(p => compte.observe(p, { attributes: true, attributeFilter: ['class'] }));
@@ -364,20 +373,19 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
           l'appartement apparaît derrière le verre, la façade passe devant et disparaît */
     const entree = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=120%' : '+=200%'), pin: true, scrub: innerWidth < 760 ? .7 : 1.6, invalidateOnRefresh: true,
+      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=110%' : '+=140%'), pin: true, scrub: innerWidth < 760 ? .6 : .9, invalidateOnRefresh: true,
         onUpdate: (st) => { zoomEnCours = st.progress > .01; },
         onLeaveBack: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } }
     });
     entree
       .set(cadres, { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; }, force3D: true }, 0)
       .to('.wa h1, .wa .sub, .wa .acts', { y: -40, opacity: 0, ease: 'power2.in', duration: .16, stagger: .02 }, 0)
-      .to('.wa .counter', { y: 40, opacity: 0, ease: 'power2.in', duration: .16 }, 0)
       .to('.wa .nav', { y: -30, opacity: 0, duration: .14 }, 0)
       .to('.wa .indice', { opacity: 0, duration: .05 }, 0)
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
       .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)
-      .to(cadres, { scale: () => plein(), ease: 'power3.in', duration: .86 }, 0)
+      .to(cadres, { scale: () => plein(), ease: 'power2.in', duration: .86 }, 0)
       .to(cadres, { opacity: 0, ease: 'power1.in', duration: .14 }, .72)
       .set('#portail img', { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; } }, 0)
       .fromTo('#portail img', { scale: 1.45, filter: 'brightness(.5) saturate(.8)' }, { scale: 1, filter: 'brightness(1) saturate(1)', ease: 'power2.out', duration: .9 }, 0)
@@ -426,31 +434,6 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       els.forEach(t => { const b = t.querySelector('[data-n]'); if (b) tween(b, 0, +b.dataset.n, v => String(Math.round(v)), 1200); });
     } });
 
-    /* 3. Le parcours défile à l'horizontale (ordinateur) */
-    const mm = gsap.matchMedia();
-    mm.add('(min-width: 1000px) and (min-height: 700px)', () => {
-      const fx = document.querySelector('.fx'), piste = $('fx-piste');
-      fx.classList.add('horizontal');
-      const panneaux = gsap.utils.toArray('.fx-panneau');
-      const dist = () => piste.scrollWidth - innerWidth;
-      const tween = gsap.to(piste, { x: () => -dist(), ease: 'none',
-        scrollTrigger: { trigger: '#fx-pin', start: 'top top', end: () => '+=' + dist(), pin: true, scrub: .6, invalidateOnRefresh: true,
-          onUpdate: (st) => marque(Math.round(st.progress * (panneaux.length - 1))) } });
-      panneaux.forEach((p) => {
-        ScrollTrigger.create({ trigger: p, containerAnimation: tween, start: 'left 70%', end: 'right 30%', toggleClass: 'joue' });
-        gsap.from(p.querySelectorAll('.fx-moment, .fx-titre, .fx-texte, .fx-cases .case'), { y: 40, opacity: 0, stagger: .06, ease: 'power2.out',
-          scrollTrigger: { trigger: p, containerAnimation: tween, start: 'left 85%', end: 'left 35%', scrub: true } });
-        gsap.fromTo(p.querySelector('.fx-photo'), { clipPath: 'inset(12% 14% 12% 14% round 26px)' }, { clipPath: 'inset(0% 0% 0% 0% round 26px)', ease: 'none',
-          scrollTrigger: { trigger: p, containerAnimation: tween, start: 'left 100%', end: 'left 40%', scrub: true } });
-      });
-      allerA = (i) => { const st = tween.scrollTrigger; scrollTo({ top: st.start + (st.end - st.start) * i / (panneaux.length - 1), behavior: 'smooth' }); };
-      return () => { fx.classList.remove('horizontal'); allerA = null; };
-    });
-
-    mm.add('(max-width: 999px), (max-height: 699px)', () => {
-      gsap.utils.toArray('.fx-panneau').forEach(p => ScrollTrigger.create({ trigger: p, start: 'top 75%', end: 'bottom 25%', toggleClass: 'joue' }));
-    });
-
     /* 4. Les garanties : le trait se tire, le chiffre monte */
     const courbe = document.querySelector('.cf-geneve .courbes path');
     if (courbe) {
@@ -467,7 +450,6 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   } else {
     /* Sans GSAP ou avec moins d'animations : l'histoire démarre quand l'écran est visible */
     new IO((es) => es.forEach(e => { e.isIntersecting ? demarre() : arrete(); }), { threshold: .4 }).observe($('app'));
-    document.querySelectorAll('.fx-panneau').forEach(p => p.classList.add('joue'));
   }
 
   }, root)

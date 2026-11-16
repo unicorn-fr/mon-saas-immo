@@ -47,8 +47,8 @@ p{margin:0;text-wrap:pretty}
 .wa .nav{display:flex;justify-content:space-between;align-items:center;padding-block:22px}
 .wa .nav ul{display:flex;gap:28px;list-style:none;margin:0;padding:0;font-size:14px;color:#D6DBF5}
 @media (max-width:760px){.wa .nav ul{display:none}}
-.plaque{display:inline-flex;background:var(--a-blue);border-radius:12px;padding:4px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
-.plaque span{border:2px solid #fff;border-radius:9px;padding:5px 14px 6px;font:800 22px/1 "Bricolage Grotesque",var(--sans);letter-spacing:-.03em;color:#fff}
+.plaque{display:inline-flex;background:#1D5A3F;border-radius:12px;padding:4px;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
+.plaque span{background:#22408C;border:2px solid #fff;border-radius:9px;padding:5px 14px 6px;font:800 22px/1 "Bricolage Grotesque",var(--sans);letter-spacing:-.03em;color:#fff}
 .wa .body{align-self:end;padding-block:40px 44px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.9fr);gap:30px;align-items:end}
 @media (max-width:900px){.wa .body{grid-template-columns:1fr}}
 .wa h1{font:800 clamp(42px,6.6vw,96px)/.95 "Bricolage Grotesque",var(--sans);letter-spacing:-.045em;margin:0 0 18px;text-wrap:balance;max-width:13ch}
@@ -677,15 +677,15 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
 .fx-pin{padding-block:64px 48px}
 .fx-haut{display:grid;gap:22px;margin-bottom:28px}
 .fx-haut h2{font:300 clamp(40px,5.4vw,78px)/1 var(--serif);letter-spacing:-.035em;margin:0;font-variation-settings:"opsz" 72}
-.fx-nav{position:relative;display:none;gap:4px;border-bottom:1px solid var(--line)}
+.fx-nav{position:relative;display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.fx-nav::-webkit-scrollbar{display:none}
 .fx-nav button{all:unset;cursor:pointer;position:relative;padding:10px 12px 14px;font:500 13.5px/1 var(--sans);color:var(--mid);white-space:nowrap;transition:color .3s}
 .fx-nav button.on{color:var(--ink)}
 .fx-nav button:focus-visible{outline:2px solid var(--sky);outline-offset:2px;border-radius:6px}
 .fx-nav .barre{position:absolute;left:0;bottom:-1px;height:2px;background:var(--ink);transition:transform .35s cubic-bezier(.3,1,.4,1),width .35s cubic-bezier(.3,1,.4,1)}
-.fx-piste{display:grid;gap:72px}
+.fx-piste{display:grid}.fx-piste>.fx-panneau{grid-area:1/1}.fx-panneau{visibility:hidden;opacity:0;transition:opacity .45s ease,visibility 0s .45s}.fx-panneau.actif{visibility:visible;opacity:1;transition:opacity .45s ease}
 .fx-panneau{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:48px;align-items:center;max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));width:100%}
-@media (max-width:900px){.fx-panneau{grid-template-columns:1fr;gap:24px}}
-.fx-photo{position:relative;border-radius:26px;overflow:hidden;aspect-ratio:4/5;max-height:620px;width:100%;background:var(--ink);box-shadow:0 60px 90px -60px rgba(29,36,51,.65)}
+@media (max-width:900px){.fx-panneau{grid-template-columns:1fr;gap:20px}.fx-photo{aspect-ratio:16/10}}
+.fx-photo{position:relative;border-radius:26px;overflow:hidden;aspect-ratio:4/3;max-height:min(56vh,560px);width:100%;background:var(--ink);box-shadow:0 60px 90px -60px rgba(29,36,51,.65)}
 .fx-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:sepia(.14) saturate(.86) contrast(1.03);transform:scale(1.06);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
 .fx-panneau.joue .fx-photo img{transform:scale(1)}
 .fx-photo .puce{position:absolute;z-index:1;left:18px;top:18px;max-width:calc(100% - 36px);background:rgba(251,249,245,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:12px;padding:9px 12px;font-size:13px;box-shadow:0 14px 30px -16px rgba(0,0,0,.6)}
@@ -735,7 +735,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
 @media (prefers-reduced-motion:reduce){.fx-photo img{transform:none;transition:none}}
 
 /* ========== Version 6 : plus direct, plus percutant ========== */
-.choc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-block:120px 40px;align-items:end}
+.choc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;padding-block:120px 40px;align-items:end}
 @media (max-width:820px){.choc{grid-template-columns:1fr;gap:36px;padding-block:88px 24px}}
 .choc-l{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:22px}
 .choc-l strong{font:300 clamp(64px,8.4vw,128px)/.88 var(--serif);letter-spacing:-.055em;font-variation-settings:"opsz" 72}
@@ -851,6 +851,15 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   .gain2 strong{font-size:clamp(44px,13vw,56px)}
   .fin h2{font-size:clamp(28px,8.4vw,36px)}
 }
+/* Sept moments : un mot-clé et une ligne, comme une liste de fonctions ; lisible d'un coup d'œil sur téléphone */
+.fx-liste{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:0;border-top:1px solid var(--line)}
+.fx-liste li{display:grid;grid-template-columns:34px minmax(0,1fr);column-gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.fx-liste .pt-ic{grid-row:span 2;width:34px;height:34px;border-radius:50%;background:var(--sun);display:grid;place-items:center}
+.fx-liste .pt-ic svg{width:17px;height:17px;fill:none;stroke:var(--ink);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fx-liste b{font:500 19px/1.2 var(--sans);letter-spacing:-.01em;color:var(--ink)}
+.fx-liste li>span:last-child{font-size:14.5px;color:var(--mid);line-height:1.35}
+@media (max-width:640px){.fx-liste li{padding:11px 0;grid-template-columns:30px minmax(0,1fr)}.fx-liste .pt-ic{width:30px;height:30px}.fx-liste b{font-size:16.5px}.fx-liste li>span:last-child{font-size:13.5px}}
+.cf-source{grid-column:1/-1;margin:14px 0 0;font-size:12.5px;color:var(--mid);max-width:80ch}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -884,11 +893,6 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
         <p class="sub">Bail, quittances, relances et impôts. Bailio prépare tout, vous validez. 3,49&#8239;€ par logement et par mois.</p>
         <div class="acts"><a class="btn p" href="#parcours">Créer mon bail</a><a class="btn g" href="#parcours"><svg fill="currentColor" aria-hidden="true"><use href="#i-play"/></svg>La vidéo, 1&#8239;min</a></div>
       </div>
-      <div class="counter">
-        <small>Ce soir, exemple</small>
-        <strong><span id="cnt">0</span> <em>/ 13 loyers</em></strong>
-        <ul class="feed" id="feed"></ul>
-      </div>
     </div>
   </div>
 </header>
@@ -899,22 +903,20 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   <section class="choc in" aria-label="Pourquoi Bailio">
     <div class="choc-l"><strong class="num"><span data-choc="3.49" data-dec="2">3,49</span>&#8239;€</strong><span>par logement et par mois.<br>Tout compris.</span></div>
     <div class="choc-l fort"><strong class="num"><span data-choc="93">93</span>&#8239;%</strong><span>moins cher<br>qu’une agence.</span></div>
-    <div class="choc-l"><strong class="num"><span data-choc="0">0</span></strong><span>option payante.<br>Jamais.</span></div>
-    <p class="choc-note">Agence : 7&#8239;% d’un loyer de 750&#8239;€, dans la fourchette courante de 4 à 10&#8239;%.</p>
   </section>
 
   <!-- ================= Le tableau de bord ================= -->
   <section class="tb in" aria-labelledby="tb-t">
     <div class="tete-s">
       <h2 id="tb-t" class="mots">Votre tableau de bord.</h2>
-      <p class="monte">Descendez : la journée se joue sous vos yeux.</p>
+      <p class="monte">Bailio s’en occupe. Vous validez.</p>
     </div>
     <div class="tb-pin" id="tb-pin">
     <ol class="tb-etapes" id="etapes">
-      <li><button type="button" data-s="0"><b>1</b><strong>Un virement arrive</strong><span>Reconnu sur votre relevé, le loyer est noté.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="1"><b>2</b><strong>La quittance part</strong><span>Le locataire la reçoit aussitôt.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="2"><b>3</b><strong>Un retard est repéré</strong><span>La relance est déjà rédigée.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="3"><b>4</b><strong>Vous validez</strong><span>Un clic, c’est envoyé.</span><i class="fil"></i></button></li>
+      <li><button type="button" data-s="0"><b>1</b><strong>Loyer reçu</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="1"><b>2</b><strong>Quittance envoyée</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="2"><b>3</b><strong>Retard repéré</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="3"><b>4</b><strong>Relance validée</strong><i class="fil"></i></button></li>
     </ol>
     <div class="tb-scene" id="tb-scene">
       <div class="app2" id="app" aria-label="Démonstration du tableau de bord, données fictives">
@@ -1023,7 +1025,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
     <div class="in">
       <div class="tete-s">
         <h2 id="cf-t" class="mots">Vos données dorment en Suisse.</h2>
-        <p class="monte">Hébergées à Genève, chez Infomaniak.</p>
+        <p class="monte">Chez Infomaniak, hébergeur suisse indépendant.</p>
       </div>
       <div class="cf-grille2">
         <article class="cf-geneve">
@@ -1031,19 +1033,20 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
             <svg viewBox="0 0 320 200"><g class="courbes" fill="none" stroke="rgba(238,233,224,.16)" stroke-width="1"></g><circle class="onde o1" cx="196" cy="118" r="6"/><circle class="onde o2" cx="196" cy="118" r="6"/><circle cx="196" cy="118" r="5" fill="#F2B45C"/></svg>
           </div>
           <div class="cf-geneve-t">
-            <span class="coord num">46°&#8239;11′&#8239;N, 6°&#8239;08′&#8239;E</span>
-            <h3>Genève, Suisse.</h3>
-            <p>Protection des données reconnue par l’Union européenne.</p>
+            <h3>En Suisse.</h3>
+            <p>Droit suisse, protection reconnue par l’Union européenne. La chaleur des serveurs chauffe des foyers.</p>
             <span class="infk">Hébergé par Infomaniak</span>
           </div>
         </article>
         <div class="cf-tuiles">
-          <div class="cf-t"><b class="num" data-n="14">14</b><span>jours de sauvegardes,<br>faites chaque nuit</span></div>
-          <div class="cf-t"><b class="num">0</b><span>mot de passe<br>à voler</span></div>
-          <div class="cf-t"><b class="num">0</b><span>cookie,<br>0 publicité</span></div>
+          <div class="cf-t"><b class="num">100&#8239;%</b><span>électricité<br>renouvelable</span></div>
+          <div class="cf-t"><b class="num">0</b><span>donnée revendue,<br>jamais</span></div>
+          <div class="cf-t"><b class="num">ISO</b><span>14001 et 50001,<br>certifié</span></div>
           <div class="cf-t"><b class="num">0&#8239;€</b><span>de vos loyers<br>ne passe par nous</span></div>
           <div class="cf-t large"><b class="num">7j/7</b><span>une vraie personne vous répond</span></div>
         </div>
+        <p class="cf-source">Engagements publiés par Infomaniak (infomaniak.com, novembre 2026) : électricité renouvelable certifiée, chaleur des centres de données réutilisée, aucun accès aux données des clients sans demande explicite.</p>
+      </div>
       </div>
     </div>
   </section>
@@ -1100,21 +1103,17 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   /* Façade : tout est éteint, puis une fenêtre s'allume ; au-delà de trois, la plus ancienne s'éteint */
   const villes = { a1:'Lyon 3e', a2:'Nantes', a3:'Paris 11e', a4:'Lille', b1:'Bordeaux', b2:'Rennes', b3:'Lyon 7e', b4:'Toulouse', c1:'Paris 18e', c2:'Nantes', c3:'Lille', c4:'Marseille', d1:'Grenoble', d2:'Montpellier', d3:'Strasbourg' };
   const vitres = [...document.querySelectorAll('#vitres .vitre')];
-  const cnt = document.getElementById('cnt'), feed = document.getElementById('feed');
-  const allumees = [];
+    const allumees = [];
   let zoomEnCours = false;
   let recus = 0, derniere = null;
-  const dire = (k) => { const li = document.createElement('li'); li.className = 'new'; li.innerHTML = '<b></b>Loyer reçu, ' + villes[k]; feed.prepend(li); while (feed.children.length > 3) feed.lastChild.remove(); };
   const allume = (v) => {
     if (allumees.length >= 3) allumees.shift().classList.remove('on');
     allumees.push(v); derniere = v;
     v.classList.remove('flick'); void v.getBBox(); v.classList.add('on', 'flick');
-    recus = recus >= 13 ? 1 : recus + 1; cnt.textContent = recus; dire(v.dataset.k);
+   
   };
   if (reduce) {
     vitres.filter(v => ['a3','b2','c1'].includes(v.dataset.k)).forEach(v => { v.classList.add('on'); allumees.push(v); });
-    recus = 3; cnt.textContent = 3;
-    feed.innerHTML = '<li><b></b>Loyer reçu, Paris 18e</li><li><b></b>Loyer reçu, Rennes</li><li><b></b>Loyer reçu, Paris 11e</li>';
   } else {
     const tour = () => {
       if (zoomEnCours) { setTimeout(tour, 500); return; }
@@ -1140,6 +1139,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   };
   cadrer();
   addEventListener('resize', cadrer);
+  /* Façade en haute définition (pour un zoom net), chargée une fois la page affichée, puis échangée sans à-coup */
+  const passerHD = () => { const t = document.getElementById('facade-trou'); if (!t) return; const hd = new Image(); hd.src = 'img/facade-trou-hd.webp'; (hd.decode ? hd.decode() : Promise.resolve()).then(() => { t.src = hd.src; }).catch(() => {}); };
+  if (document.readyState === 'complete') setTimeout(passerHD, 600); else addEventListener('load', () => setTimeout(passerHD, 600), { once: true });
   const eur = (v, dec) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
   const tween = (el, from, to, fmt, ms = 900) => {
     if (reduce) { el.textContent = fmt(to); return; }
@@ -1289,26 +1291,26 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   };
   const C = [
     { nom: 'Mettre en location', photo: 'visite', puce: '<b>5 candidatures</b> reçues', titre: 'Trouvez le bon locataire.',
-      cases: [['Lien de candidature', V.lien('bailio.fr/candidature/t2-lyon')], ['Pièces protégées', V.doc('Uniquement pour louer à Lyon'), 'sombre'], ['Dossiers notés', V.notes(4)], ['Annonce conforme', V.coches(['Loyer', 'Dépôt', 'Classe énergie']), 'soleil']] },
+      points: [['Lien de candidature', 'À coller sur Leboncoin'], ['Pièces protégées', 'Filigrane sur chaque justificatif'], ['Dossiers notés', 'Les plus solides en premier'], ['Annonce conforme', 'Mentions obligatoires ajoutées']] },
     { nom: 'Bail et signature', photo: 'bail', puce: '<b>Bail signé</b> en ligne', titre: 'Un bail juste, signé au doigt.',
-      cases: [['Règles vérifiées', V.coches(['Durée', 'Dépôt', 'Plafond de loyer']), 'soleil'], ['Signature en ligne', V.trait()], ['Tous les baux', V.puces(['Vide', 'Meublé', 'Étudiant', 'Colocation', 'Garage', 'Commerce'])], ['Annexes jointes', V.puces(['Notice', 'Diagnostics', 'Charges']), 'sombre']] },
+      points: [['Règles vérifiées', 'Durée, dépôt, plafond de loyer'], ['Signature en ligne', 'Au doigt, sur le téléphone'], ['Tous les baux', 'Vide, meublé, garage, commerce'], ['Annexes jointes', 'Notice et diagnostics inclus']] },
     { nom: 'État des lieux', photo: 'edl', puce: '<b>Séjour</b> identique', titre: 'L’état des lieux sur votre téléphone.',
-      cases: [['Entrée et sortie comparées', V.compare([['Parquet', 'Identique', 'ok'], ['Peinture', 'À regarder', 'av']]), 'soleil'], ['Retenues justifiées', V.compte(780, 700, 'rendus')], ['Signé sur place', V.trait(), 'sombre'], ['Oublis signalés', V.frise(['J1', 'J5', 'J10'])]] },
+      points: [['Pièce par pièce', 'Avec les photos'], ['Entrée et sortie comparées', 'Ce qui a changé, d’un coup d’œil'], ['Retenues justifiées', 'Avec les factures'], ['Signé sur place', 'Par vous et le locataire']] },
     { nom: 'Loyers et quittances', photo: 'matin', puce: '<b>Quittance</b> partie à 8&#8239;h&#8239;02', titre: 'Le loyer arrive, la quittance part.',
-      cases: [['Relevé lu', V.coches(['780,00 €', '520,00 €'])], ['Relances automatiques', V.frise(['J+3', 'J+8', 'J+15']), 'sombre'], ['Loyer révisé', V.compte(720, 735.4, 'nouveau loyer', 2), 'soleil'], ['Charges régularisées', V.barres([['Provisions', 72], ['Réel', 64, 'clair']])]] },
+      points: [['Relevé lu', 'Les virements reconnus'], ['Quittance envoyée', 'Dès le loyer reçu'], ['Relances automatiques', 'J+3, J+8, J+15'], ['Loyer révisé', 'Selon l’IRL, à la bonne date']] },
     { nom: 'Côté locataire', photo: 'cles', puce: '<b>Assurance</b> reçue', titre: 'Un lien, sans compte.',
-      cases: [['Assurance suivie', V.coches(['Reçue', 'Rappel prévu'])], ['Fuite signalée', V.alerte('Fuite', 'Urgent'), 'soleil'], ['Préavis calculé', V.frise(['Lettre', '1 mois', 'Départ'])], ['Quittance par email', V.interrupteur('Accord'), 'sombre']] },
+      points: [['Rien à installer', 'Un simple lien personnel'], ['Assurance suivie', 'Rappel avant l’échéance'], ['Problème signalé', 'Avec photos, urgence repérée'], ['Préavis calculé', 'La date de départ exacte']] },
     { nom: 'Impôts', photo: 'impots', puce: '<b>Case 4BE</b> prête', titre: 'Vos impôts, en cases à recopier.',
-      cases: [['2044 remplie', V.coches(['Ligne 211', 'Ligne 221', 'Ligne 250']), 'soleil'], ['Micro ou réel', V.barres([['Micro', 80], ['Réel', 46, 'clair']])], ['Bonnes dates', V.puces(['Déclaration', 'Occupation', 'CFE']), 'sombre'], ['SCI incluses', V.gens([['CD', '50 %'], ['MD', '50 %']])]] },
+      points: [['Cases à recopier', '4BE ou 2044, une par une'], ['Micro ou réel', 'Le plus avantageux'], ['Bonnes dates', 'Déclaration, occupation, CFE'], ['SCI incluses', 'La part de chaque associé']] },
     { nom: 'Gestion et comptes', photo: 'cartons', puce: '<b>5,8&#8239;%</b> de rendement', titre: 'Votre patrimoine, bien rangé.',
-      cases: [['Pilotage', V.barres([['Lyon', 84], ['Nantes', 58], ['Sète', 70]]), 'sombre'], ['Comptable invité', V.gens([['AS', 'Associé'], ['EC', 'Comptable'], ['PL', 'Artisan']])], ['IA en lecture', V.discussion('Qui est en retard ?', 'Inès, 970 €.'), 'soleil'], ['Corbeille 30 jours', V.corbeille('Plombier, 180 €')]] }
+      points: [['Pilotage', 'Rendement et trésorerie'], ['Accès partagés', 'Associé, comptable, artisan'], ['Connexion aux IA', 'En lecture seule'], ['Corbeille 30 jours', 'Rien ne se perd']] }
   ];
   const piste = $('fx-piste'), nav = $('fx-nav');
   piste.innerHTML = C.map((c, i) =>
     '<article class="fx-panneau" aria-label="' + c.nom + '">' +
       '<figure class="fx-photo" style="margin:0"><img src="img/' + c.photo + '.jpg" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
       '<div><p class="fx-moment">' + (i + 1) + ' sur ' + C.length + ', ' + c.nom.toLowerCase() + '</p><h3 class="fx-titre">' + c.titre + '</h3>' +
-      '<div class="fx-cases">' + c.cases.map((x, j) => '<div class="case ' + (x[2] || '') + '" style="--i:' + j + '"><div class="vis">' + x[1] + '</div><h3>' + x[0] + '</h3></div>').join('') + '</div></div>' +
+      '<ul class="fx-liste">' + c.points.map((x, j) => '<li style="--i:' + j + '"><span class="pt-ic" aria-hidden="true">' + OK + '</span><b>' + x[0] + '</b><span>' + x[1] + '</span></li>').join('') + '</ul></div>' +
     '</article>').join('');
   nav.innerHTML = C.map((c, i) => '<button type="button" data-i="' + i + '">' + c.nom + '</button>').join('') + '<span class="barre" aria-hidden="true"></span>';
   const navB = [...nav.querySelectorAll('button')], barre = nav.querySelector('.barre');
@@ -1318,7 +1320,17 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
     navB.forEach((b, j) => b.classList.toggle('on', j === i));
     const b = navB[i]; barre.style.width = b.offsetWidth + 'px'; barre.style.transform = 'translateX(' + b.offsetLeft + 'px)';
   };
-  navB.forEach((b, i) => b.addEventListener('click', () => { if (allerA) allerA(i); }));
+  const panneauxFx = [...piste.querySelectorAll('.fx-panneau')];
+  let fxTimer = null, fxLibre = true, fxVu = false;
+  const montre = (i) => {
+    panneauxFx.forEach((p, j) => { p.classList.toggle('actif', j === i); p.setAttribute('aria-hidden', j === i ? 'false' : 'true'); if (j === i) p.classList.add('joue'); });
+    marque(i);
+    const b = navB[i]; nav.scrollTo({ left: b.offsetLeft - 16, behavior: 'smooth' });
+  };
+  const suivant = () => { if (!fxLibre || !fxVu) return; montre((actif + 1) % panneauxFx.length); fxTimer = setTimeout(suivant, 7000); };
+  navB.forEach((b, i) => b.addEventListener('click', () => { fxLibre = false; clearTimeout(fxTimer); montre(i); }));
+  montre(0);
+  if (!reduce) new IntersectionObserver((es) => es.forEach(e => { fxVu = e.isIntersecting; clearTimeout(fxTimer); if (fxVu && fxLibre) fxTimer = setTimeout(suivant, 7000); }), { threshold: .35 }).observe(piste);
   /* compteurs des petites scènes : quand leur panneau joue */
   const compte = new MutationObserver((ms) => ms.forEach(m => { if (m.target.classList.contains('joue') && !m.target.dataset.compte) { m.target.dataset.compte = 1; m.target.querySelectorAll('[data-a]').forEach(el => setTimeout(() => tween(el, +el.dataset.de, +el.dataset.a, v => eur(v, +el.dataset.dec), 1400), 500)); } }));
   piste.querySelectorAll('.fx-panneau').forEach(p => compte.observe(p, { attributes: true, attributeFilter: ['class'] }));
@@ -1418,20 +1430,19 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
           l'appartement apparaît derrière le verre, la façade passe devant et disparaît */
     const entree = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=120%' : '+=200%'), pin: true, scrub: innerWidth < 760 ? .7 : 1.6, invalidateOnRefresh: true,
+      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=110%' : '+=140%'), pin: true, scrub: innerWidth < 760 ? .6 : .9, invalidateOnRefresh: true,
         onUpdate: (st) => { zoomEnCours = st.progress > .01; },
         onLeaveBack: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } }
     });
     entree
       .set(cadres, { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; }, force3D: true }, 0)
       .to('.wa h1, .wa .sub, .wa .acts', { y: -40, opacity: 0, ease: 'power2.in', duration: .16, stagger: .02 }, 0)
-      .to('.wa .counter', { y: 40, opacity: 0, ease: 'power2.in', duration: .16 }, 0)
       .to('.wa .nav', { y: -30, opacity: 0, duration: .14 }, 0)
       .to('.wa .indice', { opacity: 0, duration: .05 }, 0)
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
       .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)
-      .to(cadres, { scale: () => plein(), ease: 'power3.in', duration: .86 }, 0)
+      .to(cadres, { scale: () => plein(), ease: 'power2.in', duration: .86 }, 0)
       .to(cadres, { opacity: 0, ease: 'power1.in', duration: .14 }, .72)
       .set('#portail img', { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; } }, 0)
       .fromTo('#portail img', { scale: 1.45, filter: 'brightness(.5) saturate(.8)' }, { scale: 1, filter: 'brightness(1) saturate(1)', ease: 'power2.out', duration: .9 }, 0)
@@ -1480,31 +1491,6 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
       els.forEach(t => { const b = t.querySelector('[data-n]'); if (b) tween(b, 0, +b.dataset.n, v => String(Math.round(v)), 1200); });
     } });
 
-    /* 3. Le parcours défile à l'horizontale (ordinateur) */
-    const mm = gsap.matchMedia();
-    mm.add('(min-width: 1000px) and (min-height: 700px)', () => {
-      const fx = document.querySelector('.fx'), piste = $('fx-piste');
-      fx.classList.add('horizontal');
-      const panneaux = gsap.utils.toArray('.fx-panneau');
-      const dist = () => piste.scrollWidth - innerWidth;
-      const tween = gsap.to(piste, { x: () => -dist(), ease: 'none',
-        scrollTrigger: { trigger: '#fx-pin', start: 'top top', end: () => '+=' + dist(), pin: true, scrub: .6, invalidateOnRefresh: true,
-          onUpdate: (st) => marque(Math.round(st.progress * (panneaux.length - 1))) } });
-      panneaux.forEach((p) => {
-        ScrollTrigger.create({ trigger: p, containerAnimation: tween, start: 'left 70%', end: 'right 30%', toggleClass: 'joue' });
-        gsap.from(p.querySelectorAll('.fx-moment, .fx-titre, .fx-texte, .fx-cases .case'), { y: 40, opacity: 0, stagger: .06, ease: 'power2.out',
-          scrollTrigger: { trigger: p, containerAnimation: tween, start: 'left 85%', end: 'left 35%', scrub: true } });
-        gsap.fromTo(p.querySelector('.fx-photo'), { clipPath: 'inset(12% 14% 12% 14% round 26px)' }, { clipPath: 'inset(0% 0% 0% 0% round 26px)', ease: 'none',
-          scrollTrigger: { trigger: p, containerAnimation: tween, start: 'left 100%', end: 'left 40%', scrub: true } });
-      });
-      allerA = (i) => { const st = tween.scrollTrigger; scrollTo({ top: st.start + (st.end - st.start) * i / (panneaux.length - 1), behavior: 'smooth' }); };
-      return () => { fx.classList.remove('horizontal'); allerA = null; };
-    });
-
-    mm.add('(max-width: 999px), (max-height: 699px)', () => {
-      gsap.utils.toArray('.fx-panneau').forEach(p => ScrollTrigger.create({ trigger: p, start: 'top 75%', end: 'bottom 25%', toggleClass: 'joue' }));
-    });
-
     /* 4. Les garanties : le trait se tire, le chiffre monte */
     const courbe = document.querySelector('.cf-geneve .courbes path');
     if (courbe) {
@@ -1521,7 +1507,6 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px rgba(
   } else {
     /* Sans GSAP ou avec moins d'animations : l'histoire démarre quand l'écran est visible */
     new IntersectionObserver((es) => es.forEach(e => { e.isIntersecting ? demarre() : arrete(); }), { threshold: .4 }).observe($('app'));
-    document.querySelectorAll('.fx-panneau').forEach(p => p.classList.add('joue'));
   }
 })();
 </script>

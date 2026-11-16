@@ -127,13 +127,6 @@ export default function HomeDusk() {
                 </VideoButton>
               </div>
             </div>
-            <div className="counter" aria-hidden>
-              <small>Ce soir, exemple</small>
-              <strong>
-                <span id="cnt">0</span> <em>/ 13 loyers</em>
-              </strong>
-              <ul className="feed" id="feed" />
-            </div>
           </div>
         </div>
         <p className="indice" aria-hidden>
