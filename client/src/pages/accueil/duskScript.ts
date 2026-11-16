@@ -350,7 +350,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
           l'appartement apparaît derrière le verre, la façade passe devant et disparaît */
     const entree = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: wa, start: 'top top', end: '+=200%', pin: true, scrub: 1.6, invalidateOnRefresh: true,
+      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=120%' : '+=200%'), pin: true, scrub: innerWidth < 760 ? .7 : 1.6, invalidateOnRefresh: true,
         onUpdate: (st) => { zoomEnCours = st.progress > .01; },
         onLeaveBack: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } }
     });
@@ -359,6 +359,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       .to('.wa h1, .wa .sub, .wa .acts', { y: -40, opacity: 0, ease: 'power2.in', duration: .16, stagger: .02 }, 0)
       .to('.wa .counter', { y: 40, opacity: 0, ease: 'power2.in', duration: .16 }, 0)
       .to('.wa .nav', { y: -30, opacity: 0, duration: .14 }, 0)
+      .to('.wa .indice', { opacity: 0, duration: .05 }, 0)
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
       .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)

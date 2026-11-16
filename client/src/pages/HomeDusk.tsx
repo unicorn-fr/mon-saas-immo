@@ -128,6 +128,10 @@ export default function HomeDusk() {
             </div>
           </div>
         </div>
+        <p className="indice" aria-hidden>
+          <i />
+          Faites défiler pour entrer
+        </p>
       </header>
       <main id="parcours" dangerouslySetInnerHTML={main} />
     </div>
