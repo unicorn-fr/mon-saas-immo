@@ -284,6 +284,8 @@ export default defineConfig({
           if (!id.includes('node_modules')) return undefined
           if (/node_modules\/(react|react-dom|scheduler)\//.test(id)) return 'react'
           if (id.includes('react-router')) return 'router'
+          // Animations de l'accueil : un fichier à part, chargé seulement par l'accueil après son premier affichage.
+          if (id.includes('node_modules/gsap')) return 'gsap'
           return 'vendor'
         },
       },

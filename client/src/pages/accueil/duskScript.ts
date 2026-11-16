@@ -72,6 +72,20 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   }
 
   const $ = (id) => document.getElementById(id);
+  /* Cadrage de la façade : sur un écran plus étroit que la photo, on la décale pour garder la fenêtre a3 (centre x = 514)
+     aux trois cinquièmes de la largeur, au lieu de la couper au milieu. */
+  const waEl = document.querySelector('.wa');
+  let vb = { x: 0, w: 1500 };
+  const cadrer = () => {
+    const W = waEl.clientWidth, H = waEl.clientHeight, a = W / H;
+    if (a >= 1.5) vb = { x: 0, w: 1500 };
+    else { const w = 1000 * a; vb = { x: Math.max(0, Math.min(1500 - w, 514.5 - .6 * w)), w }; }
+    waEl.querySelectorAll('svg.cadre').forEach(sv => sv.setAttribute('viewBox', vb.x + ' 0 ' + vb.w + ' 1000'));
+    const t = document.getElementById('facade-trou');
+    if (t) t.style.objectPosition = (vb.w < 1500 ? vb.x / (1500 - vb.w) * 100 : 50) + '% 50%';
+  };
+  cadrer();
+  addEventListener('resize', cadrer);
   const eur = (v, dec) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
   const tween = (el, from, to, fmt, ms = 900) => {
     if (reduce) { el.textContent = fmt(to); return; }
@@ -93,7 +107,20 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   }
 
   /* ========== Le tableau de bord : une journée rejouée ========== */
-  const app = $('app'), cur = $('curseur');
+  const app = $('app'), cur = $('curseur'), scene = $('tb-scene');
+  /* Miniature : la version ordinateur réduite à la largeur de l'écran ; la hauteur de la scène suit. */
+  let ech = 1;
+  const miniature = () => {
+    const petit = innerWidth < 1000;
+    app.classList.toggle('mini', petit); scene.classList.toggle('mini', petit);
+    if (!petit) { ech = 1; app.style.transform = ''; scene.style.height = ''; return; }
+    ech = Math.min(1, scene.clientWidth / 1100);
+    app.style.transform = 'scale(' + ech + ')';
+    scene.style.height = Math.ceil(app.offsetHeight * ech) + 'px';
+  };
+  miniature();
+  addEventListener('resize', miniature);
+  if (document.fonts) document.fonts.ready.then(miniature);
   const boutons = [...document.querySelectorAll('#etapes button')];
   let minuteurs = [], tourne = false;
   const plus = (ms, fn) => minuteurs.push(setTimeout(fn, ms * (typeof vite === 'number' ? vite : 1)));
@@ -103,7 +130,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   const vif = (id, cls = 'vif') => { $(id).classList.add(cls); plus(1400, () => $(id).classList.remove(cls)); };
   const toast = (t) => { $('toast-t').textContent = t; $('toast').hidden = false; plus(2300, () => { $('toast').hidden = true; }); };
   const saute = () => { const s = $('k-todo'); s.classList.add('saute'); plus(300, () => s.classList.remove('saute')); };
-  const vers = (el) => { const a = app.getBoundingClientRect(), r = el.getBoundingClientRect(); cur.style.left = (r.left - a.left + r.width * .55) + 'px'; cur.style.top = (r.top - a.top + r.height * .6) + 'px'; };
+  const vers = (el) => { const a = app.getBoundingClientRect(), r = el.getBoundingClientRect(); cur.style.left = (r.left - a.left + r.width * .55) / ech + 'px'; cur.style.top = (r.top - a.top + r.height * .6) / ech + 'px'; };
   const repos = () => { cur.style.left = '86%'; cur.style.top = '104%'; };
   const clic = (el) => { cur.classList.add('clic'); el.classList.add('clic'); plus(170, () => { cur.classList.remove('clic'); el.classList.remove('clic'); }); };
   const allumeEtape = (i, duree) => boutons.forEach((b, j) => {
@@ -132,7 +159,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       if (vite) return;
       plus(200, () => {
         const q = $('quit'), b = $('b-camille').getBoundingClientRect(), a = app.getBoundingClientRect();
-        q.style.transition = 'none'; q.style.left = (b.left - a.left + 30) + 'px'; q.style.top = (b.top - a.top - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
+        q.style.transition = 'none'; q.style.left = ((b.left - a.left) / ech + 30) + 'px'; q.style.top = ((b.top - a.top) / ech - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => { q.style.transition = ''; q.style.opacity = '1'; q.style.transform = 'scale(1) rotate(-2deg) translateY(-40px)'; }));
       });
       plus(1300, () => { const q = $('quit'); q.style.transform = 'translate(' + Math.round(app.clientWidth * .3) + 'px,-220px) scale(.35) rotate(10deg)'; q.style.opacity = '0'; });
@@ -225,7 +252,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   const piste = $('fx-piste'), nav = $('fx-nav');
   piste.innerHTML = C.map((c, i) =>
     '<article class="fx-panneau" aria-label="' + c.nom + '">' +
-      '<figure class="fx-photo" style="margin:0"><img src="/accueil/img/' + c.photo + '.jpg" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
+      '<figure class="fx-photo" style="margin:0"><img src="/accueil/img/' + c.photo + '.webp" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
       '<div><p class="fx-moment">' + (i + 1) + ' sur ' + C.length + ', ' + c.nom.toLowerCase() + '</p><h3 class="fx-titre">' + c.titre + '</h3>' +
       '<div class="fx-cases">' + c.cases.map((x, j) => '<div class="case ' + (x[2] || '') + '" style="--i:' + j + '"><div class="vis">' + x[1] + '</div><h3>' + x[0] + '</h3></div>').join('') + '</div></div>' +
     '</article>').join('');
@@ -318,24 +345,26 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   /* ========== Mise en scène au défilement (GSAP, tous navigateurs) ========== */
   if (!reduce) {
     
-    const wa = document.querySelector('.wa'), cadres = wa.querySelectorAll('svg.cadre'), portail = $('portail');
+    const wa = document.querySelector('.wa'), cadres = wa.querySelectorAll('.cadre'), portail = $('portail');
     const cible3 = document.querySelector('#vitres .vitre[data-k="a3"]');
     /* Géométrie exacte de la fenêtre a3 (472,482 → 557,630 sur la photo de 1500 × 1000, cadrée en « cover ») */
     const geo = () => {
-      const W = wa.clientWidth, H = wa.clientHeight, k = Math.max(W / 1500, H / 1000);
-      const ox = (W - 1500 * k) / 2, oy = (H - 1000 * k) / 2;
+      const W = wa.clientWidth, H = wa.clientHeight, k = Math.max(W / vb.w, H / 1000);
+      const ox = (W - vb.w * k) / 2 - vb.x * k, oy = (H - 1000 * k) / 2;
       const x = ox + 472 * k, y = oy + 482 * k, w = 85 * k, h = 148 * k;
       return { W, H, x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
     };
-    const facadeImg = $('facade-img');
-    facadeImg.setAttribute('mask', 'url(#trou)');
+    ScrollTrigger.addEventListener('refreshInit', cadrer);
+    /* Échelle où la vitre couvre tout l'écran, puis un peu plus : la façade sort de l'écran de tous côtés. */
+    /* Échelle où la vitre couvre tout l'écran, mesurée depuis son centre (elle n'est pas forcément au milieu). */
+    const plein = () => { const g = geo(); return Math.max(g.cx / (g.w / 2), (g.W - g.cx) / (g.w / 2), g.cy / (g.h / 2), (g.H - g.cy) / (g.h / 2)) * 1.15; };
     const vers = () => { const g = geo(); return { x: g.W / 2 - g.cx, y: g.H / 2 - g.cy }; };
 
     /* 1. On entre par la fenêtre : elle glisse au centre, la lumière de la vitre s'efface,
           l'appartement apparaît derrière le verre, la façade passe devant et disparaît */
     const entree = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: wa, start: 'top top', end: '+=200%', pin: true, scrub: 1.6, invalidateOnRefresh: true,
+      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=120%' : '+=200%'), pin: true, scrub: innerWidth < 760 ? .7 : 1.6, invalidateOnRefresh: true,
         onUpdate: (st) => { zoomEnCours = st.progress > .01; },
         onLeaveBack: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } }
     });
@@ -344,11 +373,13 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       .to('.wa h1, .wa .sub, .wa .acts', { y: -40, opacity: 0, ease: 'power2.in', duration: .16, stagger: .02 }, 0)
       .to('.wa .counter', { y: 40, opacity: 0, ease: 'power2.in', duration: .16 }, 0)
       .to('.wa .nav', { y: -30, opacity: 0, duration: .14 }, 0)
+      .to('.wa .indice', { opacity: 0, duration: .05 }, 0)
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
+      .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)
-      .to(cadres, { x: () => vers().x, y: () => vers().y, ease: 'sine.inOut', duration: .62 }, 0)
-      .to(cadres, { scale: 22, ease: 'power3.in', duration: .86 }, 0)
+      .to(cadres, { scale: () => plein(), ease: 'power3.in', duration: .86 }, 0)
       .to(cadres, { opacity: 0, ease: 'power1.in', duration: .14 }, .72)
+      .set('#portail img', { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; } }, 0)
       .fromTo('#portail img', { scale: 1.45, filter: 'brightness(.5) saturate(.8)' }, { scale: 1, filter: 'brightness(1) saturate(1)', ease: 'power2.out', duration: .9 }, 0)
       .fromTo('.portail-t', { y: 30, opacity: 0 }, { y: 0, opacity: 1, ease: 'power2.out', duration: .1 }, .86)
       .to({}, { duration: .04 });
@@ -363,16 +394,26 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
         rotateX: () => rnd(-28, 28), rotateY: () => rnd(-30, 30), rotateZ: () => rnd(-6, 6),
         opacity: 0, duration: 1.3, ease: 'expo.out', stagger: { each: .035, from: 'random' }
       }, 0);
-    /* Le tableau de bord se fige et la journée avance avec le défilement, une étape par quart */
-    histoireActive = true;
-    const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=260%', pin: true,
-      onUpdate: (st) => {
-        const p = st.progress * 4, k = Math.min(3, Math.floor(p));
-        montreEtape(k);
-        boutons.forEach((b, j) => b.style.setProperty('--p', j < k ? 1 : j === k ? Math.min(1, p - k) : 0));
-      },
-      onLeaveBack: () => { etapeVue = -1; stop(); depart(); boutons.forEach(b => { b.classList.remove('on', 'fait'); b.style.setProperty('--p', 0); }); } });
-    boutons.forEach((b, i) => { b.onclick = (e) => { e.stopImmediatePropagation(); scrollTo({ top: histoire.start + (histoire.end - histoire.start) * (i + .15) / 4, behavior: 'smooth' }); }; });
+    /* Le tableau de bord se fige et la journée avance avec le défilement, une étape par quart : seulement quand il tient
+       dans l'écran (ordinateur). Sur téléphone et tablette, il défile normalement et la journée se joue seule quand il
+       est visible ; les quatre étapes restent cliquables. */
+    const mmTb = gsap.matchMedia();
+    mmTb.add('(min-width: 1000px) and (min-height: 700px)', () => {
+      histoireActive = true;
+      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=260%', pin: true,
+        onUpdate: (st) => {
+          const p = st.progress * 4, k = Math.min(3, Math.floor(p));
+          montreEtape(k);
+          boutons.forEach((b, j) => b.style.setProperty('--p', j < k ? 1 : j === k ? Math.min(1, p - k) : 0));
+        },
+        onLeaveBack: () => { etapeVue = -1; stop(); depart(); boutons.forEach(b => { b.classList.remove('on', 'fait'); b.style.setProperty('--p', 0); }); } });
+      boutons.forEach((b, i) => { b.onclick = (e) => { e.stopImmediatePropagation(); scrollTo({ top: histoire.start + (histoire.end - histoire.start) * (i + .15) / 4, behavior: 'smooth' }); }; });
+      return () => { histoireActive = false; etapeVue = -1; boutons.forEach(b => { b.onclick = null; }); };
+    });
+    mmTb.add('(max-width: 999px), (max-height: 699px)', () => {
+      const vu = ScrollTrigger.create({ trigger: '#app', start: 'top 70%', end: 'bottom 20%', onToggle: (st) => (st.isActive ? demarre() : arrete()) });
+      return () => { vu.kill(); arrete(); };
+    });
 
     /* Les trois chiffres-chocs montent quand ils arrivent */
     gsap.utils.toArray('[data-choc]').forEach((el) => {
