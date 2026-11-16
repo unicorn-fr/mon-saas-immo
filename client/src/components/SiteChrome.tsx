@@ -115,65 +115,78 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
-  const links = [
-    { to: "/guides", label: "Guides" },
-    { to: "/modeles", label: "Modèles gratuits" },
-    { to: "/fonctionnalites", label: "Fonctionnalités" },
-    { to: "/tarifs", label: "Tarifs" },
-    { to: "/a-propos", label: "À propos" },
-    { to: "/avis", label: "Avis" },
-    { to: "/espace-locataire", label: "Espace locataire" },
-    { to: "/demo", label: "Essayer la démo" },
-    { to: "/changer-pour-bailio", label: "Changer pour Bailio" },
-    { to: "/mentions-legales", label: "Mentions légales" },
-    { to: "/conditions", label: "Conditions" },
-    { to: "/confidentialite", label: "Confidentialité" },
-    { to: "/cookies", label: "Cookies" },
-    { to: "/prix-et-remboursement", label: "Prix et remboursement" },
-    { to: "/cgv", label: "CGV" },
-    { to: "/accessibilite", label: "Accessibilité" },
-    { to: "/securite", label: "Sécurité" },
-    { to: "/contact", label: "Contact" },
+  // Trois colonnes nommées au lieu d'une liste de 19 liens : on trouve ce qu'on cherche d'un coup d'œil.
+  const columns: Array<{ title: string; links: Array<{ to: string; label: string }> }> = [
+    {
+      title: "Produit",
+      links: [
+        { to: "/fonctionnalites", label: "Fonctionnalités" },
+        { to: "/tarifs", label: "Tarifs" },
+        { to: "/demo", label: "Essayer la démo" },
+        { to: "/changer-pour-bailio", label: "Changer pour Bailio" },
+        { to: "/espace-locataire", label: "Espace locataire" },
+      ],
+    },
+    {
+      title: "Ressources",
+      links: [
+        { to: "/guides", label: "Guides" },
+        { to: "/modeles", label: "Modèles gratuits" },
+        { to: "/avis", label: "Avis" },
+        { to: "/a-propos", label: "À propos" },
+        { to: "/contact", label: "Contact" },
+      ],
+    },
+    {
+      title: "Cadre légal",
+      links: [
+        { to: "/mentions-legales", label: "Mentions légales" },
+        { to: "/conditions", label: "Conditions" },
+        { to: "/cgv", label: "CGV" },
+        { to: "/confidentialite", label: "Confidentialité" },
+        { to: "/cookies", label: "Cookies" },
+        { to: "/prix-et-remboursement", label: "Prix et remboursement" },
+        { to: "/accessibilite", label: "Accessibilité" },
+        { to: "/securite", label: "Sécurité" },
+      ],
+    },
   ];
+  const link = { color: BAI.onDark, textDecoration: "none", display: "inline-block", padding: "7px 0", fontSize: 14.5 } as const;
   return (
-    <footer style={{ background: BAI.night }}>
-      <div
-        className="container col-md"
-        style={{
-          padding: "40px clamp(20px, 6.6vw, 96px)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 20,
-        }}
-      >
-        <Logo size={28} onDark />
-        <nav
-          aria-label="Liens légaux"
-          className="wrap-md"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            columnGap: 28,
-            rowGap: 0,
-            fontSize: 14,
-          }}
-        >
-          {links.map((l) => (
+    <footer style={{ background: BAI.night, color: BAI.onDark }}>
+      <div className="container site-foot" style={{ padding: "56px clamp(20px, 6.6vw, 96px) 28px" }}>
+        <div className="site-foot-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, alignItems: "flex-start" }}>
+            <Logo size={28} onDark />
+            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: BAI.onDarkMuted, maxWidth: "26ch" }}>
+              La gestion locative des propriétaires, sans agence.
+            </p>
             <Link
-              key={l.to}
-              to={l.to}
-              style={{
-                color: BAI.onDark,
-                textDecoration: "none",
-                display: "inline-block",
-                padding: "13px 0",
-              }}
+              to="/commencer"
+              style={{ display: "inline-flex", alignItems: "center", minHeight: 44, padding: "0 18px", borderRadius: BAI.radiusBtn, background: BAI.accent, color: BAI.night, fontWeight: 600, fontSize: 15, textDecoration: "none" }}
             >
-              {l.label}
+              Créer mon bail
             </Link>
+          </div>
+          {columns.map((c) => (
+            <nav key={c.title} aria-label={c.title}>
+              <p style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600, color: BAI.accent }}>{c.title}</p>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {c.links.map((l) => (
+                  <li key={l.to}>
+                    <Link to={l.to} className="foot-link" style={link}>
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           ))}
-        </nav>
+        </div>
+        <div style={{ borderTop: `1px solid ${BAI.nightLine}`, marginTop: 36, paddingTop: 18, display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 8, fontSize: 13, color: BAI.onDarkMuted }}>
+          <span>© {new Date().getFullYear()} Bailio</span>
+          <span>Hébergé en Suisse, chez Infomaniak.</span>
+        </div>
       </div>
     </footer>
   );

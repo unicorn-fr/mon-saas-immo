@@ -25,28 +25,26 @@ export const MAIN = (P: DuskPrices) => `
   <section class="choc in" aria-label="Pourquoi Bailio">
     <div class="choc-l"><strong class="num"><span data-choc="${P.monthly}" data-dec="2">${P.monthlyText}</span>&#8239;€</strong><span>par logement et par mois.<br>Tout compris.</span></div>
     <div class="choc-l fort"><strong class="num"><span data-choc="93">93</span>&#8239;%</strong><span>moins cher<br>qu’une agence.</span></div>
-    <div class="choc-l"><strong class="num"><span data-choc="0">0</span></strong><span>option payante.<br>Jamais.</span></div>
-    <p class="choc-note">Agence : 7&#8239;% d’un loyer de 750&#8239;€, dans la fourchette courante de 4 à 10&#8239;%.</p>
   </section>
 
   
   <section class="tb in" aria-labelledby="tb-t">
     <div class="tete-s">
       <h2 id="tb-t" class="mots">Votre tableau de bord.</h2>
-      <p class="monte">Descendez : la journée se joue sous vos yeux.</p>
+      <p class="monte">Bailio s’en occupe. Vous validez.</p>
     </div>
     <div class="tb-pin" id="tb-pin">
     <ol class="tb-etapes" id="etapes">
-      <li><button type="button" data-s="0"><b>1</b><strong>Un virement arrive</strong><span>Reconnu sur votre relevé, le loyer est noté.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="1"><b>2</b><strong>La quittance part</strong><span>Le locataire la reçoit aussitôt.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="2"><b>3</b><strong>Un retard est repéré</strong><span>La relance est déjà rédigée.</span><i class="fil"></i></button></li>
-      <li><button type="button" data-s="3"><b>4</b><strong>Vous validez</strong><span>Un clic, c’est envoyé.</span><i class="fil"></i></button></li>
+      <li><button type="button" data-s="0"><b>1</b><strong>Loyer reçu</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="1"><b>2</b><strong>Quittance envoyée</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="2"><b>3</b><strong>Retard repéré</strong><i class="fil"></i></button></li>
+      <li><button type="button" data-s="3"><b>4</b><strong>Relance validée</strong><i class="fil"></i></button></li>
     </ol>
     <div class="tb-scene" id="tb-scene">
       <div class="app2" id="app" aria-label="Démonstration du tableau de bord, données fictives">
         <div class="a2-fond" aria-hidden="true"></div>
         <aside class="a2-side piece" aria-hidden="true">
-          <span class="plaque mini"><span>bailio</span></span>
+          <span class="plaque mini" aria-label="bailio"><svg viewBox="0 0 598 727" aria-hidden="true"><path d="M51 727V67L195 0V727Z"/><path d="M120 727H298A270 270 0 0 0 298 187H120Z"/><rect x="195" y="329" width="229" height="256" rx="26" fill="#F2B45C"/><path d="M309.5 329V585M195 457H424" stroke="currentColor" stroke-width="34"/></svg>ailio</span>
           <ul>
             <li class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6 10v9.5h12V10"/></svg>Tableau de bord</li>
             <li><svg viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="3"/><path d="M9 4.5v15"/></svg>Bailleurs</li>
@@ -149,7 +147,7 @@ export const MAIN = (P: DuskPrices) => `
     <div class="in">
       <div class="tete-s">
         <h2 id="cf-t" class="mots">Vos données dorment en Suisse.</h2>
-        <p class="monte">Hébergées à Genève, chez Infomaniak.</p>
+        <p class="monte">Chez Infomaniak, hébergeur suisse indépendant.</p>
       </div>
       <div class="cf-grille2">
         <article class="cf-geneve">
@@ -157,19 +155,20 @@ export const MAIN = (P: DuskPrices) => `
             <svg viewBox="0 0 320 200"><g class="courbes" fill="none" stroke="rgba(238,233,224,.16)" stroke-width="1"></g><circle class="onde o1" cx="196" cy="118" r="6"/><circle class="onde o2" cx="196" cy="118" r="6"/><circle cx="196" cy="118" r="5" fill="#F2B45C"/></svg>
           </div>
           <div class="cf-geneve-t">
-            <span class="coord num">46°&#8239;11′&#8239;N, 6°&#8239;08′&#8239;E</span>
-            <h3>Genève, Suisse.</h3>
-            <p>Protection des données reconnue par l’Union européenne.</p>
+            <h3>En Suisse.</h3>
+            <p>Droit suisse, protection reconnue par l’Union européenne. La chaleur des serveurs chauffe des foyers.</p>
             <span class="infk">Hébergé par Infomaniak</span>
           </div>
         </article>
         <div class="cf-tuiles">
-          <div class="cf-t"><b class="num" data-n="14">14</b><span>jours de sauvegardes,<br>faites chaque nuit</span></div>
-          <div class="cf-t"><b class="num">0</b><span>mot de passe<br>à voler</span></div>
-          <div class="cf-t"><b class="num">0</b><span>cookie,<br>0 publicité</span></div>
+          <div class="cf-t"><b class="num">100&#8239;%</b><span>électricité<br>renouvelable</span></div>
+          <div class="cf-t"><b class="num">0</b><span>donnée revendue,<br>jamais</span></div>
+          <div class="cf-t"><b class="num">ISO</b><span>14001 et 50001,<br>certifié</span></div>
           <div class="cf-t"><b class="num">0&#8239;€</b><span>de vos loyers<br>ne passe par nous</span></div>
           <div class="cf-t large"><b class="num">7j/7</b><span>une vraie personne vous répond</span></div>
         </div>
+        <p class="cf-source">Engagements publiés par Infomaniak (infomaniak.com, novembre 2026) : électricité renouvelable certifiée, chaleur des centres de données réutilisée, aucun accès aux données des clients sans demande explicite.</p>
+      </div>
       </div>
     </div>
   </section>

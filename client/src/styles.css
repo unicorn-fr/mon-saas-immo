@@ -360,3 +360,8 @@ button:not(:disabled):active { transform: scale(.98); }
 .maison.on .vitre-m { fill: #FFD996; filter: drop-shadow(0 0 3px #F2B45C); transition-delay: .7s; }
 .maison.on .porte-m { fill: rgba(242, 180, 92, .5); transition-delay: .75s; }
 .su-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, .5) !important; }
+
+/* Pied de page : la marque, puis trois colonnes nommées ; deux colonnes sur téléphone. */
+.site-foot-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 32px; }
+@media (max-width: 860px) { .site-foot-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; } .site-foot-grid > :first-child { grid-column: 1 / -1; } }
+.foot-link:hover { color: #ffffff !important; text-decoration: underline !important; text-underline-offset: 4px; }
