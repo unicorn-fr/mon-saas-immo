@@ -109,9 +109,9 @@ export const MAIN = (P: DuskPrices) => `
           <section class="a2-bloc a2-biens piece">
             <div class="a2-bloc-t"><h4>Mes biens</h4><span class="lien-voir">Voir les 4 biens</span></div>
             <div class="biens">
-              <article class="bien" id="b-camille"><img src="/accueil/img/salon.jpg" alt="" loading="lazy"><div><b>T2, Lyon 3e</b><span>Camille Martin, <span class="num">780&#8239;€</span></span></div><em class="etat attendu">Attendu</em></article>
-              <article class="bien" id="b-hugo"><img src="/accueil/img/fauteuil.jpg" alt="" loading="lazy"><div><b>Studio, Nantes</b><span>Hugo Lefèvre, <span class="num">520&#8239;€</span></span></div><em class="etat paye">Payé</em></article>
-              <article class="bien" id="b-ines"><img src="/accueil/img/edl.jpg" alt="" loading="lazy"><div><b>T3, Montpellier</b><span>Inès Moreau, <span class="num">970&#8239;€</span></span></div><em class="etat attendu">Attendu</em></article>
+              <article class="bien" id="b-camille"><img src="/accueil/img/salon-mini.webp" width="60" height="50" alt="" loading="lazy"><div><b>T2, Lyon 3e</b><span>Camille Martin, <span class="num">780&#8239;€</span></span></div><em class="etat attendu">Attendu</em></article>
+              <article class="bien" id="b-hugo"><img src="/accueil/img/fauteuil-mini.webp" width="60" height="50" alt="" loading="lazy"><div><b>Studio, Nantes</b><span>Hugo Lefèvre, <span class="num">520&#8239;€</span></span></div><em class="etat paye">Payé</em></article>
+              <article class="bien" id="b-ines"><img src="/accueil/img/edl-mini.webp" width="60" height="50" alt="" loading="lazy"><div><b>T3, Montpellier</b><span>Inès Moreau, <span class="num">970&#8239;€</span></span></div><em class="etat attendu">Attendu</em></article>
             </div>
           </section>
         </div>

@@ -11,29 +11,51 @@ import { AuthProvider, useAuth } from './lib/auth'
 import { DraftProvider, useDraft } from './lib/draft'
 import { countVisit } from './lib/visits'
 import Home from './pages/HomeDusk'
-// Pages publiques dans le fichier principal ; l'espace dans un second fichier (pages/espace/index.ts),
-// téléchargé dès que la première page est affichée.
-import TypeStep from './pages/tunnel/TypeStep'
-import LogementStep from './pages/tunnel/LogementStep'
-import PersonnesStep from './pages/tunnel/PersonnesStep'
-import LoyerStep from './pages/tunnel/LoyerStep'
-import RelectureStep from './pages/tunnel/RelectureStep'
-import RecevoirStep from './pages/tunnel/RecevoirStep'
-import Importer from './pages/Importer'
-import Reprendre from './pages/Reprendre'
-import Connexion, { ConnexionLien } from './pages/Connexion'
-import Inscription from './pages/Inscription'
-import { GuideArticle, GuidesList } from './pages/Guides'
-import { ModeleArticle, ModelesList, SimulateurRevision } from './pages/Modeles'
-import { Changer } from './pages/Changer'
-import { Tarifs } from './pages/Tarifs'
-import Demo from './pages/Demo'
-import { FonctionnaliteArticle, FonctionnalitesList } from './pages/Fonctionnalites'
-import { APropos, SolutionPage } from './pages/Solutions'
-import { AvisPage, EspaceLocatairePublic } from './pages/Publiques'
-import { SimulateurConge, SimulateurDepot, SimulateurDpe, SimulateurMicroReel, SimulateurPiece, SimulateurPreavis, SimulateurRentabilite } from './pages/Simulateurs'
-import AvisTesteur from './pages/AvisTesteur'
-import { Accessibilite, Cgv, Conditions, Confidentialite, Contact, Cookies, MentionsLegales, NotFound, PrixRemboursement, Securite } from './pages/legal/Legal'
+// L'accueil dans le fichier principal (affiché tout de suite) ; chaque autre page publique dans son propre fichier,
+// téléchargé à la demande ; l'espace dans un second fichier (pages/espace/index.ts).
+const TypeStep = lazy(() => import('./pages/tunnel/TypeStep'))
+const LogementStep = lazy(() => import('./pages/tunnel/LogementStep'))
+const PersonnesStep = lazy(() => import('./pages/tunnel/PersonnesStep'))
+const LoyerStep = lazy(() => import('./pages/tunnel/LoyerStep'))
+const RelectureStep = lazy(() => import('./pages/tunnel/RelectureStep'))
+const RecevoirStep = lazy(() => import('./pages/tunnel/RecevoirStep'))
+const Importer = lazy(() => import('./pages/Importer'))
+const Reprendre = lazy(() => import('./pages/Reprendre'))
+const Connexion = lazy(() => import('./pages/Connexion'))
+const ConnexionLien = lazy(() => import('./pages/Connexion').then((m) => ({ default: m.ConnexionLien })))
+const Inscription = lazy(() => import('./pages/Inscription'))
+const GuideArticle = lazy(() => import('./pages/Guides').then((m) => ({ default: m.GuideArticle })))
+const GuidesList = lazy(() => import('./pages/Guides').then((m) => ({ default: m.GuidesList })))
+const ModeleArticle = lazy(() => import('./pages/Modeles').then((m) => ({ default: m.ModeleArticle })))
+const ModelesList = lazy(() => import('./pages/Modeles').then((m) => ({ default: m.ModelesList })))
+const SimulateurRevision = lazy(() => import('./pages/Modeles').then((m) => ({ default: m.SimulateurRevision })))
+const Changer = lazy(() => import('./pages/Changer').then((m) => ({ default: m.Changer })))
+const Tarifs = lazy(() => import('./pages/Tarifs').then((m) => ({ default: m.Tarifs })))
+const Demo = lazy(() => import('./pages/Demo'))
+const FonctionnaliteArticle = lazy(() => import('./pages/Fonctionnalites').then((m) => ({ default: m.FonctionnaliteArticle })))
+const FonctionnalitesList = lazy(() => import('./pages/Fonctionnalites').then((m) => ({ default: m.FonctionnalitesList })))
+const APropos = lazy(() => import('./pages/Solutions').then((m) => ({ default: m.APropos })))
+const SolutionPage = lazy(() => import('./pages/Solutions').then((m) => ({ default: m.SolutionPage })))
+const AvisPage = lazy(() => import('./pages/Publiques').then((m) => ({ default: m.AvisPage })))
+const EspaceLocatairePublic = lazy(() => import('./pages/Publiques').then((m) => ({ default: m.EspaceLocatairePublic })))
+const SimulateurConge = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurConge })))
+const SimulateurDepot = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurDepot })))
+const SimulateurDpe = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurDpe })))
+const SimulateurMicroReel = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurMicroReel })))
+const SimulateurPiece = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurPiece })))
+const SimulateurPreavis = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurPreavis })))
+const SimulateurRentabilite = lazy(() => import('./pages/Simulateurs').then((m) => ({ default: m.SimulateurRentabilite })))
+const AvisTesteur = lazy(() => import('./pages/AvisTesteur'))
+const Accessibilite = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Accessibilite })))
+const Cgv = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Cgv })))
+const Conditions = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Conditions })))
+const Confidentialite = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Confidentialite })))
+const Contact = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Contact })))
+const Cookies = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Cookies })))
+const MentionsLegales = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.MentionsLegales })))
+const NotFound = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.NotFound })))
+const PrixRemboursement = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.PrixRemboursement })))
+const Securite = lazy(() => import('./pages/legal/Legal').then((m) => ({ default: m.Securite })))
 
 
 type EspaceModule = typeof import('./pages/espace/index')

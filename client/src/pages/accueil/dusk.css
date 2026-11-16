@@ -742,10 +742,19 @@
 .dusk .resultats{gap:20px}
 .dusk .app2 .a2-tuile{transition:border-color .4s,box-shadow .4s}
 .dusk .app2 .a2-tuile.vif{transform:none;box-shadow:0 0 0 4px rgba(242,180,92,.28),0 10px 22px -12px rgba(29,36,51,.4)}
-.dusk .wa .photo-trou{display:none}
-.dusk.scene .wa .photo-trou{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;will-change:transform;backface-visibility:hidden}
-.dusk.scene .wa svg.photo{display:none}
+.dusk .wa .photo-trou{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;backface-visibility:hidden}
+.dusk.scene .wa .photo-trou{will-change:transform}
+.dusk .wa svg.photo{display:none}
 .dusk.scene .wa svg.vitres{will-change:transform,opacity}
+.dusk .tb-scene.mini{overflow:hidden;perspective:none}
+.dusk .app2.mini{width:1100px;max-width:none;transform-origin:0 0;font-size:11.5px;grid-template-columns:156px minmax(0,1fr)!important}
+.dusk .app2.mini .a2-side{display:flex!important}
+.dusk .app2.mini .a2-main{padding:16px 16px 18px!important;gap:10px!important}
+.dusk .app2.mini .a2-tuiles{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+.dusk .app2.mini .a2-grille{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)!important}
+.dusk .app2.mini .a2-biens .biens{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.dusk .app2.mini .action{grid-template-columns:30px minmax(0,1fr) auto!important}
+.dusk .app2.mini .action .mini-btn{grid-column:auto!important}
 .dusk .wa .indice{display:none}
 .dusk.scene .wa .indice{display:flex;position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:3;flex-direction:column;align-items:center;gap:6px;font:500 13px/1 var(--sans);color:#E4E8FA;letter-spacing:.01em;pointer-events:none}
 .dusk .wa .indice i{width:22px;height:34px;border:1.5px solid rgba(255,255,255,.7);border-radius:12px;position:relative}
@@ -772,15 +781,6 @@
 .dusk .tb-etapes button{padding:8px 10px 11px}
 .dusk .tb-etapes button strong{font-size:14px}
 .dusk .tb-etapes button span{display:none}
-.dusk .app2 .a2-main{padding:14px 12px;gap:10px}
-.dusk .app2 .a2-tete h3{font-size:21px}
-.dusk .app2 .a2-tete .vue{display:none}
-.dusk .app2 .a2-tuiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-.dusk .app2 .a2-tuile{padding:8px}
-.dusk .app2 .a2-tuile strong{font-size:18px}
-.dusk .app2 .a2-col{display:none}
-.dusk .app2 #b-hugo{display:none}
-.dusk .app2 .cat:nth-of-type(n+3){display:none}
 .dusk .fx-pin{padding-block:44px 32px}
 .dusk .fx-piste{gap:44px}
 .dusk .fx-panneau{gap:16px}

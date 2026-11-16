@@ -13,8 +13,12 @@ Produit :
 - client/src/pages/accueil/duskScript.ts : les animations de la maquette, avec GSAP installé dans le projet
   (aucun script tiers), arrêtées proprement quand on quitte la page.
 """
+import base64
+import io
 import re
 from pathlib import Path
+
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'docs/maquette/accueil-tombee-du-jour/index.html'
@@ -82,8 +86,39 @@ OUT.mkdir(parents=True, exist_ok=True)
 head_start = html.index('<header class="wa" id="haut">') + len('<header class="wa" id="haut">')
 head_end = html.index('<div class="in" style="width:100%;display:grid;grid-template-rows:auto 1fr">')
 facade = html[head_start:head_end].strip().replace('src="img/', 'src="/accueil/img/').replace('href="img/', 'href="/accueil/img/')
+# Allègement : la photo SVG de la façade n'est plus servie (l'image découpée la remplace), les lumières des fenêtres
+# passent de PNG à WebP (même transparence, environ cinq fois plus légères).
+facade = re.sub(r'<svg class="cadre photo".*?</svg>', '', facade, count=1, flags=re.S)
+
+
+def png_to_webp(m):
+    raw = base64.b64decode(m.group(1))
+    im = Image.open(io.BytesIO(raw)).convert('RGBA')
+    out = io.BytesIO()
+    im.save(out, 'WEBP', quality=78, method=6)
+    return 'data:image/webp;base64,' + base64.b64encode(out.getvalue()).decode()
+
+
+facade = re.sub(r'data:image/png;base64,([A-Za-z0-9+/=]+)', png_to_webp, facade)
+facade = facade.replace('src="/accueil/img/facade-trou.webp"', 'src="/accueil/img/facade-trou.webp" fetchpriority="high"')
+facade = re.sub(r'(/accueil/img/[a-z-]+)\.jpg', r'\1.webp', facade)
+facade = facade.replace('<img src="/accueil/img/interieur.webp"', '<img src="/accueil/img/interieur.webp" fetchpriority="low" decoding="async"')
 PUB.mkdir(parents=True, exist_ok=True)
 (PUB / 'facade.html').write_text(facade + '\n')
+
+# Photos de l'accueil en WebP, à la taille où elles sont montrées.
+for jpg in sorted((ROOT / 'docs/maquette/accueil-tombee-du-jour/img').glob('*.jpg')):
+    if jpg.stem == 'facade':
+        continue
+    im = Image.open(jpg).convert('RGB')
+    largeur = 1800 if jpg.stem == 'interieur' else 1100
+    if im.width > largeur:
+        im = im.resize((largeur, round(im.height * largeur / im.width)), Image.LANCZOS)
+    im.save(PUB / 'img' / (jpg.stem + '.webp'), 'WEBP', quality=80, method=6)
+    if jpg.stem in ('salon', 'fauteuil', 'edl'):
+        petit = Image.open(jpg).convert('RGB')
+        petit.thumbnail((240, 240), Image.LANCZOS)
+        petit.save(PUB / 'img' / (jpg.stem + '-mini.webp'), 'WEBP', quality=78, method=6)
 
 # ── Contenu sous la façade ────────────────────────────────────────────────────
 sprite = html[html.index('<svg width="0" height="0"'): html.index('<!-- ================= Accueil A')].strip()
@@ -94,6 +129,11 @@ fin = fin.replace('<a class="btn soleil" href="#haut">Créer mon bail</a>', '<a 
 fin = fin.replace('<footer class="fin">', '<section class="fin" aria-label="Commencer">').replace('</footer>', '</section>')
 main = re.sub(r'<!--.*?-->', '', main, flags=re.S)
 main = main.replace('src="img/', 'src="/accueil/img/')
+main = re.sub(r'(/accueil/img/[a-z-]+)\.jpg', r'\1.webp', main)
+# Vignettes des biens du tableau de bord (montrées à 60 px) : une petite image à part.
+for nom in ('salon', 'fauteuil', 'edl'):
+    main = main.replace(f'<article class="bien" id="b-', '<article class="bien" id="b-')
+main = re.sub(r'(<article class="bien" id="b-[a-z]+"><img src="/accueil/img/)([a-z]+)\.webp"', r'\1\2-mini.webp" width="60" height="50"', main)
 # Prix repris de config.ts au moment de l'affichage.
 main = main.replace('<span data-choc="3.49" data-dec="2">3,49</span>', '<span data-choc="${P.monthly}" data-dec="2">${P.monthlyText}</span>')
 main = main.replace('<section class="prix-s" aria-labelledby="prix-t">', '<section class="prix-s" id="tarifs" aria-labelledby="prix-t">')
@@ -126,6 +166,7 @@ js = js.replace("if (!reduce && window.gsap && window.ScrollTrigger) {", "if (!r
 js = js.replace("gsap.registerPlugin(ScrollTrigger);", '')
 js = js.replace("new IntersectionObserver(", 'new IO(').replace('new MutationObserver(', 'new MO(')
 js = js.replace('<img src="img/', '<img src="/accueil/img/')
+js = js.replace("c.photo + '.jpg", "c.photo + '.webp")
 js = js.replace("addEventListener('load', () => ScrollTrigger.refresh());", "window.addEventListener('load', refresh); cleanups.push(() => window.removeEventListener('load', refresh));")
 js = js.replace("if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());", "if (document.fonts) document.fonts.ready.then(() => { if (alive) ScrollTrigger.refresh() });")
 for a, b in [('k * 34.90, 299', 'k * P.yearly, P.capYearly'), ('k * 3.49, 29.90', 'k * P.monthly, P.capMonthly'), ('(1 - 3.49 /', '(1 - P.monthly /')]:

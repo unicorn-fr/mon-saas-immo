@@ -12,7 +12,6 @@ import { CAP_MONTHLY_CENTS, CAP_YEARLY_CENTS, LAUNCH_OFFER, MONTHLY_PRICE_CENTS,
 import { useAuth } from '../lib/auth'
 import { DA2 } from '../constants/bailio-tokens'
 import { MAIN, SPRITE, type DuskPrices } from './accueil/duskMain'
-import { mountDusk } from './accueil/duskScript'
 
 /**
  * Accueil « Tombée du jour » (maquette `docs/maquette/accueil-tombee-du-jour/`, générée par `scripts/accueil-dusk.py`) :
@@ -61,9 +60,18 @@ export default function HomeDusk() {
   }, [])
 
   // Animations de la maquette, une fois la façade en place ; tout s'arrête en quittant la page.
+  // Le code des animations (GSAP) arrive après le premier affichage, dans un fichier à part.
   useEffect(() => {
     if (!ready || !root.current) return
-    return mountDusk(root.current, PRICES)
+    let stop: (() => void) | undefined
+    let on = true
+    import('./accueil/duskScript').then(({ mountDusk }) => {
+      if (on && root.current) stop = mountDusk(root.current, PRICES)
+    })
+    return () => {
+      on = false
+      stop?.()
+    }
   }, [ready])
 
   // Liens du contenu : navigation dans le site, sans recharger la page.

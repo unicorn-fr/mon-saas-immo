@@ -107,7 +107,20 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   }
 
   /* ========== Le tableau de bord : une journée rejouée ========== */
-  const app = $('app'), cur = $('curseur');
+  const app = $('app'), cur = $('curseur'), scene = $('tb-scene');
+  /* Miniature : la version ordinateur réduite à la largeur de l'écran ; la hauteur de la scène suit. */
+  let ech = 1;
+  const miniature = () => {
+    const petit = innerWidth < 1000;
+    app.classList.toggle('mini', petit); scene.classList.toggle('mini', petit);
+    if (!petit) { ech = 1; app.style.transform = ''; scene.style.height = ''; return; }
+    ech = Math.min(1, scene.clientWidth / 1100);
+    app.style.transform = 'scale(' + ech + ')';
+    scene.style.height = Math.ceil(app.offsetHeight * ech) + 'px';
+  };
+  miniature();
+  addEventListener('resize', miniature);
+  if (document.fonts) document.fonts.ready.then(miniature);
   const boutons = [...document.querySelectorAll('#etapes button')];
   let minuteurs = [], tourne = false;
   const plus = (ms, fn) => minuteurs.push(setTimeout(fn, ms * (typeof vite === 'number' ? vite : 1)));
@@ -117,7 +130,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   const vif = (id, cls = 'vif') => { $(id).classList.add(cls); plus(1400, () => $(id).classList.remove(cls)); };
   const toast = (t) => { $('toast-t').textContent = t; $('toast').hidden = false; plus(2300, () => { $('toast').hidden = true; }); };
   const saute = () => { const s = $('k-todo'); s.classList.add('saute'); plus(300, () => s.classList.remove('saute')); };
-  const vers = (el) => { const a = app.getBoundingClientRect(), r = el.getBoundingClientRect(); cur.style.left = (r.left - a.left + r.width * .55) + 'px'; cur.style.top = (r.top - a.top + r.height * .6) + 'px'; };
+  const vers = (el) => { const a = app.getBoundingClientRect(), r = el.getBoundingClientRect(); cur.style.left = (r.left - a.left + r.width * .55) / ech + 'px'; cur.style.top = (r.top - a.top + r.height * .6) / ech + 'px'; };
   const repos = () => { cur.style.left = '86%'; cur.style.top = '104%'; };
   const clic = (el) => { cur.classList.add('clic'); el.classList.add('clic'); plus(170, () => { cur.classList.remove('clic'); el.classList.remove('clic'); }); };
   const allumeEtape = (i, duree) => boutons.forEach((b, j) => {
@@ -146,7 +159,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       if (vite) return;
       plus(200, () => {
         const q = $('quit'), b = $('b-camille').getBoundingClientRect(), a = app.getBoundingClientRect();
-        q.style.transition = 'none'; q.style.left = (b.left - a.left + 30) + 'px'; q.style.top = (b.top - a.top - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
+        q.style.transition = 'none'; q.style.left = ((b.left - a.left) / ech + 30) + 'px'; q.style.top = ((b.top - a.top) / ech - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => { q.style.transition = ''; q.style.opacity = '1'; q.style.transform = 'scale(1) rotate(-2deg) translateY(-40px)'; }));
       });
       plus(1300, () => { const q = $('quit'); q.style.transform = 'translate(' + Math.round(app.clientWidth * .3) + 'px,-220px) scale(.35) rotate(10deg)'; q.style.opacity = '0'; });
@@ -239,7 +252,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   const piste = $('fx-piste'), nav = $('fx-nav');
   piste.innerHTML = C.map((c, i) =>
     '<article class="fx-panneau" aria-label="' + c.nom + '">' +
-      '<figure class="fx-photo" style="margin:0"><img src="/accueil/img/' + c.photo + '.jpg" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
+      '<figure class="fx-photo" style="margin:0"><img src="/accueil/img/' + c.photo + '.webp" alt="" loading="lazy"><span class="puce">' + c.puce + '</span></figure>' +
       '<div><p class="fx-moment">' + (i + 1) + ' sur ' + C.length + ', ' + c.nom.toLowerCase() + '</p><h3 class="fx-titre">' + c.titre + '</h3>' +
       '<div class="fx-cases">' + c.cases.map((x, j) => '<div class="case ' + (x[2] || '') + '" style="--i:' + j + '"><div class="vis">' + x[1] + '</div><h3>' + x[0] + '</h3></div>').join('') + '</div></div>' +
     '</article>').join('');
@@ -343,7 +356,8 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     };
     ScrollTrigger.addEventListener('refreshInit', cadrer);
     /* Échelle où la vitre couvre tout l'écran, puis un peu plus : la façade sort de l'écran de tous côtés. */
-    const plein = () => { const g = geo(); return Math.max(g.W / g.w, g.H / g.h) * 1.7; };
+    /* Échelle où la vitre couvre tout l'écran, mesurée depuis son centre (elle n'est pas forcément au milieu). */
+    const plein = () => { const g = geo(); return Math.max(g.cx / (g.w / 2), (g.W - g.cx) / (g.w / 2), g.cy / (g.h / 2), (g.H - g.cy) / (g.h / 2)) * 1.15; };
     const vers = () => { const g = geo(); return { x: g.W / 2 - g.cx, y: g.H / 2 - g.cy }; };
 
     /* 1. On entre par la fenêtre : elle glisse au centre, la lumière de la vitre s'efface,
@@ -363,9 +377,9 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
       .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)
-      .to(cadres, { x: () => vers().x, y: () => vers().y, ease: 'sine.inOut', duration: .62 }, 0)
       .to(cadres, { scale: () => plein(), ease: 'power3.in', duration: .86 }, 0)
       .to(cadres, { opacity: 0, ease: 'power1.in', duration: .14 }, .72)
+      .set('#portail img', { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; } }, 0)
       .fromTo('#portail img', { scale: 1.45, filter: 'brightness(.5) saturate(.8)' }, { scale: 1, filter: 'brightness(1) saturate(1)', ease: 'power2.out', duration: .9 }, 0)
       .fromTo('.portail-t', { y: 30, opacity: 0 }, { y: 0, opacity: 1, ease: 'power2.out', duration: .1 }, .86)
       .to({}, { duration: .04 });
