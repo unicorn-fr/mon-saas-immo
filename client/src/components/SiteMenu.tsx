@@ -143,7 +143,7 @@ function ItemLink({ item, onPick }: { item: Item; onPick: () => void }) {
 
 function Columns({ section, onPick }: { section: Section; onPick: () => void }) {
   return (
-    <div className="mega-cols">
+    <div className="mega-cols" style={{ ['--n' as string]: section.columns!.reduce((n, c) => n + (c.wide ? 2 : 1), 0) }}>
       {section.columns!.map((c) => (
         <div key={c.title} className={c.wide ? 'mega-col mega-col--wide' : 'mega-col'}>
           <p style={{ margin: '0 0 8px', padding: '0 10px 10px', borderBottom: `1px solid ${BAI.divider}`, fontSize: 12.5, fontWeight: 700, color: BAI.owner }}>{c.title}</p>

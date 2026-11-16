@@ -625,7 +625,7 @@ export default function Demo() {
               {tab === "impots" ? <Taxes /> : null}
             </div>
           </div>
-          <div style={{ position: "sticky", top: 24 }}>
+          <div style={{ position: "sticky", top: 104 }}>
             <SignupCta text="Dans votre espace, tout cela se fait avec vos vrais logements et vos vrais locataires : les courriers partent, les montants et les dates sont justes." />
           </div>
         </div>
