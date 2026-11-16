@@ -127,6 +127,7 @@ export const MAIN = (P: DuskPrices) => `
         <div class="toast" id="toast" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2 8.8-9.2"/></svg><span id="toast-t"></span></div>
         <svg class="curseur" id="curseur" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l14 8.2-6.3 1.3 3.6 6.9-2.6 1.3-3.6-6.9L5 18z" fill="#1D2433" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
       </div>
+      <p class="tb-bulle" id="tb-bulle" aria-live="polite"><b id="tb-bulle-t">Loyer reçu</b><span id="tb-bulle-s">Repéré sur votre relevé.</span></p>
     </div>
   </div>
   </section>
@@ -160,14 +161,12 @@ export const MAIN = (P: DuskPrices) => `
             <span class="infk">Hébergé par Infomaniak</span>
           </div>
         </article>
-        <div class="cf-tuiles">
-          <div class="cf-t"><b class="num">100&#8239;%</b><span>électricité<br>renouvelable</span></div>
-          <div class="cf-t"><b class="num">0</b><span>donnée revendue,<br>jamais</span></div>
-          <div class="cf-t"><b class="num">ISO</b><span>14001 et 50001,<br>certifié</span></div>
-          <div class="cf-t"><b class="num">0&#8239;€</b><span>de vos loyers<br>ne passe par nous</span></div>
-          <div class="cf-t large"><b class="num">7j/7</b><span>une vraie personne vous répond</span></div>
-        </div>
-        <p class="cf-source">Engagements publiés par Infomaniak (infomaniak.com, novembre 2026) : électricité renouvelable certifiée, chaleur des centres de données réutilisée, aucun accès aux données des clients sans demande explicite.</p>
+        <ul class="cf3">
+          <li><b class="num">100&#8239;%</b><span>Électricité renouvelable</span></li>
+          <li><b class="num">0&#8239;€</b><span>De vos loyers ne passe par nous</span></li>
+          <li><b class="num">7j/7</b><span>Une vraie personne vous répond</span></li>
+        </ul>
+        <p class="cf-source">Engagements publiés par Infomaniak (infomaniak.com, novembre 2026) : électricité renouvelable certifiée, chaleur des centres de données réutilisée.</p>
       </div>
       </div>
     </div>

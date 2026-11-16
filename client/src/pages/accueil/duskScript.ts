@@ -108,15 +108,32 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   /* ========== Le tableau de bord : une journée rejouée ========== */
   const app = $('app'), cur = $('curseur'), scene = $('tb-scene');
   /* Miniature : la version ordinateur réduite à la largeur de l'écran ; la hauteur de la scène suit. */
-  let ech = 1;
+  let ech = 1, foyer = null, zoomZ = 1;
   const miniature = () => {
     const petit = innerWidth < 1000;
     app.classList.toggle('mini', petit); scene.classList.toggle('mini', petit);
-    if (!petit) { ech = 1; app.style.transform = ''; scene.style.height = ''; return; }
-    ech = Math.min(1, scene.clientWidth / 1100);
-    app.style.transform = 'scale(' + ech + ')';
-    scene.style.height = Math.ceil(app.offsetHeight * ech) + 'px';
+    ech = petit ? Math.min(1, scene.clientWidth / 1100) : 1;
+    scene.style.height = petit ? Math.ceil(Math.max(app.offsetHeight * ech, Math.min(innerWidth * 1.1, 560))) + 'px' : '';
+    camera(foyer, zoomZ);
   };
+  /* Position d'un élément dans l'écran du tableau de bord, avant agrandissement */
+  const pos = (el) => { let x = 0, y = 0, n = el; while (n && n !== app) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { x, y, w: el.offsetWidth, h: el.offsetHeight }; };
+  /* La caméra : l'écran s'agrandit autour de l'élément, sans jamais montrer de vide sur les bords */
+  function camera(el, z) {
+    foyer = el || null; zoomZ = el ? z : 1;
+    document.querySelectorAll('#app .cible').forEach(c => c.classList.remove('cible'));
+    const W = app.offsetWidth, H = app.offsetHeight, vw = scene.clientWidth || W * ech, vh = scene.clientHeight || H * ech;
+    const petit = ech < 1, S = Math.max(ech * zoomZ * (petit ? 1.35 : 1), vh / H, vw / W);
+    if (!el) {
+      if (!petit) { app.style.transform = 'none'; return; }
+      el = app.querySelector('.a2-tuiles');
+    } else el.classList.add('cible');
+    const p = pos(el);
+    let tx = vw / 2 - (p.x + p.w / 2) * S, ty = vh / 2 - (p.y + p.h / 2) * S;
+    tx = Math.min(0, Math.max(vw - W * S, tx)); ty = Math.min(0, Math.max(vh - H * S, ty));
+    app.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + S + ')';
+  }
+  const bulle = (t, sous) => { const b = $('tb-bulle'); b.classList.add('change'); setTimeout(() => { $('tb-bulle-t').textContent = t; $('tb-bulle-s').textContent = sous; b.classList.remove('change'); }, 220); };
   miniature();
   addEventListener('resize', miniature);
   if (document.fonts) document.fonts.ready.then(miniature);
@@ -129,8 +146,8 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   const vif = (id, cls = 'vif') => { $(id).classList.add(cls); plus(1400, () => $(id).classList.remove(cls)); };
   const toast = (t) => { $('toast-t').textContent = t; $('toast').hidden = false; plus(2300, () => { $('toast').hidden = true; }); };
   const saute = () => { const s = $('k-todo'); s.classList.add('saute'); plus(300, () => s.classList.remove('saute')); };
-  const vers = (el) => { const a = app.getBoundingClientRect(), r = el.getBoundingClientRect(); cur.style.left = (r.left - a.left + r.width * .55) / ech + 'px'; cur.style.top = (r.top - a.top + r.height * .6) / ech + 'px'; };
-  const repos = () => { cur.style.left = '86%'; cur.style.top = '104%'; };
+  const vers = (el) => { const p = pos(el); cur.style.left = (p.x + p.w * .55) + 'px'; cur.style.top = (p.y + p.h * .6) + 'px'; };
+  const repos = () => { cur.style.left = '78%'; cur.style.top = '86%'; };
   const clic = (el) => { cur.classList.add('clic'); el.classList.add('clic'); plus(170, () => { cur.classList.remove('clic'); el.classList.remove('clic'); }); };
   const allumeEtape = (i, duree) => boutons.forEach((b, j) => {
     b.classList.toggle('fait', j < i);
@@ -145,23 +162,27 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     etat('b-camille', 'attendu', 'Attendu'); etat('b-ines', 'attendu', 'Attendu');
     ['tache', 'notif', 'quit', 'lettre', 'toast'].forEach(id => { $(id).hidden = true; });
     $('tache').classList.remove('fait'); $('t-btn').textContent = 'Relire la relance'; $('t-btn').classList.remove('ok');
-    repos();
+    repos(); camera(null);
   };
   const ETAPES = [
     [3200, (vite) => {
       const f = () => { etat('b-camille', 'paye', 'Payé'); $('k-bar').style.width = '57%'; };
       if (vite) { f(); $('k-recu').textContent = eur(1300, 0); return; }
+      bulle('Loyer reçu', 'Repéré sur votre relevé.');
+      plus(0, () => { camera($('t-recu'), 2.1); vers($('t-recu')); });
       plus(300, () => { $('notif').hidden = false; });
       plus(1600, () => { $('notif').hidden = true; f(); pulse('b-camille'); vif('t-recu'); tween($('k-recu'), 520, 1300, v => eur(Math.round(v), 0)); });
     }],
     [3600, (vite) => {
       if (vite) return;
+      bulle('Quittance envoyée', 'Toute seule, au locataire.');
+      plus(0, () => { camera($('b-camille'), 2); vers($('b-camille')); });
       plus(200, () => {
-        const q = $('quit'), b = $('b-camille').getBoundingClientRect(), a = app.getBoundingClientRect();
-        q.style.transition = 'none'; q.style.left = ((b.left - a.left) / ech + 30) + 'px'; q.style.top = ((b.top - a.top) / ech - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
+        const q = $('quit'), b = pos($('b-camille'));
+        q.style.transition = 'none'; q.style.left = (b.x + 30) + 'px'; q.style.top = (b.y - 40) + 'px'; q.style.transform = 'scale(.6) rotate(-4deg)'; q.style.opacity = '0'; q.hidden = false;
         requestAnimationFrame(() => requestAnimationFrame(() => { q.style.transition = ''; q.style.opacity = '1'; q.style.transform = 'scale(1) rotate(-2deg) translateY(-40px)'; }));
       });
-      plus(1300, () => { const q = $('quit'); q.style.transform = 'translate(' + Math.round(app.clientWidth * .3) + 'px,-220px) scale(.35) rotate(10deg)'; q.style.opacity = '0'; });
+      plus(1300, () => { const q = $('quit'); q.style.transform = 'translate(160px,-140px) scale(.35) rotate(10deg)'; q.style.opacity = '0'; });
       plus(2100, () => { $('quit').hidden = true; toast('Quittance envoyée à Camille Martin'); });
     }],
     [3600, (vite) => {
@@ -169,19 +190,23 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       const retard = () => { etat('b-ines', 'retard', 'En retard'); $('k-retard').textContent = '1'; $('k-retard').classList.add('dette'); $('k-impaye').textContent = eur(970, 0); $('k-impaye').classList.add('dette'); };
       const tache = () => { $('tache').hidden = false; $('k-todo').textContent = '3'; };
       if (vite) { date(); retard(); tache(); return; }
+      bulle('Retard repéré', 'Une action apparaît. Vous décidez.');
+      plus(0, () => { camera($('b-ines'), 2); vers($('b-ines')); });
       plus(300, date);
       plus(1000, () => { retard(); pulse('b-ines'); vif('t-retard', 'rouge'); vif('t-impaye', 'rouge'); });
-      plus(2000, () => { tache(); saute(); });
+      plus(2000, () => { tache(); saute(); camera($('tache'), 1.8); vers($('tache')); });
     }],
     [6600, (vite) => {
       const fin = () => { $('lettre').hidden = true; $('tache').classList.add('fait'); $('t-btn').textContent = 'Envoyée'; $('t-btn').classList.add('ok'); $('k-todo').textContent = '2'; };
       if (vite) { fin(); return; }
+      bulle('Relance validée', 'Un clic, la lettre part.');
+      plus(0, () => camera($('tache'), 1.8));
       plus(200, () => vers($('t-btn')));
       plus(1250, () => clic($('t-btn')));
-      plus(1500, () => { $('lettre').hidden = false; });
+      plus(1500, () => { $('lettre').hidden = false; requestAnimationFrame(() => camera($('lettre'), 1.5)); });
       plus(3300, () => vers($('l-btn')));
       plus(4350, () => clic($('l-btn')));
-      plus(4600, () => { fin(); saute(); toast('Relance envoyée à Inès Moreau'); repos(); });
+      plus(4600, () => { fin(); saute(); camera(null); toast('Relance envoyée à Inès Moreau'); repos(); });
     }]
   ];
   const joue = (i) => {
@@ -371,12 +396,29 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
 
     /* 1. On entre par la fenêtre : elle glisse au centre, la lumière de la vitre s'efface,
           l'appartement apparaît derrière le verre, la façade passe devant et disparaît */
-    const entree = gsap.timeline({
-      defaults: { ease: 'none' },
-      scrollTrigger: { trigger: wa, start: 'top top', end: () => (innerWidth < 760 ? '+=110%' : '+=140%'), pin: true, scrub: innerWidth < 760 ? .6 : .9, invalidateOnRefresh: true,
-        onUpdate: (st) => { zoomEnCours = st.progress > .01; },
-        onLeaveBack: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } }
-    });
+    const entree = gsap.timeline({ paused: true, defaults: { ease: 'none' },
+      onStart: () => { zoomEnCours = true; },
+      onReverseComplete: () => { zoomEnCours = false; gsap.set(cible3, { clearProps: 'opacity' }); } });
+    /* Le zoom se joue tout seul dès le premier défilement (1,6 s, la page attend la fin), et se rejoue à l'envers en
+       remontant : jamais d'arrêt entre deux. */
+    let entre = false, verrou = null;
+    const bloque = (e) => { if (verrou) e.preventDefault(); };
+    const touches = (e) => { if (verrou && ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(e.key)) e.preventDefault(); };
+    addEventListener('wheel', bloque, { passive: false }); addEventListener('touchmove', bloque, { passive: false }); addEventListener('keydown', touches);
+    if (typeof cleanups !== 'undefined') cleanups.push(() => { removeEventListener('wheel', bloque); removeEventListener('touchmove', bloque); removeEventListener('keydown', touches); });
+    const attend = (ms) => { clearTimeout(verrou); verrou = setTimeout(() => { verrou = null; }, ms); };
+    const zoomST = ScrollTrigger.create({ trigger: wa, start: 'top top', end: '+=100%', pin: true, invalidateOnRefresh: true,
+      onUpdate: (st) => {
+        if (!entre && st.direction > 0 && st.progress > .005) {
+          entre = true; attend(1500);
+          entree.timeScale(.62).play();
+          scrollTo({ top: st.end - 2, behavior: 'smooth' });
+        } else if (entre && st.direction < 0 && st.progress < .97) {
+          entre = false; attend(900);
+          entree.timeScale(1.15).reverse();
+          scrollTo({ top: st.start, behavior: 'smooth' });
+        }
+      } });
     entree
       .set(cadres, { transformOrigin: () => { const g = geo(); return g.cx + 'px ' + g.cy + 'px'; }, force3D: true }, 0)
       .to('.wa h1, .wa .sub, .wa .acts', { y: -40, opacity: 0, ease: 'power2.in', duration: .16, stagger: .02 }, 0)
@@ -408,7 +450,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     const mmTb = gsap.matchMedia();
     mmTb.add('(min-width: 1000px) and (min-height: 700px)', () => {
       histoireActive = true;
-      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=260%', pin: true,
+      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=200%', pin: true,
         onUpdate: (st) => {
           const p = st.progress * 4, k = Math.min(3, Math.floor(p));
           montreEtape(k);
@@ -429,7 +471,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       ScrollTrigger.create({ trigger: el, start: 'top 85%', once: true, onEnter: () => tween(el, fin === 0 ? 9 : 0, fin, v => v.toFixed(dec).replace('.', ','), 1600) });
     });
     gsap.from('.choc-l', { y: 60, opacity: 0, duration: 1.2, ease: 'expo.out', stagger: .12, scrollTrigger: { trigger: '.choc', start: 'top 85%' } });
-    ScrollTrigger.batch('.cf-t', { start: 'top 90%', once: true, onEnter: (els) => {
+    ScrollTrigger.batch('.cf3 li', { start: 'top 90%', once: true, onEnter: (els) => {
       gsap.from(els, { y: 40, opacity: 0, scale: .96, duration: 1, ease: 'expo.out', stagger: .08 });
       els.forEach(t => { const b = t.querySelector('[data-n]'); if (b) tween(b, 0, +b.dataset.n, v => String(Math.round(v)), 1200); });
     } });
