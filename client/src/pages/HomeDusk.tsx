@@ -8,6 +8,7 @@ import './accueil/dusk-site.css'
 import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { VideoButton } from '../components/VideoDialog'
 import { SiteFooter } from '../components/SiteChrome'
+import { Wordmark } from '../components/Logo'
 import { CAP_MONTHLY_CENTS, CAP_YEARLY_CENTS, LAUNCH_OFFER, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS } from '../config'
 import { useAuth } from '../lib/auth'
 import { DA2 } from '../constants/bailio-tokens'
@@ -91,8 +92,8 @@ export default function HomeDusk() {
         <div ref={facade} className="wa-fond" />
         <div className="in" style={{ width: '100%', display: 'grid', gridTemplateRows: 'auto 1fr' }}>
           <nav className="nav" aria-label="Menu">
-            <Link to="/" className="plaque" aria-label="Bailio, accueil">
-              <span>bailio</span>
+            <Link to="/" className="dusk-logo" aria-label="Bailio, accueil">
+              <Wordmark size={30} light />
             </Link>
             <div className="dusk-menu">
               <MegaMenu linkClass="dusk-link" onDark />

@@ -44,7 +44,7 @@ export const MAIN = (P: DuskPrices) => `
       <div class="app2" id="app" aria-label="Démonstration du tableau de bord, données fictives">
         <div class="a2-fond" aria-hidden="true"></div>
         <aside class="a2-side piece" aria-hidden="true">
-          <span class="plaque mini"><span>bailio</span></span>
+          <span class="plaque mini" aria-label="bailio"><svg viewBox="0 0 598 727" aria-hidden="true"><path d="M51 727V67L195 0V727Z"/><path d="M120 727H298A270 270 0 0 0 298 187H120Z"/><rect x="195" y="329" width="229" height="256" rx="26" fill="#F2B45C"/><path d="M309.5 329V585M195 457H424" stroke="currentColor" stroke-width="34"/></svg>ailio</span>
           <ul>
             <li class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-6.5 8 6.5M6 10v9.5h12V10"/></svg>Tableau de bord</li>
             <li><svg viewBox="0 0 24 24"><rect x="4.5" y="4.5" width="15" height="15" rx="3"/><path d="M9 4.5v15"/></svg>Bailleurs</li>
