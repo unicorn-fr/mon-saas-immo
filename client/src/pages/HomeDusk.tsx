@@ -5,12 +5,9 @@ import '@fontsource-variable/newsreader/opsz-italic.css'
 import '@fontsource-variable/bricolage-grotesque/wght.css'
 import './accueil/dusk.css'
 import './accueil/dusk-site.css'
-import { MegaMenu, MobileMenu } from '../components/SiteMenu'
 import { VideoButton } from '../components/VideoDialog'
-import { SiteFooter } from '../components/SiteChrome'
-import { Wordmark } from '../components/Logo'
+import { SiteFooter, SiteHeader } from '../components/SiteChrome'
 import { CAP_MONTHLY_CENTS, CAP_YEARLY_CENTS, LAUNCH_OFFER, MONTHLY_PRICE_CENTS, YEARLY_PRICE_CENTS } from '../config'
-import { useAuth } from '../lib/auth'
 import { DA2 } from '../constants/bailio-tokens'
 import { MAIN, SPRITE, type DuskPrices } from './accueil/duskMain'
 
@@ -31,7 +28,6 @@ const PRICES: DuskPrices = {
 }
 
 export default function HomeDusk() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const root = useRef<HTMLDivElement>(null)
   const facade = useRef<HTMLDivElement>(null)
@@ -86,30 +82,13 @@ export default function HomeDusk() {
 
   return (
     <>
+    <SiteHeader overDark />
     <div className="dusk" ref={root} onClick={onClick}>
       <div aria-hidden dangerouslySetInnerHTML={sprite} />
       <header className="wa" id="haut">
         <div ref={facade} className="wa-fond" />
         <div className="in" style={{ width: '100%', display: 'grid', gridTemplateRows: 'auto 1fr' }}>
-          <nav className="nav" aria-label="Menu">
-            <Link to="/" className="dusk-logo" aria-label="Bailio, accueil">
-              <Wordmark size={30} light />
-            </Link>
-            <div className="dusk-menu">
-              <MegaMenu linkClass="dusk-link" onDark />
-              <Link to={user ? '/espace' : '/connexion'} className="dusk-link hide-md">
-                {user ? 'Mon espace' : 'Se connecter'}
-              </Link>
-              <MobileMenu
-                account={
-                  <Link to={user ? '/espace' : '/connexion'} className="dusk-account">
-                    {user ? 'Mon espace' : 'Se connecter'}
-                  </Link>
-                }
-                cta={null}
-              />
-            </div>
-          </nav>
+          <div className="dusk-espace" aria-hidden />
           <div className="body" id="contenu">
             <div>
               <h1>Chaque fenêtre allumée est un loyer reçu.</h1>

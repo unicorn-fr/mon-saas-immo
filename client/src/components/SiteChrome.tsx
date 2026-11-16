@@ -4,113 +4,145 @@ import { CALLBACK_PROMISE } from "../content/inclus";
 import { SIMULATEURS } from "../content/modeles";
 import { BAI } from "../constants/bailio-tokens";
 import { useAuth } from "../lib/auth";
+import { Grid, Pencil, Upload } from "./Icons";
 import { Logo } from "./Logo";
 import { MegaMenu, MobileMenu } from "./SiteMenu";
 import { display } from "./ui";
 
-export function SiteHeader() {
+/**
+ * Barre du site, la même sur toutes les pages publiques, toujours visible en haut : en haut de page elle s'étale sur
+ * toute la largeur ; dès qu'on descend, elle devient une barre flottante arrondie. Logo, menu, « Se connecter »,
+ * « Importer mon bail » et « Créer mon bail » à portée de clic où qu'on soit. Sur téléphone : « Commencer » ouvre le
+ * choix (créer, importer le bail, importer ses logements, se connecter) et « Menu » le reste.
+ * `overDark` : sur l'accueil, la barre est claire sur la façade sombre tant qu'on n'est pas descendu plus bas.
+ */
+export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
   const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [dark, setDark] = useState(overDark);
+  const [starter, setStarter] = useState(false);
+  useEffect(() => {
+    const on = () => {
+      setScrolled(window.scrollY > 24);
+      setDark(overDark && window.scrollY < window.innerHeight * 1.9);
+    };
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    window.addEventListener("resize", on);
+    return () => (window.removeEventListener("scroll", on), window.removeEventListener("resize", on));
+  }, [overDark]);
+  const account = user ? { to: "/espace", label: "Mon espace" } : { to: "/connexion", label: "Se connecter" };
   return (
-    <header
-      className="container"
-      style={{
-        position: "relative",
-        zIndex: 30,
-        height: "clamp(72px, 9vw, 88px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 16,
-      }}
-    >
-      <Logo size={26} />
-      <nav
-        aria-label="Menu"
-        className="site-nav"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "clamp(10px, 2vw, 24px)",
-          fontSize: 15,
-          fontWeight: 500,
-          whiteSpace: "nowrap",
-        }}
-      >
-        <MegaMenu
-          linkStyle={{
-            textDecoration: "none",
-            color: BAI.ink,
-            display: "inline-flex",
-            alignItems: "center",
-            minHeight: 44,
-            padding: "0 12px",
-          }}
-        />
-        {user ? (
-          <Link
-            to="/espace"
-            className="hide-md"
-            style={{
-              textDecoration: "none",
-              color: BAI.inkMid,
-              display: "inline-block",
-              padding: "13px 2px",
-            }}
-          >
-            Mon espace
-          </Link>
-        ) : (
-          <Link
-            to="/connexion"
-            className="hide-md"
-            style={{
-              textDecoration: "none",
-              color: BAI.inkMid,
-              display: "inline-block",
-              padding: "13px 2px",
-            }}
-          >
-            Se connecter
-          </Link>
-        )}
-        <MobileMenu
-          account={
-            <Link
-              to={user ? "/espace" : "/connexion"}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 52,
-                borderRadius: 999,
-                border: `1.5px solid ${BAI.borderStrong}`,
-                color: BAI.ink,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              {user ? "Mon espace" : "Se connecter"}
+    <>
+      <header className={`sbar${scrolled ? " sbar--float" : ""}${dark ? " sbar--dark" : ""}`}>
+        <div className="sbar-in">
+          <Logo size={26} onDark={dark} />
+          <nav aria-label="Menu" className="sbar-nav">
+            <MegaMenu linkClass="sbar-link" onDark={dark} />
+          </nav>
+          <div className="sbar-acts">
+            <Link to={account.to} className="sbar-link sbar-login">
+              {account.label}
             </Link>
-          }
-          cta={null}
-        />
-        <Link
-          to="/commencer"
-          className="btn btn-primary"
-          style={{
-            textDecoration: "none",
-            background: BAI.cta,
-            color: BAI.ctaInk,
-            border: `1.5px solid ${BAI.cta}`,
-            padding: "12px clamp(14px, 2vw, 24px)",
-            borderRadius: 999,
-            fontWeight: 600,
-          }}
-        >
-          Créer mon bail
+            {user ? null : (
+              <Link to="/importer" className="sbar-ghost">
+                <UploadMini />
+                Importer mon bail
+              </Link>
+            )}
+            <Link to="/commencer" className="sbar-cta sbar-cta--wide">
+              <Lit />
+              Créer mon bail
+            </Link>
+            <button type="button" className="sbar-cta sbar-cta--phone" aria-haspopup="dialog" onClick={() => setStarter(true)}>
+              <Lit />
+              Commencer
+            </button>
+            <MobileMenu
+              account={
+                <Link to={account.to} className="drawer-account">
+                  {account.label}
+                </Link>
+              }
+              cta={
+                <>
+                  <Link to="/commencer" className="drawer-cta">
+                    Créer mon bail
+                  </Link>
+                  <Link to="/importer" className="drawer-account">
+                    Importer mon bail
+                  </Link>
+                </>
+              }
+            />
+          </div>
+        </div>
+      </header>
+      {overDark ? null : <div className="sbar-space" aria-hidden />}
+      {starter ? <Starter onClose={() => setStarter(false)} account={account} signedIn={!!user} /> : null}
+    </>
+  );
+}
+
+/** La petite fenêtre allumée du bouton, reprise du logo : elle s'allume au survol. */
+const Lit = () => (
+  <svg className="sbar-lit" width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+    <rect x="1" y="1" width="12" height="12" rx="2.5" />
+    <path d="M7 1.5v11M1.5 7h11" />
+  </svg>
+);
+const UploadMini = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v4.5h14V15" />
+  </svg>
+);
+
+/** « Par où commencer ? » : trois portes d'entrée et la connexion, en un toucher (téléphone). */
+function Starter({ onClose, account, signedIn }: { onClose: () => void; account: { to: string; label: string }; signedIn: boolean }) {
+  const first = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    first.current?.focus();
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    return () => ((document.body.style.overflow = prev), document.removeEventListener("keydown", onKey));
+  }, [onClose]);
+  const doors = [
+    { to: "/commencer", title: "Créer un bail", text: "Nouveau locataire, contrat type officiel.", icon: <Pencil size={20} /> },
+    { to: "/importer", title: "Importer mon bail", text: "Photo ou PDF de votre bail signé.", icon: <Upload size={20} color="currentColor" /> },
+    { to: signedIn ? "/espace/logements/importer" : "/inscription", title: "Importer mes logements", text: "Tableur, Qalimo, Rentila…", icon: <Grid size={20} /> },
+  ];
+  return (
+    <div className="starter-root">
+      <div className="starter-back" aria-hidden onClick={onClose} />
+      <div className="starter" role="dialog" aria-modal="true" aria-label="Par où commencer ?">
+        <div className="starter-head">
+          <p>Par où commencer ?</p>
+          <button type="button" aria-label="Fermer" onClick={onClose} className="starter-x">
+            ×
+          </button>
+        </div>
+        <ul>
+          {doors.map((d, i) => (
+            <li key={d.to}>
+              <Link ref={i === 0 ? first : undefined} to={d.to} onClick={onClose} className={i === 0 ? "starter-door is-main" : "starter-door"}>
+                <span className="starter-ic" aria-hidden>
+                  {d.icon}
+                </span>
+                <span>
+                  <b>{d.title}</b>
+                  <small>{d.text}</small>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Link to={account.to} onClick={onClose} className="starter-login">
+          {signedIn ? "Aller à mon espace" : "Déjà un compte ? Se connecter"}
         </Link>
-      </nav>
-    </header>
+      </div>
+    </div>
   );
 }
 
@@ -270,7 +302,7 @@ function PageAside({
       aria-label="Sur cette page"
       style={{
         position: "sticky",
-        top: 24,
+        top: 104,
         display: "flex",
         flexDirection: "column",
         gap: 16,

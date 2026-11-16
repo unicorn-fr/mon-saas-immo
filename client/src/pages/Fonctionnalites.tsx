@@ -86,7 +86,7 @@ export function FonctionnalitesList() {
         </div>
       </section>
 
-      <nav aria-label="Parties de la page" style={{ position: 'sticky', top: 0, zIndex: 2, background: BAI.surface, margin: 'clamp(40px, 6vw, 64px) 0 0', padding: '12px 0', borderBottom: `1px solid ${BAI.border}`, overflowX: 'auto' }}>
+      <nav aria-label="Parties de la page" style={{ position: 'sticky', top: 84, zIndex: 2, background: BAI.surface, margin: 'clamp(40px, 6vw, 64px) 0 0', padding: '12px 0', borderBottom: `1px solid ${BAI.border}`, overflowX: 'auto' }}>
         <ul style={{ display: 'flex', gap: 8, margin: 0, padding: 0, listStyle: 'none', whiteSpace: 'nowrap' }}>
           {[...SECTIONS.map((s) => ({ id: s.id, title: s.title })), { id: 'pour-qui', title: 'Pour qui' }].map((s) => (
             <li key={s.id}>

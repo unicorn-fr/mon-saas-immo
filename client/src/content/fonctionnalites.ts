@@ -96,7 +96,7 @@ export const FEATURES: Feature[] = [
     steps: [
       { title: 'Vous choisissez les jours', text: 'Par défaut 3, 8 et 15 jours après l’échéance, réglables. Chaque lettre reprend toute la somme due et les mois concernés.' },
       { title: 'Tout s’arrête dès le paiement', text: 'Le loyer est noté reçu, à la main ou depuis le relevé : plus aucune relance ne part. Une étape n’est jamais envoyée deux fois.' },
-      { title: 'Et si ça ne suffit pas', text: 'Le parcours « Impayé » vous dit quoi faire ensuite : appel à la caution, commandement de payer, aide au logement à signaler.', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail et l’état des lieux à faire.' },
+      { title: 'Et si ça ne suffit pas', text: 'Le parcours « Impayé » vous dit quoi faire ensuite : appel à la caution, commandement de payer, aide au logement à signaler.', img: 'today', alt: 'Tableau de bord de Bailio : logements loués, loyers perçus du mois, un loyer en retard avec la relance prête.' },
     ],
     checks: ['Retards calculés de la même façon partout (tableau, lettres, tâches)', 'Jamais de mise en demeure d’un coup si vous activez tard', 'Rappel d’envoyer aussi la mise en demeure en recommandé', 'Copie de chaque lettre dans vos documents'],
     faq: [
@@ -236,7 +236,7 @@ export const FEATURES: Feature[] = [
 
 /** Vitrine de /fonctionnalites : quatre écrans, une zone mise en avant chacun. */
 export const SHOWCASE: Array<{ id: string; tab: string; img: string; alt: string; spot: Spot }> = [
-  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail, l’état des lieux à faire et les prochaines échéances.', spot: { x: 20.6, y: 40.8, w: 48.1, h: 17.5, label: 'Un loyer en retard : la relance est déjà rédigée' } },
+  { id: 'jour', tab: 'Aujourd’hui', img: 'today', alt: 'Tableau de bord de Bailio : logements loués, loyers perçus du mois, un loyer en retard avec la relance prête.', spot: { x: 21.7, y: 63.5, w: 74.5, h: 17, label: 'Un loyer en retard : la relance est déjà rédigée' } },
   { id: 'loyers', tab: 'Loyers', img: 'quittances', alt: 'Partie « Loyers et quittances » d’un bail : loyer du mois payé, envoi automatique des quittances et loyers des mois passés.', spot: { x: 22.3, y: 37.4, w: 45.1, h: 8.6, label: 'La quittance part dès que le loyer est noté reçu' } },
   { id: 'relances', tab: 'Relances', img: 'relances', alt: 'Bail avec un loyer en retard de 3 jours et les relances automatiques activées.', spot: { x: 22.3, y: 60, w: 45.1, h: 10.8, label: 'Relance à J+3, second rappel à J+8, mise en demeure à J+15' } },
   { id: 'bord', tab: 'Tableau de bord', img: 'patrimoine', alt: 'Tableau de bord de Bailio : loyers attendus chaque mois, ce qu’il reste, logements à surveiller.', spot: { x: 20.6, y: 36.5, w: 76.7, h: 16.6, label: 'Le loyer en retard et le bail à renouveler, en tête' } },
@@ -275,7 +275,7 @@ export const SECTIONS: Array<{ id: string; title: string; img: string; alt: stri
     id: 'gerer',
     title: 'Gérer au quotidien',
     img: 'today',
-    alt: 'Écran « Aujourd’hui » de Bailio : un loyer en retard avec la relance prête, une fin de bail et l’état des lieux à faire.',
+    alt: 'Tableau de bord de Bailio : logements loués, loyers perçus du mois, un loyer en retard avec la relance prête.',
     items: [
       { title: 'Aujourd’hui', text: 'Les trois choses à faire cette semaine, déjà préparées, et les prochaines échéances.' },
       { title: 'Révision du loyer', text: 'L’IRL du bon trimestre, le calcul et la lettre, à la date anniversaire.' },

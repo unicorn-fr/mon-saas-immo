@@ -48,17 +48,17 @@ const snap = async (name, path, ready, focus, { scrollTo = false } = {}) => {
   await page.goto(BASE + path)
   if (ready) await page.getByText(ready).first().waitFor({ timeout: 20000 }).catch(() => console.warn('pas trouvé', name, ready))
   await page.waitForLoadState('networkidle')
-  if (focus && scrollTo) await focus(page).first().evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 120))
+  if (focus && scrollTo) await focus(page).first().evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 120), null, { timeout: 4000 }).catch(() => console.warn('zone introuvable', name))
   await page.waitForTimeout(700)
   if (focus) {
-    const b = await focus(page).first().boundingBox()
+    const b = await focus(page).first().boundingBox({ timeout: 4000 }).catch(() => null)
     if (b) console.log(name, 'spot', { x: +(b.x / 14.4).toFixed(1), y: +(b.y / 9).toFixed(1), w: +(b.width / 14.4).toFixed(1), h: +(b.height / 9).toFixed(1) })
   }
   const png = await page.screenshot()
   await sharp(png).webp({ quality: 82 }).toFile(`${OUT}${name}.webp`)
   console.log('capture', name)
 }
-await snap('today', '/espace', 'Bonjour Claire', (p) => p.locator('.today-main article, .today-main > div').filter({ hasText: 'Inès Moreau' }))
+await snap('today', '/espace', 'Bienvenue', (p) => p.getByText('Mes actions prioritaires').locator('xpath=ancestor::section[1]'))
 await snap('logements', '/espace/logements', 'T3 Montpellier')
 await snap('patrimoine', '/espace/patrimoine', 'À surveiller', (p) => p.getByText('À surveiller').locator('xpath=ancestor::*[self::section or self::div][2]'))
 await snap('argent', '/espace/argent', 'Loyers encaissés')

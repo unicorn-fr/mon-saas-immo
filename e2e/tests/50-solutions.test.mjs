@@ -36,7 +36,7 @@ test('solutions : page de bail, page profil, à propos', async () => {
     await page.getByRole('heading', { level: 1, name: /loueur en meublé non professionnel/ }).waitFor()
     await page.getByRole('heading', { level: 2, name: 'Le prix' }).waitFor()
     await page.getByText(/3,49 € par logement et par mois/).first().waitFor()
-    await page.getByText('Hébergé en Suisse').waitFor()
+    await page.locator('main').getByText('Hébergé en Suisse').waitFor()
     await noOverflow('/gestion-locative/lmnp')
 
     // Autres pages : toutes s'affichent sans débordement.

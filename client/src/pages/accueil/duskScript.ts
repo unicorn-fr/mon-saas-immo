@@ -450,7 +450,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     const mmTb = gsap.matchMedia();
     mmTb.add('(min-width: 1000px) and (min-height: 700px)', () => {
       histoireActive = true;
-      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=200%', pin: true,
+      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 84px', end: '+=200%', pin: true,
         onUpdate: (st) => {
           const p = st.progress * 4, k = Math.min(3, Math.floor(p));
           montreEtape(k);
