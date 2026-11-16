@@ -742,5 +742,9 @@
 .dusk .resultats{gap:20px}
 .dusk .app2 .a2-tuile{transition:border-color .4s,box-shadow .4s}
 .dusk .app2 .a2-tuile.vif{transform:none;box-shadow:0 0 0 4px rgba(242,180,92,.28),0 10px 22px -12px rgba(29,36,51,.4)}
+.dusk .wa .photo-trou{display:none}
+.dusk.scene .wa .photo-trou{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;will-change:transform;backface-visibility:hidden}
+.dusk.scene .wa svg.photo{display:none}
+.dusk.scene .wa svg.vitres{will-change:transform,opacity}
 
 

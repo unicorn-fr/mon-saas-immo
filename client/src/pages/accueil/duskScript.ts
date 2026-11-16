@@ -72,6 +72,20 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   }
 
   const $ = (id) => document.getElementById(id);
+  /* Cadrage de la façade : sur un écran plus étroit que la photo, on la décale pour garder la fenêtre a3 (centre x = 514)
+     aux trois cinquièmes de la largeur, au lieu de la couper au milieu. */
+  const waEl = document.querySelector('.wa');
+  let vb = { x: 0, w: 1500 };
+  const cadrer = () => {
+    const W = waEl.clientWidth, H = waEl.clientHeight, a = W / H;
+    if (a >= 1.5) vb = { x: 0, w: 1500 };
+    else { const w = 1000 * a; vb = { x: Math.max(0, Math.min(1500 - w, 514.5 - .6 * w)), w }; }
+    waEl.querySelectorAll('svg.cadre').forEach(sv => sv.setAttribute('viewBox', vb.x + ' 0 ' + vb.w + ' 1000'));
+    const t = document.getElementById('facade-trou');
+    if (t) t.style.objectPosition = (vb.w < 1500 ? vb.x / (1500 - vb.w) * 100 : 50) + '% 50%';
+  };
+  cadrer();
+  addEventListener('resize', cadrer);
   const eur = (v, dec) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: dec, maximumFractionDigits: dec }).format(v);
   const tween = (el, from, to, fmt, ms = 900) => {
     if (reduce) { el.textContent = fmt(to); return; }
@@ -318,17 +332,18 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
   /* ========== Mise en scène au défilement (GSAP, tous navigateurs) ========== */
   if (!reduce) {
     
-    const wa = document.querySelector('.wa'), cadres = wa.querySelectorAll('svg.cadre'), portail = $('portail');
+    const wa = document.querySelector('.wa'), cadres = wa.querySelectorAll('.cadre'), portail = $('portail');
     const cible3 = document.querySelector('#vitres .vitre[data-k="a3"]');
     /* Géométrie exacte de la fenêtre a3 (472,482 → 557,630 sur la photo de 1500 × 1000, cadrée en « cover ») */
     const geo = () => {
-      const W = wa.clientWidth, H = wa.clientHeight, k = Math.max(W / 1500, H / 1000);
-      const ox = (W - 1500 * k) / 2, oy = (H - 1000 * k) / 2;
+      const W = wa.clientWidth, H = wa.clientHeight, k = Math.max(W / vb.w, H / 1000);
+      const ox = (W - vb.w * k) / 2 - vb.x * k, oy = (H - 1000 * k) / 2;
       const x = ox + 472 * k, y = oy + 482 * k, w = 85 * k, h = 148 * k;
       return { W, H, x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
     };
-    const facadeImg = $('facade-img');
-    facadeImg.setAttribute('mask', 'url(#trou)');
+    ScrollTrigger.addEventListener('refreshInit', cadrer);
+    /* Échelle où la vitre couvre tout l'écran, puis un peu plus : la façade sort de l'écran de tous côtés. */
+    const plein = () => { const g = geo(); return Math.max(g.W / g.w, g.H / g.h) * 1.7; };
     const vers = () => { const g = geo(); return { x: g.W / 2 - g.cx, y: g.H / 2 - g.cy }; };
 
     /* 1. On entre par la fenêtre : elle glisse au centre, la lumière de la vitre s'efface,
@@ -345,9 +360,10 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
       .to('.wa .counter', { y: 40, opacity: 0, ease: 'power2.in', duration: .16 }, 0)
       .to('.wa .nav', { y: -30, opacity: 0, duration: .14 }, 0)
       .fromTo(cible3, { opacity: 1 }, { opacity: 0, ease: 'power2.out', duration: .1 }, .01)
+      .to('#vitres', { autoAlpha: 0, ease: 'power1.out', duration: .14 }, .02)
       .to('.wa .dusk', { opacity: .1, ease: 'power1.inOut', duration: .6 }, 0)
       .to(cadres, { x: () => vers().x, y: () => vers().y, ease: 'sine.inOut', duration: .62 }, 0)
-      .to(cadres, { scale: 22, ease: 'power3.in', duration: .86 }, 0)
+      .to(cadres, { scale: () => plein(), ease: 'power3.in', duration: .86 }, 0)
       .to(cadres, { opacity: 0, ease: 'power1.in', duration: .14 }, .72)
       .fromTo('#portail img', { scale: 1.45, filter: 'brightness(.5) saturate(.8)' }, { scale: 1, filter: 'brightness(1) saturate(1)', ease: 'power2.out', duration: .9 }, 0)
       .fromTo('.portail-t', { y: 30, opacity: 0 }, { y: 0, opacity: 1, ease: 'power2.out', duration: .1 }, .86)
@@ -363,16 +379,26 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
         rotateX: () => rnd(-28, 28), rotateY: () => rnd(-30, 30), rotateZ: () => rnd(-6, 6),
         opacity: 0, duration: 1.3, ease: 'expo.out', stagger: { each: .035, from: 'random' }
       }, 0);
-    /* Le tableau de bord se fige et la journée avance avec le défilement, une étape par quart */
-    histoireActive = true;
-    const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=260%', pin: true,
-      onUpdate: (st) => {
-        const p = st.progress * 4, k = Math.min(3, Math.floor(p));
-        montreEtape(k);
-        boutons.forEach((b, j) => b.style.setProperty('--p', j < k ? 1 : j === k ? Math.min(1, p - k) : 0));
-      },
-      onLeaveBack: () => { etapeVue = -1; stop(); depart(); boutons.forEach(b => { b.classList.remove('on', 'fait'); b.style.setProperty('--p', 0); }); } });
-    boutons.forEach((b, i) => { b.onclick = (e) => { e.stopImmediatePropagation(); scrollTo({ top: histoire.start + (histoire.end - histoire.start) * (i + .15) / 4, behavior: 'smooth' }); }; });
+    /* Le tableau de bord se fige et la journée avance avec le défilement, une étape par quart : seulement quand il tient
+       dans l'écran (ordinateur). Sur téléphone et tablette, il défile normalement et la journée se joue seule quand il
+       est visible ; les quatre étapes restent cliquables. */
+    const mmTb = gsap.matchMedia();
+    mmTb.add('(min-width: 1000px) and (min-height: 700px)', () => {
+      histoireActive = true;
+      const histoire = ScrollTrigger.create({ trigger: '#tb-pin', start: 'top 4%', end: '+=260%', pin: true,
+        onUpdate: (st) => {
+          const p = st.progress * 4, k = Math.min(3, Math.floor(p));
+          montreEtape(k);
+          boutons.forEach((b, j) => b.style.setProperty('--p', j < k ? 1 : j === k ? Math.min(1, p - k) : 0));
+        },
+        onLeaveBack: () => { etapeVue = -1; stop(); depart(); boutons.forEach(b => { b.classList.remove('on', 'fait'); b.style.setProperty('--p', 0); }); } });
+      boutons.forEach((b, i) => { b.onclick = (e) => { e.stopImmediatePropagation(); scrollTo({ top: histoire.start + (histoire.end - histoire.start) * (i + .15) / 4, behavior: 'smooth' }); }; });
+      return () => { histoireActive = false; etapeVue = -1; boutons.forEach(b => { b.onclick = null; }); };
+    });
+    mmTb.add('(max-width: 999px), (max-height: 699px)', () => {
+      const vu = ScrollTrigger.create({ trigger: '#app', start: 'top 70%', end: 'bottom 20%', onToggle: (st) => (st.isActive ? demarre() : arrete()) });
+      return () => { vu.kill(); arrete(); };
+    });
 
     /* Les trois chiffres-chocs montent quand ils arrivent */
     gsap.utils.toArray('[data-choc]').forEach((el) => {
