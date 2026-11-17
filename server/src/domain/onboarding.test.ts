@@ -22,8 +22,8 @@ test('vue du tableau de bord selon le nombre de logements, agence à part', () =
 })
 
 test('ancien logiciel ou tableur : la première connexion ouvre l’import', () => {
-  for (const tool of ['SPREADSHEET', 'QALIMO', 'RENTILA', 'SOFTWARE'] as const) assert.equal(firstPathFor({ tool }), '/espace/logements/importer')
-  for (const tool of ['NONE', 'AGENCY'] as const) assert.equal(firstPathFor({ tool }), '/espace')
+  // Toujours le tableau de bord d'abord : l'import se fait depuis l'espace.
+  for (const tool of ['SPREADSHEET', 'QALIMO', 'RENTILA', 'SOFTWARE', 'NONE', 'AGENCY'] as const) assert.equal(firstPathFor({ tool }), '/espace')
 })
 
 test('le profil existant n’est jamais écrasé ; téléphone illisible ignoré', () => {

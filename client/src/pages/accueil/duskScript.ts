@@ -374,7 +374,7 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     calc();
   }));
   calc();
-  if (!prixVu) new IO((es, o) => es.forEach(e => { if (e.isIntersecting) { prixVu = true; calc(); o.disconnect(); } }), { threshold: .4 }).observe(mais);
+  if (!prixVu) new IO((es, o) => es.forEach(e => { if (e.isIntersecting) { prixVu = true; calc(); o.disconnect(); } }), { threshold: .1 }).observe($('n-range').closest('.prix-grille'));
 
   /* ========== Mise en scène au défilement (GSAP, tous navigateurs) ========== */
   if (!reduce) {
@@ -484,8 +484,8 @@ export function mountDusk(root: HTMLElement, P: DuskPrices): () => void {
     }
 
     /* 5. La nuit retombe sur le prix */
-    gsap.fromTo('.prix-s', { backgroundColor: '#E9E1D5', borderTopLeftRadius: '50% 120px', borderTopRightRadius: '50% 120px' },
-      { backgroundColor: '#1D2433', borderTopLeftRadius: '36px 36px', borderTopRightRadius: '36px 36px', ease: 'none', scrollTrigger: { trigger: '.prix-s', start: 'top bottom', end: 'top 45%', scrub: true } });
+    gsap.fromTo('.prix-s', { borderTopLeftRadius: '50% 120px', borderTopRightRadius: '50% 120px' },
+      { borderTopLeftRadius: '36px 36px', borderTopRightRadius: '36px 36px', ease: 'none', scrollTrigger: { trigger: '.prix-s', start: 'top bottom', end: 'top 45%', scrub: true } });
     gsap.from('.fin .btn', { y: 30, opacity: 0, duration: 1, ease: 'expo.out', scrollTrigger: { trigger: '.fin', start: 'top 75%' } });
     window.addEventListener('load', refresh); cleanups.push(() => window.removeEventListener('load', refresh));
     if (document.fonts) document.fonts.ready.then(() => { if (alive) ScrollTrigger.refresh() });
