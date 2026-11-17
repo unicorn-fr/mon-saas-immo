@@ -394,13 +394,11 @@ button:not(:disabled):active { transform: scale(.98); }
 .sbar-cta--phone { display: none; }
 .sbar .menu-btn { min-height: 42px !important; }
 .sbar--dark .menu-btn { background: transparent !important; color: #fbf9f5 !important; border-color: rgba(255, 255, 255, .45) !important; }
-@media (max-width: 1180px) { .sbar-ghost { display: none; } }
-@media (max-width: 960px) { .sbar-login { display: none; } }
 @media (max-width: 768px) {
   .sbar-in { height: 62px; padding: 0 12px 0 16px; }
   .sbar--float { padding: 8px 8px 0; }
   .sbar--float .sbar-in { height: 56px; border-radius: 16px; }
-  .sbar-cta--wide { display: none; }
+  .sbar-cta--wide, .sbar-login { display: none; }
   .sbar-cta--phone { display: inline-flex; min-height: 42px; padding: 0 14px; }
   .sbar-acts { margin-left: auto; gap: 8px; }
   .sbar-nav { display: none; }

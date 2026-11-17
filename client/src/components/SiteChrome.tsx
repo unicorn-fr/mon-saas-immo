@@ -11,8 +11,8 @@ import { display } from "./ui";
 
 /**
  * Barre du site, la même sur toutes les pages publiques, toujours visible en haut : en haut de page elle s'étale sur
- * toute la largeur ; dès qu'on descend, elle devient une barre flottante arrondie. Logo, menu, « Se connecter »,
- * « Importer mon bail » et « Créer mon bail » à portée de clic où qu'on soit. Sur téléphone : « Commencer » ouvre le
+ * toute la largeur ; dès qu'on descend, elle devient une barre flottante arrondie. Logo, menu, puis deux boutons
+ * seulement, comme les logiciels du marché : « Se connecter » et « Essai gratuit » (inscription en questions). Sur téléphone : « Commencer » ouvre le
  * choix (créer, importer le bail, importer ses logements, se connecter) et « Menu » le reste.
  * `overDark` : sur l'accueil, la barre est claire sur la façade sombre tant qu'on n'est pas descendu plus bas.
  */
@@ -41,18 +41,14 @@ export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
             <MegaMenu linkClass="sbar-link" onDark={dark} />
           </nav>
           <div className="sbar-acts">
-            <Link to={account.to} className="sbar-link sbar-login">
-              {account.label}
-            </Link>
             {user ? null : (
-              <Link to="/importer" className="sbar-ghost">
-                <UploadMini />
-                Importer mon bail
+              <Link to="/connexion" className="sbar-link sbar-login">
+                Se connecter
               </Link>
             )}
-            <Link to="/commencer" className="sbar-cta sbar-cta--wide">
+            <Link to={user ? "/espace" : "/inscription"} className="sbar-cta sbar-cta--wide">
               <Lit />
-              Créer mon bail
+              {user ? "Mon espace" : "Essai gratuit"}
             </Link>
             <button type="button" className="sbar-cta sbar-cta--phone" aria-haspopup="dialog" onClick={() => setStarter(true)}>
               <Lit />
@@ -66,11 +62,8 @@ export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
               }
               cta={
                 <>
-                  <Link to="/commencer" className="drawer-cta">
-                    Créer mon bail
-                  </Link>
-                  <Link to="/importer" className="drawer-account">
-                    Importer mon bail
+                  <Link to="/inscription" className="drawer-cta">
+                    Essai gratuit
                   </Link>
                 </>
               }
@@ -89,11 +82,6 @@ const Lit = () => (
   <svg className="sbar-lit" width="14" height="14" viewBox="0 0 14 14" aria-hidden>
     <rect x="1" y="1" width="12" height="12" rx="2.5" />
     <path d="M7 1.5v11M1.5 7h11" />
-  </svg>
-);
-const UploadMini = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M5 15v4.5h14V15" />
   </svg>
 );
 
