@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { CALLBACK_PROMISE } from '../content/inclus'
 import { FEATURES, featurePath } from '../content/fonctionnalites'
-import { MODELES, SIMULATEURS, modelePath } from '../content/modeles'
+import { SIMULATEURS } from '../content/modeles'
 import { BAUX, PROFILS, solutionPath } from '../content/solutions'
 import { Bell, Book, Camera, Close, DocIcon, EuroIcon, House, Mail, Page, Pencil, People, Signpost, Sofa, Upload } from './Icons'
 import { Logo } from './Logo'
@@ -12,7 +12,7 @@ import { Logo } from './Logo'
 type IconName = 'doc' | 'euro' | 'bell' | 'camera' | 'people' | 'book' | 'signpost' | 'house' | 'sofa' | 'page' | 'pencil' | 'upload' | 'mail'
 
 function MenuIcon({ name }: { name: IconName }) {
-  const p = { size: 20, color: BAI.owner, strokeWidth: 1.8 }
+  const p = { size: 20, color: BAI.accent, strokeWidth: 1.8 }
   const icon = {
     doc: <DocIcon {...p} />,
     euro: <EuroIcon {...p} />,
@@ -29,7 +29,7 @@ function MenuIcon({ name }: { name: IconName }) {
     mail: <Mail {...p} />,
   }[name]
   return (
-    <span aria-hidden style={{ width: 40, height: 40, borderRadius: 12, background: BAI.ownerLight, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <span aria-hidden style={{ width: 40, height: 40, borderRadius: 12, background: BAI.night, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       {icon}
     </span>
   )
@@ -69,7 +69,6 @@ const PROFILE_TEXT: Record<string, string> = { particulier: 'Vous louez en votre
 const LEASE_TEXT: Record<string, string> = { 'location-vide': '3 ans en nom propre', 'location-meublee': '1 an, mobilier obligatoire', 'bail-etudiant': '9 mois, non reconduit', 'bail-mobilite': '1 à 10 mois, sans dépôt', colocation: 'Plusieurs locataires, solidarité', 'garage-parking': 'Contrat libre, sans DPE' }
 const LEASE_ICON: Record<string, IconName> = { 'location-vide': 'house', 'location-meublee': 'sofa', 'bail-etudiant': 'book', 'bail-mobilite': 'signpost', colocation: 'people', 'garage-parking': 'house' }
 const TOOL_ICON: Record<string, IconName> = { '/simulateurs/date-conge-bailleur': 'signpost', '/simulateurs/preavis-locataire': 'signpost', '/simulateurs/dpe-location': 'house', '/simulateurs/piece-autorisee': 'people', '/simulateurs/micro-foncier-ou-reel': 'doc' }
-const TOP_MODELES = ['quittance-de-loyer', 'mise-en-demeure-loyer-impaye', 'lettre-revision-loyer', 'restitution-depot-de-garantie', 'conge-proprietaire-vente', 'conge-proprietaire-reprise', 'appel-a-la-caution', 'avenant-au-bail']
 
 /** Menu du site : mêmes rubriques sur toutes les pages publiques, panneaux au survol sur ordinateur, accordéon sur téléphone. */
 export const SECTIONS: Section[] = [
@@ -82,7 +81,6 @@ export const SECTIONS: Section[] = [
         items: [
           ...FEATURES.map((f) => ({ to: featurePath(f.slug), title: f.name, text: FEATURE_TEXT[f.slug]?.[0] ?? '', icon: FEATURE_TEXT[f.slug]?.[1] ?? 'doc' })),
           { to: '/changer-pour-bailio', title: 'Reprise de vos locations', text: 'Fichier Excel ou bail en photo', icon: 'upload' },
-          { to: '/demo', title: 'Essayer la démo', text: 'Sans compte, en deux minutes', icon: 'signpost' },
         ],
       },
     ],
@@ -101,22 +99,12 @@ export const SECTIONS: Section[] = [
     label: 'Ressources',
     columns: [
       {
-        title: 'Guides et conseils',
+        title: 'S’informer',
         items: [
-          { to: '/guides', title: 'Guides du propriétaire', text: 'Les règles, vérifiées et sourcées', icon: 'book' },
+          { to: '/actualites', title: 'Actualités', text: 'Le journal du propriétaire, daté et sourcé', icon: 'book' },
           { to: '/a-propos', title: 'À propos de Bailio', text: 'Comment Bailio est fait', icon: 'signpost' },
           { to: '/avis', title: 'Avis des propriétaires', text: 'Vrais avis, mot pour mot', icon: 'book' },
           { to: '/espace-locataire', title: 'Espace locataire', text: 'Sans compte, depuis son lien', icon: 'signpost' },
-        ],
-      },
-      {
-        title: 'Modèles gratuits',
-        wide: true,
-        items: [
-          { to: '/modeles', title: 'Tous les modèles', text: `${MODELES.length} lettres prêtes à copier`, icon: 'page' },
-          ...TOP_MODELES.map((slug) => MODELES.find((m) => m.slug === slug))
-            .filter((m): m is (typeof MODELES)[number] => !!m)
-            .map((m) => ({ to: modelePath(m), title: m.title.replace(/\s*:\s*modèle.*$/i, ''), text: '', icon: 'page' as IconName })),
         ],
       },
       { title: 'Outils gratuits', items: SIMULATEURS.map((x) => ({ to: x.path, title: x.name, text: '', icon: TOOL_ICON[x.path] ?? 'euro' })) },

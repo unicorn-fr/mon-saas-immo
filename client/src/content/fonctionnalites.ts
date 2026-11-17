@@ -105,8 +105,7 @@ export const FEATURES: Feature[] = [
     ],
     links: [
       { label: 'Guide : 3 ans pour réclamer un impayé', to: '/guides/impaye-loyer-charges-delai-3-ans' },
-      { label: 'Modèle : relance amiable', to: '/modeles/relance-loyer-impaye' },
-      { label: 'Modèle : mise en demeure de payer', to: '/modeles/mise-en-demeure-loyer-impaye' },
+      { label: 'Guide : loyer impayé, les premières démarches', to: '/guides/loyer-impaye-premieres-demarches' },
     ],
   },
   {
@@ -130,7 +129,7 @@ export const FEATURES: Feature[] = [
     links: [
       { label: 'Guide : l’état des lieux d’entrée', to: '/guides/etat-des-lieux-entree-10-jours' },
       { label: 'Simulateur : restitution du dépôt de garantie', to: '/simulateurs/depot-de-garantie' },
-      { label: 'Modèle : restitution du dépôt de garantie', to: '/modeles/restitution-depot-de-garantie' },
+      { label: 'Guide : le dépôt de garantie', to: '/guides/depot-de-garantie' },
     ],
   },
   {

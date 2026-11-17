@@ -25,7 +25,7 @@ function Sources({ children }: { children: React.ReactNode }) {
     <>
       <SignupCta />
       <p style={{ marginTop: 24, fontSize: 15 }}>
-        {children} <Link to="/modeles">Tous les modèles et outils</Link>
+        {children} <Link to="/modeles">Documents officiels et outils</Link>
       </p>
     </>
   )
@@ -80,7 +80,7 @@ export function SimulateurConge() {
         {late ? <p style={{ margin: 0, color: BAI.ink }}>Cette date est passée : un congé reçu maintenant ne vaut que pour la fin du bail suivante.</p> : null}
         <p style={{ margin: 0 }}>Motifs possibles : vendre, reprendre le logement pour y habiter ou y loger un proche, ou un motif légitime et sérieux. Par lettre recommandée avec avis de réception, acte de commissaire de justice ou remise en main propre contre signature, à chaque locataire.</p>
         <p style={{ margin: 0 }}>
-          <Link to="/modeles/conge-proprietaire-vente">Le modèle de congé pour vendre, gratuit</Link>
+          <Link to="/guides/conge-du-proprietaire">Le guide du congé du propriétaire</Link>
         </p>
         <button type="button" onClick={() => (setKind(null), setEnd(''), go(1))} style={linkButton}>
           Faire un autre calcul
@@ -228,7 +228,7 @@ export function SimulateurPreavis() {
         </div>
         <p style={{ margin: 0 }}>Ensuite : état des lieux de sortie à la remise des clés, puis restitution du dépôt de garantie dans un ou deux mois.</p>
         <p style={{ margin: 0 }}>
-          <Link to="/modeles/accuse-reception-conge-locataire">Le modèle de réponse au congé, gratuit</Link>
+          <Link to="/guides/preavis-locataire-zone-tendue">Le guide du préavis du locataire</Link>
         </p>
         <button type="button" onClick={() => (setKind(null), setReduced(null), setReceived(''), go(1))} style={linkButton}>
           Faire un autre calcul
@@ -294,7 +294,7 @@ export function SimulateurDepot() {
         </div>
         <p style={{ margin: 0 }}>En immeuble collectif, vous pouvez garder 20 % au plus jusqu’au mois qui suit l’approbation des comptes de l’immeuble.</p>
         <p style={{ margin: 0 }}>
-          <Link to="/modeles/restitution-depot-de-garantie">Le modèle de lettre de restitution, gratuit</Link>
+          <Link to="/guides/depot-de-garantie">Le guide du dépôt de garantie</Link>
         </p>
         <button type="button" onClick={() => (setKeys(''), setConform(null), setRent(''), go(1))} style={linkButton}>
           Faire un autre calcul

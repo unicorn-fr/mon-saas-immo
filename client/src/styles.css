@@ -221,9 +221,9 @@ button:not(:disabled):active { transform: scale(.98); }
 /* Pages publiques (direction « Bleu clair ») : haut de page bleuté à halos et trame de points, comme l'accueil. */
 .pub { position: relative; isolation: isolate; }
 .pub::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: min(720px, 90vh); z-index: -1; pointer-events: none; background:
-  radial-gradient(40% 50% at 18% 20%, rgba(47, 79, 179, 0.14), transparent 70%),
-  radial-gradient(36% 46% at 85% 30%, rgba(242, 180, 92, 0.2), transparent 70%),
-  linear-gradient(180deg, #f5f1ea 0%, #f8f5ef 55%, #ffffff 100%); }
+  radial-gradient(42% 55% at 84% 12%, rgba(242, 180, 92, 0.3), transparent 70%),
+  radial-gradient(38% 48% at 10% 0%, rgba(30, 43, 85, 0.12), transparent 70%),
+  linear-gradient(180deg, #ebe3d6 0%, rgba(243, 238, 230, 0.6) 58%, rgba(243, 238, 230, 0) 100%); }
 .pub::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: min(720px, 90vh); z-index: -1; pointer-events: none; background-image: radial-gradient(rgba(29, 36, 51, 0.09) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 90%); }
 .pub .page-body h2 { color: #1d2433; font-weight: 700; letter-spacing: -0.02em; }
 .pub a[style*="box-shadow"]:hover { filter: brightness(1.05); transform: translateY(-1px); }
@@ -406,3 +406,30 @@ button:not(:disabled):active { transform: scale(.98); }
 @media (prefers-reduced-motion: reduce) { .sbar, .sbar-in { transition: none; } }
 .drawer-account { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 14px; border: 1.5px solid #837c6e; color: #1d2433; font-weight: 600; text-decoration: none; }
 .drawer-cta { display: flex; align-items: center; justify-content: center; min-height: 52px; border-radius: 14px; background: #1e2b55; color: #fbf9f5; font-weight: 600; text-decoration: none; }
+/* Actualités : le journal du propriétaire (pages/Guides.tsx). */
+.jr-rubs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 26px; padding-bottom: 2px; }
+.jr-rubs::-webkit-scrollbar { display: none; }
+.jr-rub { flex: none; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1.5px solid #837c6e; background: transparent; color: #1d2433; font: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+.jr-rub[aria-pressed='true'] { background: #1e2b55; border-color: #1e2b55; color: #fbf9f5; }
+.jr-une-link { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); text-decoration: none; color: inherit; }
+.jr-une-img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 18px; display: block; }
+.jr-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 24px; }
+.jr-link { display: flex; flex-direction: column; text-decoration: none; color: inherit; height: 100%; }
+.jr-img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 14px; display: block; transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+.jr-link:hover .jr-img { transform: scale(1.02); }
+.jr-link:hover span span:last-child, .jr-une-link:hover span span:nth-child(3) { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.jr-article { max-width: 760px; margin: 0 auto; }
+.jr-hero { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 18px; display: block; margin-bottom: 28px; }
+.jr-body { font-size: 18px; line-height: 1.7; color: #1d2433; }
+@media (max-width: 980px) { .jr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .jr-une-link { grid-template-columns: 1fr; gap: 14px; }
+  .jr-grid { grid-template-columns: 1fr; gap: 22px; }
+  .jr-body { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .jr-img { transition: none; } }
+/* Grain de papier, très léger, sur tout le site : un voile fixe qui ne bloque aucun clic. */
+body::after { content: ''; position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; opacity: 0.05; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 180px 180px; }
+@media print { body::after { display: none; } }

@@ -2,37 +2,20 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BASE, launch, watch } from '../lib.mjs'
 
-/** Pages publiques pour Google : modèles de lettres à copier et simulateur de révision du loyer, une question à la fois. */
+/** Pages publiques pour Google : documents officiels, modèle de quittance et simulateur de révision du loyer, une question à la fois. */
 test('modèles gratuits et simulateur de révision du loyer', async () => {
   const browser = await launch()
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
   const errors = []
   watch(page, errors)
 
+  // Page publique : documents de l'État et modèle de quittance seulement ; les autres lettres sont réservées aux comptes.
   await page.goto(`${BASE}/modeles`)
-  await page.getByRole('heading', { level: 1, name: 'Modèles de lettres gratuits' }).waitFor()
-  await page.getByRole('link', { name: /Mise en demeure de payer le loyer/ }).click()
-  await page.getByText('Je vous mets en demeure de régler cette somme').waitFor()
-  await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
-  assert.match(await page.title(), /Mise en demeure/)
-
-  // La liste affiche les 29 modèles ; l'acte de caution et deux autres s'ouvrent avec leur titre et leur source.
-  await page.goto(`${BASE}/modeles`)
-  await page.getByRole('heading', { level: 1, name: 'Modèles de lettres gratuits' }).waitFor()
-  assert.equal(await page.locator('main a[href^="/modeles/"]').count(), 29)
-  await page.goto(`${BASE}/modeles/conge-proprietaire-reprise`)
-  await page.getByRole('heading', { level: 1, name: 'Congé pour reprise du logement : modèle gratuit' }).waitFor()
-  await page.getByText('Service-public.fr : préavis et formalités du congé donné par le propriétaire').first().waitFor()
-  assert.match(await page.title(), /Congé pour reprise/)
-  await page.goto(`${BASE}/modeles/appel-a-la-caution`)
-  await page.getByRole('heading', { level: 1, name: /Appel à la caution/ }).waitFor()
-  await page.getByText('Service-public.fr : loyer impayé et expulsion du locataire').first().waitFor()
-
-  await page.goto(`${BASE}/modeles/acte-de-caution-solidaire`)
-  await page.getByRole('heading', { level: 1, name: /Acte de caution solidaire/ }).waitFor()
-  await page.getByText('Légifrance : code civil, article 2297').first().waitFor()
-  await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
-  assert.match(await page.title(), /caution solidaire/i)
+  await page.getByRole('heading', { level: 1, name: 'Documents officiels et quittance' }).waitFor()
+  assert.equal(await page.locator('main a[href^="/modeles/"]').count(), 1)
+  assert.equal(await page.locator('main a[href$=".pdf"]').count(), 3)
+  await page.goto(`${BASE}/modeles/mise-en-demeure-loyer-impaye`)
+  await page.waitForURL(/\/modeles$/)
 
   // Simulateur : DPE, loyer, trimestre, puis le résultat avec la formule.
   await page.goto(`${BASE}/simulateurs/revision-loyer`)
@@ -147,14 +130,10 @@ test('outils gratuits : rentabilité locative et pièce autorisée', async () =>
   await page.getByRole('button', { name: /Facture d’eau/ }).click()
   await page.getByRole('heading', { name: /Interdite : facture d’eau/ }).waitFor()
 
-  // Nouveaux modèles : quittance, avis d'échéance, attestation.
+  // Le modèle de quittance reste public.
   await page.goto(`${BASE}/modeles/quittance-de-loyer`)
   await page.getByText('et lui en donne quittance').waitFor()
   await page.getByRole('button', { name: 'Copier la lettre' }).waitFor()
-  await page.goto(`${BASE}/modeles/avis-echeance-loyer`)
-  await page.getByText('Total à payer').waitFor()
-  await page.goto(`${BASE}/modeles/attestation-paiement-loyers`)
-  await page.getByText('est à jour du paiement de ses loyers').waitFor()
   await browser.close()
   assert.deepEqual(errors, [])
 })

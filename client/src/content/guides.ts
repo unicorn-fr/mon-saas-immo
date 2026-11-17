@@ -740,3 +740,42 @@ export const GUIDES: Guide[] = [
 ]
 
 export const guidePath = (g: Pick<Guide, 'slug'>) => `/guides/${g.slug}`
+
+/**
+ * Le journal « Actualités » (/actualites) : chaque article a sa rubrique, déduite de son titre, et une photo
+ * d'illustration de la rubrique (photos Pexels, licence libre, déjà servies par l'accueil : public/accueil/img/).
+ */
+export type Rubrique = 'Bail' | 'Loyer' | 'Impayés' | 'Logement' | 'Impôts'
+export const RUBRIQUES: Rubrique[] = ['Bail', 'Loyer', 'Impayés', 'Logement', 'Impôts']
+
+const RULES: Array<[Rubrique, RegExp]> = [
+  ['Impôts', /micro-bic|foncier|fiscal|impôt|déclar/i],
+  ['Impayés', /impayé|expulsion|résolutoire|caution|garant\b|visale/i],
+  ['Logement', /dpe|décent|diagnostic|réparation|état des lieux|mobilier|assurance|charges/i],
+  ['Loyer', /loyer|irl|zone tendue|quittance/i],
+]
+export function rubriqueOf(g: Pick<Guide, 'title'>): Rubrique {
+  return RULES.find(([, re]) => re.test(g.title))?.[0] ?? 'Bail'
+}
+
+const PHOTOS: Record<Rubrique, string[]> = {
+  Bail: ['bail', 'cles', 'visite'],
+  Loyer: ['salon', 'matin', 'interieur'],
+  Impayés: ['cartons', 'cles', 'bail'],
+  Logement: ['edl', 'interieur', 'fauteuil'],
+  Impôts: ['impots', 'matin', 'bail'],
+}
+/** Photo d'illustration : une de la rubrique, choisie selon la place de l'article pour varier d'une carte à l'autre. */
+export function coverOf(g: Pick<Guide, 'slug' | 'title'>): string {
+  const rub = rubriqueOf(g)
+  const pool = PHOTOS[rub]
+  // Rang de l'article dans sa rubrique : deux articles voisins de la même rubrique n'ont jamais la même photo.
+  const i = GUIDES.filter((x) => rubriqueOf(x) === rub).findIndex((x) => x.slug === g.slug)
+  return `/accueil/img/${pool[Math.max(0, i) % pool.length]}.webp`
+}
+
+/** Temps de lecture estimé (200 mots par minute). */
+export function readingMinutes(g: Pick<Guide, 'blocks'>): number {
+  const words = g.blocks.map((b) => ('h' in b ? b.h : 'p' in b ? b.p : 'note' in b ? b.note : b.list.join(' '))).join(' ').split(/\s+/).length
+  return Math.max(1, Math.round(words / 200))
+}

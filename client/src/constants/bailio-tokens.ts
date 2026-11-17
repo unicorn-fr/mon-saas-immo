@@ -47,8 +47,8 @@ export const BAI = {
   // Bleu « stylo » : liens, sélection, progression, et le bouton de l'action principale (texte blanc, 6,7:1)
   owner: '#2f4fb3', // bleu ciel du soir : liens, sélection (6,3:1 sur le lin),
   ownerHover: '#243f95',
-  ownerLight: '#e8ecf8',
-  ownerTint: '#eef1fa',
+  ownerLight: '#e7e9f0', // fond d'un élément choisi : gris bleuté discret, accordé au lin,
+  ownerTint: '#eff0f4',
   ownerBorder: '#b9c4e8',
   // Menu latéral de l'espace : bleu plein, texte blanc (5,2:1), entrée en cours plus foncée (7,3:1)
   side: '#1e2b55', // menu latéral : le même bleu marine, texte blanc,
@@ -73,7 +73,7 @@ export const BAI = {
   greenOnDark: '#9fd3ae',
   greenDarkBg: '#1f3a2a',
   // Aplats de section : bleu très pâle et papier gris
-  sky: '#e8ecf8',
+  sky: '#ece5d9', // aplat clair d'une section : plâtre chaud (direction « Tombée du jour »),
   peach: '#f3eee6',
   // Illustrations seulement
   coral: '#e2603f',

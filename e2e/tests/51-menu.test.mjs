@@ -12,7 +12,7 @@ test('menu : panneaux sur ordinateur, accordéon sur téléphone', async () => {
     await d.goto(`${BASE}/tarifs`)
     const res = d.getByRole('button', { name: 'Ressources' })
     await res.hover()
-    await d.getByRole('link', { name: /^Tous les modèles/ }).waitFor()
+    await d.getByRole('link', { name: /Le journal du propriétaire/ }).waitFor()
     assert.equal(await res.getAttribute('aria-expanded'), 'true')
     await d.keyboard.press('Escape')
     assert.equal(await res.getAttribute('aria-expanded'), 'false')
