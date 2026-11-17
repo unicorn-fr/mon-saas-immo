@@ -31,7 +31,7 @@ export function BGlyph({ color, style }: { color: string; style?: React.CSSPrope
 
 /** L'icône seule : le b habité sur une tuile bleu nuit (onBlue : tuile blanche). */
 export function LogoMark({ size = 28, onBlue = false }: { size?: number; onDark?: boolean; onBlue?: boolean }) {
-  const tile = onBlue ? BAI.surface : DA2.ink
+  const tile = onBlue ? BAI.surface : BAI.night
   const ink = onBlue ? DA2.ink : DA2.linen
   return (
     <span aria-hidden style={{ width: size, height: size, borderRadius: size * 0.24, background: tile, display: 'inline-grid', placeItems: 'center', flexShrink: 0, fontSize: size * 0.82, lineHeight: 1 }}>

@@ -7,7 +7,7 @@ import { BASE, SIGNATURE, api, launch, shot, signupQuestions, watch } from '../l
 
 /**
  * Venir de Qalimo sans rien perdre : inscription en questions (vue du tableau de bord, profil, téléphone), arrivée
- * directe sur l'import, puis import d'un fichier dont un logement loué : son bail en cours est repris, noté
+ * sur le tableau de bord puis l'import depuis l'espace, puis import d'un fichier dont un logement loué : son bail en cours est repris, noté
  * « signé, importé », avec la fin de sa période en cours ; le bail signé s'ajoute ensuite depuis sa page.
  */
 const CSV = [
@@ -32,8 +32,11 @@ test('inscription en questions, puis import avec le bail en cours', async () => 
 
   const email = `qalimo+${Date.now()}@example.fr`
   const link = await signupQuestions(page, { email, homes: 5, tool: 'Qalimo', phone: '06 12 34 56 78' })
-  await page.getByText(/directement sur l’import de votre fichier/).waitFor()
+  await page.getByText(/importez ensuite votre fichier/).waitFor()
   await page.goto(link)
+  // Toujours le tableau de bord d'abord ; l'import du fichier se lance depuis l'espace.
+  await page.waitForURL(/\/espace$/)
+  await page.getByRole('link', { name: /Importer mon fichier/ }).click()
   await page.waitForURL(/\/espace\/logements\/importer/)
   await page.getByRole('heading', { name: /Tous vos logements/ }).waitFor()
 

@@ -1,6 +1,7 @@
 /**
  * Design system Bailio, direction « Tombée du jour » (15 novembre 2026, maquette docs/maquette/accueil-tombee-du-jour/) :
- * fond lin, encre bleu nuit, titres en Newsreader, liens bleu du soir, action principale en encre, soleil sur fond sombre.
+ * fond lin, encre bleu nuit, titres en Newsreader, liens bleu du soir, un seul bleu marine sobre (#1e2b55) pour tous les
+ * aplats sombres et l'action principale (connexion, inscription, menu de l'espace, bandes, boutons), soleil sur fond sombre.
  * Remplace la direction « Bleu clair » ci-dessous (mêmes noms de clés, nouvelles valeurs).
  *
  * Ancienne direction « Bleu clair » (13 novembre 2026, demandée par Enzo : l'allure des logiciels de
@@ -19,10 +20,10 @@ export const BAI = {
   // Fonds
   bg: '#f3eee6', // fond lin de tout le site,
   surface: '#ffffff', // la feuille,
-  night: '#1d2433', // aplat sombre : bandes, pied de page,
-  nightLine: '#2e3647',
-  nightActive: '#262e40',
-  nightSoft: '#353e52',
+  night: '#1e2b55', // bleu marine sobre : panneaux, bandes, pied de page (le même bleu partout),
+  nightLine: '#2f3d6c',
+  nightActive: '#283666',
+  nightSoft: '#36457a',
   // Texte
   ink: '#1d2433', // encre bleu nuit (15,5:1 sur blanc),
   inkMid: '#3a4152',
@@ -50,15 +51,15 @@ export const BAI = {
   ownerTint: '#eef1fa',
   ownerBorder: '#b9c4e8',
   // Menu latéral de l'espace : bleu plein, texte blanc (5,2:1), entrée en cours plus foncée (7,3:1)
-  side: '#1d2433', // menu latéral : bleu nuit, texte blanc,
-  sideActive: '#2e3647',
-  sideHover: '#262e40',
-  sideLine: '#3a4356',
+  side: '#1e2b55', // menu latéral : le même bleu marine, texte blanc,
+  sideActive: '#2f3d6c',
+  sideHover: '#283666',
+  sideLine: '#3a4878',
   // Action principale : le seul bouton plein bleu de l'écran
-  cta: '#1d2433', // action principale : bouton encre, texte blanc,
-  ctaHover: '#11151f',
+  cta: '#1e2b55', // action principale : bouton bleu marine, texte blanc (13:1),
+  ctaHover: '#162146',
   ctaInk: '#ffffff',
-  ctaShadow: '0 10px 24px -12px rgba(29, 36, 51, 0.55)',
+  ctaShadow: '0 10px 24px -12px rgba(30, 43, 85, 0.55)',
   cardShadow: '0 1px 2px rgba(29, 36, 51, 0.05), 0 24px 48px -28px rgba(29, 36, 51, 0.3)',
   // Accent : bleu clair sur fond sombre (8,8:1 sur l'encre) ; sur fond clair, `accentInk`
   accent: '#f2b45c', // soleil, sur fond sombre seulement (8,5:1 sur l'encre),
@@ -110,7 +111,7 @@ export const DA2 = {
   lineStrong: 'rgba(29, 36, 51, 0.6)',
   blue: '#22408C',
   blueFrame: '#1D5A3F',
-  night: '#0E1538',
+  night: '#1E2B55',
   sky: '#2F4FB3',
   skyTint: '#E6EAF7',
   sun: '#F2B45C',

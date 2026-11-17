@@ -695,6 +695,11 @@ function SetupSteps({ counts }: { counts: TodayView['counts'] }) {
           <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Prenez-le en photo ou déposez le PDF : Bailio remplit le logement, le locataire et le bail en une fois.</span>
           <span style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>Importer mon bail</span>
         </Link>
+        <Link to="/espace/logements/importer" style={{ textDecoration: 'none', color: BAI.ink, background: BAI.surface, border: `1px solid ${BAI.divider}`, borderRadius: 22, padding: 'clamp(20px, 3vw, 28px)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <span style={{ fontSize: 20, fontWeight: 700 }}>Tous mes logements dans un fichier</span>
+          <span style={{ fontSize: 15, color: BAI.inkMid, lineHeight: 1.5 }}>Excel, CSV, export de Qalimo ou Rentila : logements, locataires et baux en cours repris d’un coup.</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: BAI.owner }}>Importer mon fichier</span>
+        </Link>
       </aside>
     </div>
   )

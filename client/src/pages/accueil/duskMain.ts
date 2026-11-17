@@ -180,7 +180,7 @@ export const MAIN = (P: DuskPrices) => `
         <p class="monte">Choisissez votre nombre de logements. ${P.trial}, sans carte bancaire.</p>
       </div>
       <div class="prix-grille">
-        <div class="reglages monte">
+        <div class="reglages">
           <label for="n-range" class="lab">Combien de logements louez-vous ?</label>
           <div class="stepper">
             <button type="button" id="n-moins" aria-label="Un logement de moins">−</button>
@@ -194,14 +194,14 @@ export const MAIN = (P: DuskPrices) => `
             <button type="button" role="radio" aria-checked="true" data-p="an">À l’année</button>
           </div>
         </div>
-        <div class="resultats monte" aria-live="polite">
+        <div class="resultats" aria-live="polite">
           <div class="ligne bailio"><b>Bailio</b><strong class="val num" id="v-bailio">0&#8239;€</strong><div class="piste"><i id="bar-bailio"></i></div></div>
           <div class="ligne qalimo"><b>Qalimo<span class="forfait" id="forfait">Forfait de 7 à 40 biens</span></b><strong class="val num" id="v-qalimo">0&#8239;€</strong><div class="piste"><i id="bar-qalimo"></i></div></div>
-          <div class="ligne agence"><b>Une agence</b><strong class="val num" id="v-agence">0&#8239;€</strong><div class="piste"><i id="bar-agence"></i></div></div>
+          <div class="ligne agence"><b>Une agence<span class="note-l">7&#8239;% des loyers</span></b><strong class="val num" id="v-agence">0&#8239;€</strong><div class="piste"><i id="bar-agence"></i></div></div>
           <div class="gain2"><span class="g-lab">Vous économisez</span><strong class="num" id="g-agence">0&#8239;€</strong><span class="g-sous"><span id="g-per">par an</span>, face à une agence.</span><span class="g-pct num" id="g-pct">93&#8239;% moins cher</span></div>
         </div>
       </div>
-      <p class="sources">Agence : 7&#8239;% d’un loyer de 750&#8239;€ par mois, dans la fourchette courante de 4 à 10&#8239;%. Qalimo : tarif public du 25&#8239;octobre 2026.</p>
+      <p class="sources">Qalimo : tarif public du 25&#8239;octobre 2026. Agence : loyer de 750&#8239;€ par logement.</p>
     </div>
   </section>
 <section class="fin" aria-label="Commencer">

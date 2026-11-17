@@ -460,7 +460,7 @@ export default function Inscription() {
         </h1>
         <p style={{ margin: 0, fontSize: 17, color: DA2.mid, lineHeight: 1.55 }}>
           {a.firstName.trim()}, le lien qui ouvre votre espace vient de partir vers {a.email.trim()}. Il est valable 30 minutes.
-          {a.tool && IMPORT_TOOLS.includes(a.tool) ? ' Vous arriverez directement sur l’import de votre fichier.' : ''}
+          {a.tool && IMPORT_TOOLS.includes(a.tool) ? ' Depuis votre tableau de bord, importez ensuite votre fichier en un clic.' : ''}
         </p>
         <MailLinks email={a.email.trim()} />
         <span style={{ fontSize: 14, color: DA2.soft }}>

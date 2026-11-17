@@ -3,7 +3,7 @@
  * combien de logements, comment vous gérez aujourd'hui, comment vous avez connu Bailio, puis prénom, nom, email et
  * téléphone facultatif. Chaque réponse sert à quelque chose (RGPD art. 5, minimisation) :
  * - le nombre de logements choisit la vue du tableau de bord (`viewMode`) ;
- * - le logiciel actuel ouvre l'import du fichier à la première connexion ;
+ * - le logiciel actuel nous dit d'où viennent les propriétaires (l'import se propose ensuite dans l'espace) ;
  * - les attentes ordonnent les raccourcis et nous disent quoi améliorer ;
  * - la provenance nous dit où parler de Bailio (jamais transmise à un tiers) ;
  * - prénom, nom et téléphone remplissent le profil du bailleur (repris dans les baux et quittances).
@@ -43,9 +43,12 @@ export function viewModeFor(a: Pick<SignupAnswers, 'role' | 'homes'>): ViewMode 
   return 'PORTFOLIO'
 }
 
-/** Ancien logiciel ou tableur : la première connexion ouvre l'import du fichier, rien n'est à ressaisir. */
-export function firstPathFor(a: Pick<SignupAnswers, 'tool'>): string {
-  return a.tool === 'SPREADSHEET' || a.tool === 'QALIMO' || a.tool === 'RENTILA' || a.tool === 'SOFTWARE' ? '/espace/logements/importer' : '/espace'
+/**
+ * Première connexion : toujours le tableau de bord. L'import d'un fichier (tableur, Qalimo, Rentila) se fait ensuite
+ * depuis l'espace (carte « Tous mes logements dans un fichier », page Biens), jamais avant d'avoir un compte.
+ */
+export function firstPathFor(_a: Pick<SignupAnswers, 'tool'>): string {
+  return '/espace'
 }
 
 /**

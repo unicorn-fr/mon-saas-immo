@@ -4,7 +4,6 @@ import { CALLBACK_PROMISE } from "../content/inclus";
 import { SIMULATEURS } from "../content/modeles";
 import { BAI } from "../constants/bailio-tokens";
 import { useAuth } from "../lib/auth";
-import { Grid, Pencil, Upload } from "./Icons";
 import { Logo } from "./Logo";
 import { MegaMenu, MobileMenu } from "./SiteMenu";
 import { display } from "./ui";
@@ -12,15 +11,14 @@ import { display } from "./ui";
 /**
  * Barre du site, la même sur toutes les pages publiques, toujours visible en haut : en haut de page elle s'étale sur
  * toute la largeur ; dès qu'on descend, elle devient une barre flottante arrondie. Logo, menu, puis deux boutons
- * seulement, comme les logiciels du marché : « Se connecter » et « Essai gratuit » (inscription en questions). Sur téléphone : « Commencer » ouvre le
- * choix (créer, importer le bail, importer ses logements, se connecter) et « Menu » le reste.
+ * seulement, comme les logiciels du marché : « Se connecter » et « Essai gratuit » (inscription en questions). Sur téléphone : « Essai gratuit » et « Menu »
+ * (« Se connecter » en bas du panneau). Pas de bail sans compte depuis la barre.
  * `overDark` : sur l'accueil, la barre est claire sur la façade sombre tant qu'on n'est pas descendu plus bas.
  */
 export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [dark, setDark] = useState(overDark);
-  const [starter, setStarter] = useState(false);
   useEffect(() => {
     const on = () => {
       setScrolled(window.scrollY > 24);
@@ -50,10 +48,6 @@ export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
               <Lit />
               {user ? "Mon espace" : "Essai gratuit"}
             </Link>
-            <button type="button" className="sbar-cta sbar-cta--phone" aria-haspopup="dialog" onClick={() => setStarter(true)}>
-              <Lit />
-              Commencer
-            </button>
             <MobileMenu
               account={
                 <Link to={account.to} className="drawer-account">
@@ -72,7 +66,6 @@ export function SiteHeader({ overDark = false }: { overDark?: boolean }) {
         </div>
       </header>
       {overDark ? null : <div className="sbar-space" aria-hidden />}
-      {starter ? <Starter onClose={() => setStarter(false)} account={account} signedIn={!!user} /> : null}
     </>
   );
 }
@@ -84,55 +77,6 @@ const Lit = () => (
     <path d="M7 1.5v11M1.5 7h11" />
   </svg>
 );
-
-/** « Par où commencer ? » : trois portes d'entrée et la connexion, en un toucher (téléphone). */
-function Starter({ onClose, account, signedIn }: { onClose: () => void; account: { to: string; label: string }; signedIn: boolean }) {
-  const first = useRef<HTMLAnchorElement | null>(null);
-  useEffect(() => {
-    first.current?.focus();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    return () => ((document.body.style.overflow = prev), document.removeEventListener("keydown", onKey));
-  }, [onClose]);
-  const doors = [
-    { to: "/commencer", title: "Créer un bail", text: "Nouveau locataire, contrat type officiel.", icon: <Pencil size={20} /> },
-    { to: "/importer", title: "Importer mon bail", text: "Photo ou PDF de votre bail signé.", icon: <Upload size={20} color="currentColor" /> },
-    { to: signedIn ? "/espace/logements/importer" : "/inscription", title: "Importer mes logements", text: "Tableur, Qalimo, Rentila…", icon: <Grid size={20} /> },
-  ];
-  return (
-    <div className="starter-root">
-      <div className="starter-back" aria-hidden onClick={onClose} />
-      <div className="starter" role="dialog" aria-modal="true" aria-label="Par où commencer ?">
-        <div className="starter-head">
-          <p>Par où commencer ?</p>
-          <button type="button" aria-label="Fermer" onClick={onClose} className="starter-x">
-            ×
-          </button>
-        </div>
-        <ul>
-          {doors.map((d, i) => (
-            <li key={d.to}>
-              <Link ref={i === 0 ? first : undefined} to={d.to} onClick={onClose} className={i === 0 ? "starter-door is-main" : "starter-door"}>
-                <span className="starter-ic" aria-hidden>
-                  {d.icon}
-                </span>
-                <span>
-                  <b>{d.title}</b>
-                  <small>{d.text}</small>
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <Link to={account.to} onClick={onClose} className="starter-login">
-          {signedIn ? "Aller à mon espace" : "Déjà un compte ? Se connecter"}
-        </Link>
-      </div>
-    </div>
-  );
-}
 
 export function SiteFooter() {
   // Trois colonnes nommées au lieu d'une liste de 19 liens : on trouve ce qu'on cherche d'un coup d'œil.
