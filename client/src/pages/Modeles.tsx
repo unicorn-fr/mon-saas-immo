@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { BAI } from '../constants/bailio-tokens'
 import { SimplePage } from '../components/SiteChrome'
 import { Choices, QuestionScreen, useQuestion } from '../components/Questions'
 import { TextField } from '../components/ui'
-import { MODELES, SIMULATEURS, letterText, modelePath, type Modele } from '../content/modeles'
+import { MODELES, OFFICIAL_DOCS, PUBLIC_MODELES, SIMULATEURS, letterText, modelePath, type Modele } from '../content/modeles'
 import { NotFound } from './legal/Legal'
 import { SignupCta } from '../components/SignupCta'
 
@@ -25,32 +25,51 @@ const card = { background: BAI.bg, borderRadius: 24, padding: 'clamp(20px, 4vw, 
 const h2 = { margin: '36px 0 12px', fontSize: 22, fontWeight: 700, color: BAI.ink } as const
 
 export function ModelesList() {
-  useDescription('Modèles de lettres gratuits pour les propriétaires bailleurs : mise en demeure de payer, révision du loyer, congé pour vendre. Et le simulateur de révision du loyer avec l’IRL.')
+  useDescription('Documents officiels gratuits pour louer : notice d’information, réparations locatives, charges récupérables, modèle de quittance de loyer. Et des outils de calcul gratuits.')
   return (
-    <SimplePage title="Modèles de lettres gratuits">
-      <p style={{ margin: '0 0 28px' }}>Lettres à copier et outils de calcul, avec les règles vérifiées sur les sources officielles.</p>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {SIMULATEURS.map((x) => (
-          <li key={x.path} style={{ ...card, background: BAI.sky }}>
-            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
-              <Link to={x.path} style={{ color: BAI.ink }}>
-                {x.name}
-              </Link>
-            </h2>
-            <p style={{ margin: 0, fontSize: 16 }}>{x.lead}</p>
+    <SimplePage title="Documents officiels et quittance">
+      <p style={{ margin: '0 0 28px' }}>Les documents de l’État, reproduits à l’identique, et le modèle de quittance. Gratuits, sans compte.</p>
+      <h2 style={h2}>Documents officiels</h2>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {OFFICIAL_DOCS.map((d) => (
+          <li key={d.href} style={card}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, lineHeight: 1.3 }}>
+              <a href={d.href} target="_blank" rel="noopener noreferrer" style={{ color: BAI.ink }}>
+                {d.title} (PDF)
+              </a>
+            </h3>
+            <p style={{ margin: 0, fontSize: 16 }}>{d.text}</p>
+            <p style={{ margin: '6px 0 0', fontSize: 14, color: BAI.inkSoft }}>{d.source}</p>
           </li>
         ))}
-        {MODELES.map((m) => (
+      </ul>
+      <h2 style={h2}>Modèle de quittance</h2>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {PUBLIC_MODELES.map((m) => (
           <li key={m.slug} style={card}>
-            <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, lineHeight: 1.3 }}>
               <Link to={modelePath(m)} style={{ color: BAI.ink }}>
                 {m.title}
               </Link>
-            </h2>
+            </h3>
             <p style={{ margin: 0, fontSize: 16 }}>{m.lead}</p>
           </li>
         ))}
       </ul>
+      <h2 style={h2}>Outils de calcul gratuits</h2>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {SIMULATEURS.map((x) => (
+          <li key={x.path} style={{ ...card, background: BAI.surface, border: `1px solid ${BAI.divider}` }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 19, fontWeight: 700, lineHeight: 1.3 }}>
+              <Link to={x.path} style={{ color: BAI.ink }}>
+                {x.name}
+              </Link>
+            </h3>
+            <p style={{ margin: 0, fontSize: 16 }}>{x.lead}</p>
+          </li>
+        ))}
+      </ul>
+      <SignupCta text="Toutes les autres lettres (relances, congé, révision, dépôt de garantie…) sont prêtes dans votre espace, remplies avec les données du bail." />
     </SimplePage>
   )
 }
@@ -75,7 +94,7 @@ function CopyButton({ text }: { text: string }) {
 
 function ModelePage({ m }: { m: Modele }) {
   useDescription(m.description)
-  const others = MODELES.filter((x) => x.slug !== m.slug)
+  const others = PUBLIC_MODELES.filter((x) => x.slug !== m.slug)
   return (
     <SimplePage title={m.title}>
       <p style={{ margin: '-16px 0 24px', fontSize: 18 }}>{m.lead}</p>
@@ -127,7 +146,7 @@ function ModelePage({ m }: { m: Modele }) {
         ))}
       </ul>
       <p style={{ marginTop: 20, fontSize: 15 }}>Ce modèle donne les règles générales. Il ne remplace pas un conseil juridique adapté à votre situation.</p>
-      <h2 style={{ ...h2, fontSize: 18 }}>Autres modèles</h2>
+      <h2 style={{ ...h2, fontSize: 18 }}>Documents et outils gratuits</h2>
       <ul style={{ margin: 0, paddingLeft: 22 }}>
         {others.map((x) => (
           <li key={x.slug}>
@@ -146,8 +165,10 @@ function ModelePage({ m }: { m: Modele }) {
 
 export function ModeleArticle() {
   const { slug } = useParams()
-  const m = MODELES.find((x) => x.slug === slug)
-  return m ? <ModelePage m={m} /> : <NotFound />
+  // Seuls les modèles publics restent en ligne ; les anciennes adresses mènent à la page des documents.
+  const m = PUBLIC_MODELES.find((x) => x.slug === slug)
+  if (m) return <ModelePage m={m} />
+  return MODELES.some((x) => x.slug === slug) ? <Navigate to="/modeles" replace /> : <NotFound />
 }
 
 // ── Simulateur de révision du loyer ────────────────────────────────────────
@@ -301,7 +322,7 @@ export function SimulateurRevision() {
             </div>
             <p style={{ margin: 0 }}>Le loyer change à la date de révision prévue au bail, et seulement après votre demande écrite : rien en arrière.</p>
             <p style={{ margin: 0 }}>
-              <Link to="/modeles/lettre-revision-loyer">Le modèle de lettre de révision, gratuit</Link>
+              <Link to="/guides/revision-du-loyer-irl">Le guide de la révision du loyer</Link>
             </p>
           </>
         )}

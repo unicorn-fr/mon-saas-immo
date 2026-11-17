@@ -86,7 +86,6 @@ export function SiteFooter() {
       links: [
         { to: "/fonctionnalites", label: "Fonctionnalités" },
         { to: "/tarifs", label: "Tarifs" },
-        { to: "/demo", label: "Essayer la démo" },
         { to: "/changer-pour-bailio", label: "Changer pour Bailio" },
         { to: "/espace-locataire", label: "Espace locataire" },
       ],
@@ -94,8 +93,8 @@ export function SiteFooter() {
     {
       title: "Ressources",
       links: [
-        { to: "/guides", label: "Guides" },
-        { to: "/modeles", label: "Modèles gratuits" },
+        { to: "/actualites", label: "Actualités" },
+        { to: "/modeles", label: "Documents officiels" },
         { to: "/avis", label: "Avis" },
         { to: "/a-propos", label: "À propos" },
         { to: "/contact", label: "Contact" },

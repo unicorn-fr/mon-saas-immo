@@ -68,8 +68,8 @@ export function FonctionnalitesList() {
           </h1>
           <p style={{ margin: '0 0 28px', fontSize: 19 }}>Bail conforme, signature, quittances, relances, état des lieux et impôts : tout ce qu’il faut pour louer seul, dans une seule application.</p>
           <p style={{ margin: '0 0 24px', display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <Link to="/demo" style={blueButton}>
-              Essayer la démo
+            <Link to="/inscription" style={blueButton}>
+              Essai gratuit
             </Link>
             <a href="/#tarifs" style={outlineButton}>
               Voir le prix
@@ -188,8 +188,8 @@ function Article({ f }: { f: Feature }) {
           </h1>
           <p style={{ margin: '0 0 28px', fontSize: 19 }}>{f.lead}</p>
           <p style={{ margin: 0, display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-            <Link to="/demo" style={blueButton}>
-              Essayer la démo
+            <Link to="/inscription" style={blueButton}>
+              Essai gratuit
             </Link>
             <span style={{ fontSize: 15 }}>Compris dans {priceText()}</span>
           </p>

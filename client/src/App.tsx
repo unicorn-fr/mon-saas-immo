@@ -31,7 +31,6 @@ const ModelesList = lazy(() => import('./pages/Modeles').then((m) => ({ default:
 const SimulateurRevision = lazy(() => import('./pages/Modeles').then((m) => ({ default: m.SimulateurRevision })))
 const Changer = lazy(() => import('./pages/Changer').then((m) => ({ default: m.Changer })))
 const Tarifs = lazy(() => import('./pages/Tarifs').then((m) => ({ default: m.Tarifs })))
-const Demo = lazy(() => import('./pages/Demo'))
 const FonctionnaliteArticle = lazy(() => import('./pages/Fonctionnalites').then((m) => ({ default: m.FonctionnaliteArticle })))
 const FonctionnalitesList = lazy(() => import('./pages/Fonctionnalites').then((m) => ({ default: m.FonctionnalitesList })))
 const APropos = lazy(() => import('./pages/Solutions').then((m) => ({ default: m.APropos })))
@@ -318,11 +317,12 @@ function Pages() {
               <Route path="/prix-et-remboursement" element={<PrixRemboursement />} />
               <Route path="/accessibilite" element={<Accessibilite />} />
               <Route path="/securite" element={<Securite />} />
-              <Route path="/guides" element={<GuidesList />} />
+              <Route path="/actualites" element={<GuidesList />} />
+              <Route path="/guides" element={<Navigate to="/actualites" replace />} />
               <Route path="/guides/:slug" element={<GuideArticle />} />
               <Route path="/changer-pour-bailio" element={<Changer />} />
               <Route path="/tarifs" element={<Tarifs />} />
-              <Route path="/demo" element={<Demo />} />
+              <Route path="/demo" element={<Navigate to="/" replace />} />
               <Route path="/fonctionnalites" element={<FonctionnalitesList />} />
               <Route path="/fonctionnalites/:slug" element={<FonctionnaliteArticle />} />
               <Route path="/bail/:slug" element={<SolutionPage kind="bail" />} />

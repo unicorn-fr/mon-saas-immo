@@ -806,3 +806,17 @@ export const SIMULATEURS = [
 /** Texte brut de la lettre, prêt à copier. */
 export const letterText = (m: Modele) =>
   [`Objet : ${m.letter.subject}`, '', '[Votre nom et adresse]', '[Nom et adresse du locataire]', '[Lieu], le [date]', '', 'Madame, Monsieur,', '', ...m.letter.paragraphs.flatMap((p) => [p, '']), 'Je vous prie d’agréer, Madame, Monsieur, mes salutations distinguées.', '', '[Signature]'].join('\n')
+
+/**
+ * Modèles en accès libre (16 novembre 2026, choix d'Enzo) : seulement la quittance de loyer. Les autres lettres de
+ * Bailio restent réservées aux comptes (courriers du bail) : elles ne sont plus publiées sur le site.
+ */
+export const PUBLIC_MODELE_SLUGS = ['quittance-de-loyer']
+export const PUBLIC_MODELES = MODELES.filter((m) => PUBLIC_MODELE_SLUGS.includes(m.slug))
+
+/** Documents de l'État reproduits à l'identique par Bailio (server/src/pdf/), publics et gratuits. */
+export const OFFICIAL_DOCS: Array<{ title: string; text: string; href: string; source: string }> = [
+  { title: 'Notice d’information à joindre au bail', text: 'Vos droits et obligations, et ceux du locataire. Obligatoire avec chaque bail de logement.', href: '/api/notice-information.pdf', source: 'Arrêté du 29 mai 2015 modifié' },
+  { title: 'Liste des réparations locatives', text: 'Ce que le locataire entretient et répare à ses frais.', href: '/api/reparations-locatives.pdf', source: 'Décret n° 87-712 du 26 août 1987' },
+  { title: 'Liste des charges récupérables', text: 'Les charges que vous pouvez demander au locataire.', href: '/api/charges-recuperables.pdf', source: 'Décret n° 87-713 du 26 août 1987' },
+]

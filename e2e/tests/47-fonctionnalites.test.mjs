@@ -32,8 +32,8 @@ test('fonctionnalités : liste, page avec captures, lien vers la démo', async (
   assert.ok(await releve.evaluate((e) => e.complete && e.naturalWidth > 0), 'capture du relevé chargée')
   await page.getByText('Puis-je relier ma banque directement ?').click()
   await page.getByText(/connexion bancaire directe n’existe pas/).waitFor()
-  await page.getByRole('link', { name: 'Essayer la démo' }).first().click()
-  await page.getByRole('heading', { level: 1, name: /Essayez Bailio/ }).waitFor()
+  await page.getByRole('link', { name: 'Essai gratuit' }).last().click()
+  await page.waitForURL(/\/inscription/)
   } finally {
     await browser.close()
   }
