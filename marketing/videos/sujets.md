@@ -32,18 +32,19 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 | 2026-11-21 10 h | YouTube : louer un local commercial, 4 règles (1 658) | Motion design paysage | F22854, F31707, F36538, F31925 |
 | 2026-11-21 11 h 30 | Bail commercial : départ du locataire tous les 3 ans (411) | Motion design | F31707 |
 | 2026-11-22 10 h 30 | Bail commercial : dépôt plafonné à un trimestre (409) | Motion design | F36538 |
+| 2026-11-23 18 h 30 | Nouveau bail type au 1er octobre 2026 | kit2 : personne + 3D (nuit) | A19067 |
+| 2026-11-24 18 h 30 | Notice d'information du 18 octobre 2026 | kit2 (journal) | A19067 |
+| 2026-11-25 18 h 30 | Pénalité de retard interdite | kit2 (soleil) | F2889 |
+| 2026-11-26 18 h 30 | Colocation : clause de solidarité au départ | kit2 (nuit) | F2044 |
+| 2026-11-27 18 h 30 | CFE de la location meublée avant le 15 décembre | kit2 (journal) | F23547 |
+| 2026-11-28 10 h | YouTube : votre bail fin 2026, 5 points à vérifier | kit2 paysage | A19067, F2889, F31269, F31272 |
+| 2026-11-28 11 h 30 | Loyer impayé : les 4 étapes dans l'ordre | kit2 (soleil) | F31272, F2889 |
+| 2026-11-29 10 h 30 | Dépôt de garantie : le maximum, trimestre d'avance, pas d'augmentation | kit2 (nuit) | F31269 |
 
 ## Préparés, en attente de validation
 
-Semaine 48 (préparée le 22 novembre 2026, `semaine-48/`), en attente de la validation écrite :
-- lun. 23, 18 h 30 : nouveau bail type au 1er octobre 2026 (A19067)
-- mar. 24, 18 h 30 : notice d'information du 18 octobre 2026 (A19067)
-- mer. 25, 18 h 30 : pénalité de retard interdite (F2889)
-- jeu. 26, 18 h 30 : colocation, clause de solidarité au départ (F2044)
-- ven. 27, 18 h 30 : CFE de la location meublée avant le 15 décembre (F23547)
-- sam. 28, 10 h : YouTube, votre bail fin 2026, 5 points à vérifier
-- sam. 28, 11 h 30 : loyer impayé, les 4 étapes (F31272, F2889)
-- dim. 29, 10 h 30 : dépôt de garantie, le maximum (F31269)
+Rien en attente : la semaine 48 (style kit2) a été validée par Enzo le 22 novembre 2026 et programmée (YouTube,
+Facebook, Instagram).
 
 ## Idées à creuser (à vérifier avant d'écrire)
 
