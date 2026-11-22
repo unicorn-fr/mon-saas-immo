@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="penalites.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 21.8
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Pénalité de retard', at:.05, size:120}, {s:'dans votre bail ?', at:1.0, bg:C.night, color:C.white, size:90}] },
+  { on: 2.0, bg: 'night', items: [{slam:'Interdite', at:2.2, size:170}] },
+  { on: 3.2, bg: 'cream', items: [{s:'✕ amende', at:3.4, bg:C.peach, size:90}, {s:'✕ frais de retard', at:4.0, bg:C.peach, size:90}, {s:'Clause abusive = ne compte pas', at:6.5, bg:C.night, color:C.white, size:58}] },
+  { on: 8.8, bg: 'sky', items: [{s:'Mais', at:8.8, bg:C.orange, size:110}, {s:'retards répétés', at:10.0, bg:C.white, size:90}] },
+  { on: 11.1, bg: 'blue', items: [{s:'Refus de renouveler', at:11.5, bg:C.white, size:84}, {s:'motif légitime et sérieux', at:13.1, bg:C.orange, size:70}] },
+  { on: 15.0, bg: 'peach', items: [{s:'Gardez une trace', at:15.0, bg:C.night, color:C.white, size:96}, {s:'de chaque retard', at:15.8, bg:C.white, size:80}] }
+  ]),
+  endScene(17.0 - .2, 18.0, 'Source : service-public.fr, fiche F2889 · loi du 6 juillet 1989, art. 4'),
+]
+</script></body></html>

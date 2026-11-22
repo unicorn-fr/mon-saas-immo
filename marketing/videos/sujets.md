@@ -35,20 +35,26 @@ service-public.fr ou Légifrance le jour de la production ; la source et la date
 
 ## Préparés, en attente de validation
 
-Rien en attente : la semaine 47 a été validée le 15 novembre 2026 et programmée (YouTube, Facebook, Instagram).
+Semaine 48 (préparée le 22 novembre 2026, `semaine-48/`), en attente de la validation écrite :
+- lun. 23, 18 h 30 : nouveau bail type au 1er octobre 2026 (A19067)
+- mar. 24, 18 h 30 : notice d'information du 18 octobre 2026 (A19067)
+- mer. 25, 18 h 30 : pénalité de retard interdite (F2889)
+- jeu. 26, 18 h 30 : colocation, clause de solidarité au départ (F2044)
+- ven. 27, 18 h 30 : CFE de la location meublée avant le 15 décembre (F23547)
+- sam. 28, 10 h : YouTube, votre bail fin 2026, 5 points à vérifier
+- sam. 28, 11 h 30 : loyer impayé, les 4 étapes (F31272, F2889)
+- dim. 29, 10 h 30 : dépôt de garantie, le maximum (F31269)
 
 ## Idées à creuser (à vérifier avant d'écrire)
 
-- Encadrement des loyers après le 24 novembre 2026 : le Sénat a voté une prolongation de deux ans le 21 octobre ;
-  à faire seulement une fois la loi adoptée et publiée (et mettre à jour `RENT_CONTROL_END`).
+- Encadrement des loyers après le 24 novembre 2026 : prolongation jusqu'en novembre 2028 adoptée le 19 novembre,
+  pas encore publiée au Journal officiel le 21 novembre (service-public F1314 dit encore « jusqu'au 24 novembre
+  2026 ») ; à faire seulement une fois la loi publiée (et mettre à jour `RENT_CONTROL_END`).
 
 - Encadrement des loyers : villes concernées, fin ou prolongation de l'expérimentation (24 novembre 2026).
 - Déclaration d'occupation des logements (« Gérer mes biens immobiliers ») : source impots.gouv.fr à lire.
-- Impayé : les étapes, du rappel au commandement de payer.
-- Colocation : clause de solidarité (pas trouvée sur F21478 le 15 novembre ; chercher la bonne fiche).
 - Travaux pendant le bail : ce que le propriétaire peut imposer.
 - Diagnostics : durée de validité de chacun (pas trouvée sur F33463 le 15 novembre ; chercher la bonne fiche).
-- Dépôt de garantie en meublé : 2 mois maximum.
 - Augmenter le loyer au renouvellement d'un bail sous-évalué.
 
 ## Leçons (statistiques)
@@ -60,3 +66,8 @@ Rien en attente : la semaine 47 a été validée le 15 novembre 2026 et programm
   `utm_source` ne se lisent que dans le Pilotage. Heures gardées (soir de semaine, fin de matinée le week-end,
   10 h 30 le 11 novembre, férié).
 - 2026-11-15 : semaine 46 publiée comme prévu (programme Instagram et exécutions n8n). Pas de chiffres de vues ; heures gardées. Sujet nouveau : le bail commercial (fonction sortie le 14 novembre), en YouTube et deux courtes.
+- 2026-11-22 : semaine 47 publiée. Abonnés relevés par le circuit n8n (lecture seule) : Instagram 85, X 2 ;
+  Facebook en erreur. Toujours pas de vues par vidéo (YouTube non relevé, Meta sans statistiques) ni de visites
+  par `utm_source` hors Pilotage. Heures gardées. Hypothèse testée : sujets d'actualité 2026 (nouveau bail,
+  notice, CFE avant le 15 décembre) contre règles permanentes (dépôt, impayé), à comparer dimanche prochain.
+  Fin de vidéo : logo « b habité » et bailio.fr/actualites.
