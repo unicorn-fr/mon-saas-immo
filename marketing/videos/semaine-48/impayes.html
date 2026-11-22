@@ -1,15 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
-<script src="impayes.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
-<script>
-window.DURATION = 23.8
-window.SCENES = [
-  ...PLAN([
-  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Loyer impayé', at:.05, size:130}, {s:'que faire, dans l’ordre ?', at:1.2, bg:C.night, color:C.white, size:76}] },
-  { on: 2.3, bg: 'cream', items: [{s:'① Lettre simple', at:2.3, bg:C.white, size:90}, {s:'② Mise en demeure', at:4.6, bg:C.sky, size:90}, {s:'en recommandé', at:6.4, bg:C.peach, size:66}] },
-  { on: 7.1, bg: 'night', items: [{s:'③ Commandement de payer', at:7.1, bg:C.white, size:62}, {s:'par commissaire de justice', at:9.4, bg:C.sky, size:60}, {s:'6 semaines', at:11.6, bg:C.orange, size:130}] },
-  { on: 12.6, bg: 'blue', items: [{s:'④ Sans paiement', at:12.6, bg:C.white, size:90}, {slam:'le juge', at:14.5, size:150}] },
-  { on: 15.3, bg: 'peach', items: [{s:'Pendant tout ce temps', at:15.3, bg:C.white, size:70}, {s:'✕ pénalité de retard', at:16.5, bg:C.night, color:C.white, size:80}, {s:'interdite', at:18.0, bg:C.orange, size:110}] }
-  ]),
-  endScene(19.0 - .2, 19.9, 'Source : service-public.fr, fiches F31272 et F2889'),
-]
-</script></body></html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit2/kit2.css">
+<script type="importmap">{"imports":{"three":"../lib/three.module.min.js"}}</script></head><body>
+<script src="impayes.data.js"></script><script src="impayes.spec.js"></script><script type="module" src="../kit2/engine.js"></script>
+</body></html>

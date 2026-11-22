@@ -1,15 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
-<script src="depot.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
-<script>
-window.DURATION = 21.0
-window.SCENES = [
-  ...PLAN([
-  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Dépôt de garantie', at:.05, size:120}, {s:'combien au maximum ?', at:1.2, bg:C.night, color:C.white, size:80}] },
-  { on: 3.0, bg: 'cream', items: [{s:'Location vide', at:3.0, bg:C.sky, size:84}, {s:'1 mois', at:4.1, bg:C.orange, size:170}, {s:'de loyer hors charges', at:4.4, bg:C.white, size:60}] },
-  { on: 5.5, bg: 'sky', items: [{s:'Meublé', at:5.5, bg:C.white, size:96}, {s:'2 mois', at:6.3, bg:C.orange, size:170}] },
-  { on: 7.1, bg: 'night', items: [{s:'Vide + loyer payé', at:7.1, bg:C.white, size:76}, {s:'par trimestre d’avance', at:9.1, bg:C.sky, size:70}, {s:'dépôt interdit', at:11.5, bg:C.orange, size:100}] },
-  { on: 12.6, bg: 'peach', items: [{s:'Jamais augmenté', at:14.3, bg:C.night, color:C.white, size:86}, {s:'en cours de bail', at:14.7, bg:C.white, size:70}, {s:'ni au renouvellement', at:15.6, bg:C.white, size:70}] }
-  ]),
-  endScene(16.8 - .2, 17.7, 'Source : service-public.fr, fiche F31269 · loi du 6 juillet 1989, art. 22'),
-]
-</script></body></html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit2/kit2.css">
+<script type="importmap">{"imports":{"three":"../lib/three.module.min.js"}}</script></head><body>
+<script src="depot.data.js"></script><script src="depot.spec.js"></script><script type="module" src="../kit2/engine.js"></script>
+</body></html>

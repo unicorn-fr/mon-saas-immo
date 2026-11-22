@@ -1,32 +1,4 @@
-<!doctype html><html lang="fr" class="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
-<script src="yt.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
-<script>
-/* Vidéo YouTube paysage (1920 × 1080) : 5 points à vérifier dans votre bail fin 2026. Voix de 97,7 s. */
-window.DURATION = 101
-const N = C.night, O = C.orange, Wh = C.white
-window.SCENES = [
-  ...PLAN([
-    { on: 0, lead: 0, bg: 'night', items: [{ slam: 'Votre bail, fin 2026', size: 130, at: .05 }, { s: 'des règles ont changé', at: 2.8, bg: C.peach, size: 70 }] },
-    { on: 4.1, bg: 'orange', items: [{ s: 'Des erreurs qui coûtent cher', at: 4.2, bg: Wh, size: 80 }, { s: '5 points à vérifier', at: 6.4, bg: N, color: Wh, size: 100 }] },
-    { on: 8.2, bg: 'blue', items: [{ s: 'Point n° 1', at: 8.2, bg: O, size: 90 }, { slam: 'Le modèle de bail', size: 130, at: 9.3 }] },
-    { on: 10.1, bg: 'cream', items: [{ s: 'Depuis le 1er octobre 2026', at: 10.8, bg: O, size: 90 }, { s: 'vide · meublé · colocation à bail unique', at: 14.4, bg: C.sky, size: 56 }] },
-    { on: 17.7, bg: 'sky', items: [{ s: 'Clause résolutoire', at: 18.6, bg: Wh, size: 90 }, { s: 'loyer · charges · dépôt de garantie', at: 21.3, bg: C.peach, size: 60 }, { s: 'après 6 semaines sans paiement', at: 25.6, bg: O, size: 70 }] },
-    { on: 28.2, bg: 'peach', items: [{ s: 'Portable des parties', at: 29.7, bg: Wh, size: 90 }, { s: 'facultatif', at: 34.0, bg: N, color: Wh, size: 100 }] },
-    { on: 34.6, bg: 'blue', items: [{ s: 'Point n° 2', at: 34.6, bg: O, size: 90 }, { slam: 'La notice d’information', size: 120, at: 35.9 }] },
-    { on: 36.9, bg: 'cream', items: [{ s: 'Droits et obligations de chacun', at: 37.5, bg: C.sky, size: 70 }, { s: 'Nouvelle version · 18 octobre 2026', at: 41.3, bg: O, size: 70 }, { s: 'loyer · dépôt · impayés · congé · litiges', at: 47.1, bg: C.peach, size: 54 }] },
-    { on: 51.1, bg: 'blue', items: [{ s: 'Point n° 3', at: 51.1, bg: O, size: 90 }, { slam: 'Les pénalités de retard', size: 120, at: 52.2 }] },
-    { on: 53.2, bg: 'sky', items: [{ s: 'Interdites', at: 53.9, bg: O, size: 130 }, { s: 'clause abusive : ne s’applique pas', at: 56.9, bg: Wh, size: 64 }, { s: 'Retards répétés → refus de renouveler', at: 59.7, bg: C.peach, size: 58 }] },
-    { on: 64.6, bg: 'blue', items: [{ s: 'Point n° 4', at: 64.6, bg: O, size: 90 }, { slam: 'Le dépôt de garantie', size: 120, at: 65.7 }] },
-    { on: 66.6, bg: 'cream', items: [{ s: 'Vide : 1 mois hors charges', at: 67.7, bg: Wh, size: 80 }, { s: 'Meublé : 2 mois', at: 70.1, bg: C.sky, size: 80 }, { s: 'Vide + trimestre d’avance : interdit', at: 73.5, bg: O, size: 66 }] },
-    { on: 75.8, bg: 'blue', items: [{ s: 'Point n° 5', at: 75.8, bg: O, size: 90 }, { slam: 'L’impayé, dans l’ordre', size: 120, at: 77.0 }] },
-    { on: 78.7, bg: 'sky', items: [{ s: '① Lettre simple', at: 79.3, bg: Wh, size: 70 }, { s: '② Mise en demeure (recommandé)', at: 80.6, bg: C.peach, size: 62 }, { s: '③ Commandement de payer · 6 semaines', at: 82.7, bg: O, size: 60 }, { s: '④ Le juge', at: 88.2, bg: N, color: Wh, size: 70 }] },
-    { on: 89.0, bg: 'orange', items: [{ slam: 'Sur Bailio', size: 130, at: 89.0 }, { s: 'modèle officiel · bonne notice · relances', at: 90.4, bg: Wh, size: 56 }] },
-  ]),
-  { start: W('abonnez-vous') - .2, bg: C.blue, burst: C.blue, noCaption: true, html: () => `<div class="abs" style="inset:0;background:${DOTS('rgba(255,255,255,.12)')}"></div><div class="abs" id="l" style="left:200px;top:300px"></div><div class="abs" id="r" style="left:900px;right:140px;top:250px;text-align:center"></div>`,
-    update(lt, t) {
-      const s = this.start, g = W('guides')
-      $('l').innerHTML = `<div style="display:inline-block;transform:scale(${lerp(.3, 1, back((t - s) / .45))})">${LOGO(300)}</div><div style="font-family:Fraunces;font-weight:800;font-size:130px;color:#fff;-webkit-text-stroke:5px ${C.night};paint-order:stroke fill;opacity:${eo((t - s - .2) / .3)}">bailio</div>`
-      $('r').innerHTML = `${sticker('+ S’abonner', { bg: C.orange, size: 96, pad: '26px 60px', rot: -3, t0: s + .05, t, shadow: 16 })}<div style="margin-top:60px">${sticker('Les guides complets, gratuits', { bg: C.white, size: 52, rot: -2, t0: g, t })}</div><div style="margin-top:34px">${sticker('bailio.fr/actualites', { bg: C.orange, size: 72, pad: '24px 50px', rot: 2, t0: g + .3, t, shadow: 14 })}</div><div style="margin-top:56px;font-size:28px;font-weight:800;color:#fff;opacity:${eo((t - g - .6) / .4)}">Sources : service-public.fr, actualité A19067, fiches F2889, F31269 et F31272 ; décret n° 2026-596. Information générale, pas un conseil personnalisé.</div>`
-    } },
-]
-</script></body></html>
+<!doctype html><html lang="fr" data-format="paysage"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit2/kit2.css">
+<script type="importmap">{"imports":{"three":"../lib/three.module.min.js"}}</script></head><body>
+<script src="yt.data.js"></script><script src="yt.spec.js"></script><script type="module" src="../kit2/engine.js"></script>
+</body></html>

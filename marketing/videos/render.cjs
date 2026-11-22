@@ -2,13 +2,14 @@ const { chromium } = require('playwright')
 const fs = require('fs')
 const [,, html, outDir, mode] = process.argv
 ;(async () => {
-  const browser = await chromium.launch({ args: ['--allow-file-access-from-files'] })
+  const browser = await chromium.launch({ args: ['--allow-file-access-from-files', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] })
   // Vertical 1080 × 1920 ; paysage (YouTube) si la page porte class="paysage" sur <html>.
-  const landscape = fs.readFileSync(html, 'utf8').includes('class="paysage"')
+  const landscape = fs.readFileSync(html, 'utf8').includes('class="paysage"') || fs.readFileSync(html, 'utf8').includes('data-format="paysage"')
   const page = await browser.newPage({ viewport: landscape ? { width: 1920, height: 1080 } : { width: 1080, height: 1920 } })
   const logs = []
   page.on('console', (m) => logs.push(m.text())); page.on('pageerror', (e) => logs.push('ERREUR ' + e.message))
   await page.goto('file://' + html)
+  await page.waitForFunction(() => window.ready !== false && window.DURATION, null, { timeout: 30000 })
   await page.evaluate(() => document.fonts.ready)
   const dur = await page.evaluate(() => window.DURATION)
   fs.mkdirSync(outDir, { recursive: true })

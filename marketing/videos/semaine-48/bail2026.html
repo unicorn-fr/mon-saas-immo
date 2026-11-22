@@ -1,16 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
-<script src="bail2026.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
-<script>
-window.DURATION = 24.6
-window.SCENES = [
-  ...PLAN([
-  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Vous signez un bail ?', at:.05, size:120}, {s:'Le modèle a changé', at:1.3, bg:C.night, color:C.white, size:90}] },
-  { on: 2.4, bg: 'night', items: [{s:'1er octobre 2026', at:2.5, bg:C.orange, size:110}, {s:'2 nouveautés', at:3.4, bg:C.white, size:90}] },
-  { on: 4.6, bg: 'cream', items: [{slam:'① Clause résolutoire', at:4.7, size:96}, {s:'loyer · charges · dépôt', at:7.7, bg:C.sky, size:70}, {s:'résilié si impayé', at:6.8, bg:C.peach, size:66}] },
-  { on: 10.8, bg: 'sky', items: [{s:'après un commandement de payer', at:11.1, bg:C.white, size:58}, {s:'6 semaines', at:12.9, bg:C.orange, size:160}, {s:'sans effet', at:12.5, size:64}] },
-  { on: 13.8, bg: 'blue', items: [{s:'② Le portable', at:14.3, bg:C.white, size:96}, {s:'propriétaire · locataire', at:15.2, bg:C.sky, size:66}, {s:'facultatif', at:17.0, bg:C.orange, size:96}] },
-  { on: 18.0, bg: 'peach', items: [{s:'Vieux modèle ?', at:18.0, bg:C.white, size:100}, {s:'Changez-le', at:18.5, bg:C.night, color:C.white, size:120}] }
-  ]),
-  endScene(19.8 - .2, 20.8, 'Source : service-public.fr, actualité A19067 · décret n° 2026-596'),
-]
-</script></body></html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit2/kit2.css">
+<script type="importmap">{"imports":{"three":"../lib/three.module.min.js"}}</script></head><body>
+<script src="bail2026.data.js"></script><script src="bail2026.spec.js"></script><script type="module" src="../kit2/engine.js"></script>
+</body></html>

@@ -1,15 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
-<script src="colocation.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
-<script>
-window.DURATION = 21.6
-window.SCENES = [
-  ...PLAN([
-  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Un colocataire part', at:.05, size:112}, {s:'il paie encore ?', at:1.2, bg:C.night, color:C.white, size:96}] },
-  { on: 2.2, bg: 'night', items: [{s:'clause de solidarité', at:2.6, bg:C.white, size:76}, {slam:'Oui', at:3.8, size:200}] },
-  { on: 4.5, bg: 'cream', items: [{s:'colocataire + caution', at:4.7, bg:C.sky, size:76}, {s:'100 % du loyer', at:6.3, bg:C.orange, size:120}, {s:'même la part des autres', at:7.5, bg:C.peach, size:64}] },
-  { on: 8.8, bg: 'sky', items: [{s:'Celui qui part', at:8.8, bg:C.white, size:84}, {s:'6 mois', at:10.2, bg:C.orange, size:170}, {s:'après la fin du préavis', at:10.6, bg:C.white, size:60}] },
-  { on: 12.0, bg: 'blue', items: [{s:'Sauf', at:12.0, bg:C.orange, size:110}, {s:'remplacé pendant le préavis', at:13.6, bg:C.white, size:62}, {s:'→ fin au préavis', at:15.6, bg:C.sky, size:84}] }
-  ]),
-  endScene(17.5 - .2, 18.4, 'Source : service-public.fr, fiche F2044 · loi du 6 juillet 1989, art. 8-1'),
-]
-</script></body></html>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit2/kit2.css">
+<script type="importmap">{"imports":{"three":"../lib/three.module.min.js"}}</script></head><body>
+<script src="colocation.data.js"></script><script src="colocation.spec.js"></script><script type="module" src="../kit2/engine.js"></script>
+</body></html>

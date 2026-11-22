@@ -33,10 +33,23 @@ voix clonée : voix de la bibliothèque ElevenLabs, énergique.
 5. **Horodatage.** `python3 transcrire.py voix.wav mots.json` (Whisper local, gratuit ; première fois :
    `python3 -m venv venv && venv/bin/pip install -r requirements.txt`), puis `python3 align.py <dossier> script.txt`
    qui écrit `data.js` (mots et sous-titres).
-6. **Scènes.** Une page HTML par vidéo, sur le modèle de `exemples/` : `window.DURATION`, `window.SCENES` (un
-   changement de plan toutes les 3 à 5 s, calé sur les mots avec `W('mot')`), fin commune `endScene(...)`.
-   YouTube : `<html class="paysage">` et positions adaptées (`capTop`).
-7. **Rendu.** `node render.cjs page.html images/ 0,3,8,15` pour quelques images de contrôle (les regarder), puis
+6. **Scènes (kit2, depuis le 22 novembre 2026, demande d'Enzo : « des vrais humains, des objets 3D, des mèmes,
+   chaque vidéo différente »).** Par vidéo : `<nom>.spec.js` (`window.SPEC`) et une page qui charge `../kit2/engine.js`
+   (modèle : `semaine-48/`). Trois sortes de plans, à mélanger dans chaque vidéo :
+   - `clip` : une **vraie personne** (vidéo Pexels, licence libre, usage commercial, sans mention obligatoire), au
+     format « mème » refait avec nos propres mots : texte du haut (`top`, « POV : … », « Moi quand … »), chute en bas
+     (`bottom`). Jamais une image de mème qui circule (films, séries, personnes connues : protégées) ; jamais une
+     personne présentée de façon dégradante ou comme cliente de Bailio (licence Pexels). Téléchargement :
+     `https://www.pexels.com/download/video/<id>/` (redirige vers le fichier), rangé dans `clips/src/<id>.mp4`
+     (hors du dépôt), images extraites par `node kit2/prep.cjs semaine-NN/<nom>.spec.js`. Noter l'id dans la spec.
+   - `obj` : un **objet 3D** (three.js, `kit2/obj3d.js` : pièce, pile de pièces, clé, maison, document, calendrier,
+     téléphone, enveloppe, interdit, marteau du juge, b habité), titre en Newsreader, gros chiffre, puces.
+   - fin commune : b habité en 3D, « S'abonner », bailio.fr/actualites, source.
+   **Alterner** : habillage de la vidéo (`look` : `nuit`, `journal`, `soleil`, jamais deux fois de suite), fond de
+   chaque plan (`bg`), premier plan (une vraie personne un jour, un objet 3D le lendemain), objets différents. Couleurs
+   et polices du site seulement (nuit `#1e2b55`, lin, soleil `#f2b45c`, encre ; Inter, Newsreader).
+   YouTube : `format: 'paysage'` (la personne dans une carte à gauche, le texte à droite).
+7. **Rendu.** `node render.cjs $PWD/page.html images/ 0,3,8,15` (chemin absolu) pour quelques images de contrôle (les regarder), puis
    `node render.cjs page.html images/ full`.
 8. **Son.** `python3 mix.py voix.wav musique/piste-N.mp3 <durée> "<débuts des scènes>" son.wav` (pistes libres de
    droits du dossier, en rotation).

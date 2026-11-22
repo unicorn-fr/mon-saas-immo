@@ -71,3 +71,6 @@ Semaine 48 (préparée le 22 novembre 2026, `semaine-48/`), en attente de la val
   par `utm_source` hors Pilotage. Heures gardées. Hypothèse testée : sujets d'actualité 2026 (nouveau bail,
   notice, CFE avant le 15 décembre) contre règles permanentes (dépôt, impayé), à comparer dimanche prochain.
   Fin de vidéo : logo « b habité » et bailio.fr/actualites.
+- 2026-11-22 : première version de la semaine 48 refusée par Enzo (« chaque vidéo se ressemble »). Refaite avec
+  kit2 : vraies personnes (Pexels) en format mème, objets 3D, trois habillages qui alternent. Mêmes voix (aucun
+  crédit en plus). À suivre : quel premier plan (personne ou objet 3D) retient le mieux.
