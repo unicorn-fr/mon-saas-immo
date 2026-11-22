@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="notice.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 24.8
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{slam:'La notice du bail', at:.05, size:120}, {s:'a changé', at:1.0, bg:C.night, color:C.white, size:110}] },
+  { on: 2.4, bg: 'night', items: [{s:'depuis le 18 octobre 2026', at:2.4, bg:C.orange, size:76}, {s:'à joindre au bail', at:2.7, bg:C.white, size:76}] },
+  { on: 3.7, bg: 'cream', items: [{slam:'C’est quoi ?', at:3.8, size:110}, {s:'le document officiel', at:4.8, bg:C.sky, size:70}, {s:'vos droits et ceux du locataire', at:6.2, bg:C.peach, size:56}] },
+  { on: 8.1, bg: 'sky', items: [{s:'Obligatoire', at:8.3, bg:C.orange, size:120}, {s:'chaque bail signé', at:9.2, bg:C.white, size:70}, {s:'ou renouvelé', at:10.2, bg:C.white, size:70}] },
+  { on: 11.3, bg: 'blue', items: [{s:'loyer · dépôt de garantie', at:12.4, bg:C.white, size:62}, {s:'impayés', at:14.3, bg:C.sky, size:80}, {s:'congé · litiges', at:15.1, bg:C.orange, size:80}] },
+  { on: 16.4, bg: 'peach', items: [{s:'Ancienne notice ?', at:16.4, bg:C.white, size:90}, {s:'Mettez-la à jour', at:18.3, bg:C.night, color:C.white, size:100}] }
+  ]),
+  endScene(19.4 - .2, 20.3, 'Source : service-public.fr, actualité A19067 · arrêté du 29 mai 2015 modifié'),
+]
+</script></body></html>

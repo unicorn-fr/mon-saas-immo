@@ -1,0 +1,16 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><link rel="stylesheet" href="../kit.css"></head><body>
+<script src="cfe.data.js"></script><script src="../kit.js"></script><script src="plans.js"></script>
+<script>
+window.DURATION = 24.8
+window.SCENES = [
+  ...PLAN([
+  { on: 0, bg: 'orange', lead: 0, items: [{slam:'Location meublée ?', at:.05, size:112}, {s:'une taxe arrive', at:1.2, bg:C.night, color:C.white, size:90}] },
+  { on: 2.1, bg: 'night', items: [{s:'avant le 15 décembre', at:2.1, bg:C.white, size:80}, {slam:'La CFE', at:3.2, size:190}] },
+  { on: 4.4, bg: 'cream', items: [{s:'Due si recettes >', at:4.6, bg:C.sky, size:76}, {s:'5 000 € / an', at:5.9, bg:C.orange, size:130}] },
+  { on: 7.1, bg: 'sky', items: [{s:'Pas due', at:7.1, bg:C.white, size:100}, {s:'une partie de votre résidence principale', at:8.0, bg:C.peach, size:54}] },
+  { on: 10.1, bg: 'blue', items: [{s:'1re année', at:10.1, bg:C.white, size:96}, {s:'exonération', at:11.4, bg:C.orange, size:110}, {s:'à condition de la demander', at:12.4, bg:C.sky, size:60}] },
+  { on: 13.5, bg: 'peach', items: [{s:'✕ pas par la poste', at:14.2, bg:C.white, size:80}, {s:'espace professionnel', at:16.0, bg:C.night, color:C.white, size:76}, {s:'impots.gouv.fr', at:17.4, bg:C.orange, size:90}] }
+  ]),
+  endScene(20.1 - .2, 21.0, 'Source : service-public.fr (Entreprendre), fiche F23547'),
+]
+</script></body></html>

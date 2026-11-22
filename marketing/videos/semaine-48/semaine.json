@@ -1,0 +1,68 @@
+{
+ "videos": [
+  {
+   "date": "2026-11-23",
+   "heure": "18:30",
+   "nom": "nouveau-bail-2026",
+   "type": "vertical",
+   "fichier": "sortie/bail2026.mp4",
+   "textes": "textes/bail2026.json"
+  },
+  {
+   "date": "2026-11-24",
+   "heure": "18:30",
+   "nom": "notice-2026",
+   "type": "vertical",
+   "fichier": "sortie/notice.mp4",
+   "textes": "textes/notice.json"
+  },
+  {
+   "date": "2026-11-25",
+   "heure": "18:30",
+   "nom": "penalites-retard",
+   "type": "vertical",
+   "fichier": "sortie/penalites.mp4",
+   "textes": "textes/penalites.json"
+  },
+  {
+   "date": "2026-11-26",
+   "heure": "18:30",
+   "nom": "colocation-solidarite",
+   "type": "vertical",
+   "fichier": "sortie/colocation.mp4",
+   "textes": "textes/colocation.json"
+  },
+  {
+   "date": "2026-11-27",
+   "heure": "18:30",
+   "nom": "cfe-meuble",
+   "type": "vertical",
+   "fichier": "sortie/cfe.mp4",
+   "textes": "textes/cfe.json"
+  },
+  {
+   "date": "2026-11-28",
+   "heure": "10:00",
+   "nom": "bail-fin-2026",
+   "type": "youtube",
+   "fichier": "sortie/yt.mp4",
+   "textes": "textes/yt.json"
+  },
+  {
+   "date": "2026-11-28",
+   "heure": "11:30",
+   "nom": "impaye-etapes",
+   "type": "vertical",
+   "fichier": "sortie/impayes.mp4",
+   "textes": "textes/impayes.json"
+  },
+  {
+   "date": "2026-11-29",
+   "heure": "10:30",
+   "nom": "depot-maximum",
+   "type": "vertical",
+   "fichier": "sortie/depot.mp4",
+   "textes": "textes/depot.json"
+  }
+ ]
+}

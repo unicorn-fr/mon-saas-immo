@@ -32,7 +32,8 @@ function slam(text, t0, t, { size = 140, color = C.night, font = 'Fraunces', ita
 const BURST = (size, color, rot = 0) => `<svg width="${size}" height="${size}" viewBox="0 0 100 100" style="transform:rotate(${rot}deg)"><path d="${Array.from({ length: 24 }, (_, i) => { const a = i / 24 * Math.PI * 2, r = i % 2 ? 36 : 50; return `${i ? 'L' : 'M'}${50 + r * Math.cos(a)} ${50 + r * Math.sin(a)}` }).join(' ')}Z" fill="${color}" stroke="${C.night}" stroke-width="3"/></svg>`
 const SQUIG = (w, color, p = 1) => `<svg width="${w}" height="60" viewBox="0 0 ${w} 60"><path d="${Array.from({ length: Math.ceil(w / 40) + 1 }, (_, i) => `${i ? 'Q' : 'M'} ${i ? `${i * 40 - 20} ${i % 2 ? 6 : 54},` : ''}${i * 40} 30`).join(' ')}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-dasharray="3000" stroke-dashoffset="${3000 * (1 - clamp(p))}"/></svg>`
 const DOTS = (color, op = .25) => `radial-gradient(${color} 22%, transparent 24%) 0 0/34px 34px`
-const LOGO = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><path d="M3 10.2 11 4.2a1.6 1.6 0 0 1 2 0L21 10.2V18a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3Z" fill="#ffffff" stroke="${C.night}" stroke-width=".6"/><path d="M12 3.6 21 10.2h-6.2A2.8 2.8 0 0 1 12 7.4Z" fill="${C.orange}"/><path d="M12 13.13a1.805 1.805 0 0 1 1.0925 3.2395l.6175 3.23h-3.42l.6175-3.23A1.805 1.805 0 0 1 12 13.13Z" fill="${C.night}"/></svg>`
+/* Logo de Bailio (« le b habité », comme le site) : b lin sur tuile bleu nuit, fenêtre allumée. */
+const LOGO = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 1000 1000"><rect width="1000" height="1000" rx="240" fill="#1e2b55" stroke="${C.night}" stroke-width="14"/><g transform="translate(201 160) scale(1)"><path d="M51 727V67L195 0V727Z" fill="#F3EEE6"/><path d="M120 727H298A270 270 0 0 0 298 187H120Z" fill="#F3EEE6"/><rect x="195" y="329" width="229" height="256" rx="26" fill="#F2B45C"/><path d="M309.5 329V585M195 457H424" stroke="#F3EEE6" stroke-width="34"/></g></svg>`
 
 document.body.insertAdjacentHTML('beforeend', `
   <div id="stage" style="position:absolute;inset:0;overflow:hidden"></div>
@@ -76,7 +77,7 @@ function endScene(start, guideAt, source, sub = true) {
         $('e').innerHTML = `<div style="display:inline-block;transform:scale(${lerp(.3, 1, back((t - s) / .45))}) rotate(${(1 - eo((t - s) / .5)) * -20}deg)">${LOGO(230)}</div>
           <div style="font-family:Fraunces;font-weight:800;font-size:130px;color:#fff;-webkit-text-stroke:5px ${C.night};paint-order:stroke fill;margin-top:10px;opacity:${eo((t - s - .2) / .3)}">bailio</div>
           <div style="margin-top:46px">${sticker('Le guide complet, gratuit', { bg: C.white, size: 54, rot: -2, t0: s + .4, t })}</div>
-          <div style="margin-top:34px">${sticker('bailio.fr/guides', { bg: C.orange, size: 76, pad: '26px 54px', rot: 2, t0: s + .65, t, shadow: 14 })}</div>
+          <div style="margin-top:34px">${sticker('bailio.fr/actualites', { bg: C.orange, size: 66, pad: '24px 44px', rot: 2, t0: s + .65, t, shadow: 14 })}</div>
           <div style="margin-top:60px;font-size:30px;font-weight:800;color:#fff;opacity:${eo((t - s - .9) / .4)}">${source}</div>`
       }
     } }
