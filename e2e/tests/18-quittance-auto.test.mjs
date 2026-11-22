@@ -14,6 +14,25 @@ function runJob(day, leaseId) {
 }
 
 /**
+ * Mois de la prochaine quittance automatique, comme l'écran la calcule (upcomingAutoReceipt) : bail du 6 octobre 2026,
+ * loyer payable le 4, envoi le 11, jamais plus de 10 jours après. Le test ne dépend ainsi pas du jour où il tourne.
+ */
+function nextPeriod(today = new Date().toISOString().slice(0, 10)) {
+  const [y, m] = today.split('-').map(Number)
+  for (const k of [-1, 0, 1]) {
+    const d = new Date(Date.UTC(y, m - 1 + k, 1))
+    const period = d.toISOString().slice(0, 7)
+    if (`${period}-04` < '2026-10-06') continue
+    const last = new Date(Date.parse(`${period}-11T00:00:00Z`) + 10 * 86400000).toISOString().slice(0, 10)
+    if (today > last) continue
+    const short = ['janv', 'févr', 'mars', 'avr', 'mai', 'juin', 'juil', 'août', 'sept', 'oct', 'nov', 'déc'][d.getUTCMonth()]
+    const long = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    return { period, day: (n) => `${period}-${String(n).padStart(2, '0')}`, sendText: new RegExp(`envoi automatique le 11 ${short}`), long }
+  }
+  throw new Error('aucun mois à venir')
+}
+
+/**
  * Loyer supposé reçu 7 jours après l'échéance : jamais par défaut (une quittance prouve le paiement). Le propriétaire
  * l'active expressément ; ensuite prévenance, « le loyer n'est pas arrivé », puis envoi.
  */
@@ -21,9 +40,10 @@ test('loyer supposé reçu : coupé par défaut, puis 7 jours après l’échéa
   const { token } = await newAccount()
   const { leaseId } = await completeLease(token)
   await api(`/leases/${leaseId}/sign`, { method: 'POST', token })
+  const { period, day, sendText, long } = nextPeriod()
   // Par défaut : la quittance part quand le loyer est noté reçu, mais rien n'est supposé.
-  assert.equal(runJob('2026-11-08', leaseId).warned, 0, 'aucune prévenance sans accord')
-  assert.equal(runJob('2026-11-11', leaseId).sent, 0, 'aucune quittance pour un loyer non constaté')
+  assert.equal(runJob(day(8), leaseId).warned, 0, 'aucune prévenance sans accord')
+  assert.equal(runJob(day(11), leaseId).sent, 0, 'aucune quittance pour un loyer non constaté')
 
   const browser = await launch()
   const ctx = await signedInContext(browser, token)
@@ -33,29 +53,29 @@ test('loyer supposé reçu : coupé par défaut, puis 7 jours après l’échéa
   await page.goto(`${BASE}/espace/baux/${leaseId}`)
   const assume = page.getByText('Sans nouvelle de moi, noter le loyer reçu 7 jours après l’échéance')
   await assume.waitFor()
-  assert.equal(await page.getByText(/envoi automatique le 11 nov/).count(), 0)
-  // Le propriétaire l'active : il voit l'envoi prévu (loyer payable le 4 : quittance de novembre le 11) et peut l'annuler.
+  assert.equal(await page.getByText(sendText).count(), 0)
+  // Le propriétaire l'active : il voit l'envoi prévu (loyer payable le 4 : quittance le 11 du mois) et peut l'annuler.
   await assume.click()
-  await page.getByText(/envoi automatique le 11 nov/).waitFor()
+  await page.getByText(sendText).waitFor()
   await page.getByText('Le loyer n’est pas arrivé', { exact: true }).click()
   // La carte, pas le message de confirmation « Envoi annulé. » qui peut s'afficher en même temps.
   await page.getByText(/: envoi annulé$/).waitFor()
   await page.getByRole('link', { name: 'Envoyer une demande de paiement' }).waitFor()
 
-  // Envoi annulé : rien ne part le 11 novembre.
-  assert.equal(runJob('2026-11-11', leaseId).sent, 0)
+  // Envoi annulé : rien ne part le 11.
+  assert.equal(runJob(day(11), leaseId).sent, 0)
   // Rétabli : le propriétaire est prévenu 3 jours avant, puis la quittance part le jour prévu.
   await page.getByText('Rétablir l’envoi').click()
-  await page.getByText(/envoi automatique le 11 nov/).waitFor()
-  assert.equal(runJob('2026-11-08', leaseId).warned, 1)
-  assert.equal(runJob('2026-11-09', leaseId).warned, 0, 'prévenu une seule fois')
-  const done = runJob('2026-11-11', leaseId)
+  await page.getByText(sendText).waitFor()
+  assert.equal(runJob(day(8), leaseId).warned, 1)
+  assert.equal(runJob(day(9), leaseId).warned, 0, 'prévenu une seule fois')
+  const done = runJob(day(11), leaseId)
   assert.equal(done.sent, 1)
-  assert.match(done.out, /Votre quittance de loyer, novembre 2026/)
+  assert.match(done.out, new RegExp(`Votre quittance de loyer, ${long}`))
   const lease = await api(`/leases/${leaseId}`, { token })
-  const p = lease.payments.find((x) => x.period === '2026-11')
-  assert.equal(p.receivedAt, '2026-11-04')
-  assert.equal(runJob('2026-11-12', leaseId).sent, 0, 'jamais deux fois')
+  const p = lease.payments.find((x) => x.period === period)
+  assert.equal(p.receivedAt, day(4))
+  assert.equal(runJob(day(12), leaseId).sent, 0, 'jamais deux fois')
   await browser.close()
   assert.deepEqual(errors, [])
 })
