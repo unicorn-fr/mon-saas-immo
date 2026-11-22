@@ -147,10 +147,55 @@ function logo() {
   g.children.forEach((m) => { if (m.geometry.type === 'ExtrudeGeometry') m.position.z = -0.27 })
   return g
 }
-const MAKERS = { coin, stack, key, house, doc, calendar, phone, envelope, ban, gavel, logo }
+
+/* Logo de fin, façon icône d'application dessinée par un graphiste : tuile bleu nuit laquée aux angles très
+   arrondis, b lin en relief aux arêtes adoucies, fenêtre allumée avec un halo chaud, ombre de contact, liseré de
+   lumière. Proportions du b d'Inter 700 (B_PATHS du site). */
+function radialTex(inner, outer, size = 256) {
+  const c = document.createElement('canvas'); c.width = c.height = size
+  const g = c.getContext('2d'), r = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2)
+  r.addColorStop(0, inner); r.addColorStop(1, outer); g.fillStyle = r; g.fillRect(0, 0, size, size)
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t
+}
+function roundRect(w, h, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -h / 2
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r)
+  s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r)
+  s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s
+}
+function badge() {
+  const g = new THREE.Group()
+  // Tuile laquée.
+  const tileGeo = new THREE.ExtrudeGeometry(roundRect(5, 5, 1.25), { depth: 0.42, bevelEnabled: true, bevelThickness: 0.16, bevelSize: 0.16, bevelSegments: 12, curveSegments: 40 })
+  tileGeo.translate(0, 0, -0.5)
+  const lacquer = new THREE.MeshPhysicalMaterial({ color: 0x16204a, roughness: 0.5, metalness: 0.0, clearcoat: 0.8, clearcoatRoughness: 0.18, envMapIntensity: 0.22 })
+  g.add(new THREE.Mesh(tileGeo, lacquer))
+  // Le b en relief.
+  const k = 1 / 205, P = (x, y) => [(x - 310) * k, (364 - y) * k]
+  // Le b d'un seul tenant (hampe et panse réunies : aucune couture).
+  const bShape = new THREE.Shape(); bShape.moveTo(...P(51, 727)); bShape.lineTo(...P(51, 67)); bShape.lineTo(...P(195, 0)); bShape.lineTo(...P(195, 187)); bShape.lineTo(...P(298, 187))
+  const [cx, cy] = P(298, 457); bShape.absarc(cx, cy, 270 * k, Math.PI / 2, -Math.PI / 2, true); bShape.lineTo(...P(51, 727))
+  const [wx, wy] = P(195, 585), [wx2, wy2] = P(424, 329)
+  const hole = new THREE.Path(); hole.moveTo(wx, wy); hole.lineTo(wx2, wy); hole.lineTo(wx2, wy2); hole.lineTo(wx, wy2); hole.closePath(); bShape.holes.push(hole)
+  const opt = { depth: 0.22, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.045, bevelSegments: 10, curveSegments: 64 }
+  const linen = new THREE.MeshPhysicalMaterial({ color: 0xeee6d8, roughness: 0.42, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.35, envMapIntensity: 0.55 })
+  { const m = new THREE.Mesh(new THREE.ExtrudeGeometry(bShape, opt), linen); m.position.z = 0.02; g.add(m) }
+  // La fenêtre allumée, en retrait, et ses croisillons.
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(wx2 - wx, wy2 - wy), new THREE.MeshBasicMaterial({ color: 0xf2b45c, toneMapped: false }))
+  glass.position.set((wx + wx2) / 2, (wy + wy2) / 2, 0.13); g.add(glass)
+  for (const [w, h] of [[0.05, wy2 - wy], [wx2 - wx, 0.05]]) { const c = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), linen); c.position.set((wx + wx2) / 2, (wy + wy2) / 2, 0.14); g.add(c) }
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), new THREE.MeshBasicMaterial({ map: radialTex('rgba(255,170,70,0.28)', 'rgba(255,170,70,0)'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }))
+  halo.position.set((wx + wx2) / 2, (wy + wy2) / 2, 0.16); g.add(halo)
+  // Ombre de contact sous la tuile.
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.6), new THREE.MeshBasicMaterial({ map: radialTex('rgba(5,10,30,0.55)', 'rgba(5,10,30,0)'), transparent: true, depthWrite: false }))
+  sh.position.set(0, -3.25, -0.4); sh.rotation.x = -1.2; sh.name = 'shadow'; g.add(sh)
+  g.userData.settle = true
+  return g
+}
+const MAKERS = { badge, coin, stack, key, house, doc, calendar, phone, envelope, ban, gavel, logo }
 
 /* ---------- Scène ---------- */
-let renderer, scene, cam, holder, current = null
+let renderer, scene, cam, holder, sweep, current = null
 const cache = {}
 export function init(canvas, w, h) {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true })
@@ -161,6 +206,9 @@ export function init(canvas, w, h) {
   cam = new THREE.PerspectiveCamera(30, w / h, 0.1, 100); cam.position.set(0, 0, 16)
   const d = new THREE.DirectionalLight(0xffffff, 1.6); d.position.set(5, 8, 10); scene.add(d)
   scene.add(new THREE.AmbientLight(0xffffff, 0.25))
+  const rim = new THREE.DirectionalLight(0xc8d6ff, 1.4); rim.position.set(-7, 5, -6); scene.add(rim)
+  const warm = new THREE.DirectionalLight(0xffe2b8, 0.6); warm.position.set(6, -3, 6); scene.add(warm)
+  sweep = new THREE.PointLight(0xffffff, 0, 9, 1.6); scene.add(sweep)
   holder = new THREE.Group(); scene.add(holder)
 }
 const back = (x) => { const c = 1.70158, k = c + 1; x = Math.min(Math.max(x, 0), 1); return 1 + k * (x - 1) ** 3 + c * (x - 1) ** 2 }
@@ -170,9 +218,22 @@ export function show(name, arg, t0, t, { x = 0, y = 0, s = 1, spin = 0.6 } = {})
   const id = name + '|' + (arg ?? '')
   if (!cache[id]) cache[id] = MAKERS[name](arg)
   if (current !== cache[id]) { if (current) holder.remove(current); current = cache[id]; holder.add(current) }
-  const lt = t - t0, p = back(lt / 0.55)
-  holder.position.set(x, y + Math.sin(lt * 1.6) * 0.12, 0)
-  holder.scale.setScalar(s * Math.max(0.001, p))
-  holder.rotation.set(0.12 + Math.sin(lt * 0.9) * 0.06, -0.5 + (1 - Math.min(lt / 0.8, 1)) * -1.2 + Math.sin(lt * spin) * 0.45, Math.sin(lt * 0.7) * 0.04)
+  const lt = t - t0
+  if (current.userData.settle) {
+    // Entrée posée : la tuile pivote, se cale face à nous, puis respire à peine ; un reflet la traverse.
+    const p = back(lt / 0.7), q = 1 - (1 - Math.min(lt / 1.4, 1)) ** 3
+    holder.position.set(x, y + (1 - q) * -0.6 + Math.sin(lt * 1.2) * 0.04, 0)
+    holder.scale.setScalar(s * Math.max(0.001, 0.6 + 0.4 * p))
+    holder.rotation.set(0.32 * (1 - q) + 0.06 + Math.sin(lt * 0.8) * 0.025, -0.85 * (1 - q) + Math.sin(lt * 0.6) * 0.06, 0.08 * (1 - q))
+    const sw = (lt - 0.9) / 1.3
+    sweep.intensity = sw > 0 && sw < 1 ? Math.sin(sw * Math.PI) * 25 : 0
+    sweep.position.set(x + (-4 + sw * 8) * s, y + 2.2 * s, 3.2)
+  } else {
+    sweep.intensity = 0
+    const p = back(lt / 0.55)
+    holder.position.set(x, y + Math.sin(lt * 1.6) * 0.12, 0)
+    holder.scale.setScalar(s * Math.max(0.001, p))
+    holder.rotation.set(0.12 + Math.sin(lt * 0.9) * 0.06, -0.5 + (1 - Math.min(lt / 0.8, 1)) * -1.2 + Math.sin(lt * spin) * 0.45, Math.sin(lt * 0.7) * 0.04)
+  }
   renderer.render(scene, cam)
 }

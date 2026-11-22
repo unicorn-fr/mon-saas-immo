@@ -61,7 +61,7 @@ window.render = async (t) => {
   const lt = t - s.at
   const c = s.kind === 'end' ? LOOKS.nuit : s.bg ? BGS[s.bg] : L
   document.body.style.setProperty('--fg', c.fg); document.body.style.setProperty('--em', c.em)
-  $('bg').style.background = c.bg
+  $('bg').style.background = s.kind === 'end' ? `radial-gradient(circle at ${LAND ? '27% 50%' : '50% 27%'}, #34488a 0%, #1e2b55 42%, #141c3a 100%)` : c.bg
   $('prog').style.cssText = `width:${(t / S.duration) * 100}%;background:${S.look === 'soleil' ? '#1e2b55' : '#f2b45c'}`
 
   // Vidéo d'une vraie personne : images extraites par prep.cjs.
@@ -76,8 +76,8 @@ window.render = async (t) => {
     $('clip').style.transform = `scale(${1.04 + lt * 0.012 + punch})`
   }
   // Objet 3D.
-  const model = s.kind === 'obj' ? s.model : s.kind === 'end' ? 'logo' : null
-  const pos = LAND ? { x: -4.3, y: 0, s: s.kind === 'end' || s.model === 'logo' ? 0.62 : 1.45 } : { x: 0, y: s.kind === 'end' ? 2.55 : 1.75, s: s.kind === 'end' || s.model === 'logo' ? 0.55 : 0.8 }
+  const model = s.kind === 'obj' ? s.model : s.kind === 'end' ? 'badge' : null
+  const pos = LAND ? { x: -4.3, y: 0, s: s.kind === 'end' ? 0.62 : s.model === 'logo' ? 0.62 : 1.45 } : { x: 0, y: s.kind === 'end' ? 2.6 : 1.75, s: s.kind === 'end' ? 0.46 : s.model === 'logo' ? 0.55 : 0.8 }
   O.show(model, s.arg, s.at, t, { ...pos, ...(s.pos ?? {}) })
   $('gl').style.display = model ? 'block' : 'none'
 
